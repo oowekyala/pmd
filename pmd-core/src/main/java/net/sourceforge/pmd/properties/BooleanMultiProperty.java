@@ -30,14 +30,14 @@ public final class BooleanMultiProperty extends AbstractMultiValueProperty<Boole
      * @param theUIOrder     UI order
      */
     public BooleanMultiProperty(String theName, String theDescription, Boolean[] defaultValues, float theUIOrder) {
-        this(theName, theDescription, Arrays.asList(defaultValues), theUIOrder, false);
+        this(theName, theDescription, Arrays.asList(defaultValues), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private BooleanMultiProperty(String theName, String theDescription, List<Boolean> defaultValues,
-                                 float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValues, theUIOrder, isDefinedExternally);
+                                 float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -50,7 +50,7 @@ public final class BooleanMultiProperty extends AbstractMultiValueProperty<Boole
      * @param theUIOrder     UI order
      */
     public BooleanMultiProperty(String theName, String theDescription, List<Boolean> defaultValues, float theUIOrder) {
-        this(theName, theDescription, defaultValues, theUIOrder, false);
+        this(theName, theDescription, defaultValues, theUIOrder, false, true);
     }
 
 
@@ -89,7 +89,7 @@ public final class BooleanMultiProperty extends AbstractMultiValueProperty<Boole
 
         @Override
         public BooleanMultiProperty build() {
-            return new BooleanMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, isDefinedInXML);
+            return new BooleanMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

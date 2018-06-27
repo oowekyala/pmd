@@ -30,13 +30,13 @@ public final class CharacterProperty extends AbstractSingleValueProperty<Charact
      * @deprecated will be removed in 7.0.0
      */
     public CharacterProperty(String theName, String theDescription, String defaultStr, float theUIOrder) {
-        this(theName, theDescription, charFrom(defaultStr), theUIOrder, false);
+        this(theName, theDescription, charFrom(defaultStr), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
-    private CharacterProperty(String theName, String theDescription, Character theDefault, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+    private CharacterProperty(String theName, String theDescription, Character theDefault, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -49,7 +49,7 @@ public final class CharacterProperty extends AbstractSingleValueProperty<Charact
      * @param theUIOrder     UI order
      */
     public CharacterProperty(String theName, String theDescription, Character theDefault, float theUIOrder) {
-        this(theName, theDescription, theDefault, theUIOrder, false);
+        this(theName, theDescription, theDefault, theUIOrder, false, true);
     }
 
 
@@ -101,7 +101,7 @@ public final class CharacterProperty extends AbstractSingleValueProperty<Charact
 
         @Override
         public CharacterProperty build() {
-            return new CharacterProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML);
+            return new CharacterProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

@@ -38,15 +38,15 @@ public final class MethodProperty extends AbstractPackagedProperty<Method> {
      */
     public MethodProperty(String theName, String theDescription, Method theDefault, String[] legalPackageNames,
                           float theUIOrder) {
-        this(theName, theDescription, theDefault, legalPackageNames, theUIOrder, false);
+        this(theName, theDescription, theDefault, legalPackageNames, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private MethodProperty(String theName, String theDescription, Method theDefault, String[] legalPackageNames,
-                           float theUIOrder, boolean isDefinedExternally) {
+                           float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally,
-            new MethodPropertyModule(legalPackageNames, Collections.singletonList(theDefault)));
+            new MethodPropertyModule(legalPackageNames, Collections.singletonList(theDefault)), hasDefaultValue);
     }
 
 
@@ -64,7 +64,7 @@ public final class MethodProperty extends AbstractPackagedProperty<Method> {
     public MethodProperty(String theName, String theDescription, String defaultMethodStr, String[] legalPackageNames,
                           float theUIOrder) {
         this(theName, theDescription, METHOD_PARSER.valueOf(defaultMethodStr),
-            legalPackageNames, theUIOrder, false);
+            legalPackageNames, theUIOrder, false, true);
     }
 
 
@@ -109,7 +109,7 @@ public final class MethodProperty extends AbstractPackagedProperty<Method> {
 
         @Override
         public MethodProperty build() {
-            return new MethodProperty(name, description, defaultValue, legalPackageNames, uiOrder, isDefinedInXML);
+            return new MethodProperty(name, description, this.defaultValue, legalPackageNames, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

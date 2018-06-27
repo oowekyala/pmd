@@ -34,15 +34,15 @@ public final class IntegerMultiProperty extends AbstractMultiNumericProperty<Int
      */
     public IntegerMultiProperty(String theName, String theDescription, Integer min, Integer max,
                                 Integer[] defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false);
+        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private IntegerMultiProperty(String theName, String theDescription, Integer min, Integer max,
-                                 List<Integer> defaultValues, float theUIOrder, boolean isDefinedExternally) {
+                                 List<Integer> defaultValues, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
 
-        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally);
+        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -61,7 +61,7 @@ public final class IntegerMultiProperty extends AbstractMultiNumericProperty<Int
     public IntegerMultiProperty(String theName, String theDescription, Integer min, Integer max,
                                 List<Integer> defaultValues, float theUIOrder) {
 
-        this(theName, theDescription, min, max, defaultValues, theUIOrder, false);
+        this(theName, theDescription, min, max, defaultValues, theUIOrder, false, true);
     }
 
 
@@ -100,7 +100,7 @@ public final class IntegerMultiProperty extends AbstractMultiNumericProperty<Int
 
         @Override
         public IntegerMultiProperty build() {
-            return new IntegerMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML);
+            return new IntegerMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

@@ -47,7 +47,7 @@ public final class EnumeratedProperty<E> extends AbstractSingleValueProperty<E>
     public EnumeratedProperty(String theName, String theDescription, String[] theLabels, E[] theChoices,
                               int defaultIndex, Class<E> valueType, float theUIOrder) {
         this(theName, theDescription, CollectionUtil.mapFrom(theLabels, theChoices),
-                theChoices[defaultIndex], valueType, theUIOrder, false);
+                theChoices[defaultIndex], valueType, theUIOrder, false, true);
     }
 
 
@@ -68,7 +68,7 @@ public final class EnumeratedProperty<E> extends AbstractSingleValueProperty<E>
     public EnumeratedProperty(String theName, String theDescription, String[] theLabels, E[] theChoices,
                               int defaultIndex, float theUIOrder) {
         this(theName, theDescription, CollectionUtil.mapFrom(theLabels, theChoices),
-                theChoices[defaultIndex], null, theUIOrder, false);
+                theChoices[defaultIndex], null, theUIOrder, false, true);
     }
 
 
@@ -81,17 +81,20 @@ public final class EnumeratedProperty<E> extends AbstractSingleValueProperty<E>
      * @param defaultValue    Default value
      * @param valueType       Type of the values
      * @param theUIOrder      UI order
+     *
+     * @deprecated will be removed in 7.0.0. Use {@link #EnumeratedProperty(String, String, Map, Object, Class, float)}
      */
+    @Deprecated
     public EnumeratedProperty(String theName, String theDescription, Map<String, E> labelsToChoices,
                               E defaultValue, Class<E> valueType, float theUIOrder) {
-        this(theName, theDescription, labelsToChoices, defaultValue, valueType, theUIOrder, false);
+        this(theName, theDescription, labelsToChoices, defaultValue, valueType, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private EnumeratedProperty(String theName, String theDescription, Map<String, E> labelsToChoices,
-                               E defaultValue, Class<E> valueType, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally);
+                               E defaultValue, Class<E> valueType, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally, hasDefaultValue);
 
         module = new EnumeratedPropertyModule<>(labelsToChoices, valueType);
         module.checkValue(defaultValue);
@@ -155,7 +158,7 @@ public final class EnumeratedProperty<E> extends AbstractSingleValueProperty<E>
 
         @Override
         public EnumeratedProperty<E> build() {
-            return new EnumeratedProperty<>(this.name, this.description, mappings, this.defaultValue, valueType, this.uiOrder, isDefinedInXML);
+            return new EnumeratedProperty<>(this.name, this.description, mappings, this.defaultValue, valueType, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

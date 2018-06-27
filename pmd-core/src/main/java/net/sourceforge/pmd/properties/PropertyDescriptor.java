@@ -11,15 +11,18 @@ import net.sourceforge.pmd.RuleSetWriter;
 
 
 /**
- * Property value descriptor that defines the use &amp; requirements for setting property values for use within PMD and
- * any associated GUIs. While concrete descriptor instances are static and immutable they provide validation,
- * serialization, and default values for any specific datatypes.
+ * Property value descriptor that defines the use and requirements for setting
+ * property values for use within PMD and any associated GUIs. Concrete descriptor
+ * instances are immutable, and provide validation and serialization utilities
+ * specific to the datatype the handle.
  *
- * <p>This interface is primarily specialized according to whether the property is multi-valued or single-valued, see
- * {@link SingleValuePropertyDescriptor} and {@link MultiValuePropertyDescriptor}.
+ * <p>This interface is primarily specialized according to whether the property is
+ * multi-valued or single-valued, see {@link SingleValuePropertyDescriptor} and
+ * {@link MultiValuePropertyDescriptor}.
  *
- * <p>Several interfaces further specialize the behaviour of descriptors to accommodate specific types of descriptors,
- * see {@link NumericPropertyDescriptor} and {@link EnumeratedPropertyDescriptor}.
+ * <p>Several interfaces further specialize the behaviour of descriptors to
+ * accommodate specific types of descriptors, see {@link NumericPropertyDescriptor}
+ * and {@link EnumeratedPropertyDescriptor}.
  *
  * @param <T> type of the property's value. This is a list type for multi-valued properties.
  *
@@ -30,7 +33,7 @@ import net.sourceforge.pmd.RuleSetWriter;
 public interface PropertyDescriptor<T> extends Comparable<PropertyDescriptor<?>> {
 
     /**
-     * The name of the property without spaces as it serves as the key into the property map.
+     * The name of the property. Properties
      *
      * @return String
      */
@@ -38,45 +41,64 @@ public interface PropertyDescriptor<T> extends Comparable<PropertyDescriptor<?>>
 
 
     /**
-     * Describes the property and the role it plays within the rule it is specified for. Could be used in a tooltip.
+     * Describes the property and the role it plays within the rule it is specified for.
+     * Could be used in a tooltip.
      *
-     * @return String
+     * @return A string description
      */
     String description();
 
 
     /**
-     * Denotes the value datatype. For multi value properties, this is not the List class but the list's component
-     * class.
+     * Denotes the value datatype. For {@linkplain #isMultiValue() multi-valued properties}, this
+     * is not the List class but the list's component class.
      *
-     * @return Class literal of the value type
+     * @return Class of the value type
      */
     Class<?> type();
 
 
     /**
-     * Returns whether the property is multi-valued, i.e. an array of strings,
+     * Returns whether the property is multi-valued. In that case,
+     * the value of the property is a parametrization of {@link java.util.List},
+     * and multiple values can be specified in the ruleset XML by
+     * delimiting them with a delimiter specific to this property.
+     * If this method returns true, this object can be safely
+     * downcasted to {@link MultiValuePropertyDescriptor}.
      *
-     * <p>As unary property rule properties will return a value of one, you must use the get/setProperty accessors when
-     * working with the actual values. When working with multi-value properties then the get/setProperties accessors
-     * must be used.</p>
-     *
-     * @return boolean
+     * @return Whether this property is multi-valued or not
      */
     boolean isMultiValue();
 
 
     /**
-     * Default value to use when the user hasn't specified one or when they wish to revert to a known-good state.
+     * Default value to use when the user hasn't specified one or
+     * when they wish to revert to a known-good state. Some properties
+     * have no default value (see {@link #hasNoDefaultValue()}), in
+     * which case the return value of this method cannot be given a
+     * meaningful interpretation.
      *
-     * @return Object
+     * @return The default value
      */
     T defaultValue();
 
 
     /**
-     * Validation function that returns a diagnostic error message for a sample property value. Returns null if the
-     * value is acceptable.
+     * Returns true if this property descriptor has no default value. In that case,
+     * the property is <i>required</i> to be given a value in the ruleset XML, otherwise
+     * the {@link net.sourceforge.pmd.rules.RuleFactory} throws a construction exception.
+     *
+     * <p>If this method returns true, {@link #defaultValue()} cannot be given any meaningful
+     * interpretation.
+     *
+     * @return {@code true} if this descriptor has no default value.
+     */
+    boolean hasNoDefaultValue();
+
+
+    /**
+     * Validation function that returns a diagnostic error message for a sample property value.
+     * Returns null if the value is acceptable.
      *
      * @param value The value to check.
      *
@@ -93,7 +115,7 @@ public interface PropertyDescriptor<T> extends Comparable<PropertyDescriptor<?>>
      * <p>Example:<br> name -&gt; 0.0 description 1.0 minValue -&gt; 2.0 maxValue -&gt; 2.1 </p> ..would have their
      * fields placed like:<br>
      *
-     * <code>name: [ ] description: [ ] minimum: [ ] maximum: [ ]</code>
+     * {@code name: [ ] description: [ ] minimum: [ ] maximum: [ ]}
      *
      * @return float
      */

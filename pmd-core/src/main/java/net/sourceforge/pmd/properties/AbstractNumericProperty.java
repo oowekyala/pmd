@@ -28,19 +28,20 @@ import net.sourceforge.pmd.properties.modules.NumericPropertyModule;
     /**
      * Constructor for a single-valued numeric property.
      *
-     * @param theName        Name
-     * @param theDescription Description
-     * @param lower          Minimum value of the property
-     * @param upper          Maximum value of the property
-     * @param theDefault     List of defaults
-     * @param theUIOrder     UI order
+     * @param theName         Name
+     * @param theDescription  Description
+     * @param lower           Minimum value of the property
+     * @param upper           Maximum value of the property
+     * @param theDefault      List of defaults
+     * @param theUIOrder      UI order
+     * @param hasDefaultValue Whether this property has a default value
      *
      * @throws IllegalArgumentException if lower > upper, or one of them is null, or the default is not between the
      *                                  bounds
      */
     protected AbstractNumericProperty(String theName, String theDescription, T lower, T upper, T theDefault,
-                                      float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+                                      float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
 
         module = new NumericPropertyModule<>(lower, upper);
         if (theDefault == null) {

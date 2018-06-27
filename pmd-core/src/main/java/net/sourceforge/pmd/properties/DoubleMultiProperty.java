@@ -33,14 +33,14 @@ public final class DoubleMultiProperty extends AbstractMultiNumericProperty<Doub
      */
     public DoubleMultiProperty(String theName, String theDescription, Double min, Double max,
                                Double[] defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false);
+        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private DoubleMultiProperty(String theName, String theDescription, Double min, Double max,
-                                List<Double> defaultValues, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally);
+                                List<Double> defaultValues, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -58,7 +58,7 @@ public final class DoubleMultiProperty extends AbstractMultiNumericProperty<Doub
      */
     public DoubleMultiProperty(String theName, String theDescription, Double min, Double max,
                                List<Double> defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, defaultValues, theUIOrder, false);
+        this(theName, theDescription, min, max, defaultValues, theUIOrder, false, true);
     }
 
 
@@ -97,7 +97,7 @@ public final class DoubleMultiProperty extends AbstractMultiNumericProperty<Doub
 
         @Override
         public DoubleMultiProperty build() {
-            return new DoubleMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML);
+            return new DoubleMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

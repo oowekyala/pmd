@@ -34,14 +34,14 @@ public final class FloatMultiProperty extends AbstractMultiNumericProperty<Float
      */
     public FloatMultiProperty(String theName, String theDescription, Float min, Float max,
                               Float[] defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false);
+        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private FloatMultiProperty(String theName, String theDescription, Float min, Float max,
-                               List<Float> defaultValues, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally);
+                               List<Float> defaultValues, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -59,7 +59,7 @@ public final class FloatMultiProperty extends AbstractMultiNumericProperty<Float
      */
     public FloatMultiProperty(String theName, String theDescription, Float min, Float max,
                               List<Float> defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, defaultValues, theUIOrder, false);
+        this(theName, theDescription, min, max, defaultValues, theUIOrder, false, true);
     }
 
 
@@ -98,7 +98,7 @@ public final class FloatMultiProperty extends AbstractMultiNumericProperty<Float
 
         @Override
         public FloatMultiProperty build() {
-            return new FloatMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML);
+            return new FloatMultiProperty(name, description, lowerLimit, upperLimit, defaultValues, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

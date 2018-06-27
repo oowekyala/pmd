@@ -28,18 +28,19 @@ import net.sourceforge.pmd.properties.modules.PackagedPropertyModule;
     /**
      * Create a packaged property.
      *
-     * @param theName        Name
-     * @param theDescription Description
-     * @param theDefault     Default value
-     * @param theUIOrder     UI order
-     * @param module
+     * @param theName         Name
+     * @param theDescription  Description
+     * @param theDefault      Default value
+     * @param theUIOrder      UI order
+     * @param module          Packaged property module
+     * @param hasDefaultValue Whether this property has a default value
      *
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException If parameters are inconsistent
      */
     protected AbstractPackagedProperty(String theName, String theDescription, T theDefault,
                                        float theUIOrder, boolean isDefinedExternally,
-                                       PackagedPropertyModule<T> module) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+                                       PackagedPropertyModule<T> module, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
         this.module = module;
     }
 

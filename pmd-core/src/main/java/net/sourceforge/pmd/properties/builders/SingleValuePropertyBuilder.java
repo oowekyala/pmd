@@ -30,9 +30,10 @@ public abstract class SingleValuePropertyBuilder<E, T extends SingleValuePropert
      */
     @SuppressWarnings("unchecked")
     public T defaultValue(E val) {
+        if (!builderHasDefaultValue()) {
+            throw new IllegalStateException("You can't add a default value to a required property");
+        }
         this.defaultValue = val;
         return (T) this;
     }
-
-
 }

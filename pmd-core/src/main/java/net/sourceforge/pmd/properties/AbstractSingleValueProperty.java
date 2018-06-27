@@ -26,15 +26,16 @@ import net.sourceforge.pmd.Rule;
      *
      * @param theName             Name of the property
      * @param theDescription      Description
-     * @param theUIOrder          UI order
      * @param theDefault          Default value
+     * @param theUIOrder          UI order
      * @param isDefinedExternally Whether the property is defined in the XML (by a XPath rule) or not
+     * @param hasDefaultValue     Whether this property has a default value
      *
      * @throws IllegalArgumentException If name or description are empty, or UI order is negative.
      */
     protected AbstractSingleValueProperty(String theName, String theDescription, T theDefault,
-                                          float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theUIOrder, isDefinedExternally);
+                                          float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, theUIOrder, isDefinedExternally, hasDefaultValue);
 
         defaultValue = theDefault;
     }

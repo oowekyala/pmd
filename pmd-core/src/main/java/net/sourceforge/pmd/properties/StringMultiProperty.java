@@ -48,21 +48,21 @@ public final class StringMultiProperty extends AbstractMultiValueProperty<String
      * @param theDescription Description
      * @param defaultValues  List of defaults
      * @param theUIOrder     UI order
-     * @param delimiter      The delimiter to useg
+     * @param delimiter      The delimiter to use
      *
      * @throws IllegalArgumentException if a default value contains the delimiter
      * @throws NullPointerException     if the defaults array is null
      */
     public StringMultiProperty(String theName, String theDescription, List<String> defaultValues, float theUIOrder,
                                char delimiter) {
-        this(theName, theDescription, defaultValues, theUIOrder, delimiter, false);
+        this(theName, theDescription, defaultValues, theUIOrder, delimiter, false, true);
     }
 
 
     /** Master constructor. */
     private StringMultiProperty(String theName, String theDescription, List<String> defaultValues, float theUIOrder,
-                                char delimiter, boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValues, theUIOrder, delimiter, isDefinedExternally);
+                                char delimiter, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValues, theUIOrder, delimiter, isDefinedExternally, hasDefaultValue);
 
         checkDefaults(defaultValues, delimiter);
     }
@@ -160,7 +160,7 @@ public final class StringMultiProperty extends AbstractMultiValueProperty<String
 
         @Override
         public StringMultiProperty build() {
-            return new StringMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, this.multiValueDelimiter, isDefinedInXML);
+            return new StringMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, this.multiValueDelimiter, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

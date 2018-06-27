@@ -25,14 +25,14 @@ public final class StringProperty extends AbstractSingleValueProperty<String> {
      * @param theUIOrder     UI order
      */
     public StringProperty(String theName, String theDescription, String defaultValue, float theUIOrder) {
-        this(theName, theDescription, defaultValue, theUIOrder, false);
+        this(theName, theDescription, defaultValue, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
-    private StringProperty(String theName, String theDescription, String defaultValue, float theUIOrder, boolean
-        isDefinedExternally) {
-        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally);
+    private StringProperty(String theName, String theDescription, String defaultValue, float theUIOrder,
+                           boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -71,7 +71,7 @@ public final class StringProperty extends AbstractSingleValueProperty<String> {
 
         @Override
         public StringProperty build() {
-            return new StringProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML);
+            return new StringProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

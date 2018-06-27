@@ -49,7 +49,7 @@ public final class EnumeratedMultiProperty<E> extends AbstractMultiValueProperty
     public EnumeratedMultiProperty(String theName, String theDescription, String[] theLabels, E[] theChoices,
                                    int[] choiceIndices, Class<E> valueType, float theUIOrder) {
         this(theName, theDescription, CollectionUtil.mapFrom(theLabels, theChoices),
-            selection(choiceIndices, theChoices), valueType, theUIOrder, false);
+            selection(choiceIndices, theChoices), valueType, theUIOrder, false, true);
     }
 
 
@@ -71,7 +71,7 @@ public final class EnumeratedMultiProperty<E> extends AbstractMultiValueProperty
     public EnumeratedMultiProperty(String theName, String theDescription, String[] theLabels, E[] theChoices,
                                    int[] choiceIndices, float theUIOrder) {
         this(theName, theDescription, CollectionUtil.mapFrom(theLabels, theChoices),
-            selection(choiceIndices, theChoices), null, theUIOrder, false);
+            selection(choiceIndices, theChoices), null, theUIOrder, false, true);
     }
 
 
@@ -87,14 +87,14 @@ public final class EnumeratedMultiProperty<E> extends AbstractMultiValueProperty
      */
     public EnumeratedMultiProperty(String theName, String theDescription, Map<String, E> choices,
                                    List<E> defaultValues, Class<E> valueType, float theUIOrder) {
-        this(theName, theDescription, choices, defaultValues, valueType, theUIOrder, false);
+        this(theName, theDescription, choices, defaultValues, valueType, theUIOrder, false, true);
     }
 
 
     private EnumeratedMultiProperty(String theName, String theDescription, Map<String, E> choices,
                                     List<E> defaultValues, Class<E> valueType, float theUIOrder,
-                                    boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValues, theUIOrder, isDefinedExternally);
+                                    boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
 
         module = new EnumeratedPropertyModule<>(choices, valueType);
         checkDefaults(defaultValues);
@@ -191,7 +191,7 @@ public final class EnumeratedMultiProperty<E> extends AbstractMultiValueProperty
 
         @Override
         public EnumeratedMultiProperty<E> build() {
-            return new EnumeratedMultiProperty<>(this.name, this.description, mappings, this.defaultValues, valueType, this.uiOrder, isDefinedInXML);
+            return new EnumeratedMultiProperty<>(this.name, this.description, mappings, this.defaultValues, valueType, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

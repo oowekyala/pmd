@@ -29,18 +29,20 @@ import org.apache.commons.lang3.StringUtils;
     private final String description;
     private final float uiOrder;
     private final boolean isDefinedExternally;
+    private final boolean hasNoDefaultValue;
 
 
     /**
      * Constructor for an abstract property.
      *
-     * @param theName        Name of the property
-     * @param theDescription Description
-     * @param theUIOrder     UI order
+     * @param theName         Name of the property
+     * @param theDescription  Description
+     * @param theUIOrder      UI order
+     * @param hasDefaultValue Whether this property has a default value
      *
      * @throws IllegalArgumentException If name or description are empty, or UI order is negative.
      */
-    protected AbstractProperty(String theName, String theDescription, float theUIOrder, boolean isDefinedExternally) {
+    protected AbstractProperty(String theName, String theDescription, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         if (theUIOrder < 0) {
             throw new IllegalArgumentException("Property attribute 'UI order' cannot be null or blank");
         }
@@ -49,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
         description = checkNotEmpty(theDescription, DESCRIPTION);
         uiOrder = theUIOrder;
         this.isDefinedExternally = isDefinedExternally;
+        hasNoDefaultValue = !hasDefaultValue;
     }
 
 
@@ -68,6 +71,12 @@ import org.apache.commons.lang3.StringUtils;
     public final int compareTo(PropertyDescriptor<?> otherProperty) {
         float otherOrder = otherProperty.uiOrder();
         return (int) (otherOrder - uiOrder);
+    }
+
+
+    @Override
+    public boolean hasNoDefaultValue() {
+        return hasNoDefaultValue;
     }
 
 

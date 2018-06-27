@@ -35,14 +35,14 @@ public final class FloatProperty extends AbstractNumericProperty<Float> {
     public FloatProperty(String theName, String theDescription, String minStr, String maxStr, String defaultStr,
                          float theUIOrder) {
         this(theName, theDescription, FLOAT_PARSER.valueOf(minStr),
-                FLOAT_PARSER.valueOf(maxStr), FLOAT_PARSER.valueOf(defaultStr), theUIOrder, false);
+             FLOAT_PARSER.valueOf(maxStr), FLOAT_PARSER.valueOf(defaultStr), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private FloatProperty(String theName, String theDescription, Float min, Float max, Float theDefault,
-                          float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally);
+                          float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -60,7 +60,7 @@ public final class FloatProperty extends AbstractNumericProperty<Float> {
      */
     public FloatProperty(String theName, String theDescription, Float min, Float max, Float theDefault,
                          float theUIOrder) {
-        this(theName, theDescription, min, max, theDefault, theUIOrder, false);
+        this(theName, theDescription, min, max, theDefault, theUIOrder, false, true);
     }
 
 
@@ -99,7 +99,7 @@ public final class FloatProperty extends AbstractNumericProperty<Float> {
 
         @Override
         public FloatProperty build() {
-            return new FloatProperty(name, description, lowerLimit, upperLimit, defaultValue, uiOrder, isDefinedInXML);
+            return new FloatProperty(name, description, lowerLimit, upperLimit, this.defaultValue, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

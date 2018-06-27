@@ -33,16 +33,17 @@ public final class DoubleProperty extends AbstractNumericProperty<Double> {
      * @throws IllegalArgumentException if {@literal min > max} or one of the defaults is not between the bounds
      * @deprecated will be removed in 7.0.0
      */
+    @Deprecated
     public DoubleProperty(String theName, String theDescription, String minStr, String maxStr, String defaultStr,
                           float theUIOrder) {
-        this(theName, theDescription, doubleFrom(minStr), doubleFrom(maxStr), doubleFrom(defaultStr), theUIOrder, false);
+        this(theName, theDescription, doubleFrom(minStr), doubleFrom(maxStr), doubleFrom(defaultStr), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private DoubleProperty(String theName, String theDescription, Double min, Double max, Double theDefault,
-                           float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally);
+                           float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -60,7 +61,7 @@ public final class DoubleProperty extends AbstractNumericProperty<Double> {
      */
     public DoubleProperty(String theName, String theDescription, Double min, Double max, Double theDefault,
                           float theUIOrder) {
-        this(theName, theDescription, min, max, theDefault, theUIOrder, false);
+        this(theName, theDescription, min, max, theDefault, theUIOrder, false, true);
     }
 
 
@@ -111,7 +112,7 @@ public final class DoubleProperty extends AbstractNumericProperty<Double> {
 
         @Override
         public DoubleProperty build() {
-            return new DoubleProperty(name, description, lowerLimit, upperLimit, defaultValue, uiOrder, isDefinedInXML);
+            return new DoubleProperty(name, description, lowerLimit, upperLimit, this.defaultValue, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

@@ -35,34 +35,36 @@ import net.sourceforge.pmd.Rule;
     /**
      * Creates a multi valued property using the default delimiter {@link #DEFAULT_DELIMITER}.
      *
-     * @param theName        Name of the property (must not be empty)
-     * @param theDescription Description (must not be empty)
-     * @param theDefault     Default value
-     * @param theUIOrder     UI order (must be positive or zero)
+     * @param theName         Name of the property (must not be empty)
+     * @param theDescription  Description (must not be empty)
+     * @param theDefault      Default value
+     * @param theUIOrder      UI order (must be positive or zero)
+     * @param hasDefaultValue Whether this property has a default value
      *
      * @throws IllegalArgumentException If name or description are empty, or UI order is negative.
      */
     AbstractMultiValueProperty(String theName, String theDescription, List<V> theDefault, float theUIOrder,
-                               boolean isDefinedExternally) {
-        this(theName, theDescription, theDefault, theUIOrder, DEFAULT_DELIMITER, isDefinedExternally);
+                               boolean isDefinedExternally, boolean hasDefaultValue) {
+        this(theName, theDescription, theDefault, theUIOrder, DEFAULT_DELIMITER, isDefinedExternally, hasDefaultValue);
     }
 
 
     /**
      * Creates a multi valued property using a custom delimiter.
      *
-     * @param theName        Name of the property (must not be empty)
-     * @param theDescription Description (must not be empty)
-     * @param theDefault     Default value
-     * @param theUIOrder     UI order (must be positive or zero)
-     * @param delimiter      The delimiter to separate multiple values
+     * @param theName         Name of the property (must not be empty)
+     * @param theDescription  Description (must not be empty)
+     * @param theDefault      Default value
+     * @param theUIOrder      UI order (must be positive or zero)
+     * @param delimiter       The delimiter to separate multiple values
+     * @param hasDefaultValue Whether this property has a default value
      *
      * @throws IllegalArgumentException If name or description are empty, or UI order is negative.
      */
     AbstractMultiValueProperty(String theName, String theDescription, List<V> theDefault,
-                               float theUIOrder, char delimiter, boolean isDefinedExternally) {
+                               float theUIOrder, char delimiter, boolean isDefinedExternally, boolean hasDefaultValue) {
 
-        super(theName, theDescription, theUIOrder, isDefinedExternally);
+        super(theName, theDescription, theUIOrder, isDefinedExternally, hasDefaultValue);
         defaultValue = Collections.unmodifiableList(theDefault);
         multiValueDelimiter = delimiter;
     }

@@ -34,15 +34,15 @@ public final class TypeProperty extends AbstractPackagedProperty<Class> {
      */
     public TypeProperty(String theName, String theDescription, String defaultTypeStr, String[] legalPackageNames,
                         float theUIOrder) {
-        this(theName, theDescription, ValueParserConstants.CLASS_PARSER.valueOf(defaultTypeStr), legalPackageNames, theUIOrder, false);
+        this(theName, theDescription, ValueParserConstants.CLASS_PARSER.valueOf(defaultTypeStr), legalPackageNames, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private TypeProperty(String theName, String theDescription, Class<?> theDefault, String[] legalPackageNames,
-                         float theUIOrder, boolean isDefinedExternally) {
+                         float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally,
-            new TypePropertyModule(legalPackageNames, Collections.<Class>singletonList(theDefault)));
+            new TypePropertyModule(legalPackageNames, Collections.<Class>singletonList(theDefault)), hasDefaultValue);
     }
 
 
@@ -57,7 +57,7 @@ public final class TypeProperty extends AbstractPackagedProperty<Class> {
      */
     public TypeProperty(String theName, String theDescription, Class<?> theDefault, String[] legalPackageNames,
                         float theUIOrder) {
-        this(theName, theDescription, theDefault, legalPackageNames, theUIOrder, false);
+        this(theName, theDescription, theDefault, legalPackageNames, theUIOrder, false, true);
     }
 
 
@@ -102,7 +102,7 @@ public final class TypeProperty extends AbstractPackagedProperty<Class> {
 
         @Override
         public TypeProperty build() {
-            return new TypeProperty(name, description, defaultValue, legalPackageNames, uiOrder, isDefinedInXML);
+            return new TypeProperty(name, description, defaultValue, legalPackageNames, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

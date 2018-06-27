@@ -55,15 +55,15 @@ public final class MethodMultiProperty extends AbstractMultiPackagedProperty<Met
      */
     public MethodMultiProperty(String theName, String theDescription, List<Method> theDefaults,
                                String[] legalPackageNames, float theUIOrder) {
-        this(theName, theDescription, theDefaults, legalPackageNames, theUIOrder, false);
+        this(theName, theDescription, theDefaults, legalPackageNames, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private MethodMultiProperty(String theName, String theDescription, List<Method> theDefaults,
-                                String[] legalPackageNames, float theUIOrder, boolean isDefinedExternally) {
+                                String[] legalPackageNames, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         super(theName, theDescription, theDefaults, theUIOrder, isDefinedExternally,
-            new MethodPropertyModule(legalPackageNames, theDefaults));
+            new MethodPropertyModule(legalPackageNames, theDefaults), hasDefaultValue);
     }
 
 
@@ -79,12 +79,13 @@ public final class MethodMultiProperty extends AbstractMultiPackagedProperty<Met
      * @throws IllegalArgumentException
      * @deprecated will be removed in 7.O.O
      */
+    @Deprecated
     public MethodMultiProperty(String theName, String theDescription, String methodDefaults,
                                String[] legalPackageNames, float theUIOrder) {
         this(theName, theDescription,
-            methodsFrom(methodDefaults),
-            legalPackageNames, theUIOrder,
-            false);
+             methodsFrom(methodDefaults),
+             legalPackageNames, theUIOrder,
+             false, true);
     }
 
 
@@ -140,7 +141,7 @@ public final class MethodMultiProperty extends AbstractMultiPackagedProperty<Met
 
         @Override
         public MethodMultiProperty build() {
-            return new MethodMultiProperty(name, description, defaultValues, legalPackageNames, uiOrder, isDefinedInXML);
+            return new MethodMultiProperty(name, description, defaultValues, legalPackageNames, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

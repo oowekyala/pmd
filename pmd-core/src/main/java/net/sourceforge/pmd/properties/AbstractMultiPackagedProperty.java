@@ -39,8 +39,8 @@ import net.sourceforge.pmd.properties.modules.PackagedPropertyModule;
      */
     protected AbstractMultiPackagedProperty(String theName, String theDescription, List<T> theDefault,
                                             float theUIOrder, boolean isDefinedExternally,
-                                            PackagedPropertyModule<T> module) {
-        super(theName, theDescription, theDefault, theUIOrder, MULTI_VALUE_DELIMITER, isDefinedExternally);
+                                            PackagedPropertyModule<T> module, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, MULTI_VALUE_DELIMITER, isDefinedExternally, hasDefaultValue);
         this.module = module;
     }
 

@@ -35,14 +35,14 @@ public final class CharacterMultiProperty extends AbstractMultiValueProperty<Cha
      * @throws IllegalArgumentException if the delimiter is in the default values
      */
     public CharacterMultiProperty(String theName, String theDescription, Character[] defaultValues, float theUIOrder, char delimiter) {
-        this(theName, theDescription, Arrays.asList(defaultValues), theUIOrder, delimiter, false);
+        this(theName, theDescription, Arrays.asList(defaultValues), theUIOrder, delimiter, false, true);
     }
 
 
     /** Master constructor. */
     private CharacterMultiProperty(String theName, String theDescription, List<Character> defaultValues, float theUIOrder,
-                                   char delimiter, boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValues, theUIOrder, delimiter, isDefinedExternally);
+                                   char delimiter, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValues, theUIOrder, delimiter, isDefinedExternally, hasDefaultValue);
 
         if (defaultValues != null) {
             for (Character c : defaultValues) {
@@ -66,7 +66,7 @@ public final class CharacterMultiProperty extends AbstractMultiValueProperty<Cha
      * @throws IllegalArgumentException if the delimiter is in the default values
      */
     public CharacterMultiProperty(String theName, String theDescription, List<Character> defaultValues, float theUIOrder, char delimiter) {
-        this(theName, theDescription, defaultValues, theUIOrder, delimiter, false);
+        this(theName, theDescription, defaultValues, theUIOrder, delimiter, false, true);
     }
 
 
@@ -117,7 +117,7 @@ public final class CharacterMultiProperty extends AbstractMultiValueProperty<Cha
 
         @Override
         public CharacterMultiProperty build() {
-            return new CharacterMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, multiValueDelimiter, isDefinedInXML);
+            return new CharacterMultiProperty(this.name, this.description, this.defaultValues, this.uiOrder, multiValueDelimiter, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

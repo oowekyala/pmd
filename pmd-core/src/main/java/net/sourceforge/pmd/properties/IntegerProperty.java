@@ -32,14 +32,14 @@ public final class IntegerProperty extends AbstractNumericProperty<Integer> {
      */
     public IntegerProperty(String theName, String theDescription, Integer min, Integer max, Integer theDefault,
                            float theUIOrder) {
-        this(theName, theDescription, min, max, theDefault, theUIOrder, false);
+        this(theName, theDescription, min, max, theDefault, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private IntegerProperty(String theName, String theDescription, Integer min, Integer max, Integer theDefault,
-                            float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally);
+                            float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -78,7 +78,7 @@ public final class IntegerProperty extends AbstractNumericProperty<Integer> {
 
         @Override
         public IntegerProperty build() {
-            return new IntegerProperty(name, description, lowerLimit, upperLimit, defaultValue, uiOrder, isDefinedInXML);
+            return new IntegerProperty(name, description, lowerLimit, upperLimit, defaultValue, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

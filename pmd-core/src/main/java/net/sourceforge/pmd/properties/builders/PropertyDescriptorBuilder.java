@@ -25,6 +25,7 @@ public abstract class PropertyDescriptorBuilder<E, T extends PropertyDescriptorB
     protected String description;
     protected float uiOrder = 0f;
     protected boolean isDefinedInXML = false;
+    private boolean hasDefaultValue = true;
 
 
     protected PropertyDescriptorBuilder(String name) {
@@ -32,6 +33,16 @@ public abstract class PropertyDescriptorBuilder<E, T extends PropertyDescriptorB
             throw new IllegalArgumentException("Name must be provided");
         }
         this.name = name;
+    }
+
+
+    /**
+     * Returns true if the default value is valid.
+     * If this method returns false, this property
+     * will have no default value.
+     */
+    protected boolean builderHasDefaultValue() {
+        return hasDefaultValue;
     }
     
 
@@ -65,6 +76,23 @@ public abstract class PropertyDescriptorBuilder<E, T extends PropertyDescriptorB
         return (T) this;
     }
 
+
+    /**
+     * Tags the property as required. Such a property
+     * has no default value, and requires to be overridden
+     * by the user in the XML, otherwise an exception
+     * is thrown by the {@link net.sourceforge.pmd.rules.RuleFactory}.
+     *
+     * <p>Calling that method on the builder discards any
+     * previously specified default values.
+     *
+     * @return The same builder
+     */
+    @SuppressWarnings("unchecked")
+    public T isRequired() {
+        hasDefaultValue = false;
+        return (T) this;
+    }
 
     /**
      * Builds the descriptor and returns it.

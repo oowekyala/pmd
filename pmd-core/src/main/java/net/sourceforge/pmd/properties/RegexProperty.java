@@ -21,8 +21,8 @@ import net.sourceforge.pmd.properties.builders.SingleValuePropertyBuilder;
  */
 public final class RegexProperty extends AbstractSingleValueProperty<Pattern> {
 
-    RegexProperty(String theName, String theDescription, Pattern theDefault, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+    private RegexProperty(String theName, String theDescription, Pattern theDefault, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -81,7 +81,7 @@ public final class RegexProperty extends AbstractSingleValueProperty<Pattern> {
 
         @Override
         public RegexProperty build() {
-            return new RegexProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML);
+            return new RegexProperty(this.name, this.description, this.defaultValue, this.uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

@@ -34,16 +34,16 @@ public final class TypeMultiProperty extends AbstractMultiPackagedProperty<Class
      */
     public TypeMultiProperty(String theName, String theDescription, List<Class> theDefaults,
                              String[] legalPackageNames, float theUIOrder) {
-        this(theName, theDescription, theDefaults, legalPackageNames, theUIOrder, false);
+        this(theName, theDescription, theDefaults, legalPackageNames, theUIOrder, false, true);
 
     }
 
 
     /** Master constructor. */
     private TypeMultiProperty(String theName, String theDescription, List<Class> theTypeDefaults,
-                              String[] legalPackageNames, float theUIOrder, boolean isDefinedExternally) {
+                              String[] legalPackageNames, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         super(theName, theDescription, theTypeDefaults, theUIOrder, isDefinedExternally,
-            new TypePropertyModule(legalPackageNames, theTypeDefaults));
+            new TypePropertyModule(legalPackageNames, theTypeDefaults), hasDefaultValue);
     }
 
 
@@ -61,8 +61,8 @@ public final class TypeMultiProperty extends AbstractMultiPackagedProperty<Class
     public TypeMultiProperty(String theName, String theDescription, String theTypeDefaults,
                              String[] legalPackageNames, float theUIOrder) {
         this(theName, theDescription, typesFrom(theTypeDefaults),
-            legalPackageNames,
-            theUIOrder, false);
+             legalPackageNames,
+             theUIOrder, false, true);
 
     }
 
@@ -120,7 +120,7 @@ public final class TypeMultiProperty extends AbstractMultiPackagedProperty<Class
 
         @Override
         public TypeMultiProperty build() {
-            return new TypeMultiProperty(name, description, defaultValues, legalPackageNames, uiOrder, isDefinedInXML);
+            return new TypeMultiProperty(name, description, defaultValues, legalPackageNames, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 }

@@ -30,13 +30,13 @@ public final class FileProperty extends AbstractSingleValueProperty<File> {
      * @param theUIOrder     UI order
      */
     public FileProperty(String theName, String theDescription, File theDefault, float theUIOrder) {
-        super(theName, theDescription, theDefault, theUIOrder, false);
+        this(theName, theDescription, theDefault, theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
-    private FileProperty(String theName, String theDescription, File theDefault, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+    private FileProperty(String theName, String theDescription, File theDefault, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -75,7 +75,7 @@ public final class FileProperty extends AbstractSingleValueProperty<File> {
 
         @Override
         public FileProperty build() {
-            return new FileProperty(name, description, defaultValue, uiOrder, isDefinedInXML);
+            return new FileProperty(name, description, this.defaultValue, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

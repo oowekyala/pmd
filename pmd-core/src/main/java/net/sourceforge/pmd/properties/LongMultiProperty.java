@@ -34,14 +34,14 @@ public final class LongMultiProperty extends AbstractMultiNumericProperty<Long> 
      */
     public LongMultiProperty(String theName, String theDescription, Long min, Long max,
                              Long[] defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false);
+        this(theName, theDescription, min, max, Arrays.asList(defaultValues), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
     private LongMultiProperty(String theName, String theDescription, Long min, Long max,
-                              List<Long> defaultValues, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally);
+                              List<Long> defaultValues, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, min, max, defaultValues, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -59,7 +59,7 @@ public final class LongMultiProperty extends AbstractMultiNumericProperty<Long> 
      */
     public LongMultiProperty(String theName, String theDescription, Long min, Long max,
                              List<Long> defaultValues, float theUIOrder) {
-        this(theName, theDescription, min, max, defaultValues, theUIOrder, false);
+        this(theName, theDescription, min, max, defaultValues, theUIOrder, false, true);
     }
 
 
@@ -101,7 +101,7 @@ public final class LongMultiProperty extends AbstractMultiNumericProperty<Long> 
         @Override
         public LongMultiProperty build() {
             return new LongMultiProperty(name, description, lowerLimit, upperLimit,
-                defaultValues, uiOrder, isDefinedInXML);
+                                         defaultValues, uiOrder, isDefinedInXML, builderHasDefaultValue());
         }
     }
 

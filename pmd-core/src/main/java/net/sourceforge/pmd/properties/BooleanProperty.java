@@ -29,13 +29,13 @@ public final class BooleanProperty extends AbstractSingleValueProperty<Boolean> 
      * @deprecated will be removed in 7.0.0
      */
     public BooleanProperty(String theName, String theDescription, String defaultBoolStr, float theUIOrder) {
-        this(theName, theDescription, Boolean.valueOf(defaultBoolStr), theUIOrder, false);
+        this(theName, theDescription, Boolean.valueOf(defaultBoolStr), theUIOrder, false, true);
     }
 
 
     /** Master constructor. */
-    private BooleanProperty(String theName, String theDescription, boolean defaultValue, float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally);
+    private BooleanProperty(String theName, String theDescription, boolean defaultValue, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+        super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 
 
@@ -48,7 +48,7 @@ public final class BooleanProperty extends AbstractSingleValueProperty<Boolean> 
      * @param theUIOrder     UI order
      */
     public BooleanProperty(String theName, String theDescription, boolean defaultValue, float theUIOrder) {
-        this(theName, theDescription, defaultValue, theUIOrder, false);
+        this(theName, theDescription, defaultValue, theUIOrder, false, true);
     }
 
 
@@ -87,7 +87,7 @@ public final class BooleanProperty extends AbstractSingleValueProperty<Boolean> 
 
         @Override
         public BooleanProperty build() {
-            return new BooleanProperty(this.name, this.description, this.defaultValue, this.uiOrder, this.isDefinedInXML);
+            return new BooleanProperty(this.name, this.description, this.defaultValue, this.uiOrder, this.isDefinedInXML, this.builderHasDefaultValue());
         }
     }
 
