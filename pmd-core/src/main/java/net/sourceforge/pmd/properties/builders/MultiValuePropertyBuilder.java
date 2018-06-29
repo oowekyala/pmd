@@ -39,6 +39,9 @@ public abstract class MultiValuePropertyBuilder<V, T extends MultiValuePropertyB
      */
     @SuppressWarnings("unchecked")
     public T defaultValues(Collection<? extends V> val) {
+        if (!builderHasDefaultValue()) {
+            throw new IllegalStateException("You can't add a default value to a required property");
+        }
         this.defaultValues = new ArrayList<>(val);
         return (T) this;
     }
@@ -53,6 +56,9 @@ public abstract class MultiValuePropertyBuilder<V, T extends MultiValuePropertyB
      */
     @SuppressWarnings("unchecked")
     public T defaultValues(V... val) {
+        if (!builderHasDefaultValue()) {
+            throw new IllegalStateException("You can't add a default value to a required property");
+        }
         this.defaultValues = Arrays.asList(val);
         return (T) this;
     }

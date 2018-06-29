@@ -39,12 +39,14 @@ public class DoublePropertyTest extends AbstractNumericPropertyDescriptorTester<
     }
 
 
+    @Override
     protected DoubleProperty.DoublePBuilder singleBuilder() {
         return DoubleProperty.named("test").desc("foo")
                              .range(MIN, MAX).defaultValue(createValue()).uiOrder(1.0f);
     }
 
 
+    @Override
     protected DoubleMultiProperty.DoubleMultiPBuilder multiBuilder() {
         return DoubleMultiProperty.named("test").desc("foo")
                                   .range(MIN, MAX).defaultValues(createValue(), createValue()).uiOrder(1.0f);

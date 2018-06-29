@@ -33,8 +33,8 @@ public final class BooleanProperty extends AbstractSingleValueProperty<Boolean> 
     }
 
 
-    /** Master constructor. */
-    private BooleanProperty(String theName, String theDescription, boolean defaultValue, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
+    /** Master constructor. */ // Using a boxed type avoids NPEs caused by unboxing of a null default value
+    private BooleanProperty(String theName, String theDescription, Boolean defaultValue, float theUIOrder, boolean isDefinedExternally, boolean hasDefaultValue) {
         super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally, hasDefaultValue);
     }
 

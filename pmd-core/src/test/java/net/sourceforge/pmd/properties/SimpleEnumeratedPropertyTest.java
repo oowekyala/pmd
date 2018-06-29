@@ -16,6 +16,9 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import net.sourceforge.pmd.properties.SimpleEnumeratedPropertyTest.Foo;
+import net.sourceforge.pmd.properties.builders.MultiValuePropertyBuilder;
+import net.sourceforge.pmd.properties.builders.SingleValuePropertyBuilder;
+
 
 /**
  * Evaluates the functionality of the EnumeratedProperty descriptor by testing
@@ -55,6 +58,20 @@ public class SimpleEnumeratedPropertyTest extends AbstractPropertyDescriptorTest
 
         assertEquals(MAPPINGS, prop.mappings());
         assertEquals(MAPPINGS, multi.mappings());
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected SingleValuePropertyBuilder<Foo, ?> singleBuilder() {
+        return ((EnumeratedProperty.EnumPBuilder<Foo>) super.singleBuilder()).mappings(MAPPINGS);
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected MultiValuePropertyBuilder<Foo, ?> multiBuilder() {
+        return ((EnumeratedMultiProperty.EnumMultiPBuilder<Foo>) super.multiBuilder()).mappings(MAPPINGS);
     }
 
 

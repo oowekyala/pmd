@@ -97,7 +97,9 @@ public final class EnumeratedProperty<E> extends AbstractSingleValueProperty<E>
         super(theName, theDescription, defaultValue, theUIOrder, isDefinedExternally, hasDefaultValue);
 
         module = new EnumeratedPropertyModule<>(labelsToChoices, valueType);
-        module.checkValue(defaultValue);
+        if (hasDefaultValue) {
+            module.checkValue(defaultValue);
+        }
     }
 
 

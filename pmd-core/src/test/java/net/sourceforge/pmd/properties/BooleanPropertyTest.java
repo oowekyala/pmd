@@ -8,6 +8,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import net.sourceforge.pmd.properties.builders.SingleValuePropertyBuilder;
+
+
 /**
  * @author Brian Remedios
  */

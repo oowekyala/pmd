@@ -16,7 +16,7 @@ public abstract class SingleNumericPropertyBuilder<V, T extends SingleNumericPro
     protected V upperLimit;
 
 
-    public SingleNumericPropertyBuilder(String name) {
+    protected SingleNumericPropertyBuilder(String name) {
         super(name);
     }
 

@@ -6,6 +6,7 @@ package net.sourceforge.pmd.properties.modules;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import net.sourceforge.pmd.util.CollectionUtil;
 
@@ -23,6 +24,8 @@ public class EnumeratedPropertyModule<E> {
 
 
     public EnumeratedPropertyModule(Map<String, E> choicesByLabel, Class<E> valueType) {
+        Objects.requireNonNull(choicesByLabel, "The choices of an enumerated property must be specified");
+
         this.valueType = valueType;
         this.choicesByLabel = Collections.unmodifiableMap(choicesByLabel);
         this.labelsByChoice = Collections.unmodifiableMap(CollectionUtil.invertedMapFrom(choicesByLabel));

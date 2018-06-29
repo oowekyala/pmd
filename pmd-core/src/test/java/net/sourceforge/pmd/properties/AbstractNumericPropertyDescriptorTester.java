@@ -72,8 +72,10 @@ public abstract class AbstractNumericPropertyDescriptorTester<T> extends Abstrac
     }
 
 
+    @Override
     protected abstract SingleNumericPropertyBuilder<T, ?> singleBuilder();
 
+    @Override
     protected abstract MultiNumericPropertyBuilder<T, ?> multiBuilder();
 
 

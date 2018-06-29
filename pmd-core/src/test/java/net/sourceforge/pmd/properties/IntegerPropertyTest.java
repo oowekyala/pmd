@@ -50,12 +50,14 @@ public class IntegerPropertyTest extends AbstractNumericPropertyDescriptorTester
     }
 
 
+    @Override
     protected IntegerProperty.IntegerPBuilder singleBuilder() {
         return IntegerProperty.named("test").desc("foo")
                               .range(MIN, MAX).defaultValue(createValue()).uiOrder(1.0f);
     }
 
 
+    @Override
     protected IntegerMultiProperty.IntegerMultiPBuilder multiBuilder() {
         return IntegerMultiProperty.named("test").desc("foo")
                                    .range(MIN, MAX).defaultValues(createValue(), createValue()).uiOrder(1.0f);

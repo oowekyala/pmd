@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,9 +19,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import net.sourceforge.pmd.properties.builders.MultiValuePropertyBuilder;
 import net.sourceforge.pmd.properties.builders.PropertyDescriptorExternalBuilder;
+import net.sourceforge.pmd.properties.builders.SingleValuePropertyBuilder;
 
 
 /**
@@ -43,13 +49,69 @@ public abstract class AbstractPropertyDescriptorTester<T> {
 
     protected final String typeName;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-    public AbstractPropertyDescriptorTester(String typeName) {
+    AbstractPropertyDescriptorTester(String typeName) {
         this.typeName = typeName;
     }
 
 
+    protected SingleValuePropertyBuilder<T, ?> singleBuilder() {
+        try {
+            @SuppressWarnings("unchecked")
+            SingleValuePropertyBuilder<T, ?> builder = (SingleValuePropertyBuilder<T, ?>) MethodUtils.invokeStaticMethod(createProperty().getClass(), "named", "foo");
+            return builder.desc("description");
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        fail();
+        return null;
+    }
+
+
+    protected MultiValuePropertyBuilder<T, ?> multiBuilder() {
+        try {
+            @SuppressWarnings("unchecked")
+            MultiValuePropertyBuilder<T, ?> builder = (MultiValuePropertyBuilder<T, ?>) MethodUtils.invokeStaticMethod(createMultiProperty().getClass(), "named", "foo");
+            return builder.desc("description");
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        fail();
+        return null;
+    }
+
+
     protected abstract PropertyDescriptor<List<T>> createBadMultiProperty();
+
+
+    /**
+     * Creates and returns a properly configured property descriptor.
+     *
+     * @return PropertyDescriptor
+     */
+    protected abstract PropertyDescriptor<T> createProperty();
+
+
+    /**
+     * Attempt to create a property with faulty configuration values. This method should throw an
+     * IllegalArgumentException if done correctly.
+     *
+     * @return PropertyDescriptor
+     */
+    protected abstract PropertyDescriptor<T> createBadProperty();
+
+
+    /**
+     * Return a value(s) that is known to be faulty per the general scope of the descriptor.
+     *
+     * @return Object
+     */
+    protected abstract T createBadValue();
+
+
+    protected abstract PropertyDescriptor<List<T>> createMultiProperty();
 
 
     @Test
@@ -119,6 +181,26 @@ public abstract class AbstractPropertyDescriptorTester<T> {
 
 
     @Test
+    public void testSingleRequiredProperty() {
+        assertTrue(singleBuilder().isRequired().build().hasNoDefaultValue());
+    }
+
+
+    @Test
+    public void testMultiRequiredProperty() {
+        assertTrue(singleBuilder().isRequired().build().hasNoDefaultValue());
+    }
+
+
+    @Test
+    public void testRequiredPlusDefaultValueCannotBuild() {
+        thrown.expect(IllegalStateException.class);
+        singleBuilder().isRequired().defaultValue(createValue()).build().hasNoDefaultValue();
+        multiBuilder().isRequired().defaultValues(createMultipleValues(4)).build().hasNoDefaultValue();
+    }
+
+
+    @Test
     public void testFactoryMultiValueCustomDelimiter() {
         PropertyDescriptorExternalBuilder<List<T>> multiFactory = getMultiFactory();
         Map<PropertyDescriptorField, String> valuesById = getPropertyDescriptorValues();
@@ -150,23 +232,6 @@ public abstract class AbstractPropertyDescriptorTester<T> {
     }
 
 
-    /**
-     * Creates and returns a properly configured property descriptor.
-     *
-     * @return PropertyDescriptor
-     */
-    protected abstract PropertyDescriptor<T> createProperty();
-
-
-    /**
-     * Attempt to create a property with faulty configuration values. This method should throw an
-     * IllegalArgumentException if done correctly.
-     *
-     * @return PropertyDescriptor
-     */
-    protected abstract PropertyDescriptor<T> createBadProperty();
-
-
     @Test
     public void testAsDelimitedString() {
 
@@ -180,7 +245,6 @@ public abstract class AbstractPropertyDescriptorTester<T> {
     }
 
 
-    protected abstract PropertyDescriptor<List<T>> createMultiProperty();
 
 
     @Test
@@ -233,13 +297,6 @@ public abstract class AbstractPropertyDescriptorTester<T> {
         assertNotNull("uncaught bad value: " + testValue, errorMsg);
     }
 
-
-    /**
-     * Return a value(s) that is known to be faulty per the general scope of the descriptor.
-     *
-     * @return Object
-     */
-    protected abstract T createBadValue();
 
 
     @Test
