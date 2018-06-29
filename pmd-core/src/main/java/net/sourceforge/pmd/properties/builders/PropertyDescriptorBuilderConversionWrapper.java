@@ -5,7 +5,9 @@
 package net.sourceforge.pmd.properties.builders;
 
 
+import static net.sourceforge.pmd.properties.PropertyDescriptorField.DEFAULT_VALUE;
 import static net.sourceforge.pmd.properties.PropertyDescriptorField.DELIMITER;
+import static net.sourceforge.pmd.properties.PropertyDescriptorField.IS_REQUIRED;
 import static net.sourceforge.pmd.properties.PropertyDescriptorField.LEGAL_PACKAGES;
 
 import java.util.List;
@@ -46,11 +48,22 @@ public abstract class PropertyDescriptorBuilderConversionWrapper<E, T extends Pr
         if (fields.containsKey(PropertyDescriptorField.UI_ORDER)) {
             builder.uiOrder(Float.parseFloat(fields.get(PropertyDescriptorField.UI_ORDER)));
         }
+
+        if (fields.containsKey(PropertyDescriptorField.IS_REQUIRED) && Boolean.valueOf(fields.get(IS_REQUIRED))) {
+            builder.isRequired();
+        }
+
+        if (fields.containsKey(DEFAULT_VALUE)) {
+            // This will throw an exception if the property is marked required
+            populateDefaultValue(builder, fields);
+        }
     }
 
 
-    @Override
-    public abstract boolean isMultiValue();
+    /**
+     * Adds the default value to the builder.
+     */
+    protected abstract void populateDefaultValue(T builder, Map<PropertyDescriptorField, String> fields);
 
 
     @Override
@@ -113,11 +126,11 @@ public abstract class PropertyDescriptorBuilderConversionWrapper<E, T extends Pr
 
 
         @Override
-        protected void populate(T builder, Map<PropertyDescriptorField, String> fields) {
-            super.populate(builder, fields);
+        protected final void populateDefaultValue(T builder, Map<PropertyDescriptorField, String> fields) {
             char delim = delimiterIn(fields, builder.multiValueDelimiter);
             builder.delim(delim).defaultValues(ValueParserConstants.multi(parser, delim)
                                                                    .valueOf(fields.get(PropertyDescriptorField.DEFAULT_VALUE)));
+
         }
 
 
@@ -168,8 +181,9 @@ public abstract class PropertyDescriptorBuilderConversionWrapper<E, T extends Pr
             @Override
             protected void populate(T builder, Map<PropertyDescriptorField, String> fields) {
                 super.populate(builder, fields);
-                builder.legalPackages(legalPackageNamesIn(fields, PropertyDescriptorBuilderConversionWrapper.delimiterIn(fields,
-                    MultiValuePropertyDescriptor.DEFAULT_DELIMITER)));
+
+                builder.legalPackages(legalPackageNamesIn(fields, delimiterIn(fields,
+                                                                              MultiValuePropertyDescriptor.DEFAULT_DELIMITER)));
             }
         }
 
@@ -193,10 +207,8 @@ public abstract class PropertyDescriptorBuilderConversionWrapper<E, T extends Pr
             this.parser = parser;
         }
 
-
         @Override
-        protected void populate(T builder, Map<PropertyDescriptorField, String> fields) {
-            super.populate(builder, fields);
+        protected final void populateDefaultValue(T builder, Map<PropertyDescriptorField, String> fields) {
             builder.defaultValue(parser.valueOf(fields.get(PropertyDescriptorField.DEFAULT_VALUE)));
         }
 
@@ -248,8 +260,10 @@ public abstract class PropertyDescriptorBuilderConversionWrapper<E, T extends Pr
             @Override
             protected void populate(T builder, Map<PropertyDescriptorField, String> fields) {
                 super.populate(builder, fields);
-                builder.legalPackageNames(legalPackageNamesIn(fields, PropertyDescriptorBuilderConversionWrapper.delimiterIn(fields,
-                    MultiValuePropertyDescriptor.DEFAULT_DELIMITER)));
+
+                char delimiter = delimiterIn(fields, MultiValuePropertyDescriptor.DEFAULT_DELIMITER);
+                builder.legalPackageNames(legalPackageNamesIn(fields, delimiter));
+
             }
         }
 

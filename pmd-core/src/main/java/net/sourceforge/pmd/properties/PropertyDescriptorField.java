@@ -29,6 +29,8 @@ public enum PropertyDescriptorField {
     UI_ORDER("uiOrder"),
     /** The default value. */
     DEFAULT_VALUE("value"),
+    /** Whether the property is required (in which case the default value is ignored) or not. */
+    IS_REQUIRED("required"),
     /** For multi-valued properties, this defines the delimiter of the single values. */
     DELIMITER("delimiter"),
     /** The minimum allowed value for numeric properties. */

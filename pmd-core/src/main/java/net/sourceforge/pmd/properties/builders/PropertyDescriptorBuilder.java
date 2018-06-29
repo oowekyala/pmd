@@ -48,6 +48,7 @@ public abstract class PropertyDescriptorBuilder<E, T extends PropertyDescriptorB
 
     /**
      * Specify the description of the property.
+     * Calling this method is required.
      *
      * @param desc The description
      *
