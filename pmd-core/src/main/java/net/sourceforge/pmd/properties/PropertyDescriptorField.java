@@ -16,7 +16,10 @@ import net.sourceforge.pmd.RuleSetFactory;
  * @author Brian Remedios
  * @see RuleSetFactory
  * @see PropertyTypeId
+ *
+ * @deprecated This is part of PMD's internal API and will be moved to an internal package on 7.0.0
  */
+@Deprecated
 public enum PropertyDescriptorField {
 
     /** The type of the property. */
@@ -70,13 +73,16 @@ public enum PropertyDescriptorField {
     }
 
 
+    /**
+     * Gets a constant by name or throws an exception.
+     */
     public static PropertyDescriptorField getConstant(String name) {
         for (PropertyDescriptorField f : values()) {
             if (Objects.equals(f.attributeName, name)) {
                 return f;
             }
         }
-        return null;
+        throw new IllegalArgumentException("Unknown property field '" + name + "'");
     }
 
 }

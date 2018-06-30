@@ -7,6 +7,7 @@ package net.sourceforge.pmd.rules;
 import static net.sourceforge.pmd.properties.PropertyDescriptorField.DEFAULT_VALUE;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,17 +60,22 @@ public class RuleFactory {
     
     private static final List<String> REQUIRED_ATTRIBUTES = Collections.unmodifiableList(Arrays.asList(NAME, CLASS));
 
+
     /**
      * Decorates a referenced rule with the metadata that are overridden in the given rule element.
      *
-     * <p>Declaring a property in the overriding element throws an exception (the property must exist in the referenced
-     * rule).
+     * <p>Declaring a property in the overriding element throws an exception (the property must
+     * exist in the referenced rule).
      *
-     * @param referencedRule Referenced rule
+     * <p>Not specifying a value for a default property also throws an exception.
+     *
+     * @param referencedRule   Referenced rule
      * @param ruleSetReference the ruleset, where the referenced rule is defined
-     * @param ruleElement    Element overriding some metadata about the rule
+     * @param ruleElement      Element overriding some metadata about the rule
      *
      * @return A rule reference to the referenced rule
+     *
+     * @throws IllegalArgumentException if the element doesn't describe a valid rule reference.
      */
     public RuleReference decorateRule(Rule referencedRule, RuleSetReference ruleSetReference, Element ruleElement) {
         RuleReference ruleReference = new RuleReference(referencedRule, ruleSetReference);
@@ -101,11 +107,16 @@ public class RuleFactory {
                     ruleReference.setPriority(RulePriority.valueOf(Integer.parseInt(parseTextNode(node))));
                     break;
                 case PROPERTIES:
-                    setPropertyValues(ruleReference, (Element) node);
+                    List<PropertyDescriptor<?>> notOverridden = setPropertyValues(ruleReference, (Element) node);
+
+                    String message = requiredPropertyDescriptorsToString(notOverridden);
+                    if (!message.isEmpty()) {
+                        throw new IllegalArgumentException("Cannot set non-existent " + message + " on rule " + ruleReference.getName());
+                    }
                     break;
                 default:
                     throw new IllegalArgumentException("Unexpected element <" + node.getNodeName()
-                                                       + "> encountered as child of <rule> element for Rule "
+                                                       + "> encountered as child of <rule> element for rule "
                                                        + ruleReference.getName());
                 }
             }
@@ -117,8 +128,9 @@ public class RuleFactory {
     /**
      * Parses a rule element and returns a new rule instance.
      *
-     * <p>Notes: The ruleset name is not set here. Exceptions raised from this method indicate invalid XML structure,
-     * with regards to the expected schema, while RuleBuilder validates the semantics.
+     * <p>Notes: The ruleset name is not set here. Exceptions raised from this class
+     * indicate invalid XML structure, with regards to the expected schema, while
+     * RuleBuilder validates the semantics.
      *
      * @param ruleElement The rule element to parse
      *
@@ -209,6 +221,27 @@ public class RuleFactory {
         }
     }
 
+
+    /**
+     * Returns a string describing the property descriptors found in the
+     * list that need to be overridden. If none are found, returns an empty
+     * string.
+     */
+    private String requiredPropertyDescriptorsToString(List<PropertyDescriptor<?>> descriptors) {
+        List<String> names = new ArrayList<>();
+        for (PropertyDescriptor<?> p : descriptors) {
+            if (p.hasNoDefaultValue()) {
+                names.add("'" + p.name() + "'");
+            }
+        }
+        if (names.isEmpty()) {
+            return "";
+        } else {
+            return names.size() == 1 ? "property " + names.get(0)
+                                     : "properties " + StringUtils.join(names, ", ");
+        }
+    }
+
     /**
      * Parses a properties element looking only for the values of the properties defined or overridden.
      *
@@ -265,19 +298,24 @@ public class RuleFactory {
      *
      * @param rule          The rule
      * @param propertiesElt The {@literal <properties>} element
+     *
+     * @return The property descriptors that have not been overridden
      */
-    private void setPropertyValues(Rule rule, Element propertiesElt) {
+    private List<PropertyDescriptor<?>> setPropertyValues(Rule rule, Element propertiesElt) {
         Map<String, String> overridden = getPropertyValuesFrom(propertiesElt);
+        List<PropertyDescriptor<?>> notOverriddenDescriptors = new ArrayList<>(rule.getPropertyDescriptors());
 
         for (Entry<String, String> e : overridden.entrySet()) {
             PropertyDescriptor<?> descriptor = rule.getPropertyDescriptor(e.getKey());
             if (descriptor == null) {
-                throw new IllegalArgumentException(
-                        "Cannot set non-existent property '" + e.getKey() + "' on Rule " + rule.getName());
+                throw new IllegalArgumentException("Cannot set non-existent property '" + e.getKey() + "' on Rule " + rule.getName());
             }
 
             setRulePropertyCapture(rule, descriptor, e.getValue());
+            notOverriddenDescriptors.remove(descriptor);
         }
+
+        return notOverriddenDescriptors;
     }
 
     private <T> void setRulePropertyCapture(Rule rule, PropertyDescriptor<T> descriptor, String value) {
@@ -310,26 +348,24 @@ public class RuleFactory {
             throw new IllegalArgumentException("No property descriptor factory for type: " + typeId);
         }
 
-        Map<PropertyDescriptorField, String> values = new HashMap<>();
+        Map<PropertyDescriptorField, String> fields = new HashMap<>();
         NamedNodeMap atts = propertyElement.getAttributes();
 
-        /// populate a map of values for an individual descriptor
+        // populate a map of fields from the attributes of the element
+        // an unrecognised field throws an exception
         for (int i = 0; i < atts.getLength(); i++) {
             Attr a = (Attr) atts.item(i);
-            values.put(PropertyDescriptorField.getConstant(a.getName()), a.getValue());
+            fields.put(PropertyDescriptorField.getConstant(a.getName()), a.getValue());
         }
-        
-        if (StringUtils.isBlank(values.get(DEFAULT_VALUE))) {
+
+        if (StringUtils.isBlank(fields.get(DEFAULT_VALUE))) {
             NodeList children = propertyElement.getElementsByTagName(DEFAULT_VALUE.attributeName());
             if (children.getLength() == 1) {
-                values.put(DEFAULT_VALUE, children.item(0).getTextContent());
-            } else {
-                throw new IllegalArgumentException("No value defined!");
+                fields.put(DEFAULT_VALUE, children.item(0).getTextContent());
             }
         }
 
-        // casting is not pretty but prevents the interface from having this method
-        return pdFactory.build(values);
+        return pdFactory.build(fields);
     }
 
     /** Gets the string value from a property node. */
