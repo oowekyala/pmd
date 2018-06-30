@@ -12,6 +12,16 @@
     margin-top: .4cm;
 }
 
+a[data-toggle="tooltip"] .label {
+    /* Get rid of the khaki fill color */
+    color: #ffffff;
+}
+
+.label.big-label {
+    font-size: 100%;
+}
+
+
 /* Offsets contents by the height of the nav bar */
 #topbar-content-offset {
     overflow: scroll;

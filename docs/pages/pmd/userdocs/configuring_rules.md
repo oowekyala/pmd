@@ -63,3 +63,13 @@ Some properties take multiple values (a list), in which case you can provide the
 ```
 
 These properties are referred to as **multivalued properties** in this documentation.
+
+### Required properties
+
+Some properties can have no sensible default value. <!-- TODO explain why when template rules are introduced -->
+For such properties, you *must* provide a value in the XML when referencing
+the rule. If you forget to do so, then the construction of the rule reference
+will fail.
+
+Required properties are documented on the rules with a label indicating
+they have no default value.

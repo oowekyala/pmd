@@ -51,8 +51,9 @@ public class RuleDocGenerator {
     private static final String RULESET_INDEX_FILENAME_PATTERN = "docs/pages/pmd/rules/${language.tersename}/${ruleset.name}.md";
     private static final String RULESET_INDEX_PERMALINK_PATTERN = "pmd_rules_${language.tersename}_${ruleset.name}.html";
 
-    private static final String DEPRECATION_LABEL_SMALL = "<span style=\"border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;\">Deprecated</span> ";
-    private static final String DEPRECATION_LABEL = "<span style=\"border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;\">Deprecated</span> ";
+    private static final String REQUIRED_PROPERTY_LABEL = tooltip("The rule requires this property to be set in the XML", label("danger", "None"));
+    private static final String DEPRECATION_LABEL_SMALL = label("danger", "Deprecated");
+    private static final String DEPRECATION_LABEL = label("danger big-label", "Deprecated");
     private static final String DEPRECATED_RULE_PROPERTY_MARKER = "deprecated!";
 
     private static final String GITHUB_SOURCE_LINK = "https://github.com/pmd/pmd/blob/master/";
@@ -436,7 +437,9 @@ public class RuleDocGenerator {
                             }
 
                             String defaultValue = "";
-                            if (propertyDescriptor.defaultValue() != null) {
+                            if (propertyDescriptor.hasNoDefaultValue()) {
+                                defaultValue = REQUIRED_PROPERTY_LABEL;
+                            } else if (propertyDescriptor.defaultValue() != null) {
                                 if (propertyDescriptor.isMultiValue()) {
                                     @SuppressWarnings("unchecked") // multi valued properties are using a List
                                     MultiValuePropertyDescriptor<List<?>> multiPropertyDescriptor = (MultiValuePropertyDescriptor<List<?>>) propertyDescriptor;
@@ -480,6 +483,16 @@ public class RuleDocGenerator {
                 System.out.println("Generated " + path);
             }
         }
+    }
+
+
+    private static String tooltip(String tooltipText, String wrappedElement) {
+        return "<a href='#' data-toggle='tooltip' data-original-title='" + tooltipText + "'>" + wrappedElement + "</a>";
+    }
+
+
+    private static String label(String labelClass, String labelTitle) {
+        return "<span class='label label-" + labelClass + "'>" + labelTitle + "</span>";
     }
 
     private static String stripIndentation(String description) {
