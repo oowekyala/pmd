@@ -52,7 +52,7 @@ public class RuleDocGenerator {
     private static final String RULESET_INDEX_PERMALINK_PATTERN = "pmd_rules_${language.tersename}_${ruleset.name}.html";
 
     private static final String REQUIRED_PROPERTY_LABEL = tooltip("The rule requires this property to be set in the XML", label("danger", "None"));
-    private static final String DEPRECATION_LABEL_SMALL = label("danger", "Deprecated");
+    private static final String DEPRECATION_LABEL_SMALL = label("danger", "Deprecated") + " ";
     private static final String DEPRECATION_LABEL = label("danger big-label", "Deprecated");
     private static final String DEPRECATED_RULE_PROPERTY_MARKER = "deprecated!";
 
@@ -433,7 +433,7 @@ public class RuleDocGenerator {
                             String description = propertyDescriptor.description();
                             if (description != null && description.toLowerCase(Locale.ROOT).startsWith(DEPRECATED_RULE_PROPERTY_MARKER)) {
                                 description = DEPRECATION_LABEL_SMALL
-                                        + description.substring(DEPRECATED_RULE_PROPERTY_MARKER.length());
+                                        + description.substring(DEPRECATED_RULE_PROPERTY_MARKER.length()).trim();
                             }
 
                             String defaultValue = "";
@@ -551,12 +551,7 @@ public class RuleDocGenerator {
 
     private List<Rule> getSortedRules(RuleSet ruleset) {
         List<Rule> sortedRules = new ArrayList<>(ruleset.getRules());
-        Collections.sort(sortedRules, new Comparator<Rule>() {
-            @Override
-            public int compare(Rule o1, Rule o2) {
-                return o1.getName().compareToIgnoreCase(o2.getName());
-            }
-        });
+        sortedRules.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
         return sortedRules;
     }
 

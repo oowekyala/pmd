@@ -611,8 +611,7 @@ public final class StringUtil {
      * the first letter of each word except the first.
      *
      * <p>If the first word starts with an uppercase
-     * letter, it's kept as is. This method can thus
-     * be used for Pascal case too.
+     * letter, it's kept as is.
      *
      * @param name The string to convert
      *
@@ -620,6 +619,20 @@ public final class StringUtil {
      */
     public static String toCamelCase(String name) {
         return toCamelCase(name, false);
+    }
+
+
+    /**
+     * Converts the given string to Pascal case,
+     * that is, removing all spaces, and capitalising
+     * the first letter of each word including the first.
+     *
+     * @param name The string to convert
+     *
+     * @return The string converted to Camel case
+     */
+    public static String toPascalCase(String name) {
+        return toCamelCase(StringUtils.capitalize(name), false);
     }
 
 

@@ -333,4 +333,9 @@ public abstract class AbstractDelegateRule implements Rule {
     public boolean hasDescriptor(PropertyDescriptor<?> descriptor) {
         return rule.hasDescriptor(descriptor);
     }
+
+    @Override
+    public boolean isCompletelyConfigured() {
+        return rule.isCompletelyConfigured();
+    }
 }

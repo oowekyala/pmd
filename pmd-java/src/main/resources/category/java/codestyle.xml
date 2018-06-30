@@ -1615,6 +1615,24 @@ public class Something {
         </example>
     </rule>
 
+
+    <rule name="ClassHierarchyNamingConventions"
+          language="java"
+          since="4.0"
+          class="net.sourceforge.pmd.lang.java.rule.codestyle.ClassHierarchyNamingConventionsRule"
+          message="The Local Home interface of a Session EJB should be suffixed by 'LocalHome'"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_codestyle.html#classhierarchynamingconventions">
+        <description>
+            TODO
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+            TODO
+            ]]>
+        </example>
+    </rule>
+
     <rule name="SuspiciousConstantFieldName"
           language="java"
           since="2.0"

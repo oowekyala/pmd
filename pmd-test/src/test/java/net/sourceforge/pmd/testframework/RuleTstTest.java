@@ -43,6 +43,7 @@ public class RuleTstTest {
         Report report = new Report();
         when(rule.getLanguage()).thenReturn(dummyLanguage.getLanguage());
         when(rule.getName()).thenReturn("test rule");
+        when(rule.isCompletelyConfigured()).thenReturn(true);
 
         ruleTester.runTestFromString("the code", rule, report, dummyLanguage, false);
 
@@ -55,6 +56,7 @@ public class RuleTstTest {
         verify(rule, times(2)).isRuleChain();
         verify(rule).getMinimumLanguageVersion();
         verify(rule).getMaximumLanguageVersion();
+        verify(rule).isCompletelyConfigured();
         verify(rule).apply(anyList(), any(RuleContext.class));
         verify(rule, times(4)).getName();
         verify(rule).getPropertiesByPropertyDescriptor();

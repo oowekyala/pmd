@@ -6,6 +6,7 @@ package net.sourceforge.pmd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -453,8 +454,18 @@ public abstract class AbstractRuleSetFactoryTest {
             List<PropertyDescriptor<?>> propertyDescriptors2 = rule2.getPropertyDescriptors();
             assertEquals(message + ", Rule property descriptor ", propertyDescriptors1, propertyDescriptors2);
             for (int j = 0; j < propertyDescriptors1.size(); j++) {
-                Object value1 = rule1.getProperty(propertyDescriptors1.get(j));
-                Object value2 = rule2.getProperty(propertyDescriptors2.get(j));
+                PropertyDescriptor<?> descriptor1 = propertyDescriptors1.get(j);
+                PropertyDescriptor<?> descriptor2 = propertyDescriptors2.get(j);
+
+                assertNotNull(descriptor1);
+                assertNotNull(descriptor2);
+                assertEquals(message + ", Rule property required", descriptor1.hasNoDefaultValue(), descriptor2.hasNoDefaultValue());
+                if (descriptor1.hasNoDefaultValue()) {
+                    continue;
+                }
+
+                Object value1 = rule1.getProperty(descriptor1);
+                Object value2 = rule2.getProperty(descriptor2);
                 // special case for Pattern, there is no equals method
                 if (propertyDescriptors1.get(j).type() == Pattern.class) {
                     value1 = ((Pattern) value1).pattern();

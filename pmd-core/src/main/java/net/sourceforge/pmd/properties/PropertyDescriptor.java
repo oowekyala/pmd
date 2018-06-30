@@ -180,4 +180,16 @@ public interface PropertyDescriptor<T> extends Comparable<PropertyDescriptor<?>>
      */
     boolean isDefinedExternally();
 
+
+    /**
+     * Returns true if the given object is a property descriptor
+     * with the same name as this one.
+     *
+     * @param o Object to compare
+     *
+     * @return True if these objects are considered equal w.r.t. their name
+     */
+    @Override
+    boolean equals(Object o);
+
 }

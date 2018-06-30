@@ -468,4 +468,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
         
         return rule;
     }
+
+
+    @Override
+    public boolean isCompletelyConfigured() {
+        for (PropertyDescriptor<?> desc : propertyDescriptors) {
+            if (desc.hasNoDefaultValue() && !hasPropertyBeenSet(desc)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

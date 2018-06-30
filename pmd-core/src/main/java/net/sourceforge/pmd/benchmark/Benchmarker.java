@@ -179,6 +179,9 @@ public final class Benchmarker {
 
         final RuleSetFactory factory = new RuleSetFactory();
         for (Rule rule: ruleSet.getRules()) {
+            if (!rule.isCompletelyConfigured()) {
+                continue;
+            }
             if (debug) {
                 System.out.println("Starting " + rule.getName());
             }

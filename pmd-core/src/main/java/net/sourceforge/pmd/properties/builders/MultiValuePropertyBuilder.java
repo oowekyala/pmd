@@ -7,6 +7,7 @@ package net.sourceforge.pmd.properties.builders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.properties.MultiValuePropertyDescriptor;
@@ -21,7 +22,7 @@ import net.sourceforge.pmd.properties.MultiValuePropertyDescriptor;
 public abstract class MultiValuePropertyBuilder<V, T extends MultiValuePropertyBuilder<V, T>>
     extends PropertyDescriptorBuilder<List<V>, T> {
 
-    protected List<V> defaultValues;
+    protected List<V> defaultValues = Collections.emptyList();
     protected char multiValueDelimiter = MultiValuePropertyDescriptor.DEFAULT_DELIMITER;
 
 

@@ -496,7 +496,7 @@ public class RuleSet implements ChecksumAware {
     public void apply(List<? extends Node> acuList, RuleContext ctx) {
         try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.RULE)) {
             for (Rule rule : rules) {
-                if (!rule.isRuleChain() && applies(rule, ctx.getLanguageVersion())) {
+                if (!rule.isRuleChain() && applies(rule, ctx.getLanguageVersion()) && rule.isCompletelyConfigured()) {
 
                     try (TimedOperation rto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getName())) {
                         rule.apply(acuList, ctx);
@@ -663,7 +663,11 @@ public class RuleSet implements ChecksumAware {
 
         while (iter.hasNext()) {
             Rule rule = iter.next();
-            if (rule.dysfunctionReason() != null) {
+            if (!rule.isCompletelyConfigured()) {
+                // Rule with required properties
+                // Not dysfunctional, but cannot be executed
+                iter.remove();
+            } else if (rule.dysfunctionReason() != null) {
                 iter.remove();
                 collector.add(rule);
             }

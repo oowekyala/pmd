@@ -93,7 +93,7 @@ public abstract class AbstractAntTestHelper {
 
 
     public void assertContains(String text, String toFind) {
-        Assert.assertTrue("Expected to find \"" + toFind + "\", but it's missing",
+        Assert.assertTrue("Expected to find \"" + toFind + "\", but it's missing.\nOUTPUT:\n\n" + text,
                           text.contains(toFind));
     }
 

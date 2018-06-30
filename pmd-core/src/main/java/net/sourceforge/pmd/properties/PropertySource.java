@@ -56,8 +56,8 @@ public interface PropertySource {
 
 
     /**
-     * Returns true if the given property has been set to a value,
-     * that is, it doesn't use the default value of the descriptor.
+     * Returns true if the given property has been set to a value
+     * from the XML.
      *
      * @param propertyDescriptor The descriptor
      *

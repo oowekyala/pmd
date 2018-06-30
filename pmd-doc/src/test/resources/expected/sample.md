@@ -10,7 +10,7 @@ language: Java
 ---
 ## DeprecatedSample
 
-<span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span> 
+<span class='label label-danger big-label'>Deprecated</span>
 
 **Since:** PMD 1.0
 
@@ -66,7 +66,7 @@ public class JumbledIncrementerRule1 {
 |----|-------------|-----------|-----------|
 |sampleAdditionalProperty|the value|This is a additional property for tests|no|
 |sampleMultiStringProperty|Value1 \| Value2|Test property with multiple strings|yes. Delimiter is '\|'.|
-|sampleDeprecatedProperty|test|<span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  This is a sample deprecated property for tests|no|
+|sampleDeprecatedProperty|test|<span class='label label-danger'>Deprecated</span> This is a sample deprecated property for tests|no|
 
 **Use this rule by referencing it:**
 ``` xml
@@ -75,7 +75,7 @@ public class JumbledIncrementerRule1 {
 
 ## MovedRule
 
-<span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span> 
+<span class='label label-danger big-label'>Deprecated</span>
 
 The rule has been moved to another ruleset. Use instead: [JumbledIncrementer](pmd_rules_java_sample2.html#jumbledincrementer)
 
@@ -166,7 +166,7 @@ public class Foo {      // perfect, both methods provided
 
 ## RenamedRule
 
-<span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span> 
+<span class='label label-danger big-label'>Deprecated</span>
 
 This rule has been renamed. Use instead: [JumbledIncrementer](#jumbledincrementer)
 
@@ -206,7 +206,7 @@ public class JumbledIncrementerRule1 {
 |----|-------------|-----------|-----------|
 |sampleAdditionalProperty|the value|This is a additional property for tests|no|
 |sampleMultiStringProperty|Value1 \| Value2|Test property with multiple strings|yes. Delimiter is '\|'.|
-|sampleDeprecatedProperty|test|<span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  This is a sample deprecated property for tests|no|
+|sampleDeprecatedProperty|test|<span class='label label-danger'>Deprecated</span> This is a sample deprecated property for tests|no|
 
 **Use this rule by referencing it:**
 ``` xml

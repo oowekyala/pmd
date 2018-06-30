@@ -414,4 +414,17 @@ public interface Rule extends PropertySource {
      * @return A new exact copy of this rule
      */
     Rule deepCopy();
+
+
+    /**
+     * Returns true if this rule received enough config info to be run.
+     * Some rules are incomplete by design, because they have properties
+     * that have no default value. References to such rules are required
+     * to fill-in the missing properties, but the original rule definition
+     * node is missing some data and cannot be run.
+     *
+     * @return Whether the rule is completely configured or not
+     */
+    boolean isCompletelyConfigured();
+
 }
