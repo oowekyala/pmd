@@ -32,7 +32,7 @@ public class XPathRule extends AbstractRule {
 
     public static final StringProperty XPATH_DESCRIPTOR = StringProperty.named("xpath")
             .desc("XPath expression")
-            .defaultValue("")
+            .isRequired()
             .uiOrder(1.0f)
             .build();
 

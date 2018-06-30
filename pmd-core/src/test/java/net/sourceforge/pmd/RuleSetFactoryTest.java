@@ -223,7 +223,7 @@ public class RuleSetFactoryTest {
                 + "  <description>ruleset desc</description>\n"
                 + "     <rule deprecated=\"true\" ref=\"NewName\" name=\"OldName\"/>"
                 + "     <rule name=\"NewName\" message=\"m\" class=\"net.sourceforge.pmd.lang.rule.XPathRule\" language=\"dummy\">"
-                + "         <description>d</description>\n" + "         <priority>2</priority>\n" + "     </rule>"
+                + "         <description>d</description>\n" + "         <priority>2</priority>\n" + "<properties><property name='xpath' value='//XP'/></properties></rule>"
                 + "</ruleset>");
         assertEquals(1, rs.getRules().size());
         Rule rule = rs.getRuleByName("NewName");

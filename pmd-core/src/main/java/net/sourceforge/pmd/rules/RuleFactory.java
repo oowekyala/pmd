@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.rules;
 
 import static net.sourceforge.pmd.properties.PropertyDescriptorField.DEFAULT_VALUE;
+import static net.sourceforge.pmd.properties.PropertyDescriptorField.IS_REQUIRED;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -119,12 +120,9 @@ public class RuleFactory {
             }
         }
 
-        if (referencedRule instanceof RuleReference) {
-            // there's at least one level of indirection
-            for (PropertyDescriptor<?> descriptor : referencedRule.getPropertyDescriptors()) {
-                if (referencedRule.hasPropertyBeenSet(descriptor)) {
-                    notOverridden.remove(descriptor);
-                }
+        for (PropertyDescriptor<?> descriptor : referencedRule.getPropertyDescriptors()) {
+            if (referencedRule.hasPropertyBeenSet(descriptor)) {
+                notOverridden.remove(descriptor);
             }
         }
 
@@ -265,9 +263,12 @@ public class RuleFactory {
 
         for (int i = 0; i < propertiesNode.getChildNodes().getLength(); i++) {
             Node node = propertiesNode.getChildNodes().item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE && PROPERTY.equals(node.getNodeName())) {
+            if (node.getNodeType() == Node.ELEMENT_NODE && PROPERTY.equals(node.getNodeName())
+                    && !(isPropertyDefinition((Element) node) && Boolean.parseBoolean(((Element) node).getAttribute(IS_REQUIRED.attributeName())))) {
                 Entry<String, String> overridden = getPropertyValue((Element) node);
-                overridenProperties.put(overridden.getKey(), overridden.getValue());
+                if (overridden.getValue() != null) {
+                    overridenProperties.put(overridden.getKey(), overridden.getValue());
+                }
             }
         }
 
@@ -379,23 +380,34 @@ public class RuleFactory {
         return pdFactory.build(fields);
     }
 
-    /** Gets the string value from a property node. */
+    /** Gets the string value from a property node. The node is not the definition of a required property. */
     private static String valueFrom(Element propertyNode) {
-        String strValue = propertyNode.getAttribute(DEFAULT_VALUE.attributeName());
-
-        if (StringUtils.isNotBlank(strValue)) {
-            return strValue;
-        }
 
         final NodeList nodeList = propertyNode.getChildNodes();
 
+        String elemValue = null;
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE && "value".equals(node.getNodeName())) {
-                return parseTextNode(node);
+                if (elemValue == null) {
+                    elemValue = parseTextNode(node);
+                } else {
+                    throw new IllegalArgumentException("Several value elements found for the same property");
+                }
             }
         }
-        return null;
+
+        boolean hasAttr = propertyNode.hasAttribute(DEFAULT_VALUE.attributeName());
+
+        if (elemValue == null && hasAttr) {
+            return propertyNode.getAttribute(DEFAULT_VALUE.attributeName());
+        } else if (elemValue != null && !hasAttr) {
+            return elemValue;
+        } else if (elemValue == null && !hasAttr) {
+            throw new IllegalArgumentException("A property must have a value unless it is the definition of a required property");
+        } else {
+            throw new IllegalArgumentException("Found a value attribute and a value element for the same property");
+        }
     }
 
     private static boolean hasAttributeSetTrue(Element element, String attributeId) {
