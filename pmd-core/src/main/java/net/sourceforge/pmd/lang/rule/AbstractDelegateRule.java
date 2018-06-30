@@ -17,7 +17,6 @@ import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.properties.MultiValuePropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertySource;
 
 /**
  * Base class for Rule implementations which delegate to another Rule instance.
@@ -74,9 +73,6 @@ public abstract class AbstractDelegateRule implements Rule {
         rule.setDeprecated(deprecated);
     }
 
-    /**
-     * @see PropertySource#dysfunctionReason()
-     */
     @Override
     public String dysfunctionReason() {
         return rule.dysfunctionReason();
@@ -213,6 +209,10 @@ public abstract class AbstractDelegateRule implements Rule {
         rule.setProperty(propertyDescriptor, values);
     }
 
+    @Override
+    public boolean hasPropertyBeenSet(PropertyDescriptor<?> propertyDescriptor) {
+        return rule.hasPropertyBeenSet(propertyDescriptor);
+    }
 
     @Override
     public Map<PropertyDescriptor<?>, Object> getPropertiesByPropertyDescriptor() {

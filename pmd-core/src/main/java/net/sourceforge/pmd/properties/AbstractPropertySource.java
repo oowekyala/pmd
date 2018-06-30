@@ -120,6 +120,12 @@ public abstract class AbstractPropertySource implements PropertySource {
 
 
     @Override
+    public boolean hasPropertyBeenSet(PropertyDescriptor<?> propertyDescriptor) {
+        return propertyValuesByDescriptor.containsKey(propertyDescriptor);
+    }
+
+
+    @Override
     public <T> void setProperty(PropertyDescriptor<T> propertyDescriptor, T value) {
         checkValidPropertyDescriptor(propertyDescriptor);
         if (value instanceof List) {

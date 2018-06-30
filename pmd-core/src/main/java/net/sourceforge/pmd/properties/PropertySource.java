@@ -31,7 +31,7 @@ public interface PropertySource {
      *
      * @param name The name of the property.
      *
-     * @return The PropertyDescriptor for the named property, <code>null</code> if there is no such property defined.
+     * @return The PropertyDescriptor for the named property, {@code null} if there is no such property defined.
      */
     PropertyDescriptor<?> getPropertyDescriptor(String name);
 
@@ -54,6 +54,16 @@ public interface PropertySource {
      */
     <T> T getProperty(PropertyDescriptor<T> propertyDescriptor);
 
+
+    /**
+     * Returns true if the given property has been set to a value,
+     * that is, it doesn't use the default value of the descriptor.
+     *
+     * @param propertyDescriptor The descriptor
+     *
+     * @return True if the property has been set
+     */
+    boolean hasPropertyBeenSet(PropertyDescriptor<?> propertyDescriptor);
 
     /**
      * Set the property value specified (will be type-checked)

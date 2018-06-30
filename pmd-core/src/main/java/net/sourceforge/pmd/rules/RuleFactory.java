@@ -93,6 +93,8 @@ public class RuleFactory {
             ruleReference.setExternalInfoUrl(ruleElement.getAttribute(EXTERNAL_INFO_URL));
         }
 
+        List<PropertyDescriptor<?>> notOverridden = new ArrayList<>(referencedRule.getPropertyDescriptors());
+
         for (int i = 0; i < ruleElement.getChildNodes().getLength(); i++) {
             Node node = ruleElement.getChildNodes().item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -107,12 +109,7 @@ public class RuleFactory {
                     ruleReference.setPriority(RulePriority.valueOf(Integer.parseInt(parseTextNode(node))));
                     break;
                 case PROPERTIES:
-                    List<PropertyDescriptor<?>> notOverridden = setPropertyValues(ruleReference, (Element) node);
-
-                    String message = requiredPropertyDescriptorsToString(notOverridden);
-                    if (!message.isEmpty()) {
-                        throw new IllegalArgumentException("Cannot set non-existent " + message + " on rule " + ruleReference.getName());
-                    }
+                    notOverridden = setPropertyValues(ruleReference, (Element) node);
                     break;
                 default:
                     throw new IllegalArgumentException("Unexpected element <" + node.getNodeName()
@@ -120,6 +117,20 @@ public class RuleFactory {
                                                        + ruleReference.getName());
                 }
             }
+        }
+
+        if (referencedRule instanceof RuleReference) {
+            // there's at least one level of indirection
+            for (PropertyDescriptor<?> descriptor : referencedRule.getPropertyDescriptors()) {
+                if (referencedRule.hasPropertyBeenSet(descriptor)) {
+                    notOverridden.remove(descriptor);
+                }
+            }
+        }
+
+        String message = requiredPropertyDescriptorsToString(notOverridden);
+        if (!message.isEmpty()) {
+            throw new IllegalArgumentException("The " + message + " required and must be provided with a value in " + ruleReference.getName());
         }
 
         return ruleReference;
@@ -237,8 +248,8 @@ public class RuleFactory {
         if (names.isEmpty()) {
             return "";
         } else {
-            return names.size() == 1 ? "property " + names.get(0)
-                                     : "properties " + StringUtils.join(names, ", ");
+            return names.size() == 1 ? "property " + names.get(0) + " is"
+                                     : "properties " + StringUtils.join(names, ", ") + " are";
         }
     }
 

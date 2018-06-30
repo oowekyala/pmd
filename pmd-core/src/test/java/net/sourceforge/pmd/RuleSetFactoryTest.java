@@ -12,6 +12,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -19,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
@@ -27,6 +30,7 @@ import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.rule.MockRule;
 import net.sourceforge.pmd.lang.rule.RuleReference;
+import net.sourceforge.pmd.properties.BooleanProperty;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.util.ResourceLoader;
 
@@ -538,6 +542,124 @@ public class RuleSetFactoryTest {
         assertEquals("Exclude pattern #3", "exclude3", ruleSet.getExcludePatterns().get(2));
     }
 
+
+    @Test
+    public void testRequiredPropertyBuiltFromXPathNotProvided() throws IOException, RuleSetNotFoundException {
+
+        final File tmp = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(tmp, REQUIRED_XML_PROPERTY);
+
+        final String ruleref = "<?xml version='1.0' ?>"
+              + "<ruleset name='test'>"
+              + "   <description>testdesc</description>"
+              + "   <rule ref='" + tmp.getAbsolutePath() + "/MockRuleName' />"
+              + "</ruleset>";
+
+        ex.expect(IllegalArgumentException.class);
+        ex.expectMessage("required"); // the property is not given a value
+
+        loadFirstRule(ruleref);
+    }
+
+
+    @Test
+    public void testRequiredPropertyBuiltFromXPath() throws IOException, RuleSetNotFoundException {
+
+        final File tmp = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(tmp, REQUIRED_XML_PROPERTY);
+
+        final String ruleref = "<?xml version='1.0' ?>"
+                + "<ruleset name='test'>"
+                + "   <description>testdesc</description>"
+                + "   <rule ref='" + tmp.getAbsolutePath() + "/MockRuleName' >"
+                + "     <properties>"
+                + "         <property name='prop' value='hallo' />"
+                + "     </properties>"
+                + "   </rule>"
+                + "</ruleset>";
+
+        Rule r = loadFirstRule(ruleref);
+        assertEquals("hallo", r.getProperty(r.getPropertyDescriptor("prop")));
+
+    }
+
+
+    @Test
+    public void testRequiredPropertyBuiltFromXPathWithIndirection() throws IOException, RuleSetNotFoundException {
+
+        final File ruleDef = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(ruleDef, REQUIRED_XML_PROPERTY);
+
+        final String firstRef = "<?xml version='1.0' ?>"
+                + "<ruleset name='test'>"
+                + "   <description>testdesc</description>"
+                + "   <rule ref='" + ruleDef.getAbsolutePath() + "/MockRuleName' >"
+                + "     <properties>"
+                // property provided in first reference
+                + "         <property name='prop' value='hallo' />"
+                + "     </properties>"
+                + "   </rule>"
+                + "</ruleset>";
+
+        final File firstRefRSet = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(firstRefRSet, firstRef);
+
+        final String finalRef = "<?xml version='1.0' ?>"
+              + "<ruleset name='test'>"
+              + "   <description>testdesc</description>"
+              + // the property is not defined here, but was already provided at a previous level of indirection
+                "   <rule ref='" + firstRefRSet.getAbsolutePath() + "/MockRuleName' />"
+              + "</ruleset>";
+
+        Rule r = loadFirstRule(finalRef);
+        assertEquals("hallo", r.getProperty(r.getPropertyDescriptor("prop")));
+    }
+
+    @Test
+    public void testJavaRequiredProperty() throws IOException, RuleSetNotFoundException {
+
+        final File ruleDef = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(ruleDef, REQUIRED_JAVA_PROPERTY);
+
+        // should not throw any exceptions
+        loadRuleSet(REQUIRED_JAVA_PROPERTY);
+
+        final String ruleref = "<?xml version='1.0' ?>"
+                + "<ruleset name='test'>"
+                + "   <description>testdesc</description>"
+                + "   <rule ref='" + ruleDef.getAbsolutePath() + "/MockRuleName' >"
+                + "     <properties>"
+                + "         <property name='" + MockRuleWithRequiredProperty.REQUIRED_NAME + "' value='false' />"
+                + "     </properties>"
+                + "   </rule>"
+                + "</ruleset>";
+
+        Rule r = loadFirstRule(ruleref);
+        assertEquals(false, r.getProperty(r.getPropertyDescriptor(MockRuleWithRequiredProperty.REQUIRED_NAME)));
+    }
+
+    @Test
+    public void testJavaRequiredPropertyNotProvided() throws IOException, RuleSetNotFoundException {
+
+        final File ruleDef = File.createTempFile("pmdtest", ".xml");
+        FileUtils.write(ruleDef, REQUIRED_JAVA_PROPERTY);
+
+        // should not throw any exceptions
+        loadRuleSet(REQUIRED_JAVA_PROPERTY);
+
+        final String ruleref = "<?xml version='1.0' ?>"
+                + "<ruleset name='test'>"
+                + "   <description>testdesc</description>"
+                + "   <rule ref='" + ruleDef.getAbsolutePath() + "/MockRuleName' />"
+                + "</ruleset>";
+
+        ex.expect(IllegalArgumentException.class);
+        ex.expectMessage("required"); // the property is not given a value
+
+        loadFirstRule(ruleref);
+    }
+
+
     /**
      * Rule reference can't be resolved - ref is used instead of class and the
      * class is old (pmd 4.3 and not pmd 5).
@@ -749,6 +871,35 @@ public class RuleSetFactoryTest {
         assertTrue(logging.getLog().contains("RuleSet description is missing."));
     }
 
+
+    private static final String REQUIRED_XML_PROPERTY = "<?xml version='1.0' ?>"
+          + "<ruleset name='test'>"
+          + "   <description>testdesc</description>"
+          + "   <rule name='MockRuleName'"
+          + "         message='avoid the mock rule'"
+          + "         class='net.sourceforge.pmd.lang.rule.XPathRule'>"
+          + "       <priority>3</priority>"
+          + "       <description>testdesc2</description>"
+          + "       <properties>"
+          + "           <property name='prop' type='String' description='foo' required='true' />"
+          + "           <property name='xpath' description='test' type='String'>"
+          + "               <value><![CDATA[ //Block ]]></value>"
+          + "           </property>"
+          + "       </properties>"
+          + "   </rule>"
+          + "</ruleset>";
+
+    private static final String REQUIRED_JAVA_PROPERTY = "<?xml version='1.0' ?>"
+          + "<ruleset name='test'>"
+          + "   <description>testdesc</description>"
+          + "   <rule name='MockRuleName'"
+          + "         message='avoid the mock rule'"
+          + "         class='net.sourceforge.pmd.RuleSetFactoryTest$MockRuleWithRequiredProperty'>"
+          + "       <priority>3</priority>"
+          + "       <description>testdesc2</description>"
+          + "   </rule>"
+          + "</ruleset>";
+
     private static final String REF_OVERRIDE_ORIGINAL_NAME = "<?xml version=\"1.0\"?>" + PMD.EOL
             + "<ruleset name=\"test\">" + PMD.EOL + " <description>testdesc</description>" + PMD.EOL + " <rule "
             + PMD.EOL + "  ref=\"net/sourceforge/pmd/TestRuleset1.xml/MockRule1\" message=\"TestMessageOverride\"> "
@@ -959,5 +1110,15 @@ public class RuleSetFactoryTest {
                 }
             }
         };
+    }
+
+    public static class MockRuleWithRequiredProperty extends MockRule {
+
+        private static final String REQUIRED_NAME = "fooReq";
+
+
+        public MockRuleWithRequiredProperty() {
+            definePropertyDescriptor(BooleanProperty.named(REQUIRED_NAME).desc("description").isRequired().build());
+        }
     }
 }
