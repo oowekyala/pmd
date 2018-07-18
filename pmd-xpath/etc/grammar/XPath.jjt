@@ -1,0 +1,789 @@
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+
+  CACHE_TOKENS = true;
+  STATIC = false;
+  USER_CHAR_STREAM = true;
+  JDK_VERSION = "1.6";
+
+  MULTI = true;
+  VISITOR = true;
+  NODE_USES_PARSER = true;
+  TRACK_TOKENS = true;
+  NODE_PACKAGE = "net.sourceforge.pmd.lang.xpath.ast";
+
+   DEBUG_PARSER = true;
+  // DEBUG_LOOKAHEAD = true;
+}
+
+PARSER_BEGIN(XPathParser)
+
+import net.sourceforge.pmd.lang.ast.CharStream;
+
+public class XPathParser {
+
+    private void throwParseException(String message) {
+        ParseException exc = generateParseException();
+        throw new ParseException(exc.getMessage() + message);
+    }
+
+
+    void checkVarBinding(boolean isLetContext, boolean wasLetFound) {
+        String expected = isLetContext ? ":=" : "in";
+        String actual = wasLetFound ? ":=" : "in";
+
+        if (isLetContext != wasLetFound) {
+          throwParseException("Variable binding expected '" + expected + "', actual '" + actual);
+        }
+    }
+
+}
+PARSER_END(XPathParser)
+
+TOKEN_MGR_DECLS :
+{
+    private int commentDepth = 0;
+}
+
+/* WHITE SPACE */
+
+SPECIAL_TOKEN :
+{
+  " " | "\t" | "\n" | "\r" | "\f"
+}
+
+SKIP :
+{
+  <"(:"> { commentDepth++; } : IN_XPATH_COMMENT
+}
+
+<IN_XPATH_COMMENT> SKIP :
+{
+  // FIXME Nested comments cannot be expressed with regex
+  //  <XPATH_COMMENT: "(:" > { commentDepth++; }
+  // |
+  <XPATH_COMMENT: ":)" >
+  {
+    commentDepth--;
+    if (commentDepth == 0) {
+      SwitchTo(DEFAULT);
+    }
+  }
+}
+
+<IN_XPATH_COMMENT> MORE :
+{
+  < ~[] >
+}
+
+/* RESERVED WORDS */
+
+TOKEN :
+{
+// Axes
+ < SELF: "self" >
+| < CHILD: "child" >
+| < ATTRIBUTE: "attribute" >
+| < DESCENDANT: "descendant" >
+| < DESCENDANT_OR_SELF: "descendant-or-self" >
+| < ANCESTOR: "ancestor" >
+| < ANCESTOR_OR_SELF: "ancestor-or-self" >
+| < FOLLOWING: "following" >
+| < FOLLOWING_SIBLING: "following-sibling" >
+| < NAMESPACE: "namespace" >
+| < PARENT: "parent" >
+| < PRECEDING: "preceding" >
+| < PRECEDING_SIBLING: "preceding-sibling" >
+
+// Operators
+| < OR: "or" >
+| < AND: "and" >
+| < NOT: "not" >
+| < DIV: "div" >
+| < IDIV: "idiv" >
+| < MOD: "mod" >
+| < NE: "ne" >
+| < EQ: "eq" >
+| < LT: "lt" >
+| < LE: "le" >
+| < GT: "gt" >
+| < GE: "ge" >
+
+// Keywords
+| < SOME: "some" >
+| < IN: "in" >
+| < SATISFIES: "satisfies" >
+| < AS: "as" >
+| < IS: "is" >
+| < FOR: "for" >
+| < EVERY: "every" >
+| < CAST: "cast" >
+| < CASTABLE: "castable" >
+| < TREAT: "treat" >
+| < INSTANCE: "instance" >
+| < OF: "of" >
+| < TO: "to" >
+| < IF: "if" >
+| < THEN: "then" >
+| < ELSE: "else" >
+| < RETURN: "return" >
+| < LET: "let" >
+| < INTERSECT: "intersect" >
+| < EXCEPT: "except" >
+| < UNION: "union" >
+
+// Node kinds
+| < NODE: "node" >
+| < DOCUMENT_NODE: "document-node" >
+| < TEXT: "text" >
+| < COMMENT: "comment" >
+| < NAMESPACE_NODE: "namespace-node" >
+| < PROCESSING_INSTRUCTION: "processing-instruction" >
+// | < ATTRIBUTE: "attribute" > // also a node kind, but already defined
+| < SCHEMA_ATTRIBUTE: "schema-attribute" >
+| < ELEMENT: "element" >
+| < SCHEMA_ELEMENT: "schema-element" >
+| < FUNCTION: "function" >
+
+// Separators
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < DOUBLE_COLON: "::" >
+| < COMMA: "," >
+| < DOT: "." >
+| < AT: "@" >
+| < DOLLAR: "$" >
+}
+
+
+
+
+/* LITERALS */
+
+
+TOKEN :
+{
+  < STRING_LITERAL: "\"" ("\"\"" | ~["\""])* "\"" | "'" ("''" | ~["'"])* "'" >
+|
+  < NUMERIC_LITERAL: <INTEGER_LITERAL> | <DECIMAL_LITERAL> | <DOUBLE_LITERAL> >
+|
+  < BRACED_URI_LITERAL: "Q" "{" ~["{", "}"] "}" >
+|
+  < #DIGITS: (["0"-"9"])+ >
+|
+  < INTEGER_LITERAL: <DIGITS> >
+|
+  < #DECIMAL_LITERAL: ("." <DIGITS>) | (<DIGITS> ("." (["0"-"9"])*)) >
+|
+  < #DOUBLE_LITERAL: (("." <DIGITS>) | (<DIGITS> ("." (["0"-"9"])*)?)) ["e","E"] (["+","-"])? <DIGITS> >
+}
+
+/* NAMES */
+
+TOKEN :
+{
+  // The actual lexical grammar for NCName is: any name except <CHAR>* ":" <CHAR>*
+  // This is not easily representable and is left for future work if needed
+  < NCNAME: <NAME_START_CHAR_NO_COLON> (<NAME_CHAR_NO_COLON>)* >
+|
+  < EQNAME: <NCNAME> (":" <NCNAME>)? | <BRACED_URI_LITERAL> <NCNAME> >
+|
+  < NS_ATT_NAME: "xmlns:" <NCNAME> | "xmlns" >
+|
+  < #NAME_START_CHAR_NO_COLON: [
+    "A"-"Z",
+    "a"-"z",
+    "_",
+    "\u00c0"-"\u00d6",
+    "\u00d8"-"\u00f6",
+    "\u00f8"-"\u02ff",
+    "\u0370"-"\u037d",
+    "\u037f"-"\u1fff",
+    "\u200c"-"\u200d",
+    "\u2070"-"\u218f",
+    "\u2c00"-"\u2fef",
+    "\u3001"-"\ud7ff",
+    "\uf900"-"\ufdcf",
+    "\ufdf0"-"\ufffd",
+    "\u1000"-"\uefff"
+  ] >
+|
+  < #NAME_CHAR_NO_COLON: <NAME_START_CHAR_NO_COLON> | [
+  "-",
+  ".",
+  "0"-"9",
+  "\u00b7",
+  "\u0300"-"\u036f",
+  "\u203f"-"\u2040"
+  ] >
+}
+
+
+
+/*****************************************
+ * THE XPATH LANGUAGE GRAMMAR STARTS HERE *
+ *****************************************/
+
+ASTXPathRoot XPathRoot() :
+{}
+{
+  Expr() <EOF> { return jjtThis; }
+}
+
+void Expr() :
+{}
+{
+  VoidSingleExpr() ("," VoidSingleExpr() )*
+}
+
+// This is a shorthand for "An Expr with necessarily one child"
+void ExprSingle() #Expr:
+{}
+{
+    VoidSingleExpr()
+}
+
+// This factorises the two
+void VoidSingleExpr() #void:
+{}
+{
+    ForExpr()
+  | LetExpr()
+  | QuantifiedExpr()
+  | IfExpr()
+  | OrExpr()
+}
+
+
+
+void ForExpr():
+{}
+{
+ "for" VarBindingList(false) "return" ExprSingle()
+}
+
+void LetExpr():
+{}
+{
+ "let" VarBindingList(true) "return" ExprSingle()
+}
+
+void QuantifiedExpr():
+{}
+{
+  ("some" { jjtThis.setUniversallyQuantified(false); }| "every" {jjtThis.setUniversallyQuantified(true);})
+  VarBindingList(false)
+  "satisfies" ExprSingle()
+}
+
+void VarBindingList(boolean isLetCtx):
+{}
+{
+    VarBinding(isLetCtx) ("," VarBinding(isLetCtx))*
+}
+
+
+
+void VarBinding(boolean isLet):
+{}
+{
+  "$" VarName() { jjtThis.setVarName(token.getImage()); }
+  (<IN> {checkVarBinding(isLet, false);} | ":=" {checkVarBinding(isLet, true);})
+  ExprSingle()
+}
+
+void IfExpr():
+{}
+{
+  "if" "(" Expr() ")" "then" ExprSingle() "else" ExprSingle()
+}
+
+void OrExpr() #OrExpr(>1):
+{}
+{
+  AndExpr() ( "or" AndExpr() )*
+}
+
+void AndExpr() #AndExpr(>1):
+{}
+{
+  ComparisonExpr() ( "and" ComparisonExpr() )*
+}
+
+void ComparisonExpr() #ComparisonExpr(>1):
+{String operator = null;}
+{
+  StringConcatExpr()
+  (
+    (operator = ComparisonOperator()) StringConcatExpr() {jjtThis.setOperator(operator);}
+  )?
+}
+
+String ComparisonOperator() #void: // TODO store operator, do that in the Java node
+{}
+{
+   (  "=" | "!=" | "<" | "<=" | ">" | ">="
+   |  "ne" | "eq" | "lt" | "le" | "gt" | "ge"
+   |  "is" | "<<" | ">>"
+   )
+   { return token.getImage(); }
+}
+
+
+
+void StringConcatExpr() #StringConcatExpr(>1):
+{}
+{
+  RangeExpr() ( "||" RangeExpr() )*
+}
+
+void RangeExpr() #RangeExpr(>1):
+{}
+{
+  AdditiveExpr() ( "to" AdditiveExpr() )?
+}
+
+// In the following, we use nodes to represent the operators because there may be several expressions chained.
+// e.g. E1 + E2 - E3 ~> E1 PlusOperator E2 MinusOperator E3
+
+void AdditiveExpr() #AdditiveExpr(>1):
+{}
+{
+  MultiplicativeExpr() ( ( "+" #PlusOperator | "-" #MinusOperator) MultiplicativeExpr() )*
+}
+
+void MultiplicativeExpr() #MultiplicativeExpr(>1):
+{}
+{
+  UnionExpr()
+  (
+    (   "*" #TimesOperator
+      | "div" #DivOperator
+      | "idiv" #IDivOperator
+      | "mod" #ModOperator
+    )
+
+    UnionExpr()
+  )*
+}
+
+void UnionExpr() #UnionExpr(>1):
+{}
+{
+  IntersectExceptExpr()
+  (
+    (   "union" #UnionOperator
+      | "|" #UnionShortHandOperator
+    )
+
+    IntersectExceptExpr()
+  )*
+}
+
+void IntersectExceptExpr() #IntersectExceptExpr(>1):
+{}
+{
+  InstanceofExpr()
+  (
+    (   "intersect" #IntersectOperator
+      | "except" #ExceptOperator
+    )
+
+    InstanceofExpr()
+  )*
+}
+
+
+void InstanceofExpr() #InstanceofExpr(>1):
+{}
+{
+  TreatExpr() ( "instance" "of" SequenceType() )?
+}
+
+void TreatExpr() #TreatExpr(>1):
+{}
+{
+  CastableExpr() ( "treat" "as" SequenceType() )?
+}
+
+void CastableExpr() #CastableExpr(>1):
+{}
+{
+  CastExpr() ( LOOKAHEAD (3) "treat" "as" SingleType() )?
+}
+
+void CastExpr() #CastExpr(>1):
+{}
+{
+  UnaryExpr() ( "cast" "as" SingleType() )?
+}
+
+void UnaryExpr() #UnaryExpr(push):
+{ boolean push = false; }
+{
+      [ < ([ "+" , "-" ])+ > { push = true; } ] MapExpr()
+}
+
+void MapExpr() #MapExpr(>1) :
+{}
+{
+ PathExpr() ( "!" PathExpr() )*
+}
+
+/* PATH EXPRESSIONS */
+
+void PathExpr():
+{}
+{
+    ("/" [ RelativePathExpr() ]) { jjtThis.setRootAnchor(); }
+  | ( "//" RelativePathExpr()) { jjtThis.setDescendantAnchor(); }
+  | RelativePathExpr() { jjtThis.setRelativeAnchor(); }
+}
+
+void RelativePathExpr() #void:
+{}
+{
+  StepExpr() (("/" #ChildStep | "//" #DescendantStep) StepExpr())* // TODO save the symbol
+}
+
+void StepExpr():
+{}
+{
+    PostfixExpr() | AxisStep()
+}
+
+void AxisStep():
+{}
+{
+ (ReverseStep() | ForwardStep()) PredicateList()
+}
+
+void ForwardStep():
+{}
+{
+  LOOKAHEAD(2) (ForwardAxis() NodeTest()) | AbbrevForwardStep()
+}
+
+void ForwardAxis():
+{}
+{
+    ( <SELF>
+    | <CHILD>
+    | <ATTRIBUTE>
+    | <DESCENDANT>
+    | <DESCENDANT_OR_SELF>
+    | <FOLLOWING>
+    | <FOLLOWING_SIBLING>
+    | <NAMESPACE>
+    )
+    { jjtThis.setAxis(token.getImage()); }
+    "::"
+}
+
+void AbbrevForwardStep() #AbbrevForwardStep(push):
+{ boolean push = false; }
+{
+   [ "@" { push = true; } ] NodeTest()
+}
+
+void ReverseStep():
+{}
+{
+  (ReverseAxis() NodeTest()) | AbbrevReverseStep()
+}
+
+void ReverseAxis():
+{}
+{
+    ( <PARENT>
+    | <ANCESTOR>
+    | <ANCESTOR_OR_SELF>
+    | <PRECEDING_SIBLING>
+    | <PRECEDING>
+    )
+    { jjtThis.setAxis(token.getImage()); }
+    "::"
+}
+
+void AbbrevReverseStep():
+{}
+{
+   ".."
+}
+
+void NodeTest():
+{}
+{
+    KindTest() | NameTest()
+}
+
+void NameTest():
+{}
+{
+    EQName() | Wildcard()
+}
+
+void Wildcard():
+{}
+{
+    LOOKAHEAD(2)
+      "*"
+    | NCName() ":" "*" {jjtThis.setLocalNameWildcard();}
+    | "*" ":" NCName() {jjtThis.setPrefixWildcard();}
+    | <BRACED_URI_LITERAL> "*" {jjtThis.setLocalNameWildcard();}
+}
+
+void PostfixExpr() #PostfixExpr(>1):
+{}
+{
+    PrimaryExpr() (Predicate() | ArgumentList())*
+}
+
+void ArgumentList():
+{}
+{
+    "(" [ Argument() ("," Argument() )* ] ")"
+}
+
+void Argument():
+{}
+{
+    ExprSingle() | "?" // TODO that's called placeholder
+}
+
+
+void PredicateList():
+{}
+{
+    (Predicate())*
+}
+
+void Predicate():
+{}
+{
+    "[" Expr() "]"
+}
+
+
+void PrimaryExpr(): // TODO #void?
+{}
+{
+      <NUMERIC_LITERAL>     #NumericLiteral
+    | <STRING_LITERAL>      #StringLiteral
+    | "$" VarName()         #VarRef
+    | "(" [ Expr() ] ")"    #ParenthesizedExpr
+    | "."                   #ContextItemExpr
+    | ( LOOKAHEAD (2) FunctionCall()
+    | FunctionItemExpr() )
+}
+
+void FunctionCall():
+{}
+{
+    EQName() ArgumentList()
+}
+
+void FunctionItemExpr():
+{}
+{
+    NamedFunctionRef() | InlineFunctionExpr()
+}
+
+void NamedFunctionRef():
+{}
+{
+    EQName() "#" <INTEGER_LITERAL> { jjtThis.setArity(Integer.valueOf(token.getImage())); }
+}
+
+void InlineFunctionExpr():
+{}
+{
+    "function" ParamList() ("as" SequenceType())? ("{" Expr() "}") #FunctionBody
+}
+
+void ParamList():
+{}
+{
+    "(" [ Param() ("," Param() )* ] ")"
+}
+
+void Param():
+{}
+{
+    "$" EQName() [ TypeDeclaration() ]
+}
+
+
+/* Kind tests */
+
+void KindTest():
+{}
+{
+      DocumentTest()
+    | ElementTest()
+    | AttributeTest()
+    | SchemaElementTest()
+    | SchemaAttributeTest()
+    | ProcessingInstructionTest()
+    | "comment" "(" ")"             #CommentTest
+    | "text" "(" ")"                #TextTest
+    | "namespace-node" "(" ")"      #NamespaceNodeTest
+    | "node" "(" ")"                #AnyKindTest
+}
+
+
+void DocumentTest():
+{}
+{
+    "document-node" "(" (ElementTest() | SchemaElementTest())? ")"
+}
+
+
+void ElementTest():
+{}
+{
+    "element" "(" [ (ElementName() | "*") #ElementNameOrWildcard [ "," TypeName() [ "?" ]]] ")"
+}
+
+
+
+
+void AttributeTest():
+{}
+{
+    <ATTRIBUTE> "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
+}
+
+
+void SchemaAttributeTest():
+{}
+{
+    "schema-attribute" "(" AttributeName() #AttributeDeclaration ")"
+}
+
+void ProcessingInstructionTest():
+{}
+{
+    "processing-instruction" "(" (<NCNAME> | <STRING_LITERAL>)? ")"
+}
+
+
+void SchemaElementTest():
+{}
+{
+    "schema-element" "(" ElementName() #ElementDeclaration ")"
+}
+
+
+/* TYPES */
+
+void SequenceType() :
+{}
+{
+   "empty-sequence" "(" ")" #EmptySequenceType
+ | ItemType()
+   (
+      "?" {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
+    | "*" {jjtThis.setCardinality(Cardinality.ZERO_OR_MORE);}
+    | "+" {jjtThis.setCardinality(Cardinality.ONE_OR_MORE);}
+   )?
+}
+
+void ItemType():
+{}
+{
+    KindTest()
+  | "item" "(" ")"          #AnyItemType
+  | FunctionTest()
+  | EQName()                #AtomicOrUnionType
+  | "(" ItemType() ")"      #ParenthesizedItemType
+}
+
+void FunctionTest():
+{}
+{
+      LOOKAHEAD (3) ("function" "(" "*" ")")                #AnyFunctionTest
+    | ("function" ArgumentTypeList() "as" SequenceType())   #TypedFunctionTest
+}
+
+void ArgumentTypeList():
+{}
+{
+  "(" (SequenceType() ("," SequenceType())*)? ")"
+}
+
+void SingleType():
+{}
+{
+  SimpleTypeName() [ "?" {jjtThis.setOptionallyQuantified();} ]
+}
+
+void TypeDeclaration():
+{}
+{
+    "as" SequenceType()
+}
+
+
+
+
+
+
+
+// These all produce a Name node
+
+void EQName() #Name:
+{}
+{
+  VoidEQName()
+}
+
+void VoidEQName() #void:
+{}
+{
+  (<EQNAME> | <NCNAME> ) {jjtThis.jjtGetParent().setImage(token.getImage());}
+}
+
+void NCName() #Name:
+{}
+{
+  <NCNAME> {jjtThis.setImage(token.getImage());}
+}
+
+
+void VarName() #Name:
+{}
+{
+   VoidEQName()
+}
+
+void AttributeName() #Name:
+{}
+{
+   VoidEQName()
+}
+
+void ElementName() #Name:
+{}
+{
+   VoidEQName()
+}
+
+
+void TypeName() #Name:
+{}
+{
+   VoidEQName()
+}
+
+void SimpleTypeName() #Name:
+{}
+{
+     VoidEQName()
+}

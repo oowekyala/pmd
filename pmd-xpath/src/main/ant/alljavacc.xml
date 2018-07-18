@@ -1,0 +1,107 @@
+<project name="pmd" default="alljavacc" basedir="../../../../../../">
+
+    <property name="javacc-home.path" value="target/lib" />
+    <property name="ast-package" value="net/sourceforge/pmd/lang/xpath/ast" />
+    
+    
+    <target name="alljavacc"
+            description="Generates all XPathCC aspects within PMD"
+            depends="checkUpToDate,init,javajjtree,cleanup" />
+
+    <target name="checkUpToDate">
+        <uptodate property="javaccBuildNotRequired" targetfile="${target}/last-generated-timestamp">
+            <srcfiles dir="etc/grammar" includes="*.jj*"/>
+        </uptodate>
+        <echo message="up to date check: javaccBuildNotRequired=${javaccBuildNotRequired}"/>
+    </target>
+
+    <target name="init" unless="javaccBuildNotRequired">
+        <mkdir dir="${javacc-home.path}" />
+        <copy file="${javacc.jar}" tofile="${javacc-home.path}/javacc.jar" />
+
+        <mkdir dir="${target}"/>
+        <touch file="${target}/last-generated-timestamp"/>
+    </target>
+
+    <target name="cleanup">
+        <delete dir="${javacc-home.path}" />
+    </target>
+
+    <target name="javajjtree" description="Generates the XPath parser and AST source files" unless="javaccBuildNotRequired">
+        <delete dir="${target}/${ast-package}" />
+        <mkdir dir="${target}/${ast-package}" />
+        <jjtree target="etc/grammar/XPath.jjt"
+                outputdirectory="${target}/${ast-package}"
+                javacchome="${javacc-home.path}" />
+        <!-- Ensure generated using CharStream interface -->
+        <javacc static="false"
+                usercharstream="true"
+                target="${target}/${ast-package}/XPath.jj"
+                outputdirectory="${target}/${ast-package}"
+                javacchome="${javacc-home.path}" />
+        <delete file="${target}/${ast-package}/Node.java" />
+        <delete file="${target}/${ast-package}/SimpleNode.java" />
+        <delete file="${target}/${ast-package}/CharStream.java" />
+        <delete file="${target}/${ast-package}/TokenMgrError.java" />
+
+        <replace token="import .*;"
+                 value="">
+            <fileset dir="${target}/${ast-package}">
+                <include name="*.java" />
+            </fileset>
+        </replace>
+        <replace token="extends SimpleNode"
+                 value="extends AbstractXPathNode">
+            <fileset dir="${target}/${ast-package}">
+                <include name="AST*.java" />
+            </fileset>
+        </replace>
+        <replace token="import net.sourceforge.pmd.lang.xpath.ast.*;"
+                 value="package net.sourceforge.pmd.lang.xpath.ast;">
+            <fileset dir="${target}/${ast-package}">
+                <include name="*.java"/>
+            </fileset>
+        </replace>
+        <replaceregexp file="${target}/${ast-package}/XPathParserConstants.java"
+                       match="XPathParserConstants.java ./"
+                       replace="\0package net.sourceforge.pmd.lang.xpath.ast;">
+        </replaceregexp>
+
+
+        <replace file="${target}/${ast-package}/XPathParserTokenManager.java"
+                 token="public class XPathParserTokenManager"
+                 value="import net.sourceforge.pmd.lang.ast.CharStream;
+                        import net.sourceforge.pmd.lang.ast.TokenMgrError;
+                        public class XPathParserTokenManager extends net.sourceforge.pmd.lang.ast.AbstractTokenManager" />
+        <replace file="${target}/${ast-package}/XPathParser.java"
+                 token="throw new Error"
+                 value="throw new RuntimeException" />
+        <delete file="${target}/${ast-package}/ParseException.java" />
+        <replace file="${target}/${ast-package}/XPathParserVisitor.java"
+                 token="SimpleNode"
+                 value="XPathNode" />
+        
+        <replace file="${target}/${ast-package}/XPathParserVisitor.java"
+                 token="XPathParserVisitor"
+                 value="XPathParserVisitor&lt;T&gt;"/>
+        <replace file="${target}/${ast-package}/XPathParserVisitor.java"
+                 token="Object"
+                 value="T"/>
+
+        <replace file="${target}/${ast-package}/JJTXPathParserState.java">
+            <replacetoken>public class</replacetoken>
+            <replacevalue><![CDATA[import net.sourceforge.pmd.lang.ast.Node;
+
+public class]]></replacevalue>
+        </replace>
+
+
+        <delete file="${target}/${ast-package}/Token.java"/>
+
+        <delete>
+            <fileset dir="${target}/${ast-package}">
+                <include name="AST*.java" />
+            </fileset>
+        </delete>
+    </target>
+</project>

@@ -1016,5 +1016,6 @@
         <module>pmd-visualforce</module>
         <module>pmd-vm</module>
         <module>pmd-xml</module>
+        <module>pmd-xpath</module>
     </modules>
 </project>
