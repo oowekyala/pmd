@@ -20,7 +20,11 @@ import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 /**
  * Base class for Rule implementations which delegate to another Rule instance.
+ *
+ * @deprecated This is only relevant to {@link RuleReference}, but prevents sharing the implementation
+ * of {@link net.sourceforge.pmd.properties.AbstractPropertySource}. Will be removed in 7.0.0
  */
+@Deprecated
 public abstract class AbstractDelegateRule implements Rule {
 
     private Rule rule;
@@ -29,6 +33,13 @@ public abstract class AbstractDelegateRule implements Rule {
         return rule;
     }
 
+
+    /**
+     * @deprecated This will be removed in 7.0.0
+     * I mark it specially deprecated because it's inherited by rule reference,
+     * even though a RuleReference has no business setting its rule after construction
+     */
+    @Deprecated
     public void setRule(Rule rule) {
         this.rule = rule;
     }
@@ -210,8 +221,8 @@ public abstract class AbstractDelegateRule implements Rule {
     }
 
     @Override
-    public boolean hasPropertyBeenSet(PropertyDescriptor<?> propertyDescriptor) {
-        return rule.hasPropertyBeenSet(propertyDescriptor);
+    public boolean hasOverriddenProperty(PropertyDescriptor<?> propertyDescriptor) {
+        return rule.hasOverriddenProperty(propertyDescriptor);
     }
 
     @Override
