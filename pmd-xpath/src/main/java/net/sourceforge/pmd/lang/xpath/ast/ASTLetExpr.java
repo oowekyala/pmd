@@ -4,7 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * A let-expression binds some names to expressions and allow these variables
+ * to be referenced in its body.
+ *
+ * <pre>
+ *
+ * LetExpr ::= "let" {@linkplain ASTVarBindingList VarBindingList} "return" {@linkplain ASTExpr ExprSingle}
+ *
+ * </pre>
+ */
 public final class ASTLetExpr extends AbstractXPathNode {
 
 

@@ -376,14 +376,14 @@ void MultiplicativeExpr() #MultiplicativeExpr(>1):
 void UnionExpr() #UnionExpr(>1):
 {}
 {
-  IntersectExceptExpr()
-  (
-    (   "union" #UnionOperator
-      | "|" #UnionShortHandOperator
-    )
+  IntersectExceptExpr() ( UnionOperator() IntersectExceptExpr() )*
+}
 
-    IntersectExceptExpr()
-  )*
+void UnionOperator():
+{}
+{
+    "union"
+  | "|" { jjtThis.setShorthand(true); }
 }
 
 void IntersectExceptExpr() #IntersectExceptExpr(>1):
@@ -449,8 +449,16 @@ void PathExpr():
 void RelativePathExpr() #void:
 {}
 {
-  StepExpr() (("/" #ChildStep | "//" #DescendantStep) StepExpr())* // TODO save the symbol
+  StepExpr() (PathOperator() StepExpr())*
 }
+
+void PathOperator():
+{}
+{
+      "/" { jjtThis.setChildAxis(true); }
+    | "//"
+}
+
 
 void StepExpr():
 {}
@@ -515,10 +523,8 @@ void NameTest() #void:
 void Wildcard():
 {}
 {
-    LOOKAHEAD(2)
-      "*"
+      "*" [ ":" NCName() {jjtThis.setPrefixWildcard();} ]
     | NCName() ":" "*" {jjtThis.setLocalNameWildcard();}
-    | "*" ":" NCName() {jjtThis.setPrefixWildcard();}
     | <BRACED_URI_LITERAL> "*" {jjtThis.setLocalNameWildcard();}
 }
 
@@ -605,7 +611,7 @@ void Param():
 
 /* Kind tests */
 
-void KindTest() #void:
+void KindTest() #void: // TODO tag those with an interface
 {}
 {
       DocumentTest()

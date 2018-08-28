@@ -5,6 +5,25 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * Root class for all expressions. An Expr may have several children,
+ * separated by commas. The production ExprSingle is used in this
+ * documentation for exprs that cannot have more than one child.
+ *
+ * <pre>
+ *
+ * Expr ::= ExprSingle ("," ExprSingle)*
+ *
+ * ExprSingle ::= {@linkplain ASTForExpr ForExpr}
+ *              | {@linkplain ASTLetExpr LetExpr}
+ *              | {@linkplain ASTQuantifiedExpr QuantifiedExpr}
+ *              | {@linkplain ASTIfExpr IfExpr}
+ *              | {@linkplain ASTOrExpr OrExpr}
+ *
+ * </pre>
+ *
+ *
+ */
 public final class ASTExpr extends AbstractXPathNode {
 
 

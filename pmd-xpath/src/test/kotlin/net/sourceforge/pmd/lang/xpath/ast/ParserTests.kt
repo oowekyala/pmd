@@ -22,17 +22,20 @@ class ParserTests : FunSpec({
                             it.varName shouldBe "i"
 
                             child<ASTName> {
-
+                                it.image shouldBe "i"
                             }
 
+                            child<ASTExpr>(ignoreChildren = true) {
+
+                            }
                         }
-
                     }
-
-
                 }
             }
         }
+
+
+
 
     }
 

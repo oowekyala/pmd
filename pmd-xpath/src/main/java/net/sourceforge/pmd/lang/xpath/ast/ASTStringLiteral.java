@@ -14,6 +14,12 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
 
 
     @Override
+    public String getImage() {
+        return jjtGetFirstToken().getImage();
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
