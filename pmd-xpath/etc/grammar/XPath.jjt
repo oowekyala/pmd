@@ -455,66 +455,49 @@ void RelativePathExpr() #void:
 void StepExpr():
 {}
 {
-    PostfixExpr() | AxisStep()
+    LOOKAHEAD(2) PostfixExpr() | AxisStep()
 }
 
 void AxisStep():
 {}
 {
- (ReverseStep() | ForwardStep()) PredicateList()
+ (jjtThis.axis = Axis()) PredicateList()
 }
 
-void ForwardStep():
-{}
-{
-  LOOKAHEAD(2) (ForwardAxis() NodeTest()) | AbbrevForwardStep()
-}
+// Only the AxisStep is pushed on the stack
 
-void ForwardAxis():
-{}
+Axis Axis() #void:
 {
-    ( <SELF>
-    | <CHILD>
-    | <ATTRIBUTE>
-    | <DESCENDANT>
-    | <DESCENDANT_OR_SELF>
-    | <FOLLOWING>
-    | <FOLLOWING_SIBLING>
-    | <NAMESPACE>
+  // It's a child if this production only matches the NodeTest
+  Axis axis = Axis.CHILD;
+}
+{
+    (
+        (
+            ( <SELF> { axis = Axis.SELF;}
+            | <CHILD> { axis = Axis.CHILD; }
+            | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
+            | <DESCENDANT> { axis = Axis.DESCENDANT; }
+            | <DESCENDANT_OR_SELF> { axis = Axis.DESCENDANT_OR_SELF; }
+            | <FOLLOWING> { axis = Axis.FOLLOWING; }
+            | <FOLLOWING_SIBLING> { axis = Axis.FOLLOWING_SIBLING; }
+            | <NAMESPACE> { axis = Axis.NAMESPACE; }
+            | <PARENT> { axis = Axis.PARENT; }
+            | <ANCESTOR> { axis = Axis.ANCESTOR; }
+            | <ANCESTOR_OR_SELF> { axis = Axis.ANCESTOR_OR_SELF; }
+            | <PRECEDING_SIBLING> { axis = Axis.PRECEDING_SIBLING; }
+            | <PRECEDING> { axis = Axis.PRECEDING; }
+            )
+            "::"
+        |
+            "@" { axis = Axis.ATTRIBUTE; }
+        )?
+        NodeTest()
+
+    | ".." { axis = Axis.PARENT; }
+
     )
-    { jjtThis.setAxis(token.getImage()); }
-    "::"
-}
-
-void AbbrevForwardStep() #AbbrevForwardStep(push):
-{ boolean push = false; }
-{
-   [ "@" { push = true; } ] NodeTest()
-}
-
-void ReverseStep():
-{}
-{
-  (ReverseAxis() NodeTest()) | AbbrevReverseStep()
-}
-
-void ReverseAxis():
-{}
-{
-    ( <PARENT>
-    | <ANCESTOR>
-    | <ANCESTOR_OR_SELF>
-    | <PRECEDING_SIBLING>
-    | <PRECEDING>
-    )
-    { jjtThis.setAxis(token.getImage()); }
-    "::"
-}
-
-void AbbrevReverseStep():
-{}
-{
-   ".."
+    { return axis; }
 }
 
 void NodeTest():
@@ -523,10 +506,10 @@ void NodeTest():
     KindTest() | NameTest()
 }
 
-void NameTest():
+void NameTest() #void:
 {}
 {
-    EQName() | Wildcard()
+   LOOKAHEAD(2) EQName() | Wildcard()
 }
 
 void Wildcard():
@@ -622,7 +605,7 @@ void Param():
 
 /* Kind tests */
 
-void KindTest():
+void KindTest() #void:
 {}
 {
       DocumentTest()
@@ -741,13 +724,7 @@ void TypeDeclaration():
 void EQName() #Name:
 {}
 {
-  VoidEQName()
-}
-
-void VoidEQName() #void:
-{}
-{
-  (<EQNAME> | <NCNAME> ) {jjtThis.jjtGetParent().setImage(token.getImage());}
+  (<EQNAME> | <NCNAME> ) {jjtThis.setImage(token.getImage());}
 }
 
 void NCName() #Name:
@@ -757,33 +734,33 @@ void NCName() #Name:
 }
 
 
-void VarName() #Name:
+void VarName() #void:
 {}
 {
-   VoidEQName()
+   EQName()
 }
 
-void AttributeName() #Name:
+void AttributeName() #void:
 {}
 {
-   VoidEQName()
+   EQName()
 }
 
-void ElementName() #Name:
+void ElementName() #void:
 {}
 {
-   VoidEQName()
+   EQName()
 }
 
 
-void TypeName() #Name:
+void TypeName() #void:
 {}
 {
-   VoidEQName()
+   EQName()
 }
 
-void SimpleTypeName() #Name:
+void SimpleTypeName() #void:
 {}
 {
-     VoidEQName()
+   EQName()
 }

@@ -11,8 +11,6 @@ import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule;
-import net.sourceforge.pmd.lang.xpath.ast.ASTAbbrevForwardStep;
-import net.sourceforge.pmd.lang.xpath.ast.ASTAbbrevReverseStep;
 import net.sourceforge.pmd.lang.xpath.ast.ASTAdditiveExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTAndExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTAnyFunctionTest;
@@ -42,8 +40,6 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTEmptySequenceType;
 import net.sourceforge.pmd.lang.xpath.ast.ASTExceptOperator;
 import net.sourceforge.pmd.lang.xpath.ast.ASTExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTForExpr;
-import net.sourceforge.pmd.lang.xpath.ast.ASTForwardAxis;
-import net.sourceforge.pmd.lang.xpath.ast.ASTForwardStep;
 import net.sourceforge.pmd.lang.xpath.ast.ASTFunctionBody;
 import net.sourceforge.pmd.lang.xpath.ast.ASTFunctionCall;
 import net.sourceforge.pmd.lang.xpath.ast.ASTFunctionItemExpr;
@@ -81,8 +77,6 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTPrimaryExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTProcessingInstructionTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTQuantifiedExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTRangeExpr;
-import net.sourceforge.pmd.lang.xpath.ast.ASTReverseAxis;
-import net.sourceforge.pmd.lang.xpath.ast.ASTReverseStep;
 import net.sourceforge.pmd.lang.xpath.ast.ASTSchemaAttributeTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTSchemaElementTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTSequenceType;
@@ -364,42 +358,6 @@ public abstract class AbstractXPathRule extends AbstractRule implements PmdXPath
 
     @Override
     public RuleContext visit(ASTAxisStep node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTForwardStep node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTForwardAxis node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTAbbrevForwardStep node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTReverseStep node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTReverseAxis node, RuleContext data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public RuleContext visit(ASTAbbrevReverseStep node, RuleContext data) {
         return visit((XPathNode) node, data);
     }
 

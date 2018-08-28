@@ -56,4 +56,8 @@ public abstract class AbstractXPathNode extends AbstractNode implements XPathNod
     }
 
 
+    @Override
+    public String getXPathNodeName() {
+        return XPathParserTreeConstants.jjtNodeName[id];
+    }
 }
