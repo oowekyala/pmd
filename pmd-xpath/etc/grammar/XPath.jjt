@@ -547,14 +547,14 @@ void PredicateList():
     (Predicate())*
 }
 
-void Predicate():
+void Predicate() #void:
 {}
 {
     "[" Expr() "]"
 }
 
 
-void PrimaryExpr(): // TODO #void?
+void PrimaryExpr() #void:
 {}
 {
       <NUMERIC_LITERAL>     #NumericLiteral

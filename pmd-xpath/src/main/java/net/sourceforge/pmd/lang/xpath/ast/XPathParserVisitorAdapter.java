@@ -249,11 +249,6 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
     }
 
 
-    @Override
-    public T visit(ASTNameTest node, T data) {
-        return visit((XPathNode) node, data);
-    }
-
 
     @Override
     public T visit(ASTWildcard node, T data) {
@@ -281,18 +276,6 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
 
     @Override
     public T visit(ASTPredicateList node, T data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public T visit(ASTPredicate node, T data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public T visit(ASTPrimaryExpr node, T data) {
         return visit((XPathNode) node, data);
     }
 
@@ -365,12 +348,6 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
 
     @Override
     public T visit(ASTParam node, T data) {
-        return visit((XPathNode) node, data);
-    }
-
-
-    @Override
-    public T visit(ASTKindTest node, T data) {
         return visit((XPathNode) node, data);
     }
 

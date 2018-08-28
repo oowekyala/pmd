@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTNumericLiteral extends AbstractXPathNode {
+public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTNumericLiteral(XPathParser p, int id) {

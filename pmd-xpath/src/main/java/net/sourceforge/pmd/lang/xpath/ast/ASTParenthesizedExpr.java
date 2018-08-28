@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTParenthesizedExpr extends AbstractXPathNode {
+public final class ASTParenthesizedExpr extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTParenthesizedExpr(XPathParser p, int id) {

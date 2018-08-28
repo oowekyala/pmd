@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTContextItemExpr extends AbstractXPathNode {
+public final class ASTContextItemExpr extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTContextItemExpr(XPathParser p, int id) {

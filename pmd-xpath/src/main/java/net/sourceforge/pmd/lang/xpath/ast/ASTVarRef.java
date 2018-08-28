@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTVarRef extends AbstractXPathNode {
+public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTVarRef(XPathParser p, int id) {

@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTStringLiteral extends AbstractXPathNode {
+public final class ASTStringLiteral extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTStringLiteral(XPathParser p, int id) {
