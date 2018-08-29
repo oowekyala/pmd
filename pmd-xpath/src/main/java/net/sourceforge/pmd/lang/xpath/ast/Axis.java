@@ -7,6 +7,25 @@ package net.sourceforge.pmd.lang.xpath.ast;
 /**
  * Iteration axis.
  *
+ * <pre>
+ *
+ * (: Not a node :)
+ * Axis ::= "self"
+ *        | "child"
+ *        | "attribute"
+ *        | "descendant"
+ *        | "descendant-or-self"
+ *        | "ancestor"
+ *        | "ancestor-or-self"
+ *        | "following"
+ *        | "following-sibling"
+ *        | "namespace"
+ *        | "parent"
+ *        | "preceding"
+ *        | "preceding-sibling"
+ *
+ * </pre>
+ *
  * @author Clément Fournier
  * @since 6.7.0
  */

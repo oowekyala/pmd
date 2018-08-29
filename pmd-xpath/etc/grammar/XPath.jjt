@@ -450,15 +450,19 @@ boolean RelativePathExpr(boolean maybeTrivial) #void:
 {}
 {
   (maybeTrivial = StepExpr(maybeTrivial))
-  (PathOperator() StepExpr(false) { maybeTrivial = false; })*
+  (
+    ( "/" | AbbrevPathOperator()) // "//" is synthesized as a StepExpr for consistency
+    StepExpr(false)
+    { maybeTrivial = false; }
+  )*
   { return maybeTrivial; }
 }
 
-void PathOperator():
+
+void AbbrevPathOperator() #StepExpr:
 {}
 {
-      "/" { jjtThis.setChildAxis(true); }
-    | "//"
+    ("//" { jjtThis.setAbbrevDescendantOrSelf();})
 }
 
 // TODO corner cases:
@@ -475,10 +479,20 @@ boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
     { return maybeTrivial; }
 }
 
-void AxisStep():
+ASTAxisStep AxisStep():
 {}
 {
- (jjtThis.axis = Axis()) PredicateList()
+ (
+   (jjtThis.axis = Axis()) "::" NodeTest()
+ |
+   NodeTest() { jjtThis.setAbbrevNoAxis(); }
+ |
+   "@" NodeTest() { jjtThis.setAbbrevAttributeAxis(); }
+ |
+   ".." { jjtThis.setAbbrevParentNodeTest(); }
+ )
+ PredicateList()
+ { return jjtThis; }
 }
 
 // Only the AxisStep is pushed on the stack
@@ -486,41 +500,31 @@ void AxisStep():
 Axis Axis() #void:
 {
   // It's a child if this production only matches the NodeTest
-  Axis axis = Axis.CHILD;
+  Axis axis = null;
 }
 {
-    (
-        (
-            ( <SELF> { axis = Axis.SELF;}
-            | <CHILD> { axis = Axis.CHILD; }
-            | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
-            | <DESCENDANT> { axis = Axis.DESCENDANT; }
-            | <DESCENDANT_OR_SELF> { axis = Axis.DESCENDANT_OR_SELF; }
-            | <FOLLOWING> { axis = Axis.FOLLOWING; }
-            | <FOLLOWING_SIBLING> { axis = Axis.FOLLOWING_SIBLING; }
-            | <NAMESPACE> { axis = Axis.NAMESPACE; }
-            | <PARENT> { axis = Axis.PARENT; }
-            | <ANCESTOR> { axis = Axis.ANCESTOR; }
-            | <ANCESTOR_OR_SELF> { axis = Axis.ANCESTOR_OR_SELF; }
-            | <PRECEDING_SIBLING> { axis = Axis.PRECEDING_SIBLING; }
-            | <PRECEDING> { axis = Axis.PRECEDING; }
-            )
-            "::"
-        |
-            "@" { axis = Axis.ATTRIBUTE; }
-        )?
-        NodeTest()
-
-    | ".." { axis = Axis.PARENT; }
-
+    ( <SELF> { axis = Axis.SELF;}
+    | <CHILD> { axis = Axis.CHILD; }
+    | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
+    | <DESCENDANT> { axis = Axis.DESCENDANT; }
+    | <DESCENDANT_OR_SELF> { axis = Axis.DESCENDANT_OR_SELF; }
+    | <FOLLOWING> { axis = Axis.FOLLOWING; }
+    | <FOLLOWING_SIBLING> { axis = Axis.FOLLOWING_SIBLING; }
+    | <NAMESPACE> { axis = Axis.NAMESPACE; }
+    | <PARENT> { axis = Axis.PARENT; }
+    | <ANCESTOR> { axis = Axis.ANCESTOR; }
+    | <ANCESTOR_OR_SELF> { axis = Axis.ANCESTOR_OR_SELF; }
+    | <PRECEDING_SIBLING> { axis = Axis.PRECEDING_SIBLING; }
+    | <PRECEDING> { axis = Axis.PRECEDING; }
     )
     { return axis; }
 }
 
-void NodeTest():
+ASTNodeTest NodeTest():
 {}
 {
-    KindTest() | NameTest() // both of these are #void
+    (KindTest() | NameTest()) // both of these are #void
+    { return jjtThis; }
 }
 
 void NameTest() #void:

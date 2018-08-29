@@ -213,12 +213,6 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
 
 
     @Override
-    public T visit(ASTPathOperator node, T data) {
-        return null;
-    }
-
-
-    @Override
     public T visit(ASTStepExpr node, T data) {
         return visit((XPathNode) node, data);
     }

@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.ast.Node;
  */
 public abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
-    private final XPathParser parser;
+    protected final XPathParser parser;
 
 
     protected AbstractXPathNode(XPathParser parser, int id) {
@@ -53,6 +53,26 @@ public abstract class AbstractXPathNode extends AbstractNode implements XPathNod
         }
         endLine = parser.token.endLine;
         endColumn = parser.token.endColumn;
+    }
+
+
+    void insertChild(Node child, int index) {
+        // Allow to insert a child at random insert without overwriting
+        if (children != null && index < children.length) {
+            Node[] newChildren = new Node[children.length + 1];
+
+            // toShift nodes are to the right of the insertion index
+            int toShift = children.length - index;
+
+            // copy the nodes before
+            System.arraycopy(children, 0, newChildren, 0, index);
+
+            // copy the nodes after
+            System.arraycopy(children, index, newChildren, index + 1, toShift);
+            children = newChildren;
+        }
+        super.jjtAddChild(child, index);
+        child.jjtSetParent(this);
     }
 
 
