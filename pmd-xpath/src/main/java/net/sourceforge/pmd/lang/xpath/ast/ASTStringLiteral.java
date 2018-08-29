@@ -58,6 +58,9 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
     }
 
 
+    /**
+     * Returns the delimiter of the string.
+     */
     public char getDelimiter() {
         return getImage().charAt(0);
     }

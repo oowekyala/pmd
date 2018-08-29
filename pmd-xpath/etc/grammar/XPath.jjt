@@ -99,7 +99,7 @@ TOKEN :
 // Operators
 | < OR: "or" >
 | < AND: "and" >
-| < NOT: "not" >
+// "not" is a function
 | < DIV: "div" >
 | < IDIV: "idiv" >
 | < MOD: "mod" >

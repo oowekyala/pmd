@@ -15,7 +15,7 @@
     <description>PMD XPath language support</description>
 
     <!--<properties>-->
-        <!--<javacc.version>7.0.0</javacc.version>-->
+    <!--<javacc.version>7.0.0</javacc.version>-->
     <!--</properties>-->
 
     <build>
@@ -128,6 +128,12 @@
         <dependency>
             <groupId>net.sourceforge.pmd</groupId>
             <artifactId>pmd-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-java</artifactId>
+            <version>6.6.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.saxon</groupId>
