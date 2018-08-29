@@ -14,7 +14,7 @@ options {
   NODE_PACKAGE = "net.sourceforge.pmd.lang.xpath.ast";
 
    DEBUG_PARSER = true;
-  // DEBUG_LOOKAHEAD = true;
+   DEBUG_LOOKAHEAD = true;
 }
 
 PARSER_BEGIN(XPathParser)
@@ -82,7 +82,7 @@ SKIP :
 TOKEN :
 {
 // Axes
- < SELF: "self" >
+  < SELF: "self" >
 | < CHILD: "child" >
 | < ATTRIBUTE: "attribute" >
 | < DESCENDANT: "descendant" >
@@ -103,12 +103,22 @@ TOKEN :
 | < DIV: "div" >
 | < IDIV: "idiv" >
 | < MOD: "mod" >
+| < DOUBLE_PIPE: "||" >
+| < PIPE: "|" >
+| < UNION: "union" >
+| < INTERSECT: "intersect" >
+| < EXCEPT: "except" >
+
+
+// Comparison operators
 | < NE: "ne" >
 | < EQ: "eq" >
 | < LT: "lt" >
 | < LE: "le" >
 | < GT: "gt" >
 | < GE: "ge" >
+| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
+
 
 // Keywords
 | < SOME: "some" >
@@ -129,9 +139,9 @@ TOKEN :
 | < ELSE: "else" >
 | < RETURN: "return" >
 | < LET: "let" >
-| < INTERSECT: "intersect" >
-| < EXCEPT: "except" >
-| < UNION: "union" >
+| < EMPTY_SEQUENCE: "empty-sequence" >
+| < ITEM: "item" >
+
 
 // Node kinds
 | < NODE: "node" >
@@ -147,16 +157,25 @@ TOKEN :
 | < FUNCTION: "function" >
 
 // Separators
-//| < LPAREN: "(" >
-//| < RPAREN: ")" >
-//| < LBRACKET: "[" >
-//| < RBRACKET: "]" >
-//| < SEMICOLON: ";" >
-//| < DOUBLE_COLON: "::" >
-//| < COMMA: "," >
-//| < DOT: "." >
-//| < AT: "@" >
-//| < DOLLAR: "$" >
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < BANG: "!" >
+| < PATH_ALT: "//" >
+| < PATH: "/" >
+| < SEMICOLON: ";" >
+| < DOUBLE_COLON: "::" >
+| < DOUBLE_PERIOD: ".." >
+| < COMMA: "," >
+| < LET_ASSIGN: ":=" >
+| < PERIOD: "." >
+| < AT: "@" >
+| < POUND: "#" >
+| < QUESTION_MARK: "?" >
+| < STAR: "*" >
+| < PLUS: "+" >
+| < DOLLAR: "$" >
 }
 
 
@@ -222,6 +241,15 @@ TOKEN :
   ] >
 }
 
+// Have lower precedence than names
+TOKEN:
+{
+  < LCURLY: "{" >
+| < RCURLY: "}" >
+| < MINUS: "-" >
+| < COLON: ":" >
+
+}
 
 
 /*****************************************
@@ -263,21 +291,21 @@ void VoidSingleExpr() #void:
 void ForExpr():
 {}
 {
- "for" VarBindingList(false) "return" ExprSingle()
+ <FOR> VarBindingList(false) <RETURN> ExprSingle()
 }
 
 void LetExpr():
 {}
 {
- "let" VarBindingList(true) "return" ExprSingle()
+ <LET> VarBindingList(true) <RETURN> ExprSingle()
 }
 
 void QuantifiedExpr():
 {}
 {
-  ("some" { jjtThis.setUniversallyQuantified(false); }| "every" {jjtThis.setUniversallyQuantified(true);})
+  (<SOME> { jjtThis.setUniversallyQuantified(false); }| <EVERY> {jjtThis.setUniversallyQuantified(true);})
   VarBindingList(false)
-  "satisfies" ExprSingle()
+  <SATISFIES> ExprSingle()
 }
 
 void VarBindingList(boolean isLetCtx):
@@ -291,27 +319,27 @@ void VarBindingList(boolean isLetCtx):
 void VarBinding(boolean isLet):
 {}
 {
-  "$" VarName() { jjtThis.setVarName(token.getImage()); }
-  (<IN> {checkVarBinding(isLet, false);} | ":=" {checkVarBinding(isLet, true);})
+  <DOLLAR> VarName() { jjtThis.setVarName(token.getImage()); }
+  (<IN> {checkVarBinding(isLet, false);} | <LET_ASSIGN> {checkVarBinding(isLet, true);})
   ExprSingle()
 }
 
 void IfExpr():
 {}
 {
-  "if" "(" Expr() ")" "then" ExprSingle() "else" ExprSingle()
+  <IF> "(" Expr() ")" <THEN> ExprSingle() <ELSE> ExprSingle()
 }
 
 void OrExpr() #OrExpr(>1):
 {}
 {
-  AndExpr() ( "or" AndExpr() )*
+  AndExpr() ( <OR> AndExpr() )*
 }
 
 void AndExpr() #AndExpr(>1):
 {}
 {
-  ComparisonExpr() ( "and" ComparisonExpr() )*
+  ComparisonExpr() ( <AND> ComparisonExpr() )*
 }
 
 void ComparisonExpr() #ComparisonExpr(>1):
@@ -326,10 +354,7 @@ void ComparisonExpr() #ComparisonExpr(>1):
 String ComparisonOperator() #void: // TODO store operator, do that in the Java node
 {}
 {
-   (  "=" | "!=" | "<" | "<=" | ">" | ">="
-   |  "ne" | "eq" | "lt" | "le" | "gt" | "ge"
-   |  "is" | "<<" | ">>"
-   )
+   ( <COMP> | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE> )
    { return token.getImage(); }
 }
 
@@ -344,7 +369,7 @@ void StringConcatExpr() #StringConcatExpr(>1):
 void RangeExpr() #RangeExpr(>1):
 {}
 {
-  AdditiveExpr() ( "to" AdditiveExpr() )?
+  AdditiveExpr() ( <TO> AdditiveExpr() )?
 }
 
 // In the following, we use nodes to represent the operators because there may be several expressions chained.
@@ -361,10 +386,10 @@ void MultiplicativeExpr() #MultiplicativeExpr(>1):
 {
   UnionExpr()
   (
-    (   "*" #TimesOperator
-      | "div" #DivOperator
-      | "idiv" #IDivOperator
-      | "mod" #ModOperator
+    (   <STAR> #TimesOperator
+      | <DIV> #DivOperator
+      | <IDIV> #IDivOperator
+      | <MOD> #ModOperator
     )
 
     UnionExpr()
@@ -380,8 +405,8 @@ void UnionExpr() #UnionExpr(>1):
 void UnionOperator():
 {}
 {
-    "union"
-  | "|" { jjtThis.setShorthand(true); }
+    <UNION>
+  | <PIPE> { jjtThis.setShorthand(true); }
 }
 
 void IntersectExceptExpr() #IntersectExceptExpr(>1):
@@ -389,8 +414,8 @@ void IntersectExceptExpr() #IntersectExceptExpr(>1):
 {
   InstanceofExpr()
   (
-    (   "intersect" #IntersectOperator
-      | "except" #ExceptOperator
+    (   <INTERSECT> #IntersectOperator
+      | <EXCEPT> #ExceptOperator
     )
 
     InstanceofExpr()
@@ -401,25 +426,25 @@ void IntersectExceptExpr() #IntersectExceptExpr(>1):
 void InstanceofExpr() #InstanceofExpr(>1):
 {}
 {
-  TreatExpr() ( "instance" "of" SequenceType() )?
+  TreatExpr() ( <INSTANCE> <OF> SequenceType() )?
 }
 
 void TreatExpr() #TreatExpr(>1):
 {}
 {
-  CastableExpr() ( "treat" "as" SequenceType() )?
+  CastableExpr() ( <TREAT> <AS> SequenceType() )?
 }
 
 void CastableExpr() #CastableExpr(>1):
 {}
 {
-  CastExpr() ( LOOKAHEAD (3) "treat" "as" SingleType() )?
+  CastExpr() ( LOOKAHEAD (3) <TREAT> <AS> SingleType() )?
 }
 
 void CastExpr() #CastExpr(>1):
 {}
 {
-  UnaryExpr() ( "cast" "as" SingleType() )?
+  UnaryExpr() ( <CAST> <AS> SingleType() )?
 }
 
 void UnaryExpr() #UnaryExpr(push):
@@ -436,11 +461,14 @@ void MapExpr() #MapExpr(>1) :
 
 /* PATH EXPRESSIONS */
 
+// Trivial expressions are pruned with the "trivial" parameter passing
+// to remove the PathExpr context
+// See documentation on ASTPathExpr
 void PathExpr() #PathExpr(!trivial):
 { boolean trivial = false; }
 {
-    ("/" [ RelativePathExpr(false) ]) { jjtThis.setRootAnchor(); }
-  | ( "//" RelativePathExpr(false)) { jjtThis.setDescendantAnchor(); }
+    (<PATH> [ LOOKAHEAD(2) RelativePathExpr(false) ]) { jjtThis.setRootAnchor(); }
+  | (<PATH_ALT> RelativePathExpr(false)) { jjtThis.setDescendantAnchor(); }
   | (trivial = RelativePathExpr(true)) { jjtThis.setRelativeAnchor(); }
 }
 
@@ -449,7 +477,7 @@ boolean RelativePathExpr(boolean maybeTrivial) #void:
 {
   (maybeTrivial = StepExpr(maybeTrivial))
   (
-    ( "/" | AbbrevPathOperator()) // "//" is synthesized as a StepExpr for consistency
+    ( <PATH> | AbbrevPathOperator()) // "//" is synthesized as a StepExpr for consistency
     StepExpr(false)
     { maybeTrivial = false; }
   )*
@@ -457,37 +485,33 @@ boolean RelativePathExpr(boolean maybeTrivial) #void:
 }
 
 
-void AbbrevPathOperator() #StepExpr:
+void AbbrevPathOperator() #StepExpr: // Pushes a step expr
 {}
 {
-    ("//" { jjtThis.setAbbrevDescendantOrSelf();})
+    <PATH_ALT> { jjtThis.setAbbrevDescendantOrSelf();} // this function synthesizes a NodeTest
 }
 
-// TODO corner cases:
-// https://www.w3.org/TR/xpath-30/#doc-xpath30-RelativePathExpr
-// / union /* vs (/) union /*
-// /* & / * -> pathexpr with wildcard
-// /*5 vs / * 5 -> syntax error
-// (/) * 5 -> multiplication with root path expr
 
 boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 {}
 {
-    (LOOKAHEAD(2) PostfixExpr() | (AxisStep() {maybeTrivial = false;}))
+    (LOOKAHEAD(2) // Lookahead because <EQNAME> may start an ExactNameTest or e.g. a function call
+      PostfixExpr() | (AxisStep() {maybeTrivial = false;})
+    )
     { return maybeTrivial; }
 }
 
 ASTAxisStep AxisStep():
 {}
 {
- (
-   (jjtThis.axis = Axis()) "::" NodeTest()
+ ( LOOKAHEAD(2) // Lookahead to find "::" because "attribute" may start an axis or a kind test
+   (jjtThis.axis = Axis()) <DOUBLE_COLON> NodeTest()
  |
    NodeTest() { jjtThis.setAbbrevNoAxis(); } // The nodetest is #void, distinctions are implemented with an interface
  |
-   "@" NodeTest() { jjtThis.setAbbrevAttributeAxis(); }
+   <AT> NodeTest() { jjtThis.setAbbrevAttributeAxis(); }
  |
-   ".." { jjtThis.setAbbrevParentNodeTest();  }
+   <DOUBLE_PERIOD> { jjtThis.setAbbrevParentNodeTest();  }
  )
  PredicateList()
  { return jjtThis; }
@@ -540,9 +564,9 @@ void ExactNameTest():
 void WildcardNameTest():
 {}
 {
-      "*" [ ":" NCName() {jjtThis.setPrefixWildcard();} ]
-    | NCName() ":" "*" {jjtThis.setLocalNameWildcard();}
-    | <BRACED_URI_LITERAL> "*" {jjtThis.setLocalNameWildcard();}
+      <STAR> [ <COLON> NCName() {jjtThis.setPrefixWildcard();} ]
+    | NCName() <COLON> <STAR> {jjtThis.setLocalNameWildcard();}
+    | <BRACED_URI_LITERAL> <STAR> {jjtThis.setLocalNameWildcard();}
 }
 
 void PostfixExpr() #PostfixExpr(>1):
@@ -560,7 +584,7 @@ void ArgumentList():
 void Argument():
 {}
 {
-    ExprSingle() | "?" {jjtThis.setPlaceholder();}// TODO that's called placeholder
+    ExprSingle() | <QUESTION_MARK> {jjtThis.setPlaceholder();}// TODO that's called placeholder
 }
 
 
@@ -582,10 +606,12 @@ void PrimaryExpr() #void:
 {
       <NUMERIC_LITERAL>     #NumericLiteral
     | <STRING_LITERAL>      #StringLiteral
-    | "$" VarName()         #VarRef
-    | "(" [ Expr() ] ")"    #ParenthesizedExpr
-    | "."                   #ContextItemExpr
-    | ( LOOKAHEAD (2) FunctionCall()
+    | <DOLLAR> VarName()         #VarRef
+    | (<LPAREN> [ Expr() ] <RPAREN>)  #ParenthesizedExpr
+    | <PERIOD>                   #ContextItemExpr
+    |
+    (LOOKAHEAD (2)
+      FunctionCall()
     | FunctionItemExpr() )
 }
 
@@ -610,7 +636,7 @@ void NamedFunctionRef():
 void InlineFunctionExpr():
 {}
 {
-    "function" ParamList() ("as" SequenceType())? ("{" Expr() "}") #FunctionBody
+    <FUNCTION> ParamList() (<AS> SequenceType())? ("{" Expr() "}") #FunctionBody
 }
 
 void ParamList():
@@ -622,7 +648,7 @@ void ParamList():
 void Param():
 {}
 {
-    "$" EQName() [ TypeDeclaration() ]
+    <DOLLAR> EQName() [ TypeDeclaration() ]
 }
 
 
@@ -637,24 +663,24 @@ void KindTest() #void: // TODO tag those with an interface
     | SchemaElementTest()
     | SchemaAttributeTest()
     | ProcessingInstructionTest()
-    | "comment" "(" ")"             #CommentTest
-    | "text" "(" ")"                #TextTest
-    | "namespace-node" "(" ")"      #NamespaceNodeTest
-    | "node" "(" ")"                #AnyKindTest
+    | <COMMENT> "(" ")"             #CommentTest
+    | <TEXT> "(" ")"                #TextTest
+    | <NAMESPACE_NODE> "(" ")"      #NamespaceNodeTest
+    | <NODE> "(" ")"                #AnyKindTest
 }
 
 
 void DocumentTest():
 {}
 {
-    "document-node" "(" (ElementTest() | SchemaElementTest())? ")"
+    <DOCUMENT_NODE> "(" (ElementTest() | SchemaElementTest())? ")"
 }
 
 
 void ElementTest():
 {}
 {
-    "element" "(" [ (ElementName() | "*") #ElementNameOrWildcard [ "," TypeName() [ "?" ]]] ")"
+    <ELEMENT> "(" [ (ElementName() | "*") #ElementNameOrWildcard [ "," TypeName() [ "?" ]]] ")"
 }
 
 
@@ -670,20 +696,20 @@ void AttributeTest():
 void SchemaAttributeTest():
 {}
 {
-    "schema-attribute" "(" AttributeName() #AttributeDeclaration ")"
+    <SCHEMA_ATTRIBUTE> "(" AttributeName() #AttributeDeclaration ")"
 }
 
 void ProcessingInstructionTest():
 {}
 {
-    "processing-instruction" "(" (<NCNAME> | <STRING_LITERAL>)? ")"
+    <PROCESSING_INSTRUCTION> "(" (<NCNAME> | <STRING_LITERAL>)? ")"
 }
 
 
 void SchemaElementTest():
 {}
 {
-    "schema-element" "(" ElementName() #ElementDeclaration ")"
+    <SCHEMA_ELEMENT> "(" ElementName() #ElementDeclaration ")"
 }
 
 
@@ -692,12 +718,12 @@ void SchemaElementTest():
 void SequenceType() :
 {}
 {
-   "empty-sequence" "(" ")" #EmptySequenceType
+   (<EMPTY_SEQUENCE> "(" ")") #EmptySequenceType
  | ItemType()
    (
-      "?" {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
-    | "*" {jjtThis.setCardinality(Cardinality.ZERO_OR_MORE);}
-    | "+" {jjtThis.setCardinality(Cardinality.ONE_OR_MORE);}
+     <QUESTION_MARK> {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
+   | <STAR>          {jjtThis.setCardinality(Cardinality.ZERO_OR_MORE);}
+   | <PLUS>          {jjtThis.setCardinality(Cardinality.ONE_OR_MORE);}
    )?
 }
 
@@ -705,17 +731,17 @@ void ItemType():
 {}
 {
     KindTest()
-  | "item" "(" ")"          #AnyItemType
+  | (<ITEM> "(" ")")        #AnyItemType
   | FunctionTest()
   | EQName()                #AtomicOrUnionType
-  | "(" ItemType() ")"      #ParenthesizedItemType
+  | ("(" ItemType() ")")    #ParenthesizedItemType
 }
 
 void FunctionTest():
 {}
 {
-      LOOKAHEAD (3) ("function" "(" "*" ")")                #AnyFunctionTest
-    | ("function" ArgumentTypeList() "as" SequenceType())   #TypedFunctionTest
+      LOOKAHEAD (3) (<FUNCTION> "(" <STAR> ")")             #AnyFunctionTest
+    | (<FUNCTION> ArgumentTypeList() <AS> SequenceType())   #TypedFunctionTest
 }
 
 void ArgumentTypeList():

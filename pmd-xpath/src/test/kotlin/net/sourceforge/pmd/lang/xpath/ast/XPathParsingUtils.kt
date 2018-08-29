@@ -113,7 +113,7 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
      * Expect a parse exception to be thrown by [block].
      * The message is asserted to contain [messageContains].
      */
-    fun expectParseException(messageContains: String, block: () -> Unit) {
+    fun expectParseException(messageContains: String = "", block: () -> Unit) {
 
         val thrown = shouldThrow<ParseException>(block)
 

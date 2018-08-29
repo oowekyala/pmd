@@ -26,7 +26,7 @@ class ParserRulesetRegressionTests : FunSpec({
             .filter { it is XPathRule }
             .forEach {
                 // Generate one test for each XPath rule
-                parserTest("Test parsing rule ${it.ruleSetName}/${it.name}") {
+                parserTest("Test parsing rule ${it.name} (${it.ruleSetName})") {
                     val xpath = it.getProperty(XPathRule.XPATH_DESCRIPTOR)
                     try {
                         parseXPathRoot(xpath)
