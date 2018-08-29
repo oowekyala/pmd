@@ -14,6 +14,7 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
         return node.childrenAccept(this, data);
     }
 
+
     @Override
     public T visit(ASTXPathRoot node, T data) {
         return visit((XPathNode) node, data);
@@ -225,13 +226,13 @@ public class XPathParserVisitorAdapter<T> implements XPathParserVisitor<T> {
 
 
     @Override
-    public T visit(ASTNodeTest node, T data) {
+    public T visit(ASTExactNameTest node, T data) {
         return visit((XPathNode) node, data);
     }
 
 
     @Override
-    public T visit(ASTWildcard node, T data) {
+    public T visit(ASTWildcardNameTest node, T data) {
         return visit((XPathNode) node, data);
     }
 

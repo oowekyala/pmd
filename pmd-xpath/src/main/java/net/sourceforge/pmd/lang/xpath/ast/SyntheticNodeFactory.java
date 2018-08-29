@@ -28,7 +28,7 @@ final class SyntheticNodeFactory {
     }
 
 
-    public static ASTNodeTest synthesizeNodeTest(String test) {
+    public static NodeTest synthesizeNodeTest(String test) {
         return getParser(test).NodeTest();
     }
 

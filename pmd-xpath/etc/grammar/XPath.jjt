@@ -23,7 +23,7 @@ import net.sourceforge.pmd.lang.ast.CharStream;
 
 public class XPathParser {
 
-    private void throwParseException(String message) {
+    void throwParseException(String message) {
         ParseException exc = generateParseException();
         throw new ParseException(exc.getMessage() + message);
     }
@@ -147,18 +147,16 @@ TOKEN :
 | < FUNCTION: "function" >
 
 // Separators
-| < LPAREN: "(" >
-| < RPAREN: ")" >
-| < LBRACE: "{" >
-| < RBRACE: "}" >
-| < LBRACKET: "[" >
-| < RBRACKET: "]" >
-| < SEMICOLON: ";" >
-| < DOUBLE_COLON: "::" >
-| < COMMA: "," >
-| < DOT: "." >
-| < AT: "@" >
-| < DOLLAR: "$" >
+//| < LPAREN: "(" >
+//| < RPAREN: ")" >
+//| < LBRACKET: "[" >
+//| < RBRACKET: "]" >
+//| < SEMICOLON: ";" >
+//| < DOUBLE_COLON: "::" >
+//| < COMMA: "," >
+//| < DOT: "." >
+//| < AT: "@" >
+//| < DOLLAR: "$" >
 }
 
 
@@ -173,7 +171,7 @@ TOKEN :
 |
   < NUMERIC_LITERAL: <INTEGER_LITERAL> | <DECIMAL_LITERAL> | <DOUBLE_LITERAL> >
 |
-  < BRACED_URI_LITERAL: "Q" "{" ~["{", "}"] "}" >
+  < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
 |
   < #DIGITS: (["0"-"9"])+ >
 |
@@ -485,11 +483,11 @@ ASTAxisStep AxisStep():
  (
    (jjtThis.axis = Axis()) "::" NodeTest()
  |
-   NodeTest() { jjtThis.setAbbrevNoAxis(); }
+   NodeTest() { jjtThis.setAbbrevNoAxis(); } // The nodetest is #void, distinctions are implemented with an interface
  |
    "@" NodeTest() { jjtThis.setAbbrevAttributeAxis(); }
  |
-   ".." { jjtThis.setAbbrevParentNodeTest(); }
+   ".." { jjtThis.setAbbrevParentNodeTest();  }
  )
  PredicateList()
  { return jjtThis; }
@@ -520,20 +518,26 @@ Axis Axis() #void:
     { return axis; }
 }
 
-ASTNodeTest NodeTest():
+NodeTest NodeTest() #void:
 {}
 {
     (KindTest() | NameTest()) // both of these are #void
-    { return jjtThis; }
+    { return (NodeTest) jjtree.peekNode(); } // Returns the last node to have been pushed
 }
 
 void NameTest() #void:
 {}
 {
-   LOOKAHEAD(2) EQName() | Wildcard()
+   LOOKAHEAD(2) ExactNameTest() | WildcardNameTest()
 }
 
-void Wildcard():
+void ExactNameTest():
+{}
+{
+    EQName()
+}
+
+void WildcardNameTest():
 {}
 {
       "*" [ ":" NCName() {jjtThis.setPrefixWildcard();} ]
@@ -556,7 +560,7 @@ void ArgumentList():
 void Argument():
 {}
 {
-    ExprSingle() | "?" // TODO that's called placeholder
+    ExprSingle() | "?" {jjtThis.setPlaceholder();}// TODO that's called placeholder
 }
 
 
@@ -743,13 +747,13 @@ void TypeDeclaration():
 void EQName() #Name:
 {}
 {
-  (<EQNAME> | <NCNAME> ) {jjtThis.setImage(token.getImage());}
+  <EQNAME> | <NCNAME>
 }
 
 void NCName() #Name:
 {}
 {
-  <NCNAME> {jjtThis.setImage(token.getImage());}
+  <NCNAME>
 }
 
 

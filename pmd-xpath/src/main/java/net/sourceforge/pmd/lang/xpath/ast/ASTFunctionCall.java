@@ -4,12 +4,30 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * Function call.
+ *
+ * <pre>
+ *
+ * FunctionCall ::= {@linkplain ASTName EQName} {@linkplain ASTArgumentList ArgumentList}
+ *
+ * </pre>
+ */
 public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTFunctionCall(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    public ASTName getFunctionName() {
+        return (ASTName) jjtGetChild(0);
+    }
+
+
+    public ASTArgumentList getArguments() {
+        return (ASTArgumentList) jjtGetChild(1);
     }
 
 

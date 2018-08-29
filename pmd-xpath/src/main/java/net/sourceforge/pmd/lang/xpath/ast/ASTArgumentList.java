@@ -4,8 +4,19 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.Iterator;
 
-public final class ASTArgumentList extends AbstractXPathNode {
+
+/**
+ * List of arguments of a {@linkplain ASTFunctionCall function call}.
+ *
+ * <pre>
+ *
+ * ArgumentsList ::= "(" ({@linkplain ASTArgument Argument} ("," {@linkplain ASTArgument Argument} )*)? ")"
+ *
+ * </pre>
+ */
+public final class ASTArgumentList extends AbstractXPathNode implements Iterable<ASTArgument> {
 
 
     ASTArgumentList(XPathParser p, int id) {
@@ -16,6 +27,12 @@ public final class ASTArgumentList extends AbstractXPathNode {
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
+    }
+
+
+    @Override
+    public Iterator<ASTArgument> iterator() {
+        return new NodeChildrenIterator<>(this, ASTArgument.class);
     }
 }
 /* JavaCC - OriginalChecksum=fd6d075b8d6ce0f018e80673e3944af3 (do not edit this line) */

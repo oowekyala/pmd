@@ -5,7 +5,23 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
+
+/**
+ * A string literal, one of the {@linkplain PrimaryExpr primary expressions}.
+ * Strings may be delimited by either single or double quotes. Within a literal,
+ * the delimiter may be escaped by doubling it.
+ *
+ * <pre>
+ *
+ * StringLiteral ::= &lt;STRING_LITERAL&gt;
+ *
+ * </pre>
+ */
 public final class ASTStringLiteral extends AbstractXPathNode implements PrimaryExpr {
+
+    private String value;
 
 
     ASTStringLiteral(XPathParser p, int id) {
@@ -14,8 +30,44 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
 
 
     @Override
+    public void jjtClose() {
+        super.jjtClose();
+
+        setImage(jjtGetFirstToken().getImage());
+
+        if (getImage() == null || getImage().length() < 2) {
+            throw new IllegalStateException("Malformed string literal!");
+        }
+
+        String delim = String.valueOf(getDelimiter());
+        String s = getImage().substring(1, getImage().length() - 1);
+
+        s = s.replaceAll(delim + delim, delim);
+        s = StringEscapeUtils.unescapeXml(s); // deprecated because now in commons-text
+
+        this.value = s;
+    }
+
+
+    /**
+     * Returns the image of the string as it appeared in the source.
+     */
+    @Override
     public String getImage() {
-        return jjtGetFirstToken().getImage();
+        return super.getImage();
+    }
+
+
+    public char getDelimiter() {
+        return getImage().charAt(0);
+    }
+
+
+    /**
+     * Returns the unescaped value.
+     */
+    public String getUnescapedValue() {
+        return value;
     }
 
 

@@ -56,7 +56,7 @@ public abstract class AbstractXPathNode extends AbstractNode implements XPathNod
     }
 
 
-    void insertChild(Node child, int index) {
+    void insertSyntheticChild(XPathNode child, int index) {
         // Allow to insert a child at random insert without overwriting
         if (children != null && index < children.length) {
             Node[] newChildren = new Node[children.length + 1];
@@ -73,6 +73,14 @@ public abstract class AbstractXPathNode extends AbstractNode implements XPathNod
         }
         super.jjtAddChild(child, index);
         child.jjtSetParent(this);
+
+        AbstractXPathNode childImpl = (AbstractXPathNode) child;
+
+        // Line numbers
+        childImpl.beginLine = this.getBeginLine();
+        childImpl.endLine = this.getEndLine();
+        childImpl.beginColumn = this.getBeginColumn();
+        childImpl.endColumn = this.getEndColumn();
     }
 
 

@@ -5,11 +5,36 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * Argument of a {@linkplain ASTFunctionCall}.
+ *
+ * <pre>
+ *
+ * Argument ::= {@linkplain ASTExpr ExprSingle} | "?"
+ *
+ * </pre>
+ */
 public final class ASTArgument extends AbstractXPathNode {
+
+
+    private boolean isPlaceholder;
 
 
     ASTArgument(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns true if this is a placeholder argument, i.e. "?".
+     */
+    public boolean isPlaceholder() {
+        return isPlaceholder;
+    }
+
+
+    void setPlaceholder() {
+        isPlaceholder = true;
     }
 
 

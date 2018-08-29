@@ -36,7 +36,8 @@ public final class ASTStepExpr extends AbstractXPathNode {
     /**
      * Returns true if this step expr is an abbreviated descendant or self step.
      * This is written "//" in the expression, but expands to "/descendant-or-self::node()/".
-     * The structure of a "//" node is exactly identical to "/descendant-or-self::node()/".
+     * The structure of the subtree is exactly identical to the expanded form (except maybe
+     * for line numbers).
      */
     public boolean isAbbrevDescendantOrSelf() {
         return isAbbrevDescendantOrSelf;
@@ -48,7 +49,7 @@ public final class ASTStepExpr extends AbstractXPathNode {
         // This is not done in jjtClose because the parser closes the node before the call to this method
         // Besides, since AbbrevPathOperator has only one token and no children, this is safe
         ASTAxisStep step = SyntheticNodeFactory.synthesizeAxisStep("descendant-or-self::node()");
-        insertChild(step, 0);
+        insertSyntheticChild(step, 0);
     }
 
 

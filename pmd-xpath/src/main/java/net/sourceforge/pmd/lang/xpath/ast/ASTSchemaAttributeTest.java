@@ -5,7 +5,10 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTSchemaAttributeTest extends AbstractXPathNode {
+import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
+
+
+public final class ASTSchemaAttributeTest extends AbstractXPathNode implements KindTest {
 
 
     ASTSchemaAttributeTest(XPathParser p, int id) {

@@ -5,7 +5,10 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTCommentTest extends AbstractXPathNode {
+import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
+
+
+public final class ASTCommentTest extends AbstractXPathNode implements KindTest {
 
 
     ASTCommentTest(XPathParser p, int id) {

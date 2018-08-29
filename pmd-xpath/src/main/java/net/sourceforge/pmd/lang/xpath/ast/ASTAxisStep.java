@@ -15,16 +15,17 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *     <li>".." is a shorthand for the "parent::node()" step.
  *     <li>If the axis name is omitted from an axis step, the default axis is "child",
  *         with two exceptions: if the NodeTest in an axis step contains an AttributeTest
- *         or SchemaAttributeTest then the default axis is attribute.
+ *         or SchemaAttributeTest then the default axis is attribute. if the NodeTest in an
+ *         axis step is a NamespaceNodeTest then a static error is raised. <a href="https://www.w3.org/TR/xpath-30/#doc-xpath30-AbbrevForwardStep">Source.</a>
  * </ul>
  * The subtree for these shorthand notations is exactly the same as that of the expanded forms.
+ * This is implemented in {@link #jjtClose()}.
  *
  * <pre>
  *
- * AxisStep ::= (Axis "::")? {@linkplain ASTNodeTest NodeTest} {@linkplain ASTPredicateList PredicateList}
- *
- * (: Not a node :)
- * Axis ::= {@linkplain Axis Axis}
+ * (: Note that Axis is not a node and is not present in the children. :)
+ * (: Note that NodeTest is an interface and the child is a concrete instance of an implementor. :)
+ * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} {@linkplain ASTPredicateList PredicateList}
  *
  * </pre>
  */
@@ -78,7 +79,16 @@ public final class ASTAxisStep extends AbstractXPathNode {
     public void jjtClose() {
         super.jjtClose();
         if (isAbbrevParentNodeTest()) {
-            insertChild(SyntheticNodeFactory.synthesizeNodeTest("node()"), 0);
+            insertSyntheticChild(SyntheticNodeFactory.synthesizeNodeTest("node()"), 0);
+        } else if (isAbbrevNoAxis()) {
+            // then the implied axis depends on the nodeTest
+
+            if (getNodeTest() instanceof ASTAttributeTest
+                    || getNodeTest() instanceof ASTSchemaAttributeTest) {
+                this.axis = Axis.ATTRIBUTE;
+            } else if (getNodeTest() instanceof ASTNamespaceNodeTest) {
+                parser.throwParseException("Namespace tests are illegal when not mentioning an axis.");
+            }
         }
     }
 
@@ -92,8 +102,8 @@ public final class ASTAxisStep extends AbstractXPathNode {
 
 
     void setAbbrevNoAxis() {
-        this.axis = Axis.CHILD; // FIXME
         this.isAbbrevNoAxis = true;
+        this.axis = Axis.CHILD; // FIXME
     }
 
 
@@ -111,10 +121,12 @@ public final class ASTAxisStep extends AbstractXPathNode {
 
 
     /**
-     * Returns the node test.
+     * Returns the node test. Note that it is not a concrete node,
+     * but an interface. The returned node is of a different concrete
+     * type.
      */
-    public ASTNodeTest getNodeTest() {
-        return (ASTNodeTest) jjtGetChild(0);
+    public NodeTest getNodeTest() {
+        return (NodeTest) jjtGetChild(0);
     }
 
 

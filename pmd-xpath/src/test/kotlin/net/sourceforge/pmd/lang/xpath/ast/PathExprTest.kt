@@ -23,10 +23,10 @@ class PathExprTest : FunSpec({
 
                     it.axis shouldBe Axis.CHILD
 
-                    child<ASTNodeTest> {
-                        child<ASTName> {
-                            it.image shouldBe "A"
-                        }
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "A"
+
+                        it.matchedName shouldBe child { it.image shouldBe "A" }
                     }
 
                     child<ASTPredicateList> {
@@ -42,12 +42,14 @@ class PathExprTest : FunSpec({
 
                     it.axis shouldBe Axis.CHILD
 
-                    child<ASTNodeTest> {
 
-                        child<ASTName> {
-                            it.image shouldBe "B"
-                        }
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "B"
+
+                        child<ASTName> { it.image shouldBe "B" }
+
                     }
+
 
                     child<ASTPredicateList> {
 
@@ -71,10 +73,10 @@ class PathExprTest : FunSpec({
                     it.axis shouldBe Axis.ATTRIBUTE
                     it.isAbbrevAttributeAxis shouldBe true
 
-                    child<ASTNodeTest> {
-                        child<ASTName> {
-                            it.image shouldBe "A"
-                        }
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "A"
+
+                        child<ASTName> { it.image shouldBe "A" }
                     }
 
                     child<ASTPredicateList> {
@@ -99,10 +101,8 @@ class PathExprTest : FunSpec({
                     it.axis shouldBe Axis.PARENT
                     it.isAbbrevParentNodeTest shouldBe true
 
-                    child<ASTNodeTest> {
-                        child<ASTAnyKindTest> {
+                    child<ASTAnyKindTest> {
 
-                        }
                     }
 
                     child<ASTPredicateList> {
@@ -127,10 +127,11 @@ class PathExprTest : FunSpec({
 
                     it.axis shouldBe Axis.CHILD
 
-                    child<ASTNodeTest> {
-                        child<ASTName> {
-                            it.image shouldBe "A"
-                        }
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "A"
+
+                        child<ASTName> { it.image shouldBe "A" }
+
                     }
 
                     child<ASTPredicateList> {
@@ -148,10 +149,8 @@ class PathExprTest : FunSpec({
 
                     it.axis shouldBe Axis.DESCENDANT_OR_SELF
 
-                    child<ASTNodeTest> {
-                        child<ASTAnyKindTest> {
+                    child<ASTAnyKindTest> {
 
-                        }
                     }
 
                     child<ASTPredicateList> {
@@ -167,11 +166,11 @@ class PathExprTest : FunSpec({
 
                     it.axis shouldBe Axis.CHILD
 
-                    child<ASTNodeTest> {
 
-                        child<ASTName> {
-                            it.image shouldBe "B"
-                        }
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "B"
+
+                        child<ASTName> { it.image shouldBe "B" }
                     }
 
                     child<ASTPredicateList> {

@@ -30,26 +30,62 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @since 6.7.0
  */
 public enum Axis {
-    SELF("self"),
-    CHILD("child"),
-    ATTRIBUTE("attribute"),
-    DESCENDANT("descendant"),
-    DESCENDANT_OR_SELF("descendant-or-self"),
-    ANCESTOR("ancestor"),
-    ANCESTOR_OR_SELF("ancestor-or-self"),
-    FOLLOWING("following"),
-    FOLLOWING_SIBLING("following-sibling"),
-    NAMESPACE("namespace"),
-    PARENT("parent"),
-    PRECEDING("preceding"),
-    PRECEDING_SIBLING("preceding-sibling");
+    SELF("self", true),
+    CHILD("child", true),
+    ATTRIBUTE("attribute", true) {
+        @Override
+        public XmdNodeKind getPrincipalNodeKind() {
+            return XmdNodeKind.ATTRIBUTE;
+        }
+    },
+    FOLLOWING("following", true),
+    FOLLOWING_SIBLING("following-sibling", true),
+    NAMESPACE("namespace", true) {
+        @Override
+        public XmdNodeKind getPrincipalNodeKind() {
+            return XmdNodeKind.NAMESPACE;
+        }
+    },
+    DESCENDANT("descendant", true),
+    DESCENDANT_OR_SELF("descendant-or-self", true),
+
+    // Reverse axes
+    ANCESTOR("ancestor", false),
+    ANCESTOR_OR_SELF("ancestor-or-self", false),
+    PARENT("parent", false),
+    PRECEDING("preceding", false),
+    PRECEDING_SIBLING("preceding-sibling", false);
 
 
     private final String name;
+    private final boolean isForward;
 
 
-    Axis(String name) {
+    Axis(String name, boolean isForward) {
         this.name = name;
+        this.isForward = isForward;
+    }
+
+
+    /**
+     * Returns whether this is a forward axis or not.
+     * An axis that only ever contains the context node
+     * or nodes that are after the context node in document
+     * order is a forward axis.
+     */
+    public boolean isForward() {
+        return isForward;
+    }
+
+
+    /**
+     * Returns whether this is a reverse axis or not.
+     * An axis that only ever contains
+     * the context node or nodes that are before the context
+     * node in document order is a reverse axis.
+     */
+    public boolean isReverse() {
+        return !isForward();
     }
 
 
@@ -58,6 +94,18 @@ public enum Axis {
      */
     public String getName() {
         return name;
+    }
+
+
+    /**
+     * Returns the principal node kind of this axis.
+     * Every axis has a principal node kind. If an
+     * axis can contain elements, then the principal
+     * node kind is element; otherwise, it is the kind
+     * of nodes that the axis can contain.
+     */
+    public XmdNodeKind getPrincipalNodeKind() {
+        return XmdNodeKind.ELEMENT;
     }
 
 
