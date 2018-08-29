@@ -4,9 +4,31 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.Iterator;
 
-public final class ASTPathExpr extends AbstractXPathNode {
 
+/**
+ * Path expression. A path is a sequence of step expressions.
+ *
+ * <p>If a path expression is relative, and has a single step
+ * that is a postfix expression, then the PathExpr/StepExpr context
+ * around the PostfixExpr is removed, since it obscures the AST and is lexically
+ * equivalent. This removal occurs at parse-time. TODO test
+ *
+ * <pre>
+ *
+ * PathExpr ::= "/" RelativePathExpr?
+ *            | "//" RelativePathExpr
+ *            | RelativePathExpr
+ *
+ * (: Not a node :)
+ * RelativePathExpr ::= {@linkplain ASTStepExpr StepExpr} ({@linkplain ASTPathOperator PathOperator} {@linkplain ASTStepExpr StepExpr})*
+ *
+ * </pre>
+ */
+public final class ASTPathExpr extends AbstractXPathNode implements Iterable<ASTStepExpr> {
+
+    // TODO we could remove the ASTPathOperator if we expand "//" to its full form
 
     private PathAnchor pathAnchor;
 
@@ -42,9 +64,21 @@ public final class ASTPathExpr extends AbstractXPathNode {
     }
 
 
+    @Override
+    public Iterator<ASTStepExpr> iterator() {
+        return new NodeChildrenIterator<>(this, ASTStepExpr.class);
+    }
+
+
+    /**
+     * Anchoring of a PathExpr. This only concerns the first step.
+     */
     public enum PathAnchor {
+        /** The PathExpr starts with "/". */
         ROOT,
+        /** The PathExpr starts with "//". */
         DESCENDANT_OR_ROOT,
+        /** The PathExpr starts with neither "/" nor "//". */
         RELATIVE
     }
 

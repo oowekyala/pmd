@@ -438,18 +438,20 @@ void MapExpr() #MapExpr(>1) :
 
 /* PATH EXPRESSIONS */
 
-void PathExpr():
-{}
+void PathExpr() #PathExpr(!trivial):
+{ boolean trivial = false; }
 {
-    ("/" [ RelativePathExpr() ]) { jjtThis.setRootAnchor(); }
-  | ( "//" RelativePathExpr()) { jjtThis.setDescendantAnchor(); }
-  | RelativePathExpr() { jjtThis.setRelativeAnchor(); }
+    ("/" [ RelativePathExpr(false) ]) { jjtThis.setRootAnchor(); }
+  | ( "//" RelativePathExpr(false)) { jjtThis.setDescendantAnchor(); }
+  | (trivial = RelativePathExpr(true)) { jjtThis.setRelativeAnchor(); }
 }
 
-void RelativePathExpr() #void:
+boolean RelativePathExpr(boolean maybeTrivial) #void:
 {}
 {
-  StepExpr() (PathOperator() StepExpr())*
+  (maybeTrivial = StepExpr(maybeTrivial))
+  (PathOperator() StepExpr(false) { maybeTrivial = false; })*
+  { return maybeTrivial; }
 }
 
 void PathOperator():
@@ -459,11 +461,18 @@ void PathOperator():
     | "//"
 }
 
+// TODO corner cases:
+// https://www.w3.org/TR/xpath-30/#doc-xpath30-RelativePathExpr
+// / union /* vs (/) union /*
+// /* & / * -> pathexpr with wildcard
+// /*5 vs / * 5 -> syntax error
+// (/) * 5 -> multiplication with root path expr
 
-void StepExpr():
+boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 {}
 {
-    LOOKAHEAD(2) PostfixExpr() | AxisStep()
+    (LOOKAHEAD(2) PostfixExpr() | (AxisStep() {maybeTrivial = false;}))
+    { return maybeTrivial; }
 }
 
 void AxisStep():
@@ -511,7 +520,7 @@ Axis Axis() #void:
 void NodeTest():
 {}
 {
-    KindTest() | NameTest()
+    KindTest() | NameTest() // both of these are #void
 }
 
 void NameTest() #void:
