@@ -40,12 +40,9 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
         }
 
         String delim = String.valueOf(getDelimiter());
-        String s = getImage().substring(1, getImage().length() - 1);
 
-        s = s.replaceAll(delim + delim, delim);
-        s = StringEscapeUtils.unescapeXml(s); // deprecated because now in commons-text
-
-        this.value = s;
+        this.value = getImage().substring(1, getImage().length() - 1)
+                               .replaceAll(delim + delim, delim);
     }
 
 
@@ -67,10 +64,19 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
 
 
     /**
-     * Returns the unescaped value.
+     * Returns the value without delimiters and with unescaped delimiters.
      */
     public String getUnescapedValue() {
         return value;
+    }
+
+
+    /**
+     * Returns the {@linkplain #getUnescapedValue() unescaped value} with
+     * additional XML unescaping.
+     */
+    public String getXmlUnescapedValue() {
+        return StringEscapeUtils.unescapeXml(value); // deprecated because now in commons-text
     }
 
 

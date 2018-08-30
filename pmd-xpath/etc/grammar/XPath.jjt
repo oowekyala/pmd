@@ -61,6 +61,25 @@ SKIP : { <"(:"> { commentNestingDepth = 1; } : COMMENT_STATE }
 < COMMENT_STATE >  SKIP : {  < ~[] > }
 
 
+/* LITERALS */
+
+
+TOKEN :
+{
+  < STRING_LITERAL: "\"" ("\"\"" | ~["\""])* "\"" | "'" ("''" | ~["'"])* "'" >
+| < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
+
+| < INTEGER_LITERAL: <DIGITS> >
+| < DECIMAL_LITERAL: "." <DIGITS> | <DIGITS> "." <MAYBE_DIGITS> >
+| < DOUBLE_LITERAL: ("." <DIGITS> | <DIGITS> ("." <MAYBE_DIGITS>)?) <EXPONENT> >
+
+| < #DIGITS: (["0"-"9"])+ >
+| < #MAYBE_DIGITS: (["0"-"9"])* >
+| < #EXPONENT: ["e","E"] (["+","-"])? <DIGITS> >
+}
+
+
+
 /* RESERVED WORDS */
 
 TOKEN :
@@ -92,7 +111,10 @@ TOKEN :
 | < UNION: "union" >
 | < INTERSECT: "intersect" >
 | < EXCEPT: "except" >
-
+| < MINUS: "-" >
+| < BANG: "!" >
+| < PATH_ALT: "//" >
+| < PATH: "/" >
 
 // Comparison operators
 | < NE: "ne" >
@@ -145,9 +167,8 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACKET: "[" >
 | < RBRACKET: "]" >
-| < BANG: "!" >
-| < PATH_ALT: "//" >
-| < PATH: "/" >
+| < LCURLY: "{" >
+| < RCURLY: "}" >
 | < SEMICOLON: ";" >
 | < DOUBLE_COLON: "::" >
 | < DOUBLE_PERIOD: ".." >
@@ -160,27 +181,11 @@ TOKEN :
 | < STAR: "*" >
 | < PLUS: "+" >
 | < DOLLAR: "$" >
+| < COLON: ":" >
 }
 
 
 
-
-/* LITERALS */
-
-
-TOKEN :
-{
-  < STRING_LITERAL: "\"" ("\"\"" | ~["\""])* "\"" | "'" ("''" | ~["'"])* "'" >
-| < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
-
-| < INTEGER_LITERAL: <DIGITS> >
-| < DECIMAL_LITERAL: "." <DIGITS> | <DIGITS> "." <MAYBE_DIGITS> >
-| < DOUBLE_LITERAL: ("." <DIGITS> | <DIGITS> ("." <MAYBE_DIGITS>)?) <EXPONENT> >
-
-| < #DIGITS: (["0"-"9"])+ >
-| < #MAYBE_DIGITS: (["0"-"9"])* >
-| < #EXPONENT: ["e","E"] (["+","-"])? <DIGITS> >
-}
 
 /* NAMES */
 
@@ -220,16 +225,6 @@ TOKEN :
   "\u0300"-"\u036f",
   "\u203f"-"\u2040"
   ] >
-}
-
-// Have lower precedence than names
-TOKEN:
-{
-  < LCURLY: "{" >
-| < RCURLY: "}" >
-| < MINUS: "-" >
-| < COLON: ":" >
-
 }
 
 
