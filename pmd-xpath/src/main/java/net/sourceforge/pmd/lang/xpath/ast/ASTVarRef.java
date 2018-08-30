@@ -4,12 +4,29 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * Variable reference, one of the {@link PrimaryExpr primary expressions}.
+ *
+ * <pre>
+ *
+ * VarRef ::= "$" {@linkplain ASTName VarName}
+ *
+ * </pre>
+ */
 public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
 
     ASTVarRef(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the node representing the name of
+     * the referenced variable.
+     */
+    public ASTName getVariableName() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

@@ -21,11 +21,17 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
     }
 
 
+    /**
+     * Get the node representing the function name.
+     */
     public ASTName getFunctionName() {
         return (ASTName) jjtGetChild(0);
     }
 
 
+    /**
+     * Gets the (possibly empty) argument list of the function.
+     */
     public ASTArgumentList getArguments() {
         return (ASTArgumentList) jjtGetChild(1);
     }

@@ -7,9 +7,44 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
+    private double value;
+    private boolean isIntegerLiteral;
+    private boolean isDecimalLiteral;
+    private boolean isDoubleLiteral;
+
 
     ASTNumericLiteral(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    public boolean isIntegerLiteral() {
+        return isIntegerLiteral;
+    }
+
+
+    void setIntegerLiteral() {
+        isIntegerLiteral = true;
+    }
+
+
+    public boolean isDecimalLiteral() {
+        return isDecimalLiteral;
+    }
+
+
+    void setDecimalLiteral() {
+        isDecimalLiteral = true;
+    }
+
+
+    public boolean isDoubleLiteral() {
+        return isDoubleLiteral;
+    }
+
+
+    void setDoubleLiteral() {
+        isDoubleLiteral = true;
     }
 
 

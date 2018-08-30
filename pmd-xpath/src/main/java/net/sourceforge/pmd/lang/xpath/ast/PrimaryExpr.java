@@ -5,7 +5,19 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Trait for primary expressions.
+ * Identifies primary expressions.
+ *
+ * <pre>
+ *
+ * PrimaryExpr ::= {@linkplain ASTNumericLiteral NumericLiteral}
+ *               | {@linkplain ASTStringLiteral StringLiteral}
+ *               | {@linkplain ASTVarRef VarRef}
+ *               | {@linkplain ASTParenthesizedExpr ParenthesizedExpr}
+ *               | {@linkplain ASTContextItemExpr ContextItemExpr}
+ *               | {@linkplain ASTFunctionCall FunctionCall}
+ *               | {@linkplain ASTFunctionItemExpr FunctionItemExpr} )
+ *
+ * </pre>
  *
  * @author Clément Fournier
  * @since 6.7.0

@@ -43,7 +43,7 @@ PARSER_END(XPathParser)
 
 TOKEN_MGR_DECLS :
 {
-    private int commentDepth = 0;
+    private int commentNestingDepth = 0;
 }
 
 /* WHITE SPACE */
@@ -53,29 +53,13 @@ SPECIAL_TOKEN :
   " " | "\t" | "\n" | "\r" | "\f"
 }
 
-SKIP :
-{
-  <"(:"> { commentDepth++; } : IN_XPATH_COMMENT
-}
+SKIP : { <"(:"> { commentNestingDepth = 1; } : COMMENT_STATE }
 
-<IN_XPATH_COMMENT> SKIP :
-{
-  // FIXME Nested comments cannot be expressed with regex
-  //  <XPATH_COMMENT: "(:" > { commentDepth++; }
-  // |
-  <XPATH_COMMENT: ":)" >
-  {
-    commentDepth--;
-    if (commentDepth == 0) {
-      SwitchTo(DEFAULT);
-    }
-  }
-}
+// Comments may be nested
+< COMMENT_STATE >  SKIP : {  "(:" { commentNestingDepth++; } }
+< COMMENT_STATE >  SKIP : {  ":)" { SwitchTo(--commentNestingDepth == 0 ? DEFAULT : COMMENT_STATE); } }
+< COMMENT_STATE >  SKIP : {  < ~[] > }
 
-<IN_XPATH_COMMENT> MORE :
-{
-  < ~[] >
-}
 
 /* RESERVED WORDS */
 
@@ -187,18 +171,15 @@ TOKEN :
 TOKEN :
 {
   < STRING_LITERAL: "\"" ("\"\"" | ~["\""])* "\"" | "'" ("''" | ~["'"])* "'" >
-|
-  < NUMERIC_LITERAL: <INTEGER_LITERAL> | <DECIMAL_LITERAL> | <DOUBLE_LITERAL> >
-|
-  < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
-|
-  < #DIGITS: (["0"-"9"])+ >
-|
-  < INTEGER_LITERAL: <DIGITS> >
-|
-  < #DECIMAL_LITERAL: ("." <DIGITS>) | (<DIGITS> ("." (["0"-"9"])*)) >
-|
-  < #DOUBLE_LITERAL: (("." <DIGITS>) | (<DIGITS> ("." (["0"-"9"])*)?)) ["e","E"] (["+","-"])? <DIGITS> >
+| < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
+
+| < INTEGER_LITERAL: <DIGITS> >
+| < DECIMAL_LITERAL: "." <DIGITS> | <DIGITS> "." <MAYBE_DIGITS> >
+| < DOUBLE_LITERAL: ("." <DIGITS> | <DIGITS> ("." <MAYBE_DIGITS>)?) <EXPONENT> >
+
+| < #DIGITS: (["0"-"9"])+ >
+| < #MAYBE_DIGITS: (["0"-"9"])* >
+| < #EXPONENT: ["e","E"] (["+","-"])? <DIGITS> >
 }
 
 /* NAMES */
@@ -604,16 +585,25 @@ void Predicate() #void:
 void PrimaryExpr() #void:
 {}
 {
-      <NUMERIC_LITERAL>     #NumericLiteral
-    | <STRING_LITERAL>      #StringLiteral
-    | <DOLLAR> VarName()         #VarRef
+      NumericLiteral()
+    | <STRING_LITERAL>                #StringLiteral
+    | (<DOLLAR> VarName())            #VarRef
     | (<LPAREN> [ Expr() ] <RPAREN>)  #ParenthesizedExpr
-    | <PERIOD>                   #ContextItemExpr
+    | <PERIOD>                        #ContextItemExpr
     |
     (LOOKAHEAD (2)
       FunctionCall()
     | FunctionItemExpr() )
 }
+
+void NumericLiteral():
+{}
+{
+      <INTEGER_LITERAL> { jjtThis.setIntegerLiteral(); }
+    | <DECIMAL_LITERAL> { jjtThis.setDecimalLiteral(); }
+    | <DOUBLE_LITERAL>  { jjtThis.setDoubleLiteral();  }
+}
+
 
 void FunctionCall():
 {}

@@ -30,13 +30,29 @@ class ParserTests : FunSpec({
                             }
                         }
                     }
+
+                    child<ASTExpr> {
+                        child<ASTMultiplicativeExpr> {
+                            child<ASTVarRef> {
+                                it.variableName shouldBe child {
+                                    it.localName shouldBe "i"
+                                }
+                            }
+
+                            child<ASTTimesOperator> { }
+
+                            child<ASTNumericLiteral> {
+                                it.image shouldBe "3"
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
 
-
-
-
+    parserTest("Test nested comments") {
+        parseXPathRoot("(: (: we're nested :) :) //hello  ")
     }
 
 })
