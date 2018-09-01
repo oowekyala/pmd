@@ -53,6 +53,8 @@ SPECIAL_TOKEN :
   " " | "\t" | "\n" | "\r" | "\f"
 }
 
+/* COMMENTS */
+
 SKIP : { <"(:"> { commentNestingDepth = 1; } : COMMENT_STATE }
 
 // Comments may be nested
@@ -77,7 +79,6 @@ TOKEN :
 | < #MAYBE_DIGITS: (["0"-"9"])* >
 | < #EXPONENT: ["e","E"] (["+","-"])? <DIGITS> >
 }
-
 
 
 /* RESERVED WORDS */
@@ -113,8 +114,8 @@ TOKEN :
 | < EXCEPT: "except" >
 | < MINUS: "-" >
 | < BANG: "!" >
-| < PATH_ALT: "//" >
 | < PATH: "/" >
+| < PATH_ALT: "//" >
 
 // Comparison operators
 | < NE: "ne" >
@@ -191,13 +192,10 @@ TOKEN :
 
 TOKEN :
 {
-  // The actual lexical grammar for NCName is: any name except <CHAR>* ":" <CHAR>*
-  // This is not easily representable and is left for future work if needed
-  < NCNAME: <NAME_START_CHAR_NO_COLON> (<NAME_CHAR_NO_COLON>)* >
-|
   < EQNAME: <NCNAME> (":" <NCNAME>)? | <BRACED_URI_LITERAL> <NCNAME> >
 |
-  < NS_ATT_NAME: "xmlns:" <NCNAME> | "xmlns" >
+  // The actual lexical grammar for NCName is: any name except <CHAR>* ":" <CHAR>*
+  < NCNAME: <NAME_START_CHAR_NO_COLON> (<NAME_CHAR_NO_COLON>)* >
 |
   < #NAME_START_CHAR_NO_COLON: [
     "A"-"Z",
@@ -295,8 +293,8 @@ void VarBindingList(boolean isLetCtx):
 void VarBinding(boolean isLet):
 {}
 {
-  <DOLLAR> VarName() { jjtThis.setVarName(token.getImage()); }
-  (<IN> {checkVarBinding(isLet, false);} | <LET_ASSIGN> {checkVarBinding(isLet, true);})
+  "$" VarName() { jjtThis.setVarName(token.getImage()); }
+  (<IN> {checkVarBinding(isLet, false);} | ":=" {checkVarBinding(isLet, true);})
   ExprSingle()
 }
 
@@ -382,7 +380,7 @@ void UnionOperator():
 {}
 {
     <UNION>
-  | <PIPE> { jjtThis.setShorthand(true); }
+  | "|" { jjtThis.setShorthand(true); }
 }
 
 void IntersectExceptExpr() #IntersectExceptExpr(>1):
@@ -390,7 +388,8 @@ void IntersectExceptExpr() #IntersectExceptExpr(>1):
 {
   InstanceofExpr()
   (
-    (   <INTERSECT> #IntersectOperator
+    (
+        <INTERSECT> #IntersectOperator
       | <EXCEPT> #ExceptOperator
     )
 
@@ -443,17 +442,18 @@ void MapExpr() #MapExpr(>1) :
 void PathExpr() #PathExpr(!trivial):
 { boolean trivial = false; }
 {
-    (<PATH> [ LOOKAHEAD(2) RelativePathExpr(false) ]) { jjtThis.setRootAnchor(); }
-  | (<PATH_ALT> RelativePathExpr(false)) { jjtThis.setDescendantAnchor(); }
-  | (trivial = RelativePathExpr(true)) { jjtThis.setRelativeAnchor(); }
+    ("/" [ RelativePathExpr(false) ])                    { jjtThis.setRootAnchor(); }
+  | ( "//" RelativePathExpr(false))                      { jjtThis.setDescendantAnchor(); }
+  | (trivial = RelativePathExpr(true))                   { jjtThis.setRelativeAnchor(); }
 }
 
+// Returns whether the step is trivial
 boolean RelativePathExpr(boolean maybeTrivial) #void:
 {}
 {
   (maybeTrivial = StepExpr(maybeTrivial))
   (
-    ( <PATH> | AbbrevPathOperator()) // "//" is synthesized as a StepExpr for consistency
+    ( "/" | AbbrevPathOperator()) // "//" is synthesized as a StepExpr for consistency
     StepExpr(false)
     { maybeTrivial = false; }
   )*
@@ -464,15 +464,15 @@ boolean RelativePathExpr(boolean maybeTrivial) #void:
 void AbbrevPathOperator() #StepExpr: // Pushes a step expr
 {}
 {
-    <PATH_ALT> { jjtThis.setAbbrevDescendantOrSelf();} // this function synthesizes a NodeTest
+    "//" { jjtThis.setAbbrevDescendantOrSelf();} // this function synthesizes a NodeTest
 }
 
-
+// Returns whether the step is trivial
 boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 {}
 {
-    (LOOKAHEAD(2) // Lookahead because <EQNAME> may start an ExactNameTest or e.g. a function call
-      PostfixExpr() | (AxisStep() {maybeTrivial = false;})
+    (//LOOKAHEAD(2) // Lookahead because <EQNAME> may start an ExactNameTest or e.g. a function call
+      (AxisStep() {maybeTrivial = false;}) | PostfixExpr()
     )
     { return maybeTrivial; }
 }
@@ -480,14 +480,17 @@ boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 ASTAxisStep AxisStep():
 {}
 {
- ( LOOKAHEAD(2) // Lookahead to find "::" because "attribute" may start an axis or a kind test
-   (jjtThis.axis = Axis()) <DOUBLE_COLON> NodeTest()
+ (LOOKAHEAD(1) // "attribute" may start an axis or a kind test
+               // We don't look ahead and let the parser backtrack since if "::" is not present
+               // it only backtracks one token
+   (jjtThis.axis = Axis()) "::" NodeTest()
  |
-   NodeTest() { jjtThis.setAbbrevNoAxis(); } // The nodetest is #void, distinctions are implemented with an interface
+ // The nodetest is #void, distinctions are implemented with an interface
+   NodeTest()       { jjtThis.setAbbrevNoAxis(); }
  |
-   <AT> NodeTest() { jjtThis.setAbbrevAttributeAxis(); }
+   "@" NodeTest()   { jjtThis.setAbbrevAttributeAxis(); }
  |
-   <DOUBLE_PERIOD> { jjtThis.setAbbrevParentNodeTest();  }
+   ".."             { jjtThis.setAbbrevParentNodeTest();  }
  )
  PredicateList()
  { return jjtThis; }
@@ -528,7 +531,7 @@ NodeTest NodeTest() #void:
 void NameTest() #void:
 {}
 {
-   LOOKAHEAD(2) ExactNameTest() | WildcardNameTest()
+   ExactNameTest() | WildcardNameTest()
 }
 
 void ExactNameTest():
@@ -540,9 +543,9 @@ void ExactNameTest():
 void WildcardNameTest():
 {}
 {
-      <STAR> [ <COLON> NCName() {jjtThis.setPrefixWildcard();} ]
-    | NCName() <COLON> <STAR> {jjtThis.setLocalNameWildcard();}
-    | <BRACED_URI_LITERAL> <STAR> {jjtThis.setLocalNameWildcard();}
+      "*" [ ":" NCName() {jjtThis.setPrefixWildcard();} ]
+    | NCName() ":" "*" {jjtThis.setLocalNameWildcard();}
+    | <BRACED_URI_LITERAL> "*" {jjtThis.setLocalNameWildcard();}
 }
 
 void PostfixExpr() #PostfixExpr(>1):
@@ -560,7 +563,7 @@ void ArgumentList():
 void Argument():
 {}
 {
-    ExprSingle() | <QUESTION_MARK> {jjtThis.setPlaceholder();}// TODO that's called placeholder
+    ExprSingle() | "?" {jjtThis.setPlaceholder();}// TODO that's called placeholder
 }
 
 
@@ -581,10 +584,10 @@ void PrimaryExpr() #void:
 {}
 {
       NumericLiteral()
-    | <STRING_LITERAL>                #StringLiteral
-    | (<DOLLAR> VarName())            #VarRef
-    | (<LPAREN> [ Expr() ] <RPAREN>)  #ParenthesizedExpr
-    | <PERIOD>                        #ContextItemExpr
+    | <STRING_LITERAL>      #StringLiteral
+    | ("$" VarName())       #VarRef
+    | ("(" [ Expr() ] ")")  #ParenthesizedExpr
+    | "."                   #ContextItemExpr
     |
     (LOOKAHEAD (2)
       FunctionCall()
@@ -633,7 +636,7 @@ void ParamList():
 void Param():
 {}
 {
-    <DOLLAR> EQName() [ TypeDeclaration() ]
+    "$" EQName() [ TypeDeclaration() ]
 }
 
 
@@ -744,7 +747,7 @@ void SingleType():
 void TypeDeclaration():
 {}
 {
-    "as" SequenceType()
+    <AS> SequenceType()
 }
 
 

@@ -26,7 +26,7 @@ class PathExprTest : FunSpec({
                     child<ASTExactNameTest> {
                         it.nameImage shouldBe "A"
 
-                        it.matchedName shouldBe child { it.image shouldBe "A" }
+                        it.nameNode shouldBe child { it.image shouldBe "A" }
                     }
 
                     child<ASTPredicateList> {

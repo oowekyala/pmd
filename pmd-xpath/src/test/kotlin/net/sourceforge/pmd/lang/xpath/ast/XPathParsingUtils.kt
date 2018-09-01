@@ -1,5 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
+import io.kotlintest.Failures
 import io.kotlintest.Matcher
 import io.kotlintest.Result
 import io.kotlintest.matchers.string.shouldContain
@@ -8,6 +9,7 @@ import io.kotlintest.specs.AbstractFunSpec
 import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.LanguageVersionHandler
 import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.NWrapper
 import net.sourceforge.pmd.lang.ast.test.getChild
 import net.sourceforge.pmd.lang.ast.test.matchNode
@@ -86,6 +88,14 @@ fun AbstractFunSpec.parserTest(name: String,
     parserTest(name, listOf(xpathVersion), null, assertions)
 }
 
+inline fun <reified T : Throwable> AbstractFunSpec.failedParserTest(name: String,
+                                                                    xpathVersion: XPathVersion = XPathVersion.Latest,
+                                                                    source: () -> String) {
+    parserTest(name, listOf(xpathVersion), null) {
+
+    }
+}
+
 
 data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
@@ -110,15 +120,42 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
 
     /**
-     * Expect a parse exception to be thrown by [block].
+     * Expect a [TokenMgrError] or [ParseException] to be thrown by [block].
      * The message is asserted to contain [messageContains].
+     *
+     * @return Returns the thrown exception
      */
-    fun expectParseException(messageContains: String = "", block: () -> Unit) {
+    fun parserShouldFailOn(messageContains: String = "", block: () -> String): RuntimeException {
 
-        val thrown = shouldThrow<ParseException>(block)
+        val testFailed by lazy { Failures.failure("Expected ParseException or TokenMgrError but no exception was thrown") }
+
+        val thrown = try {
+            parseXPathRoot(block())
+            throw testFailed
+        } catch (e: Throwable) {
+            when (e) {
+                is ParseException -> e
+                is TokenMgrError -> e
+                is AssertionError -> throw e
+                else -> throw testFailed
+            }
+        }
 
         thrown.message.shouldContain(messageContains)
+        return thrown
+    }
 
+    /**
+     * Expect an exception of type [T] to be thrown by parsing the string in [block].
+     * The message is asserted to contain [messageContains].
+     */
+    inline fun <reified T : Throwable> parseExpect(messageContains: String = "", block: () -> String): T {
+        val thrown = shouldThrow<T> { parseXPathRoot(block()) }
+
+
+
+        thrown.message.shouldContain(messageContains)
+        return thrown
     }
 
     private fun getLangVersionHandler(version: XPathVersion): LanguageVersionHandler =

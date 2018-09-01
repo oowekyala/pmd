@@ -14,9 +14,9 @@
     <name>PMD XPath</name>
     <description>PMD XPath language support</description>
 
-    <!--<properties>-->
-    <!--<javacc.version>7.0.0</javacc.version>-->
-    <!--</properties>-->
+    <properties>
+        <javacc.version>7.0.0</javacc.version>
+    </properties>
 
     <build>
         <testResources>

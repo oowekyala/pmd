@@ -30,14 +30,14 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
      * Returns the image of the name tested for.
      */
     public String getNameImage() {
-        return getMatchedName().getImage();
+        return getNameNode().getImage();
     }
 
 
     /**
      * Returns the node representing the name tested for.
      */
-    public ASTName getMatchedName() {
+    public ASTName getNameNode() {
         return (ASTName) jjtGetChild(0);
     }
 

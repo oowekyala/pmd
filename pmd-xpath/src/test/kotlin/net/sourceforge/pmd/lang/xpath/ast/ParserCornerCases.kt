@@ -22,7 +22,7 @@ class ParserCornerCases : FunSpec({
     a RelativePathExpr. In some cases, the next token after the slash
     is insufficient to allow a parser to distinguish these two possibilities:
     the * token and keywords like union could be either an operator or
-    a NameTest . For example, without lookahead the first part of the
+    a NameTest. For example, without lookahead the first part of the
     expression / * 5 is easily taken to be a complete expression, / *,
     which has a very different interpretation (the child nodes of /).
 
@@ -36,10 +36,9 @@ class ParserCornerCases : FunSpec({
 
     */
 
-
     parserTest("Test ambiguity with single slash path: /*5") {
-        expectParseException {
-            parseXPathRoot("/*5")
+        parserShouldFailOn {
+            "/*5"
         }
     }
 
@@ -116,4 +115,45 @@ class ParserCornerCases : FunSpec({
             }
         }
     }
+
+
+    parserTest("Attribute may start an Axis") {
+        "/attribute::Att" should matchExpr<ASTPathExpr> {
+            it.pathAnchor shouldBe ROOT
+
+            child<ASTStepExpr> {
+                child<ASTAxisStep> {
+                    it.axis shouldBe Axis.ATTRIBUTE
+
+                    child<ASTExactNameTest> {
+                        it.nameImage shouldBe "Att"
+                        it.nameNode shouldBe child {  }
+                    }
+
+                    child<ASTPredicateList> { }
+                }
+            }
+        }
+    }
+
+
+    parserTest("f:Attribute may start a KindTest") {
+        "/attribute(*)" should matchExpr<ASTPathExpr> {
+            it.pathAnchor shouldBe ROOT
+
+            child<ASTStepExpr> {
+                child<ASTAxisStep> {
+                    it.axis shouldBe Axis.CHILD
+
+                    child<ASTAttributeTest> {
+                        child<ASTAttributeNameOrWildCard> { }
+                    }
+
+                    child<ASTPredicateList> { }
+                }
+            }
+        }
+    }
+
+
 })
