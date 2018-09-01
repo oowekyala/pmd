@@ -425,7 +425,7 @@ void CastExpr() #CastExpr(>1):
 void UnaryExpr() #UnaryExpr(push):
 { boolean push = false; }
 {
-      [ < ([ "+" , "-" ])+ > { push = true; } ] MapExpr()
+      [ < PMCHAIN: ([ "+" , "-" ])+ > { push = true; } ] MapExpr()
 }
 
 void MapExpr() #MapExpr(>1) :
@@ -478,11 +478,18 @@ boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 }
 
 ASTAxisStep AxisStep():
-{}
 {
- (LOOKAHEAD(1) // "attribute" may start an axis or a kind test
-               // We don't look ahead and let the parser backtrack since if "::" is not present
-               // it only backtracks one token
+  // rename jjtThis to avoid shadowing inside the attribute production
+//  ASTAxisStep thisStep = jjtThis;
+//  boolean pushAttrKindTest = false;
+}
+{
+ ( // "attribute" may start an axis or a kind test
+   // The productions are folded here to avoid looking ahead as much as possible
+   (LOOKAHEAD(2)
+       <ATTRIBUTE> "::" NodeTest() | AttributeTest()
+   )  { jjtThis.axis = Axis.ATTRIBUTE; } // an attribute test implies a default attribute axis
+ |
    (jjtThis.axis = Axis()) "::" NodeTest()
  |
  // The nodetest is #void, distinctions are implemented with an interface
@@ -506,7 +513,8 @@ Axis Axis() #void:
 {
     ( <SELF> { axis = Axis.SELF;}
     | <CHILD> { axis = Axis.CHILD; }
-    | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
+    // Handled upstream
+    // | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
     | <DESCENDANT> { axis = Axis.DESCENDANT; }
     | <DESCENDANT_OR_SELF> { axis = Axis.DESCENDANT_OR_SELF; }
     | <FOLLOWING> { axis = Axis.FOLLOWING; }
@@ -647,7 +655,8 @@ void KindTest() #void: // TODO tag those with an interface
 {
       DocumentTest()
     | ElementTest()
-    | AttributeTest()
+    // Handled upstream, see AxisStep
+    // | AttributeTest()
     | SchemaElementTest()
     | SchemaAttributeTest()
     | ProcessingInstructionTest()
@@ -677,8 +686,16 @@ void ElementTest():
 void AttributeTest():
 {}
 {
-    <ATTRIBUTE> "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
+    <ATTRIBUTE> AttributeTestTail()
 }
+
+
+void AttributeTestTail() #void:
+{}
+{
+    "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
+}
+
 
 
 void SchemaAttributeTest():

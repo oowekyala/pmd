@@ -137,13 +137,15 @@ class ParserCornerCases : FunSpec({
     }
 
 
-    parserTest("f:Attribute may start a KindTest") {
+    parserTest("Attribute may start a KindTest") {
         "/attribute(*)" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ROOT
 
             child<ASTStepExpr> {
                 child<ASTAxisStep> {
-                    it.axis shouldBe Axis.CHILD
+                    // This is an exception
+                    // The default axis is attribute when there's an attribute test
+                    it.axis shouldBe Axis.ATTRIBUTE
 
                     child<ASTAttributeTest> {
                         child<ASTAttributeNameOrWildCard> { }

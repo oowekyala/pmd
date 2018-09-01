@@ -31,7 +31,7 @@ public class XPathHandler extends AbstractLanguageVersionHandler {
 
     @Override
     public Parser getParser(ParserOptions parserOptions) {
-        return new XPathParser(parserOptions);
+        return new XPathParserAdapter(parserOptions);
     }
 
 

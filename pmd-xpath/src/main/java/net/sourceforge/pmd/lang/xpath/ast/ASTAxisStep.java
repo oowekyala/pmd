@@ -83,6 +83,8 @@ public final class ASTAxisStep extends AbstractXPathNode {
         } else if (isAbbrevNoAxis()) {
             // then the implied axis depends on the nodeTest
 
+            // if it's an instance of AttributeTest we already handle that in the parser
+            // and this method is not visited
             if (getNodeTest() instanceof ASTAttributeTest
                     || getNodeTest() instanceof ASTSchemaAttributeTest) {
                 this.axis = Axis.ATTRIBUTE;
@@ -123,7 +125,7 @@ public final class ASTAxisStep extends AbstractXPathNode {
     /**
      * Returns the node test. Note that it is not a concrete node,
      * but an interface. The returned node is of a different concrete
-     * type.
+     * type. Never null.
      */
     public NodeTest getNodeTest() {
         return (NodeTest) jjtGetChild(0);

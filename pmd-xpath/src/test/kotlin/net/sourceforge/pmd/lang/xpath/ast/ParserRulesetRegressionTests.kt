@@ -3,6 +3,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.RuleSet
 import net.sourceforge.pmd.RuleSetFactory
+import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.rule.XPathRule
 
 /**
@@ -30,8 +31,13 @@ class ParserRulesetRegressionTests : FunSpec({
                     val xpath = it.getProperty(XPathRule.XPATH_DESCRIPTOR)
                     try {
 //                        parseXPathRoot(xpath)
-                    } catch (e: ParseException) {
-                        throw AssertionError("Parser failed, xpath is:\n\n$xpath\n\n", e)
+                    } catch (e: Exception) {
+                        val ex = when (e) {
+                            is ParseException -> e
+                            is TokenMgrError -> e
+                            else -> throw e
+                        }
+                        throw AssertionError("Parser failed, xpath is:\n\n$xpath\n\n", ex)
                     }
                 }
             }

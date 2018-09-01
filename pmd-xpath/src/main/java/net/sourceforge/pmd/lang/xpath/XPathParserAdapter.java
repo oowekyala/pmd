@@ -19,9 +19,9 @@ import net.sourceforge.pmd.lang.ast.ParseException;
 /**
  * Adapter for the XPathParser.
  */
-public class XPathParser extends AbstractParser {
+public class XPathParserAdapter extends AbstractParser {
 
-    public XPathParser(ParserOptions parserOptions) {
+    public XPathParserAdapter(ParserOptions parserOptions) {
         super(parserOptions);
     }
 
