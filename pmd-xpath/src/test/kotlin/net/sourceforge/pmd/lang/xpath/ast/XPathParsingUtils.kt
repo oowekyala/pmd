@@ -4,18 +4,17 @@ import io.kotlintest.Failures
 import io.kotlintest.Matcher
 import io.kotlintest.Result
 import io.kotlintest.matchers.string.shouldContain
-import io.kotlintest.shouldThrow
 import io.kotlintest.specs.AbstractFunSpec
 import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.LanguageVersionHandler
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.NWrapper
 import net.sourceforge.pmd.lang.ast.test.getChild
 import net.sourceforge.pmd.lang.ast.test.matchNode
 import net.sourceforge.pmd.lang.ast.test.numChildren
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule
 import java.io.StringReader
+import kotlin.reflect.KClass
 
 
 /**
@@ -107,8 +106,11 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
     inline fun <reified N : XPathNode> matchExpr(ignoreChildren: Boolean = false,
                                                  noinline nodeSpec: NWrapper<N>.() -> Unit): Matcher<String> =
             object : Matcher<String> {
-                override fun test(value: String): Result =
-                        matchNode(ignoreChildren, nodeSpec).test(parseXPath<N>(value))
+                override fun test(value: String): Result {
+
+
+                    return matchNode(ignoreChildren, nodeSpec).test(parseXPath<N>(value))
+                }
             }
 
     fun matchRoot(ignoreChildren: Boolean = false,
@@ -118,45 +120,46 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
                         matchNode(ignoreChildren, nodeSpec).test(parseXPath<ASTXPathRoot>(value))
             }
 
-
     /**
-     * Expect a [TokenMgrError] or [ParseException] to be thrown by [block].
-     * The message is asserted to contain [messageContains].
+     * Used to expect an exception when parsing a snippet of code. Use as
      *
-     * @return Returns the thrown exception
+     *     expect<ParseException>() whenParsing {
+     *          "/foo/a/"
+     *     }
+     *
+     * @param withMessage The message will be asserted to contain this string
+     *
+     * @return An object on which to call [ExpectSignal.whenParsing].
      */
-    fun parserShouldFailOn(messageContains: String = "", block: () -> String): RuntimeException {
+    inline fun <reified T : Throwable> expect(withMessage: String = ""): ExpectSignal<T> = ExpectSignal(T::class, withMessage)
 
-        val testFailed by lazy { Failures.failure("Expected ParseException or TokenMgrError but no exception was thrown") }
 
-        val thrown = try {
-            parseXPathRoot(block())
-            throw testFailed
-        } catch (e: Throwable) {
-            when (e) {
-                is ParseException -> e
-                is TokenMgrError -> e
-                is AssertionError -> throw e
-                else -> throw testFailed
+    inner class ExpectSignal<T : Throwable>(private val tClass: KClass<T>, private val messageContains: String) {
+        /**
+         * End of the sentence starting with [expect].
+         * @param expr Block returning the snippet of code to parse
+         *
+         * @return The thrown exception if it is found
+         */
+        infix fun whenParsing(expr: () -> String): T {
+
+            try {
+                parseXPathRoot(expr())
+                throw Failures.failure("Expected exception ${tClass.qualifiedName} but no exception was thrown")
+            } catch (e: Throwable) {
+                when {
+                    tClass.java.isAssignableFrom(e.javaClass) -> {
+                        e.message.shouldContain(messageContains)
+                        @Suppress("UNCHECKED_CAST")
+                        return e as T
+                    }
+                    e is AssertionError -> throw e
+                    else -> throw Failures.failure("Expected exception ${tClass.qualifiedName} but ${e.javaClass.name} was thrown", e)
+                }
             }
         }
-
-        thrown.message.shouldContain(messageContains)
-        return thrown
     }
 
-    /**
-     * Expect an exception of type [T] to be thrown by parsing the string in [block].
-     * The message is asserted to contain [messageContains].
-     */
-    inline fun <reified T : Throwable> parseExpect(messageContains: String = "", block: () -> String): T {
-        val thrown = shouldThrow<T> { parseXPathRoot(block()) }
-
-
-
-        thrown.message.shouldContain(messageContains)
-        return thrown
-    }
 
     private fun getLangVersionHandler(version: XPathVersion): LanguageVersionHandler =
             LanguageRegistry.getLanguage(XPathLanguageModule.NAME).getVersion(version.pmdName).languageVersionHandler

@@ -31,7 +31,14 @@ class AxisTest : FunSpec({
         }
     }
 
-    // generate a test for each axis
+    parserTest("Unrecognised axis should fail parsing") {
+        expect<ParseException>() whenParsing  {
+            "//hey/wrong::foo"
+        }
+    }
+
+
+    // generate some tests for each axis
     Axis.values().forEach { axis ->
 
         parserTest("Test explicit ${axis.axisName} axis use") {
@@ -53,11 +60,7 @@ class AxisTest : FunSpec({
                 }
             }
         }
-    }
 
-
-    // generate a test for each axis
-    Axis.values().forEach { axis ->
 
         parserTest("Test explicit ${axis.axisName} axis use with conflicting name") {
             // The use after the :: is supposed to be interpreted as an element name
@@ -79,7 +82,6 @@ class AxisTest : FunSpec({
                 }
             }
         }
+
     }
-
-
 })

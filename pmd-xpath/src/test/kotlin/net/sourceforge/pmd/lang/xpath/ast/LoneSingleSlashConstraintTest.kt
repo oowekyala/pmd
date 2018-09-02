@@ -37,7 +37,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
     */
 
     parserTest("Test ambiguity with single slash path: /*5") {
-        parserShouldFailOn {
+        expect<ParseException>() whenParsing {
             "/*5"
         }
     }
@@ -76,30 +76,34 @@ class LoneSingleSlashConstraintTest : FunSpec({
         }
     }
 
-    parserTest("Test ambiguity with single slash path: / union /") {
-        "/ union /*" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe ROOT
+    XPathTokens.binaryOperators.values.flatMap { it }.filter { it[0].isLetter() }.forEach { op ->
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "union"
+        parserTest("The keyword '$op' occuring after a slash should be treated as a name test") {
+            "/ $op /*" should matchExpr<ASTPathExpr> {
+                it.pathAnchor shouldBe ROOT
+
+                child<ASTStepExpr> {
+                    child<ASTAxisStep> {
+                        child<ASTExactNameTest> {
+                            it.nameNode shouldBe child { it.localName shouldBe op }
+                        }
+
+                        child<ASTPredicateList> { }
                     }
-
-                    child<ASTPredicateList> { }
                 }
-            }
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    child<ASTWildcardNameTest> {
+                child<ASTStepExpr> {
+                    child<ASTAxisStep> {
+                        child<ASTWildcardNameTest> {
+                        }
+
+                        child<ASTPredicateList> { }
                     }
-
-                    child<ASTPredicateList> { }
                 }
             }
         }
     }
+
 
     parserTest("Test ambiguity with wildcard: /*") {
         "/*" should matchExpr<ASTPathExpr> {

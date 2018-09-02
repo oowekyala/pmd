@@ -83,6 +83,7 @@ TOKEN :
 
 /* RESERVED WORDS */
 
+// Tokens that match EQNAME in some contexts
 TOKEN :
 {
 // Axes
@@ -103,29 +104,18 @@ TOKEN :
 // Operators
 | < OR: "or" >
 | < AND: "and" >
-// "not" is a function
 | < DIV: "div" >
 | < IDIV: "idiv" >
 | < MOD: "mod" >
-| < DOUBLE_PIPE: "||" >
-| < PIPE: "|" >
 | < UNION: "union" >
 | < INTERSECT: "intersect" >
 | < EXCEPT: "except" >
-| < MINUS: "-" >
-| < BANG: "!" >
-| < PATH: "/" >
-| < PATH_ALT: "//" >
-
-// Comparison operators
 | < NE: "ne" >
 | < EQ: "eq" >
 | < LT: "lt" >
 | < LE: "le" >
 | < GT: "gt" >
 | < GE: "ge" >
-| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
-
 
 // Keywords
 | < SOME: "some" >
@@ -149,7 +139,6 @@ TOKEN :
 | < EMPTY_SEQUENCE: "empty-sequence" >
 | < ITEM: "item" >
 
-
 // Node kinds
 | < NODE: "node" >
 | < DOCUMENT_NODE: "document-node" >
@@ -157,11 +146,24 @@ TOKEN :
 | < COMMENT: "comment" >
 | < NAMESPACE_NODE: "namespace-node" >
 | < PROCESSING_INSTRUCTION: "processing-instruction" >
-// | < ATTRIBUTE: "attribute" > // also a node kind, but already defined
 | < SCHEMA_ATTRIBUTE: "schema-attribute" >
 | < ELEMENT: "element" >
 | < SCHEMA_ELEMENT: "schema-element" >
 | < FUNCTION: "function" >
+
+}
+
+// Tokens that can never match EQNAME
+TOKEN :
+{
+  < DOUBLE_PIPE: "||" >
+| < PIPE: "|" >
+| < MINUS: "-" >
+| < BANG: "!" >
+| < PATH: "/" >
+| < PATH_ALT: "//" >
+
+| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
 
 // Separators
 | < LPAREN: "(" >
@@ -552,7 +554,9 @@ void NameTest() #void:
 void ExactNameTest():
 {}
 {
-    EQName()
+    // TODO this is wrong! Actually the keywords should be tokenized as names only right after a single slash
+    // The remaining sticky point would be to recognise an EQNAME as an axis name before "::"
+    EQNameOrKWord()
 }
 
 void WildcardNameTest():
@@ -778,9 +782,35 @@ void TypeDeclaration():
 
 
 
-
+//void CtxSensitiveKeyword(String... keywords):
+//{}
+//{
+//
+//}
 
 // These all produce a Name node
+
+
+void EQNameOrKWord() #Name:
+{}
+{
+  <EQNAME> | <NCNAME>
+  // Also match keywords
+
+  |  <SELF> | <CHILD> | <ATTRIBUTE> | <DESCENDANT> | <DESCENDANT_OR_SELF> | <ANCESTOR>
+  | <ANCESTOR_OR_SELF> | <FOLLOWING> | <FOLLOWING_SIBLING> | <NAMESPACE> | <PARENT>
+  | <PRECEDING> | <PRECEDING_SIBLING>
+
+  | <OR> | <AND> | <DIV> | <IDIV> | <MOD> | <UNION> | <INTERSECT> | <EXCEPT>
+  | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE>
+
+  | <SOME> | <IN> | <SATISFIES> | <AS> | <IS> | <FOR> | <EVERY> | <CAST> | <CASTABLE>
+  | <TREAT> | <INSTANCE> | <OF> | <TO> | <IF> | <THEN> | <ELSE> | <RETURN> | <LET>
+  | <EMPTY_SEQUENCE> | <ITEM>
+
+  | <NODE> | <DOCUMENT_NODE> | <TEXT> | <COMMENT> | <NAMESPACE_NODE>
+  | <PROCESSING_INSTRUCTION> | <SCHEMA_ATTRIBUTE> | <ELEMENT> | <SCHEMA_ELEMENT> | <FUNCTION>
+}
 
 void EQName() #Name:
 {}
