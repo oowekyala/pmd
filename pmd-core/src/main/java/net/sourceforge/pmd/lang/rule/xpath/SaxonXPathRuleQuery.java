@@ -84,15 +84,18 @@ public class SaxonXPathRuleQuery extends AbstractXPathRuleQuery {
             final ElementNode rootElementNode = documentNode.nodeToElementNode.get(node);
 
             final XPathDynamicContext xpathDynamicContext = createDynamicContext(rootElementNode);
-            final List<ElementNode> nodes = xpathExpression.evaluate(xpathDynamicContext);
 
+            final List<Item> matchedItems = xpathExpression.evaluate(xpathDynamicContext);
             /*
              Map List of Saxon Nodes -> List of AST Nodes, which were detected to match the XPath expression
              (i.e. violation found)
               */
             final List<Node> results = new ArrayList<>();
-            for (final ElementNode elementNode : nodes) {
-                results.add((Node) elementNode.getUnderlyingNode());
+            for (final Item item : matchedItems) {
+                // Returned items may be eg the DocumentNode
+                if (item instanceof ElementNode) {
+                    results.add((Node) ((ElementNode) item).getUnderlyingNode());
+                }
             }
             return results;
         } catch (final XPathException e) {
