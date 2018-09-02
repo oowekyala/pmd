@@ -4,7 +4,15 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * For expression.
+ *
+ * <pre>
+ *
+ * ForExpr ::= "for" {@linkplain ASTVarBindingList VarBindingList} "return" {@linkplain ASTExpr ExprSingle}
+ *
+ * </pre>
+ */
 public final class ASTForExpr extends AbstractXPathNode implements ExpressionNode {
 
 

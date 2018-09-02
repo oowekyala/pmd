@@ -1,7 +1,5 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 
 /**
@@ -10,46 +8,6 @@ import io.kotlintest.specs.FunSpec
  */
 class ParserTests : FunSpec({
 
-
-    parserTest("Test let expression") {
-
-        "let ${'$'}i := 1 + 2 return ${'$'}i * 3" should matchRoot {
-            child<ASTExpr> {
-                child<ASTLetExpr> {
-
-                    child<ASTVarBindingList> {
-                        child<ASTVarBinding> {
-                            it.varName shouldBe "i"
-
-                            child<ASTName> {
-                                it.image shouldBe "i"
-                            }
-
-                            child<ASTExpr>(ignoreChildren = true) {
-
-                            }
-                        }
-                    }
-
-                    child<ASTExpr> {
-                        child<ASTMultiplicativeExpr> {
-                            child<ASTVarRef> {
-                                it.variableName shouldBe child {
-                                    it.localName shouldBe "i"
-                                }
-                            }
-
-                            child<ASTMultiplicativeOperator> { }
-
-                            child<ASTNumericLiteral> {
-                                it.image shouldBe "3"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     parserTest("Test nested comments") {
         parseXPathRoot("(: (: we're nested :) :) //hello  ")

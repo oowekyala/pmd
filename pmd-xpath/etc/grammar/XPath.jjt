@@ -63,7 +63,7 @@ SKIP : { <"(:"> { commentNestingDepth = 1; } : COMMENT_STATE }
 < COMMENT_STATE >  SKIP : {  < ~[] > }
 
 
-/* LITERALS */
+/* DELIMITING TERMINALS */
 
 
 TOKEN :
@@ -71,7 +71,44 @@ TOKEN :
   < STRING_LITERAL: "\"" ("\"\"" | ~["\""])* "\"" | "'" ("''" | ~["'"])* "'" >
 | < BRACED_URI_LITERAL: "Q" "{" (~["{", "}"])* "}" >
 
-| < INTEGER_LITERAL: <DIGITS> >
+| < DOUBLE_PIPE: "||" >
+| < PIPE: "|" >
+| < MINUS: "-" >
+| < BANG: "!" >
+| < PATH: "/" >
+| < PATH_ALT: "//" >
+
+| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
+
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < LCURLY: "{" >
+| < RCURLY: "}" >
+| < SEMICOLON: ";" >
+| < COLON: ":" >
+| < DOUBLE_COLON: "::" >
+| < DOUBLE_PERIOD: ".." >
+| < COMMA: "," >
+| < LET_ASSIGN: ":=" >
+| < PERIOD: "." >
+| < AT: "@" >
+| < POUND: "#" >
+| < QUESTION_MARK: "?" >
+| < STAR: "*" >
+| < PLUS: "+" >
+| < DOLLAR: "$" >
+}
+
+
+
+/* NON-DELIMITING TERMINALS */
+
+TOKEN :
+{
+// Numeric literals
+  < INTEGER_LITERAL: <DIGITS> >
 | < DECIMAL_LITERAL: "." <DIGITS> | <DIGITS> "." <MAYBE_DIGITS> >
 | < DOUBLE_LITERAL: ("." <DIGITS> | <DIGITS> ("." <MAYBE_DIGITS>)?) <EXPONENT> >
 
@@ -80,10 +117,7 @@ TOKEN :
 | < #EXPONENT: ["e","E"] (["+","-"])? <DIGITS> >
 }
 
-
-/* RESERVED WORDS */
-
-// Tokens that match EQNAME in some contexts
+// These may match EQNAME in some contexts
 TOKEN :
 {
 // Axes
@@ -150,43 +184,7 @@ TOKEN :
 | < ELEMENT: "element" >
 | < SCHEMA_ELEMENT: "schema-element" >
 | < FUNCTION: "function" >
-
 }
-
-// Tokens that can never match EQNAME
-TOKEN :
-{
-  < DOUBLE_PIPE: "||" >
-| < PIPE: "|" >
-| < MINUS: "-" >
-| < BANG: "!" >
-| < PATH: "/" >
-| < PATH_ALT: "//" >
-
-| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
-
-// Separators
-| < LPAREN: "(" >
-| < RPAREN: ")" >
-| < LBRACKET: "[" >
-| < RBRACKET: "]" >
-| < LCURLY: "{" >
-| < RCURLY: "}" >
-| < SEMICOLON: ";" >
-| < DOUBLE_COLON: "::" >
-| < DOUBLE_PERIOD: ".." >
-| < COMMA: "," >
-| < LET_ASSIGN: ":=" >
-| < PERIOD: "." >
-| < AT: "@" >
-| < POUND: "#" >
-| < QUESTION_MARK: "?" >
-| < STAR: "*" >
-| < PLUS: "+" >
-| < DOLLAR: "$" >
-| < COLON: ":" >
-}
-
 
 
 
@@ -426,7 +424,7 @@ void TreatExpr() #TreatExpr(>1):
 void CastableExpr() #CastableExpr(>1):
 {}
 {
-  CastExpr() ( LOOKAHEAD (3) <TREAT> <AS> SingleType() )?
+  CastExpr() ( <TREAT> <AS> SingleType() )?
 }
 
 void CastExpr() #CastExpr(>1):
@@ -484,8 +482,10 @@ void AbbrevPathOperator() #StepExpr: // Pushes a step expr
 boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 {}
 {
-    (//LOOKAHEAD(2) // Lookahead because <EQNAME> may start an ExactNameTest or e.g. a function call
-      (AxisStep() {maybeTrivial = false;}) | PostfixExpr()
+    (LOOKAHEAD(2)// Lookahead because <EQNAME> may start an ExactNameTest or a function call/ref
+                 // This is inefficient, but using a semantic lookahead to find out whether an LPAREN
+                 // follows seems even worse even though it should be better...
+      PostfixExpr() | (AxisStep() {maybeTrivial = false;})
     )
     { return maybeTrivial; }
 }
