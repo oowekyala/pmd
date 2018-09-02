@@ -4,8 +4,17 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTAndExpr extends AbstractXPathNode {
+/**
+ * Boolean AND expression.
+ *
+ * <pre>
+ *
+ * AndExpr ::= {@linkplain ASTComparisonExpr ComparisonExpr} ( "and" {@linkplain ASTComparisonExpr ComparisonExpr} )+
+ *
+ * </pre>
+ *
+ */
+public final class ASTAndExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTAndExpr(XPathParser p, int id) {

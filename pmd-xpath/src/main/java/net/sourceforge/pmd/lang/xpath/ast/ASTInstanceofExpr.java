@@ -4,8 +4,17 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTInstanceofExpr extends AbstractXPathNode {
+/**
+ * Instance of expression.
+ *
+ * <pre>
+ *
+ * InstanceofExpr ::=  {@linkplain ASTTreatExpr TreatExpr} "instance" "of" {@linkplain ASTSequenceType SequenceType}
+ *
+ * </pre>
+ *
+ */
+public final class ASTInstanceofExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTInstanceofExpr(XPathParser p, int id) {

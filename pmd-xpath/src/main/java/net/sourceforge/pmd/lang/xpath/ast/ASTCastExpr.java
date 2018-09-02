@@ -4,8 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTCastExpr extends AbstractXPathNode {
+/**
+ * Cast expression.
+ *
+ * <pre>
+ *
+ * CastExpr ::= {@linkplain ASTUnaryExpr UnaryExpr} "cast" "as" {@linkplain ASTSingleType SingleType}
+ *
+ * </pre>
+ */
+public final class ASTCastExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTCastExpr(XPathParser p, int id) {

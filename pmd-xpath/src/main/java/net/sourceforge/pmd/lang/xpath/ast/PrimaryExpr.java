@@ -22,5 +22,5 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface PrimaryExpr {
+public interface PrimaryExpr extends ExpressionNode {
 }

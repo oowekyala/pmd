@@ -4,8 +4,17 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTUnionExpr extends AbstractXPathNode {
+/**
+ * Union expression.
+ *
+ * <pre>
+ *
+ * UnionExpr ::= {@linkplain ASTIntersectExceptExpr IntersectExceptExpr} ( {@linkplain ASTUnionOperator UnionOperator} {@linkplain ASTIntersectExceptExpr IntersectExceptExpr} )+
+ *
+ * </pre>
+ *
+ */
+public final class ASTUnionExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTUnionExpr(XPathParser p, int id) {

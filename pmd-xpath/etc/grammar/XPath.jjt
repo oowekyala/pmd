@@ -304,6 +304,8 @@ void IfExpr():
   <IF> "(" Expr() ")" <THEN> ExprSingle() <ELSE> ExprSingle()
 }
 
+/* Main expression precedence hierarchy */
+
 void OrExpr() #OrExpr(>1):
 {}
 {
@@ -325,7 +327,7 @@ void ComparisonExpr() #ComparisonExpr(>1):
   )?
 }
 
-String ComparisonOperator() #void: // TODO store operator, do that in the Java node
+String ComparisonOperator() #void:
 {}
 {
    ( <COMP> | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE> )
@@ -352,22 +354,30 @@ void RangeExpr() #RangeExpr(>1):
 void AdditiveExpr() #AdditiveExpr(>1):
 {}
 {
-  MultiplicativeExpr() ( ( "+" #PlusOperator | "-" #MinusOperator) MultiplicativeExpr() )*
+  MultiplicativeExpr() (AdditiveOperator() MultiplicativeExpr() )*
 }
+
+void AdditiveOperator():
+{}
+{
+    ( "+" | "-" ) { jjtThis.setImage(getToken(1).getImage()); }
+}
+
 
 void MultiplicativeExpr() #MultiplicativeExpr(>1):
 {}
 {
-  UnionExpr()
-  (
-    (   <STAR> #TimesOperator
-      | <DIV> #DivOperator
-      | <IDIV> #IDivOperator
-      | <MOD> #ModOperator
-    )
+  UnionExpr() (MultiplicativeOperator() UnionExpr())*
+}
 
-    UnionExpr()
-  )*
+void MultiplicativeOperator():
+{}
+{
+    (   <STAR>
+      | <DIV>
+      | <IDIV>
+      | <MOD>
+    ) { jjtThis.setImage(getToken(1).getImage()); }
 }
 
 void UnionExpr() #UnionExpr(>1):
@@ -379,22 +389,23 @@ void UnionExpr() #UnionExpr(>1):
 void UnionOperator():
 {}
 {
-    <UNION>
-  | "|" { jjtThis.setShorthand(true); }
+    ( <UNION>
+    | "|" { jjtThis.setShorthand(true); }
+    ) { jjtThis.setImage(getToken(1).getImage()); }
 }
 
 void IntersectExceptExpr() #IntersectExceptExpr(>1):
 {}
 {
-  InstanceofExpr()
-  (
-    (
-        <INTERSECT> #IntersectOperator
-      | <EXCEPT> #ExceptOperator
-    )
+  InstanceofExpr() (IntersectExceptOperator() InstanceofExpr())*
+}
 
-    InstanceofExpr()
-  )*
+void IntersectExceptOperator():
+{}
+{
+     ( <INTERSECT>
+     | <EXCEPT>
+     ) { jjtThis.setImage(getToken(1).getImage()); }
 }
 
 

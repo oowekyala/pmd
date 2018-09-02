@@ -50,7 +50,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
                 it.image shouldBe "5"
             }
 
-            child<ASTTimesOperator> { }
+            child<ASTMultiplicativeOperator> { }
 
             child<ASTPathExpr> {
                 it.pathAnchor shouldBe ROOT
@@ -68,7 +68,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
                 }
             }
 
-            child<ASTTimesOperator> { }
+            child<ASTMultiplicativeOperator> { }
 
             child<ASTNumericLiteral> {
                 it.image shouldBe "5"

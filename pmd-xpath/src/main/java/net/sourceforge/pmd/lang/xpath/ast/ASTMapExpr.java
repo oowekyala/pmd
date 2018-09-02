@@ -4,8 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTMapExpr extends AbstractXPathNode {
+/**
+ * Map expression.
+ *
+ * <pre>
+ *
+ * MapExpr ::= {@linkplain ASTPathExpr PathExpr} ( "!" {@linkplain ASTPathExpr PathExpr} )+
+ *
+ * </pre>
+ */
+public final class ASTMapExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTMapExpr(XPathParser p, int id) {

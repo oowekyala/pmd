@@ -4,11 +4,21 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+/**
+ * Operator occurring in a {@linkplain ASTIntersectExceptExpr IntersectExceptExpr}.
+ *
+ * TODO would left recursive parsing be better?
+ *
+ * <pre>
+ *
+ * IntersectExceptOperator ::= "intersect" | "except"
+ *
+ * </pre>
+ */
+public final class ASTIntersectExceptOperator extends AbstractXPathNode {
 
-public final class ASTIntersectOperator extends AbstractXPathNode {
 
-
-    ASTIntersectOperator(XPathParser p, int id) {
+    ASTIntersectExceptOperator(XPathParser p, int id) {
         super(p, id);
     }
 

@@ -4,8 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTAdditiveExpr extends AbstractXPathNode {
+/**
+ * Additive expression.
+ *
+ * <pre>
+ *
+ * AdditiveExpr ::= {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} ( {@linkplain ASTAdditiveOperator AdditiveOperator} {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} )*
+ *
+ * </pre>
+ */
+public final class ASTAdditiveExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTAdditiveExpr(XPathParser p, int id) {

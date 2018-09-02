@@ -4,8 +4,18 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTIntersectExceptExpr extends AbstractXPathNode {
+/**
+ * Intersect or except expression.
+ *
+ * <pre>
+ *
+ * IntersectExceptExpr ::= {@linkplain ASTInstanceofExpr InstanceofExpr} ({@linkplain ASTIntersectExceptOperator IntersectExceptOperator} {@linkplain ASTInstanceofExpr InstanceofExpr})+
+ *
+ * </pre>
+ *
+ *
+ */
+public final class ASTIntersectExceptExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTIntersectExceptExpr(XPathParser p, int id) {

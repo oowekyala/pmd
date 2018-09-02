@@ -4,8 +4,17 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTUnaryExpr extends AbstractXPathNode {
+/**
+ * Unary prefix expression. The sequence of "+" and "-" is concatenated
+ * into a string, available from {@link #getOperator()}.
+ *
+ * <pre>
+ *
+ * UnaryExpr ::= ("+" | "-")+  {@linkplain ASTMapExpr MapExpr}
+ *
+ * </pre>
+ */
+public final class ASTUnaryExpr extends AbstractXPathNode implements ExpressionNode {
     private String operator;
 
 

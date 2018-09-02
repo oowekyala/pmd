@@ -39,7 +39,7 @@ class ParserTests : FunSpec({
                                 }
                             }
 
-                            child<ASTTimesOperator> { }
+                            child<ASTMultiplicativeOperator> { }
 
                             child<ASTNumericLiteral> {
                                 it.image shouldBe "3"

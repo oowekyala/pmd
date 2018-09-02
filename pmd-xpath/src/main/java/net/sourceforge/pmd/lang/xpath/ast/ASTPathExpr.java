@@ -26,7 +26,7 @@ import java.util.Iterator;
  *
  * </pre>
  */
-public final class ASTPathExpr extends AbstractXPathNode implements Iterable<ASTStepExpr> {
+public final class ASTPathExpr extends AbstractXPathNode implements Iterable<ASTStepExpr>, ExpressionNode {
 
     // TODO we could remove the ASTPathOperator if we expand "//" to its full form
 

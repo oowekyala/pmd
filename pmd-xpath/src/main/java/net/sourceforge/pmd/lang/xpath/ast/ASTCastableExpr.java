@@ -5,7 +5,17 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTCastableExpr extends AbstractXPathNode {
+/**
+ * Castable expression.
+ *
+ * <pre>
+ *
+ * CastableExpr ::= {@linkplain ASTCastExpr CastExpr} "treat" "as" {@linkplain ASTSingleType SingleType}
+ *
+ * </pre>
+ *
+ */
+public final class ASTCastableExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTCastableExpr(XPathParser p, int id) {

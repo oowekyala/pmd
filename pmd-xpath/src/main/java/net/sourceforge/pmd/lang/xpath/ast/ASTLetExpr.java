@@ -14,13 +14,12 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTLetExpr extends AbstractXPathNode {
+public final class ASTLetExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTLetExpr(XPathParser p, int id) {
         super(p, id);
     }
-
 
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {

@@ -4,11 +4,20 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+/**
+ * Operator occurring in a {@linkplain ASTMultiplicativeExpr MultiplicativeExpr}.
+ *
+ * <pre>
+ *
+ * MultiplicativeOperator ::= "*" | "div" | "idiv" | "mod"
+ *
+ * </pre>
+ *
+ */
+public final class ASTMultiplicativeOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
-public final class ASTTimesOperator extends AbstractXPathNode {
 
-
-    ASTTimesOperator(XPathParser p, int id) {
+    ASTMultiplicativeOperator(XPathParser p, int id) {
         super(p, id);
     }
 

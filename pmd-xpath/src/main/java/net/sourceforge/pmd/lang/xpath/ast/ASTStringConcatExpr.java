@@ -5,7 +5,17 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTStringConcatExpr extends AbstractXPathNode {
+/**
+ * String concatenation expression.
+ *
+ * <pre>
+ *
+ * StringConcatExpr ::= {@linkplain ASTRangeExpr RangeExpr} ( "||" {@linkplain ASTRangeExpr RangeExpr} )+
+ *
+ * </pre>
+ *
+ */
+public final class ASTStringConcatExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTStringConcatExpr(XPathParser p, int id) {

@@ -5,7 +5,16 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTRangeExpr extends AbstractXPathNode {
+/**
+ * Range expression.
+ *
+ * <pre>
+ *
+ * RangeExpr ::= {@linkplain ASTAdditiveExpr AdditiveExpr} "to" {@linkplain ASTAdditiveExpr AdditiveExpr}
+ *
+ * </pre>
+ */
+public final class ASTRangeExpr extends AbstractXPathNode implements ExpressionNode {
 
 
     ASTRangeExpr(XPathParser p, int id) {

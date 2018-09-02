@@ -5,6 +5,14 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * Union operator occurring in an {@linkplain ASTUnionExpr UnionExpr}.
+ * <pre>
+ *
+ * UnionOperator ::= "union" | "|"
+ *
+ * </pre>
+ */
 public final class ASTUnionOperator extends AbstractXPathNode {
 
     private boolean isShorthand = false;

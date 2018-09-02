@@ -4,8 +4,20 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTComparisonExpr extends AbstractXPathNode {
+/**
+ * Comparison expression.
+ *
+ * <pre>
+ *
+ * ComparisonExpr ::=  {@linkplain ASTStringConcatExpr StringConcatExpr} ComparisonOperator {@linkplain ASTStringConcatExpr StringConcatExpr}
+ *
+ * ComparisonOperator ::= "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<"
+ *                      | "ne" | "eq" | "lt" | "le" | "gt" | "ge"
+ *
+ * </pre>
+ *
+ */
+public final class ASTComparisonExpr extends AbstractXPathNode implements ExpressionNode {
 
     private String operator;
 

@@ -5,10 +5,19 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTPlusOperator extends AbstractXPathNode {
+/**
+ * Operator occurring in an {@linkplain ASTAdditiveExpr additive expression}.
+ *
+ * <pre>
+ *
+ * AdditiveOperator ::= "+" | "-"
+ *
+ * </pre>
+ */
+public final class ASTAdditiveOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
 
-    ASTPlusOperator(XPathParser p, int id) {
+    ASTAdditiveOperator(XPathParser p, int id) {
         super(p, id);
     }
 
