@@ -11,7 +11,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
  * @author Clément Fournier
  * @since 6.7.0
  */
-class ParserCornerCases : FunSpec({
+class LoneSingleSlashConstraintTest : FunSpec({
 
     /*
 
@@ -115,47 +115,5 @@ class ParserCornerCases : FunSpec({
             }
         }
     }
-
-
-    parserTest("Attribute may start an Axis") {
-        "/attribute::Att" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe ROOT
-
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    it.axis shouldBe Axis.ATTRIBUTE
-
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "Att"
-                        it.nameNode shouldBe child {  }
-                    }
-
-                    child<ASTPredicateList> { }
-                }
-            }
-        }
-    }
-
-
-    parserTest("Attribute may start a KindTest") {
-        "/attribute(*)" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe ROOT
-
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    // This is an exception
-                    // The default axis is attribute when there's an attribute test
-                    it.axis shouldBe Axis.ATTRIBUTE
-
-                    child<ASTAttributeTest> {
-                        child<ASTAttributeNameOrWildCard> { }
-                    }
-
-                    child<ASTPredicateList> { }
-                }
-            }
-        }
-    }
-
 
 })

@@ -478,17 +478,13 @@ boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
 }
 
 ASTAxisStep AxisStep():
-{
-  // rename jjtThis to avoid shadowing inside the attribute production
-//  ASTAxisStep thisStep = jjtThis;
-//  boolean pushAttrKindTest = false;
-}
+{}
 {
  ( // "attribute" may start an axis or a kind test
    // The productions are folded here to avoid looking ahead as much as possible
    (LOOKAHEAD(2)
        <ATTRIBUTE> "::" NodeTest() | AttributeTest()
-   )  { jjtThis.axis = Axis.ATTRIBUTE; } // an attribute test implies a default attribute axis
+   ) { jjtThis.axis = Axis.ATTRIBUTE; } // an attribute kind test implies an attribute axis
  |
    (jjtThis.axis = Axis()) "::" NodeTest()
  |

@@ -4,6 +4,10 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.HashMap;
+import java.util.Map;
+
+
 /**
  * Iteration axis.
  *
@@ -57,9 +61,16 @@ public enum Axis {
     PRECEDING_SIBLING("preceding-sibling", false);
 
 
+    private static final Map<String, Axis> NAMES_TO_AXES = new HashMap<>();
+
+    static {
+        for (Axis axis : values()) {
+            NAMES_TO_AXES.put(axis.getAxisName(), axis);
+        }
+    }
+
     private final String name;
     private final boolean isForward;
-
 
     Axis(String name, boolean isForward) {
         this.name = name;
@@ -92,7 +103,7 @@ public enum Axis {
     /**
      * Returns the textual name of the axis.
      */
-    public String getName() {
+    public String getAxisName() {
         return name;
     }
 
@@ -106,6 +117,17 @@ public enum Axis {
      */
     public XmdNodeKind getPrincipalNodeKind() {
         return XmdNodeKind.ELEMENT;
+    }
+
+
+    /**
+     * Returns the Axis constant that has the specified axis name,
+     * or null if there is none.
+     *
+     * @param axisName Name of the axis to look for
+     */
+    public static Axis fromName(String axisName) {
+        return NAMES_TO_AXES.get(axisName);
     }
 
 
