@@ -4,7 +4,15 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * Context item expression.
+ *
+ * <pre>
+ *
+ * ContextItemExpr ::= "."
+ *
+ * </pre>
+ */
 public final class ASTContextItemExpr extends AbstractXPathNode implements PrimaryExpr {
 
 

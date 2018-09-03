@@ -22,13 +22,12 @@ import java.util.Iterator;
  *            | RelativePathExpr
  *
  * (: Not a node :)
- * RelativePathExpr ::= {@linkplain ASTStepExpr StepExpr} (("/" || {@linkplain ASTStepExpr AbbrevDescendantOrSelfStep}) {@linkplain ASTStepExpr StepExpr})*
+ * RelativePathExpr ::= {@link StepExpr} (("/" || {@linkplain StepExpr AbbrevDescendantOrSelfStep}) {@link StepExpr})*
  *
  * </pre>
  */
-public final class ASTPathExpr extends AbstractXPathNode implements Iterable<ASTStepExpr>, ExpressionNode {
+public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, ExpressionNode {
 
-    // TODO we could remove the ASTPathOperator if we expand "//" to its full form
 
     private PathAnchor pathAnchor;
 
@@ -65,8 +64,8 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<AST
 
 
     @Override
-    public Iterator<ASTStepExpr> iterator() {
-        return new NodeChildrenIterator<>(this, ASTStepExpr.class);
+    public Iterator<StepExpr> iterator() {
+        return new NodeChildrenIterator<>(this, StepExpr.class);
     }
 
 

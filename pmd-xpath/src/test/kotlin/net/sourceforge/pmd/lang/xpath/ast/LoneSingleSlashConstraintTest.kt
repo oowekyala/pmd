@@ -82,22 +82,14 @@ class LoneSingleSlashConstraintTest : FunSpec({
             "/ $op /*" should matchExpr<ASTPathExpr> {
                 it.pathAnchor shouldBe ROOT
 
-                child<ASTStepExpr> {
-                    child<ASTAxisStep> {
-                        child<ASTExactNameTest> {
-                            it.nameNode shouldBe child { it.localName shouldBe op }
-                        }
-
-
+                child<ASTAxisStep> {
+                    child<ASTExactNameTest> {
+                        it.nameNode shouldBe child { it.localName shouldBe op }
                     }
                 }
 
-                child<ASTStepExpr> {
-                    child<ASTAxisStep> {
-                        child<ASTWildcardNameTest> {
-                        }
-
-
+                child<ASTAxisStep> {
+                    child<ASTWildcardNameTest> {
                     }
                 }
             }
@@ -109,12 +101,8 @@ class LoneSingleSlashConstraintTest : FunSpec({
         "/*" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ROOT
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    child<ASTWildcardNameTest> {
-                    }
-
-
+            child<ASTAxisStep> {
+                child<ASTWildcardNameTest> {
                 }
             }
         }

@@ -15,15 +15,13 @@ class AxisTest : FunSpec({
         "/attribute(*)" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
-                    // This is an exception
-                    // The default axis is attribute when there's an attribute test
-                    it.axis shouldBe Axis.ATTRIBUTE
+            child<ASTAxisStep> {
+                // This is an exception
+                // The default axis is attribute when there's an attribute test
+                it.axis shouldBe Axis.ATTRIBUTE
 
-                    child<ASTAttributeTest> {
-                        child<ASTAttributeNameOrWildCard> { }
-                    }
+                child<ASTAttributeTest> {
+                    child<ASTAttributeNameOrWildCard> { }
                 }
             }
         }
@@ -43,14 +41,12 @@ class AxisTest : FunSpec({
             "/${axis.axisName}::Node" should matchExpr<ASTPathExpr> {
                 it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
-                child<ASTStepExpr> {
-                    child<ASTAxisStep> {
-                        it.axis shouldBe axis
+                child<ASTAxisStep> {
+                    it.axis shouldBe axis
 
-                        child<ASTExactNameTest> {
-                            it.nameNode shouldBe child {
-                                it.localName shouldBe "Node"
-                            }
+                    child<ASTExactNameTest> {
+                        it.nameNode shouldBe child {
+                            it.localName shouldBe "Node"
                         }
                     }
                 }
@@ -63,14 +59,12 @@ class AxisTest : FunSpec({
             "/${axis.axisName}::${axis.axisName}" should matchExpr<ASTPathExpr> {
                 it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
-                child<ASTStepExpr> {
-                    child<ASTAxisStep> {
-                        it.axis shouldBe axis
+                child<ASTAxisStep> {
+                    it.axis shouldBe axis
 
-                        child<ASTExactNameTest> {
-                            it.nameNode shouldBe child {
-                                it.localName shouldBe axis.axisName
-                            }
+                    child<ASTExactNameTest> {
+                        it.nameNode shouldBe child {
+                            it.localName shouldBe axis.axisName
                         }
                     }
                 }

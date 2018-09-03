@@ -5,7 +5,19 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTPostfixExpr extends AbstractXPathNode implements ExpressionNode {
+import java.util.List;
+
+
+/**
+ * Postfix expression.
+ *
+ * <pre>
+ *
+ * PostfixExpr ::= {@link PrimaryExpr} ({@linkplain ASTPredicate Predicate} | {@linkplain ASTArgumentList ArgumentList})+
+ *
+ * </pre>
+ */
+public final class ASTPostfixExpr extends AbstractXPathNode implements ExpressionNode, StepExpr {
 
 
     ASTPostfixExpr(XPathParser p, int id) {
@@ -16,6 +28,12 @@ public final class ASTPostfixExpr extends AbstractXPathNode implements Expressio
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
+    }
+
+
+    @Override
+    public List<ASTPredicate> getPredicates() {
+        return findChildrenOfType(ASTPredicate.class);
     }
 }
 /* JavaCC - OriginalChecksum=1cca783774867afa020917f496b7be7a (do not edit this line) */

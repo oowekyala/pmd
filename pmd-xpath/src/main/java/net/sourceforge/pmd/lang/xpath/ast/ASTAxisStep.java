@@ -32,11 +32,12 @@ import java.util.List;
  * </pre>
  */
 // @formatter:on
-public final class ASTAxisStep extends AbstractXPathNode {
+public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
 
     Axis axis; // parser only
     private boolean isAbbrevAttributeAxis;
     private boolean isAbbrevParentNodeTest;
+    private boolean isAbbrevDescendantOrSelfStep;
 
     private boolean isAbbrevNoAxis;
 
@@ -107,7 +108,7 @@ public final class ASTAxisStep extends AbstractXPathNode {
 
     void setAbbrevNoAxis() {
         this.isAbbrevNoAxis = true;
-        this.axis = Axis.CHILD; // FIXME
+        this.axis = Axis.CHILD;
     }
 
 
@@ -137,9 +138,25 @@ public final class ASTAxisStep extends AbstractXPathNode {
     /**
      * Gets the list of predicates of this step.
      */
+    @Override
     public List<ASTPredicate> getPredicates() {
         return findChildrenOfType(ASTPredicate.class);
     }
 
+
+    @Override
+    public boolean isAbbrevDescendantOrSelf() {
+        return isAbbrevDescendantOrSelfStep;
+    }
+
+
+    void setAbbrevDescendantOrSelf() {
+        isAbbrevDescendantOrSelfStep = true;
+        this.axis = Axis.DESCENDANT_OR_SELF;
+        // This is not done in jjtClose because the parser closes the node before the call to this method
+        // Besides, since AbbrevPathOperator has only one token and no children, this is safe
+        NodeTest step = SyntheticNodeFactory.synthesizeNodeTest("node()");
+        insertSyntheticChild(step, 0);
+    }
 }
 /* JavaCC - OriginalChecksum=1b2f7cc49a50ed5ffaad09284531e531 (do not edit this line) */

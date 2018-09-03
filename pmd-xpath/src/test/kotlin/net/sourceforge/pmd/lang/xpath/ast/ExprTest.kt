@@ -72,12 +72,9 @@ class ExprTest : FunSpec({
 
                                     it.pathAnchor shouldBe DESCENDANT_OR_ROOT
 
-                                    child<ASTStepExpr> {
-                                        child<ASTAxisStep> {
-                                            child<ASTExactNameTest>(ignoreChildren = true) {
-                                                it.nameImage shouldBe "i"
-                                            }
-
+                                    child<ASTAxisStep> {
+                                        child<ASTExactNameTest>(ignoreChildren = true) {
+                                            it.nameImage shouldBe "i"
                                         }
                                     }
                                 }

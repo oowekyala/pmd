@@ -18,19 +18,16 @@ class NameTest : FunSpec({
         name should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe RELATIVE
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            child<ASTAxisStep> {
 
-                    child<ASTExactNameTest> {
-                        child<ASTName> {
-                            it.isUriLiteral shouldBe true
-                            it.namespacePrefix shouldBe uri
-                            it.localName shouldBe "pi"
-                            it.hasNamespacePrefix() shouldBe true
-                            it.image shouldBe name
-                        }
+                child<ASTExactNameTest> {
+                    child<ASTName> {
+                        it.isUriLiteral shouldBe true
+                        it.namespacePrefix shouldBe uri
+                        it.localName shouldBe "pi"
+                        it.hasNamespacePrefix() shouldBe true
+                        it.image shouldBe name
                     }
-
                 }
             }
         }
@@ -79,20 +76,17 @@ class NameTest : FunSpec({
         "pmd-java" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe RELATIVE
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            child<ASTAxisStep> {
 
-                    child<ASTExactNameTest> {
-                        child<ASTName> {
-                            it.isUriLiteral shouldBe false
-                            it.namespacePrefix shouldNotBe null
-                            it.namespacePrefix.shouldBeEmpty()
-                            it.localName shouldBe "pmd-java"
-                            it.hasNamespacePrefix() shouldBe false
-                            it.image shouldBe "pmd-java"
-                        }
+                child<ASTExactNameTest> {
+                    child<ASTName> {
+                        it.isUriLiteral shouldBe false
+                        it.namespacePrefix shouldNotBe null
+                        it.namespacePrefix.shouldBeEmpty()
+                        it.localName shouldBe "pmd-java"
+                        it.hasNamespacePrefix() shouldBe false
+                        it.image shouldBe "pmd-java"
                     }
-
                 }
             }
         }

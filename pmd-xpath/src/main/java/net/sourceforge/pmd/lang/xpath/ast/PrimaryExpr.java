@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Identifies primary expressions.
+ * Marker for primary expressions.
  *
  * <pre>
  *
@@ -22,5 +22,5 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface PrimaryExpr extends ExpressionNode {
+public interface PrimaryExpr extends ExpressionNode, StepExpr {
 }

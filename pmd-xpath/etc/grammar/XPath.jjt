@@ -472,14 +472,14 @@ boolean RelativePathExpr(boolean maybeTrivial) #void:
 }
 
 
-void AbbrevPathOperator() #StepExpr: // Pushes a step expr
+void AbbrevPathOperator() #AxisStep: // Pushes an axis step, this will be completed in jjtClose
 {}
 {
     "//" { jjtThis.setAbbrevDescendantOrSelf();} // this function synthesizes a NodeTest
 }
 
 // Returns whether the step is trivial
-boolean StepExpr(boolean maybeTrivial) #StepExpr(!maybeTrivial):
+boolean StepExpr(boolean maybeTrivial) #void:
 {}
 {
     (LOOKAHEAD(2)// Lookahead because <EQNAME> may start an ExactNameTest or a function call/ref

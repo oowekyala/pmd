@@ -18,32 +18,29 @@ class PathExprTest : FunSpec({
         "/A/B" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ROOT
 
-            val fstStep = child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            val fstStep = child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.CHILD
+                it.axis shouldBe Axis.CHILD
 
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "A"
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "A"
 
-                        it.nameNode shouldBe child { it.image shouldBe "A" }
-                    }
+                    it.nameNode shouldBe child { it.image shouldBe "A" }
                 }
+
             }
 
 
-            val sndStep = child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            val sndStep = child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.CHILD
+                it.axis shouldBe Axis.CHILD
 
 
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "B"
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "B"
 
-                        child<ASTName> { it.image shouldBe "B" }
+                    child<ASTName> { it.image shouldBe "B" }
 
-                    }
                 }
             }
 
@@ -56,18 +53,17 @@ class PathExprTest : FunSpec({
         "/@A" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ROOT
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.ATTRIBUTE
-                    it.isAbbrevAttributeAxis shouldBe true
+                it.axis shouldBe Axis.ATTRIBUTE
+                it.isAbbrevAttributeAxis shouldBe true
 
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "A"
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "A"
 
-                        child<ASTName> { it.image shouldBe "A" }
-                    }
+                    child<ASTName> { it.image shouldBe "A" }
                 }
+
             }
         }
     }
@@ -78,16 +74,15 @@ class PathExprTest : FunSpec({
         "/.." should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ROOT
 
-            child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.PARENT
-                    it.isAbbrevParentNodeTest shouldBe true
+                it.axis shouldBe Axis.PARENT
+                it.isAbbrevParentNodeTest shouldBe true
 
-                    child<ASTAnyKindTest> {
+                child<ASTAnyKindTest> {
 
-                    }
                 }
+
             }
         }
     }
@@ -99,52 +94,58 @@ class PathExprTest : FunSpec({
             it.pathAnchor shouldBe ROOT
 
 
-            val fstStep = child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            val fstStep = child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.CHILD
+                it.axis shouldBe Axis.CHILD
 
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "A"
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "A"
 
-                        child<ASTName> { it.image shouldBe "A" }
-                    }
+                    child<ASTName> { it.image shouldBe "A" }
                 }
             }
 
-            // snd step corresponding to //
-            val sndStep = child<ASTStepExpr> {
+
+            // synthesized descendant-or-self::node()
+            val sndStep = child<ASTAxisStep> {
                 it.isAbbrevDescendantOrSelf shouldBe true
 
-                // synthesized descendant-or-self::node()
-                child<ASTAxisStep> {
+                it.axis shouldBe Axis.DESCENDANT_OR_SELF
 
-                    it.axis shouldBe Axis.DESCENDANT_OR_SELF
-
-                    child<ASTAnyKindTest> {
-
-                    }
-                }
+                child<ASTAnyKindTest> {}
             }
 
 
-            val thrdStep = child<ASTStepExpr> {
-                child<ASTAxisStep> {
+            val thrdStep = child<ASTAxisStep> {
 
-                    it.axis shouldBe Axis.CHILD
+                it.axis shouldBe Axis.CHILD
 
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "B"
 
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "B"
-
-                        child<ASTName> { it.image shouldBe "B" }
-                    }
+                    child<ASTName> { it.image shouldBe "B" }
                 }
             }
+
 
             it.asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep, thrdStep))
         }
     }
 
+    parserTest("Test context item expr") {
+
+        "./Foo" should matchExpr<ASTPathExpr> {
+
+            child<ASTContextItemExpr> { }
+            child<ASTAxisStep> {
+                child<ASTExactNameTest> {
+                    it.nameNode shouldBe child { it.localName shouldBe "Foo" }
+                }
+            }
+
+        }
+
+
+    }
 
 })
