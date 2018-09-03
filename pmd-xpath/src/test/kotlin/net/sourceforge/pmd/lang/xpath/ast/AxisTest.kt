@@ -24,15 +24,13 @@ class AxisTest : FunSpec({
                     child<ASTAttributeTest> {
                         child<ASTAttributeNameOrWildCard> { }
                     }
-
-                    child<ASTPredicateList> { }
                 }
             }
         }
     }
 
     parserTest("Unrecognised axis should fail parsing") {
-        expect<ParseException>() whenParsing  {
+        expect<ParseException>() whenParsing {
             "//hey/wrong::foo"
         }
     }
@@ -54,8 +52,6 @@ class AxisTest : FunSpec({
                                 it.localName shouldBe "Node"
                             }
                         }
-
-                        child<ASTPredicateList> { }
                     }
                 }
             }
@@ -76,12 +72,9 @@ class AxisTest : FunSpec({
                                 it.localName shouldBe axis.axisName
                             }
                         }
-
-                        child<ASTPredicateList> { }
                     }
                 }
             }
         }
-
     }
 })

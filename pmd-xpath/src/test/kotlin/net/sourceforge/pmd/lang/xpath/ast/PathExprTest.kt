@@ -28,12 +28,7 @@ class PathExprTest : FunSpec({
 
                         it.nameNode shouldBe child { it.image shouldBe "A" }
                     }
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
-
             }
 
 
@@ -49,17 +44,11 @@ class PathExprTest : FunSpec({
                         child<ASTName> { it.image shouldBe "B" }
 
                     }
-
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
             }
 
             it.iterator().asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep))
         }
-
     }
 
     parserTest("Test attribute shorthand") {
@@ -78,15 +67,9 @@ class PathExprTest : FunSpec({
 
                         child<ASTName> { it.image shouldBe "A" }
                     }
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
-
             }
         }
-
     }
 
 
@@ -104,15 +87,9 @@ class PathExprTest : FunSpec({
                     child<ASTAnyKindTest> {
 
                     }
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
-
             }
         }
-
     }
 
 
@@ -131,16 +108,11 @@ class PathExprTest : FunSpec({
                         it.nameImage shouldBe "A"
 
                         child<ASTName> { it.image shouldBe "A" }
-
-                    }
-
-                    child<ASTPredicateList> {
-
                     }
                 }
-
             }
 
+            // snd step corresponding to //
             val sndStep = child<ASTStepExpr> {
                 it.isAbbrevDescendantOrSelf shouldBe true
 
@@ -152,12 +124,7 @@ class PathExprTest : FunSpec({
                     child<ASTAnyKindTest> {
 
                     }
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
-
             }
 
 
@@ -172,16 +139,11 @@ class PathExprTest : FunSpec({
 
                         child<ASTName> { it.image shouldBe "B" }
                     }
-
-                    child<ASTPredicateList> {
-
-                    }
                 }
             }
 
-            it.iterator().asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep, thrdStep))
+            it.asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep, thrdStep))
         }
-
     }
 
 

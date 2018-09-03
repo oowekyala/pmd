@@ -586,7 +586,7 @@ void Argument():
 }
 
 
-void PredicateList():
+void PredicateList() #void:
 {}
 {
     (Predicate())*

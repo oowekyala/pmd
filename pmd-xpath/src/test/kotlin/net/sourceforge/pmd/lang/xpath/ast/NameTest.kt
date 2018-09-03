@@ -30,7 +30,7 @@ class NameTest : FunSpec({
                             it.image shouldBe name
                         }
                     }
-                    child<ASTPredicateList> { }
+
                 }
             }
         }
@@ -92,7 +92,7 @@ class NameTest : FunSpec({
                             it.image shouldBe "pmd-java"
                         }
                     }
-                    child<ASTPredicateList> { }
+
                 }
             }
         }

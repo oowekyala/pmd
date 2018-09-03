@@ -77,7 +77,7 @@ class ExprTest : FunSpec({
                                             child<ASTExactNameTest>(ignoreChildren = true) {
                                                 it.nameImage shouldBe "i"
                                             }
-                                            child<ASTPredicateList> { }
+
                                         }
                                     }
                                 }

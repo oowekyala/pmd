@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.List;
+
 // @formatter:off
 /**
  * An axis step of a {@linkplain ASTPathExpr path expression}.
@@ -25,7 +27,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * (: Note that Axis is not a node and is not present in the children. :)
  * (: Note that NodeTest is an interface and the child is a concrete instance of an implementor. :)
- * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} {@linkplain ASTPredicateList PredicateList}
+ * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} ({@linkplain ASTPredicate Predicate})*
  *
  * </pre>
  */
@@ -135,8 +137,8 @@ public final class ASTAxisStep extends AbstractXPathNode {
     /**
      * Gets the list of predicates of this step.
      */
-    public ASTPredicateList getPredicates() {
-        return (ASTPredicateList) jjtGetChild(1);
+    public List<ASTPredicate> getPredicates() {
+        return findChildrenOfType(ASTPredicate.class);
     }
 
 }

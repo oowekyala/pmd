@@ -88,7 +88,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
                             it.nameNode shouldBe child { it.localName shouldBe op }
                         }
 
-                        child<ASTPredicateList> { }
+
                     }
                 }
 
@@ -97,7 +97,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
                         child<ASTWildcardNameTest> {
                         }
 
-                        child<ASTPredicateList> { }
+
                     }
                 }
             }
@@ -114,7 +114,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
                     child<ASTWildcardNameTest> {
                     }
 
-                    child<ASTPredicateList> { }
+
                 }
             }
         }
