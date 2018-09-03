@@ -15,23 +15,15 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@linkplain ASTExpr ExprSingle}
+ * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link Expr}
  *
  * </pre>
  */
 public final class ASTVarBinding extends AbstractXPathNode {
 
 
-    private String varName;
-
-
     ASTVarBinding(XPathParser p, int id) {
         super(p, id);
-    }
-
-
-    void setVarName(String varName) {
-        this.varName = varName;
     }
 
 
@@ -41,8 +33,28 @@ public final class ASTVarBinding extends AbstractXPathNode {
     }
 
 
+    /**
+     * Returns true if the binder is written ":=", which is the
+     * style used in let expressions. Other expressions use the
+     * token "in".
+     */
+    public boolean isLetStyle() {
+        return jjtGetParent().jjtGetParent() instanceof ASTLetExpr;
+    }
+
+
+    /**
+     * Returns the node representing the name of the variable.
+     */
+    public ASTName getNameNode() {
+        return (ASTName) jjtGetChild(0);
+    }
+
+
+    /**
+     * Returns the name of the variable.
+     */
     public String getVarName() {
-        return varName;
+        return getNameNode().getLocalName();
     }
 }
-/* JavaCC - OriginalChecksum=0801906c16745525f42098e542a6ff4e (do not edit this line) */

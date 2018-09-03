@@ -15,7 +15,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  *
  */
-public final class ASTIntersectExceptExpr extends AbstractXPathNode implements ExpressionNode {
+public final class ASTIntersectExceptExpr extends AbstractXPathNode implements Expr {
 
 
     ASTIntersectExceptExpr(XPathParser p, int id) {

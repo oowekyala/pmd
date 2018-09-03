@@ -61,10 +61,8 @@ class LoneSingleSlashConstraintTest : FunSpec({
     parserTest("Test ambiguity with single slash path: (/)*5") {
         "(/)*5" should matchExpr<ASTMultiplicativeExpr> {
             child<ASTParenthesizedExpr> {
-                child<ASTExpr> {
-                    child<ASTPathExpr> {
-                        it.pathAnchor shouldBe ROOT
-                    }
+                child<ASTPathExpr> {
+                    it.pathAnchor shouldBe ROOT
                 }
             }
 

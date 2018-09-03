@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExpressionNode {
+public final class ASTQuantifiedExpr extends AbstractXPathNode implements Expr {
 
     private boolean isUniversallyQuantified;
 

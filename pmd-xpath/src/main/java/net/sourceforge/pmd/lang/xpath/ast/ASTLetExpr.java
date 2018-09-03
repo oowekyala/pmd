@@ -10,11 +10,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * LetExpr ::= "let" {@linkplain ASTVarBindingList VarBindingList} "return" {@linkplain ASTExpr ExprSingle}
+ * LetExpr ::= "let" {@linkplain ASTVarBindingList VarBindingList} "return" {@link Expr}
  *
  * </pre>
  */
-public final class ASTLetExpr extends AbstractXPathNode implements ExpressionNode {
+public final class ASTLetExpr extends AbstractXPathNode implements Expr {
 
 
     ASTLetExpr(XPathParser p, int id) {

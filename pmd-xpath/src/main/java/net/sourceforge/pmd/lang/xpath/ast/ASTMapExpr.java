@@ -13,7 +13,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTMapExpr extends AbstractXPathNode implements ExpressionNode {
+public final class ASTMapExpr extends AbstractXPathNode implements Expr {
 
 
     ASTMapExpr(XPathParser p, int id) {

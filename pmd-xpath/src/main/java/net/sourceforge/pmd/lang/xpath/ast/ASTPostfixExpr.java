@@ -17,7 +17,7 @@ import java.util.List;
  *
  * </pre>
  */
-public final class ASTPostfixExpr extends AbstractXPathNode implements ExpressionNode, StepExpr {
+public final class ASTPostfixExpr extends AbstractXPathNode implements Expr, StepExpr {
 
 
     ASTPostfixExpr(XPathParser p, int id) {

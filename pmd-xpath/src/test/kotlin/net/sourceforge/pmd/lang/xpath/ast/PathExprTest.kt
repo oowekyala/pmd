@@ -137,6 +137,7 @@ class PathExprTest : FunSpec({
         "./Foo" should matchExpr<ASTPathExpr> {
 
             child<ASTContextItemExpr> { }
+
             child<ASTAxisStep> {
                 child<ASTExactNameTest> {
                     it.nameNode shouldBe child { it.localName shouldBe "Foo" }

@@ -236,29 +236,23 @@ ASTXPathRoot XPathRoot() :
   Expr() <EOF> { return jjtThis; }
 }
 
-void Expr() :
+// The comma operator composes a sequence
+void Expr() #SequenceExpr(>1):
 {}
 {
-  VoidSingleExpr() ("," VoidSingleExpr() )*
+  ExprSingle() ("," ExprSingle() )*
 }
 
-// This is a shorthand for "An Expr with necessarily one child"
-void ExprSingle() #Expr:
+void ExprSingle() #void:
 {}
 {
-    VoidSingleExpr()
+       ForExpr()
+     | LetExpr()
+     | QuantifiedExpr()
+     | IfExpr()
+     | OrExpr()
 }
 
-// This factorises the two
-void VoidSingleExpr() #void:
-{}
-{
-    ForExpr()
-  | LetExpr()
-  | QuantifiedExpr()
-  | IfExpr()
-  | OrExpr()
-}
 
 
 
@@ -293,7 +287,7 @@ void VarBindingList(boolean isLetCtx):
 void VarBinding(boolean isLet):
 {}
 {
-  "$" VarName() { jjtThis.setVarName(token.getImage()); }
+  "$" VarName()
   (<IN> {checkVarBinding(isLet, false);} | ":=" {checkVarBinding(isLet, true);})
   ExprSingle()
 }
