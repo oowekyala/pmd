@@ -4,12 +4,29 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTParenthesizedItemType extends AbstractXPathNode {
+/**
+ * Parenthesized item type.
+ *
+ * <pre>
+ *
+ * ParenthesizedItemType ::= "(" {@link ItemType} ")"
+ *
+ * </pre>
+ */
+public final class ASTParenthesizedItemType extends AbstractXPathNode implements ItemType, ParenthesizedNode<ItemType> {
 
 
     ASTParenthesizedItemType(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the expression wrapped in the parentheses.
+     */
+    @Override
+    public ItemType getWrappedNode() {
+        return (ItemType) jjtGetChild(0);
     }
 
 

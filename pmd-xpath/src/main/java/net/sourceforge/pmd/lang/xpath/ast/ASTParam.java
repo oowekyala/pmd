@@ -5,11 +5,34 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * Parameter of an {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}.
+ * Wrapped in a {@link ASTParamList}.
+ *
+ * <p>Each parameter has a name and an optional type. If no type is specified,
+ * its default type is item()*.
+ *
+ * <pre>
+ *
+ * Param ::= "$" {@linkplain ASTName EQName} ( "as" {@linkplain ASTSequenceType SequenceType} )?
+ *
+ * </pre>
+ */
 public final class ASTParam extends AbstractXPathNode {
+
+    // TODO synthesize default type?
 
 
     ASTParam(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the node representing the name of the variable.
+     */
+    public ASTName getNameNode() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

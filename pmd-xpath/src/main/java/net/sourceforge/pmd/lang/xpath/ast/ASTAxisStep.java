@@ -8,8 +8,8 @@ import java.util.List;
 
 // @formatter:off
 /**
- * An axis step of a {@linkplain ASTPathExpr path expression}.
- * One of the two possible children types for {@link ASTStepExpr}.
+ * An axis step of a {@linkplain ASTPathExpr path expression}. One of the concrete types
+ * of {@link StepExpr}.
  *
  * <p>The following shorthand notations are specified:
  * <ul>

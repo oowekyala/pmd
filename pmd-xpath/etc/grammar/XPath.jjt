@@ -622,7 +622,7 @@ void FunctionCall():
     EQName() ArgumentList()
 }
 
-void FunctionItemExpr():
+void FunctionItemExpr() #void:
 {}
 {
     NamedFunctionRef() | InlineFunctionExpr()
@@ -637,7 +637,7 @@ void NamedFunctionRef():
 void InlineFunctionExpr():
 {}
 {
-    <FUNCTION> ParamList() (<AS> SequenceType())? ("{" Expr() "}") #FunctionBody
+    <FUNCTION> ParamList() [ TypeDeclaration() ] "{" Expr() "}"
 }
 
 void ParamList():
@@ -652,10 +652,15 @@ void Param():
     "$" EQName() [ TypeDeclaration() ]
 }
 
+void TypeDeclaration() #void:
+{}
+{
+    <AS> SequenceType()
+}
 
 /* Kind tests */
 
-void KindTest() #void: // TODO tag those with an interface
+void KindTest() #void:
 {}
 {
       DocumentTest()
@@ -725,19 +730,22 @@ void SchemaElementTest():
 
 /* TYPES */
 
-void SequenceType() :
+ASTSequenceType SequenceType() :
 {}
 {
-   (<EMPTY_SEQUENCE> "(" ")") #EmptySequenceType
+ (
+   (<EMPTY_SEQUENCE> "(" ")") { jjtThis.setCardinality(Cardinality.EMPTY); }
  | ItemType()
    (
-     <QUESTION_MARK> {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
-   | <STAR>          {jjtThis.setCardinality(Cardinality.ZERO_OR_MORE);}
-   | <PLUS>          {jjtThis.setCardinality(Cardinality.ONE_OR_MORE);}
+     "?"    {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
+   | "*"    {jjtThis.setCardinality(Cardinality.ZERO_OR_MORE);}
+   | "+"    {jjtThis.setCardinality(Cardinality.ONE_OR_MORE);}
    )?
+ )
+ { return jjtThis; }
 }
 
-void ItemType():
+void ItemType() #void:
 {}
 {
     KindTest()
@@ -747,10 +755,10 @@ void ItemType():
   | ("(" ItemType() ")")    #ParenthesizedItemType
 }
 
-void FunctionTest():
+void FunctionTest() #void:
 {}
 {
-      LOOKAHEAD (3) (<FUNCTION> "(" <STAR> ")")             #AnyFunctionTest
+      LOOKAHEAD (3) (<FUNCTION> "(" "*" ")")                #AnyFunctionTest
     | (<FUNCTION> ArgumentTypeList() <AS> SequenceType())   #TypedFunctionTest
 }
 
@@ -764,12 +772,6 @@ void SingleType():
 {}
 {
   SimpleTypeName() [ "?" {jjtThis.setOptionallyQuantified();} ]
-}
-
-void TypeDeclaration():
-{}
-{
-    <AS> SequenceType()
 }
 
 

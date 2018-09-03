@@ -44,7 +44,7 @@ class PathExprTest : FunSpec({
                 }
             }
 
-            it.iterator().asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep))
+            it.toList().shouldContainExactly(listOf(fstStep, sndStep))
         }
     }
 
@@ -128,7 +128,7 @@ class PathExprTest : FunSpec({
             }
 
 
-            it.asSequence().toList().shouldContainExactly(listOf(fstStep, sndStep, thrdStep))
+            it.toList().shouldContainExactly(listOf(fstStep, sndStep, thrdStep))
         }
     }
 

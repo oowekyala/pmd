@@ -8,6 +8,8 @@ import net.sourceforge.pmd.lang.ast.Node;
 
 
 /**
+ * Root interface for all nodes of the XPath language.
+ *
  * @author Clément Fournier
  * @since 6.7.0
  */

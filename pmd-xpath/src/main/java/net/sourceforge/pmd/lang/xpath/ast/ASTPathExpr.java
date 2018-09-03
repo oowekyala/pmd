@@ -13,7 +13,7 @@ import java.util.Iterator;
  * <p>If a path expression is relative, and has a single step
  * that is a postfix expression, then the PathExpr/StepExpr context
  * around the PostfixExpr is removed, since it obscures the AST and is lexically
- * equivalent. This removal occurs at parse-time. TODO test
+ * equivalent. This removal occurs at parse-time.
  *
  * <pre>
  *
@@ -26,7 +26,7 @@ import java.util.Iterator;
  *
  * </pre>
  */
-public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, Expr {
+public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, ExprSingle {
 
 
     private PathAnchor pathAnchor;
@@ -52,6 +52,9 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
     }
 
 
+    /**
+     * Gets the anchor of the first segment of the path.
+     */
     public PathAnchor getPathAnchor() {
         return pathAnchor;
     }

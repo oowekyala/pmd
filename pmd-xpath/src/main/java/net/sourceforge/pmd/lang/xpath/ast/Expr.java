@@ -5,18 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Marker for all expressions. This corresponds to the ExprSingle
- * production of the grammar.
- *
- * <pre>
- *
- * Expr ::= {@linkplain ASTForExpr ForExpr}
- *        | {@linkplain ASTLetExpr LetExpr}
- *        | {@linkplain ASTQuantifiedExpr QuantifiedExpr}
- *        | {@linkplain ASTIfExpr IfExpr}
- *        | {@linkplain ASTOrExpr OrExpr}
- *
- * </pre>
+ * Root interface for all expressions. Groups {@link ExprSingle}
+ * and {@linkplain ASTSequenceExpr SequenceExpr} together.
  *
  * @author Clément Fournier
  * @since 6.7.0

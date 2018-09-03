@@ -4,8 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTAnyItemType extends AbstractXPathNode {
+/**
+ * Type denoting any item.
+ *
+ * <pre>
+ *
+ * AnyItemType ::= "item" "(" ")"
+ *
+ * </pre>
+ */
+public final class ASTAnyItemType extends AbstractXPathNode implements ItemType {
 
 
     ASTAnyItemType(XPathParser p, int id) {

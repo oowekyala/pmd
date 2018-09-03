@@ -5,7 +5,19 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTAnyFunctionTest extends AbstractXPathNode {
+import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
+
+
+/**
+ * Function test that matches anything.
+ *
+ * <pre>
+ *
+ * AnyFunctionTest ::= "function" "(" "*" ")"
+ *
+ * </pre>
+ */
+public final class ASTAnyFunctionTest extends AbstractXPathNode implements FunctionTest {
 
 
     ASTAnyFunctionTest(XPathParser p, int id) {

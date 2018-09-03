@@ -10,7 +10,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * Argument ::= {@link Expr} | "?"
+ * Argument ::= {@link ExprSingle} | "?"
  *
  * </pre>
  */

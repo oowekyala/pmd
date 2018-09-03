@@ -5,7 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Marker for primary expressions.
+ * Marker for primary expressions. Primary expressions have the highest
+ * precedence.
  *
  * <pre>
  *
@@ -15,12 +16,12 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *               | {@linkplain ASTParenthesizedExpr ParenthesizedExpr}
  *               | {@linkplain ASTContextItemExpr ContextItemExpr}
  *               | {@linkplain ASTFunctionCall FunctionCall}
- *               | {@linkplain ASTFunctionItemExpr FunctionItemExpr} )
+ *               | {@link FunctionItemExpr} )
  *
  * </pre>
  *
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface PrimaryExpr extends Expr, StepExpr {
+public interface PrimaryExpr extends ExprSingle, StepExpr {
 }

@@ -11,6 +11,17 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 
+/**
+ * Numeric literal. XPath numeric literals are of 3 types:
+ *
+ * <pre>
+ *
+ *     &lt;INTEGER_LITERAL&gt; ::= "\d+"
+ *     &lt;DECIMAL_LITERAL&gt; ::= "\.\d+" | "\d+\.\d*"
+ *     &lt;DOUBLE_LITERAL&gt;  ::= (&lt;INTEGER_LITERAL&gt; | &lt;DECIMAL_LITERAL&gt;) ("e" | "E") ("+" | "-")? "\d+"
+ *
+ * </pre>
+ */
 public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
     private double value;

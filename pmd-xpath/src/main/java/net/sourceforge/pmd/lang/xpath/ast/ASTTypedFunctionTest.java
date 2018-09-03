@@ -4,8 +4,20 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
 
-public final class ASTTypedFunctionTest extends AbstractXPathNode {
+
+/**
+ * Function test testing the types of parameters and return type.
+ *
+ * <pre>
+ *
+ * TypedFunctionTest ::= "function" {@linkplain ASTArgumentTypeList ArgumentTypeList} "as" {@linkplain ASTSequenceType SequenceType}
+ *
+ * </pre>
+ *
+ */
+public final class ASTTypedFunctionTest extends AbstractXPathNode implements FunctionTest {
 
 
     ASTTypedFunctionTest(XPathParser p, int id) {

@@ -8,6 +8,15 @@ package net.sourceforge.pmd.lang.xpath.ast;
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
+/**
+ * Test that matches any kind.
+ *
+ * <pre>
+ *
+ * AnyKindTest ::= "node" "(" ")"
+ *
+ * </pre>
+ */
 public final class ASTAnyKindTest extends AbstractXPathNode implements KindTest {
 
 

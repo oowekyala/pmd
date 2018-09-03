@@ -14,7 +14,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * </pre>
  *
  */
-public final class ASTUnionExpr extends AbstractXPathNode implements Expr {
+public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTUnionExpr(XPathParser p, int id) {

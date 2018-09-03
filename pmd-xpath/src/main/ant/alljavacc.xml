@@ -98,7 +98,7 @@
         </replace>
 
         <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"
-                dest="${target}/${ast-package}/AbstractXPathParserVisitor.java"/>
+                dest="${target}/${ast-package}/AbstractXPathGenericVisitor.java"/>
 
         <replace file="${target}/${ast-package}/JJTXPathParserState.java">
             <replacetoken>public class</replacetoken>

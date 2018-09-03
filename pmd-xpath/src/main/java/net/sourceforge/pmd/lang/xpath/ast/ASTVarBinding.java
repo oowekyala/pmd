@@ -15,7 +15,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link Expr}
+ * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link ExprSingle}
  *
  * </pre>
  */

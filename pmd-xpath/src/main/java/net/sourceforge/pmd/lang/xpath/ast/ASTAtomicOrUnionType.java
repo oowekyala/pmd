@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-public final class ASTAtomicOrUnionType extends AbstractXPathNode {
+public final class ASTAtomicOrUnionType extends AbstractXPathNode implements ItemType {
 
 
     ASTAtomicOrUnionType(XPathParser p, int id) {

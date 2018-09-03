@@ -4,12 +4,30 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTParenthesizedExpr extends AbstractXPathNode implements PrimaryExpr {
+/**
+ * Parenthesized expression. The parentheses bind more tightly than any other expression
+ * (this is one of the primary expressions).
+ *
+ * <pre>
+ *
+ * ParenthesizedExpr ::= "(" {@link Expr} ")"
+ *
+ * </pre>
+ */
+public final class ASTParenthesizedExpr extends AbstractXPathNode implements PrimaryExpr, ParenthesizedNode<Expr> {
 
 
     ASTParenthesizedExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the expression wrapped in the parentheses.
+     */
+    @Override
+    public Expr getWrappedNode() {
+        return (Expr) jjtGetChild(0);
     }
 
 

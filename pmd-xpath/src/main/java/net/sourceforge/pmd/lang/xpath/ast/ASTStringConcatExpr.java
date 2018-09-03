@@ -15,7 +15,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * </pre>
  *
  */
-public final class ASTStringConcatExpr extends AbstractXPathNode implements Expr {
+public final class ASTStringConcatExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTStringConcatExpr(XPathParser p, int id) {

@@ -9,16 +9,18 @@ import java.util.Iterator;
 
 
 /**
- * Sequence expression. Comma separated expressions compose a sequence.
- * This corresponds to the Expr production in the grammar.
+ * Sequence expression. The comma separated expressions compose a sequence.
+ * The comma operator has the lowest priority of all, and this expression is
+ * forbidden in some contexts unless it's {@linkplain ASTParenthesizedExpr parenthesized}.
+ *
  *
  * <pre>
  *
- * SequenceExpr ::= {@link Expr} ("," {@link Expr})+
+ * SequenceExpr ::= {@link ExprSingle} ("," {@link ExprSingle})+
  *
  * </pre>
  */
-public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<Expr> {
+public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<ExprSingle>, Expr {
 
 
     ASTSequenceExpr(XPathParser p, int id) {
@@ -33,8 +35,8 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
 
     @Override
-    public Iterator<Expr> iterator() {
-        return new NodeChildrenIterator<>(this, Expr.class);
+    public Iterator<ExprSingle> iterator() {
+        return new NodeChildrenIterator<>(this, ExprSingle.class);
     }
 }
 /* JavaCC - OriginalChecksum=2e2c123dc1554f24119210ce5dedcec4 (do not edit this line) */

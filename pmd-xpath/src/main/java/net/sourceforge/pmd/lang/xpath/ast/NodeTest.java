@@ -12,7 +12,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * <pre>
  *
  * (: Both the productions are not nodes. :)
- * NodeTestX ::= {@link NameTest} | {@link KindTest}
+ * NodeTest ::= {@link NameTest} | {@link KindTest}
  *
  * </pre>
  *
@@ -23,7 +23,7 @@ public interface NodeTest extends XPathNode {
 
 
     /**
-     * A kind test on a node.
+     * A kind test on a node. This is a NodeTest and an ItemType.
      *
      * <pre>
      *
@@ -40,7 +40,7 @@ public interface NodeTest extends XPathNode {
      *
      * </pre>
      */
-    interface KindTest extends NodeTest {
+    interface KindTest extends NodeTest, ItemType {
 
     }
 
@@ -49,7 +49,8 @@ public interface NodeTest extends XPathNode {
      *
      * <pre>
      *
-     * NameTest ::= {@linkplain ASTExactNameTest ExactNameTest} | {@linkplain ASTWildcardNameTest WildcardNameTest}
+     * NameTest ::= {@linkplain ASTExactNameTest ExactNameTest}
+     *            | {@linkplain ASTWildcardNameTest WildcardNameTest}
      *
      * </pre>
      */

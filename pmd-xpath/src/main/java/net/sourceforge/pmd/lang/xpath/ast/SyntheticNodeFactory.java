@@ -32,6 +32,12 @@ final class SyntheticNodeFactory {
         return getParser(test).NodeTest();
     }
 
+
+    public static ASTSequenceType synthesizeSequenceType(String type) {
+        return getParser(type).SequenceType();
+    }
+
+
     private static XPathParser getParser(String source) {
         return new XPathParser(new XPathSimpleCharStream(new StringReader(source)));
     }

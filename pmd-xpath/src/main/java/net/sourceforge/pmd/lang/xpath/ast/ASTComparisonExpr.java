@@ -17,7 +17,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * </pre>
  *
  */
-public final class ASTComparisonExpr extends AbstractXPathNode implements Expr {
+public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSingle {
 
     private String operator;
 

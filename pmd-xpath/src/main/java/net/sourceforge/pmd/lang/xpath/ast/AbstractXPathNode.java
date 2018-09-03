@@ -9,10 +9,12 @@ import net.sourceforge.pmd.lang.ast.Node;
 
 
 /**
+ * Base class for XPath nodes.
+ *
  * @author Clément Fournier
  * @since 6.7.0
  */
-public abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
+abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
     protected final XPathParser parser;
 

@@ -4,8 +4,16 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
-public final class ASTIfExpr extends AbstractXPathNode implements Expr {
+/**
+ * Conditional expression.
+ *
+ * <pre>
+ *
+ * IfExpr ::= "if" "(" {@link Expr} ")" "then" {@link ExprSingle} "else" {@link ExprSingle}
+ *
+ * </pre>
+ */
+public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTIfExpr(XPathParser p, int id) {

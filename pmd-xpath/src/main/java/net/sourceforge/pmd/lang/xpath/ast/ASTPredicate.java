@@ -5,11 +5,28 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * A predicate occurring in a {@linkplain StepExpr StepExpr}.
+ *
+ * <pre>
+ *
+ * Predicate ::= "[" {@link Expr} "]"
+ *
+ * </pre>
+ */
 public final class ASTPredicate extends AbstractXPathNode {
 
 
     ASTPredicate(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the expression wrapped in the predicate.
+     */
+    public Expr getWrappedExpression() {
+        return (Expr) jjtGetChild(0);
     }
 
 
