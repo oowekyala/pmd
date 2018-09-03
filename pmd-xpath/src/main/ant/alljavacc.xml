@@ -94,7 +94,7 @@
             <replacefilter token="Visitor" value="Visitor&lt;T&gt;"/>
             <replacefilter token="Object" value="T"/>
             <replacefilter token="SimpleNode" value="XPathNode"/>
-            <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathParserVisitor"/>
+            <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathGenericVisitor"/>
         </replace>
 
         <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"

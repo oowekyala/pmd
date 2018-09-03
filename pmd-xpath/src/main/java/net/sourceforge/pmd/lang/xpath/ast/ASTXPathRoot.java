@@ -9,7 +9,7 @@ import net.sourceforge.pmd.lang.ast.RootNode;
 
 
 /**
- * Root node of all XPath trees.
+ * Root node of all XPath trees. Always has a unique child.
  */
 public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 

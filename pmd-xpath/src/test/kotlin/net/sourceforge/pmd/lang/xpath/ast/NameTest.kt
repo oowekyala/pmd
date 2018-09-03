@@ -35,33 +35,30 @@ class NameTest : FunSpec({
 
     parserTest("Test namespaced name") {
 
-        "pmd-java:typeIs(\"LolWhat\", ?)" should matchRoot {
+        "pmd-java:typeIs(\"LolWhat\", ?)" should matchExpr<ASTFunctionCall> {
 
-            child<ASTFunctionCall> {
+            it.functionName shouldBe child {
+                it.isUriLiteral shouldBe false
+                it.namespacePrefix shouldBe "pmd-java"
+                it.localName shouldBe "typeIs"
+                it.hasNamespacePrefix() shouldBe true
+                it.image shouldBe "pmd-java:typeIs"
+            }
 
-                it.functionName shouldBe child {
-                    it.isUriLiteral shouldBe false
-                    it.namespacePrefix shouldBe "pmd-java"
-                    it.localName shouldBe "typeIs"
-                    it.hasNamespacePrefix() shouldBe true
-                    it.image shouldBe "pmd-java:typeIs"
+            it.arguments shouldBe child {
+
+                child<ASTArgument> {
+
+                    it.isPlaceholder shouldBe false
+
+                    child<ASTStringLiteral> {
+                        it.image shouldBe "\"LolWhat\""
+                        it.unescapedValue shouldBe "LolWhat"
+                    }
                 }
 
-                it.arguments shouldBe child {
-
-                    child<ASTArgument> {
-
-                        it.isPlaceholder shouldBe false
-
-                        child<ASTStringLiteral> {
-                            it.image shouldBe "\"LolWhat\""
-                            it.unescapedValue shouldBe "LolWhat"
-                        }
-                    }
-
-                    child<ASTArgument> {
-                        it.isPlaceholder shouldBe true
-                    }
+                child<ASTArgument> {
+                    it.isPlaceholder shouldBe true
                 }
             }
         }

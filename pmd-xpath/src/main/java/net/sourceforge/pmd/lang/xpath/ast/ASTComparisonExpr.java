@@ -15,7 +15,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *                      | "ne" | "eq" | "lt" | "le" | "gt" | "ge"
  *
  * </pre>
- *
  */
 public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSingle {
 
@@ -27,6 +26,9 @@ public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSi
     }
 
 
+    /**
+     * Gets the image of the operator.
+     */
     public String getOperator() {
         return operator;
     }

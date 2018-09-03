@@ -3,6 +3,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.TokenMgrError
 
 /**
  * @author Clément Fournier
@@ -77,4 +78,23 @@ class StringLiteralTests : FunSpec({
         }
     }
 
+    parserTest("Test comment in strings") {
+        "'this is just a string :)'" should matchExpr<ASTStringLiteral> {
+            it.unescapedValue shouldBe "this is just a string :)"
+        }
+
+        "'this is another string (:'" should matchExpr<ASTStringLiteral> {
+            it.unescapedValue shouldBe "this is another string (:"
+        }
+    }
+
+    parserTest("Test unbalanced comment markers in string") {
+        expect<TokenMgrError>() whenParsing {
+            "(: \"this is just a string :)\" :)"
+        }
+
+        expect<ParseException>() whenParsing {
+            "(: \"this is another string (:\" :)"
+        }
+    }
 })

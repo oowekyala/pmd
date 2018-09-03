@@ -8,6 +8,12 @@ package net.sourceforge.pmd.lang.xpath.ast;
 /**
  * Treat as expression.
  *
+ * <p>Like cast, the treat expression takes two operands: an expression and a SequenceType.
+ * Unlike cast, however, treat does not change the dynamic type or value of its operand.
+ * Instead, the purpose of treat is to ensure that an expression has an expected dynamic type
+ * at evaluation time.
+ *
+ *
  * <pre>
  *
  * TreatExpr ::= {@linkplain ASTCastableExpr CastableExpr} "treat" "as" {@linkplain ASTSequenceType SequenceType}

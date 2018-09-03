@@ -22,7 +22,7 @@ class PathExprTest : FunSpec({
 
                 it.axis shouldBe Axis.CHILD
 
-                child<ASTExactNameTest> {
+                it.nodeTest shouldBe child<ASTExactNameTest> {
                     it.nameImage shouldBe "A"
 
                     it.nameNode shouldBe child { it.image shouldBe "A" }
@@ -36,7 +36,7 @@ class PathExprTest : FunSpec({
                 it.axis shouldBe Axis.CHILD
 
 
-                child<ASTExactNameTest> {
+                it.nodeTest shouldBe child<ASTExactNameTest> {
                     it.nameImage shouldBe "B"
 
                     child<ASTName> { it.image shouldBe "B" }
@@ -58,7 +58,7 @@ class PathExprTest : FunSpec({
                 it.axis shouldBe Axis.ATTRIBUTE
                 it.isAbbrevAttributeAxis shouldBe true
 
-                child<ASTExactNameTest> {
+                it.nodeTest shouldBe child<ASTExactNameTest> {
                     it.nameImage shouldBe "A"
 
                     child<ASTName> { it.image shouldBe "A" }
@@ -79,7 +79,7 @@ class PathExprTest : FunSpec({
                 it.axis shouldBe Axis.PARENT
                 it.isAbbrevParentNodeTest shouldBe true
 
-                child<ASTAnyKindTest> {
+                it.nodeTest shouldBe child<ASTAnyKindTest> {
 
                 }
 
@@ -98,7 +98,7 @@ class PathExprTest : FunSpec({
 
                 it.axis shouldBe Axis.CHILD
 
-                child<ASTExactNameTest> {
+                it.nodeTest shouldBe child<ASTExactNameTest> {
                     it.nameImage shouldBe "A"
 
                     child<ASTName> { it.image shouldBe "A" }
@@ -112,7 +112,7 @@ class PathExprTest : FunSpec({
 
                 it.axis shouldBe Axis.DESCENDANT_OR_SELF
 
-                child<ASTAnyKindTest> {}
+                it.nodeTest shouldBe child<ASTAnyKindTest> {}
             }
 
 
@@ -145,8 +145,38 @@ class PathExprTest : FunSpec({
             }
 
         }
+    }
 
 
+    parserTest("Test one predicate") {
+
+        "following-sibling::chapter[fn:position() = 1]" should matchExpr<ASTPathExpr> {
+
+            child<ASTAxisStep> {
+                it.axis shouldBe Axis.FOLLOWING_SIBLING
+
+                it.nodeTest shouldBe child<ASTExactNameTest>(ignoreChildren = true) {
+
+                }
+
+                val pred = child<ASTPredicate> {
+                    child<ASTComparisonExpr> {
+                        child<ASTFunctionCall> {
+                            it.functionName shouldBe child {
+                                it.localName shouldBe "position"
+                                it.namespacePrefix shouldBe "fn"
+                            }
+
+                            child<ASTArgumentList> { }
+                        }
+                        it.operator shouldBe "="
+                        child<ASTNumericLiteral> { }
+                    }
+                }
+
+                it.predicates.shouldContainExactly(pred)
+            }
+        }
     }
 
 })

@@ -14,36 +14,33 @@ class ExprTest : FunSpec({
 
     parserTest("Test let expression") {
 
-        "let ${'$'}i := 1 + 2 return ${'$'}i * 3" should matchRoot {
-            child<ASTLetExpr> {
+        "let ${'$'}i := 1 + 2 return ${'$'}i * 3" should matchExpr<ASTLetExpr> {
 
-                child<ASTVarBindingList> {
-                    child<ASTVarBinding> {
-                        it.varName shouldBe "i"
+            child<ASTVarBindingList> {
+                child<ASTVarBinding> {
+                    it.varName shouldBe "i"
 
-                        child<ASTName> {
-                            it.image shouldBe "i"
-                        }
+                    child<ASTName> {
+                        it.image shouldBe "i"
+                    }
 
-                        child<ASTAdditiveExpr>(ignoreChildren = true) {
+                    child<ASTAdditiveExpr>(ignoreChildren = true) {
 
-                        }
+                    }
+                }
+            }
+
+            child<ASTMultiplicativeExpr> {
+                child<ASTVarRef> {
+                    it.variableName shouldBe child {
+                        it.localName shouldBe "i"
                     }
                 }
 
-                child<ASTMultiplicativeExpr> {
-                    child<ASTVarRef> {
-                        it.variableName shouldBe child {
-                            it.localName shouldBe "i"
-                        }
-                    }
+                child<ASTMultiplicativeOperator> { }
 
-                    child<ASTMultiplicativeOperator> { }
-
-                    child<ASTNumericLiteral> {
-                        it.image shouldBe "3"
-                    }
-
+                child<ASTNumericLiteral> {
+                    it.image shouldBe "3"
                 }
             }
         }
@@ -52,34 +49,31 @@ class ExprTest : FunSpec({
 
     parserTest("Test for expression") {
 
-        "for ${'$'}i in //i return ${'$'}i" should matchRoot {
-            child<ASTForExpr> {
+        "for ${'$'}i in //i return ${'$'}i" should matchExpr<ASTForExpr> {
+            child<ASTVarBindingList> {
+                child<ASTVarBinding> {
+                    it.varName shouldBe "i"
 
-                child<ASTVarBindingList> {
-                    child<ASTVarBinding> {
-                        it.varName shouldBe "i"
+                    child<ASTName> {
+                        it.image shouldBe "i"
+                    }
 
-                        child<ASTName> {
-                            it.image shouldBe "i"
-                        }
+                    child<ASTPathExpr> {
 
-                        child<ASTPathExpr> {
+                        it.pathAnchor shouldBe DESCENDANT_OR_ROOT
 
-                            it.pathAnchor shouldBe DESCENDANT_OR_ROOT
-
-                            child<ASTAxisStep> {
-                                child<ASTExactNameTest>(ignoreChildren = true) {
-                                    it.nameImage shouldBe "i"
-                                }
+                        child<ASTAxisStep> {
+                            child<ASTExactNameTest>(ignoreChildren = true) {
+                                it.nameImage shouldBe "i"
                             }
                         }
                     }
                 }
+            }
 
-                child<ASTVarRef> {
-                    it.variableName shouldBe child {
-                        it.localName shouldBe "i"
-                    }
+            child<ASTVarRef> {
+                it.variableName shouldBe child {
+                    it.localName shouldBe "i"
                 }
             }
         }

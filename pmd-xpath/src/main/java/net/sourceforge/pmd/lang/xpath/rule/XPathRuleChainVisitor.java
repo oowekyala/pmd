@@ -11,7 +11,7 @@ import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.AbstractRuleChainVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
-import net.sourceforge.pmd.lang.xpath.ast.AbstractXPathParserVisitor;
+import net.sourceforge.pmd.lang.xpath.ast.AbstractXPathGenericVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
 import net.sourceforge.pmd.lang.xpath.ast.XPathParserVisitor;
 
@@ -25,7 +25,7 @@ public class XPathRuleChainVisitor extends AbstractRuleChainVisitor {
 
     @Override
     protected void indexNodes(List<Node> nodes, RuleContext ctx) {
-        XPathParserVisitor<?> javaParserVistor = new AbstractXPathParserVisitor<Object>() {
+        XPathParserVisitor<?> javaParserVistor = new AbstractXPathGenericVisitor<Object>() {
             // Perform a visitation of the AST to index nodes which need
             // visiting by type
 

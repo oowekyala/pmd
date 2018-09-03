@@ -13,8 +13,8 @@ options {
   TRACK_TOKENS = true;
   NODE_PACKAGE = "net.sourceforge.pmd.lang.xpath.ast";
 
-   DEBUG_PARSER = true;
-   DEBUG_LOOKAHEAD = true;
+//   DEBUG_PARSER = true;
+//   DEBUG_LOOKAHEAD = true;
 }
 
 PARSER_BEGIN(XPathParser)
@@ -36,6 +36,10 @@ public class XPathParser {
         if (isLetContext != wasLetFound) {
           throwParseException("Variable binding expected '" + expected + "', actual '" + actual);
         }
+    }
+
+    String getUriFromLiteral(Token bracedUriLiteral) {
+        return bracedUriLiteral.getImage().substring("Q{".length(), bracedUriLiteral.getImage().length() - 1);
     }
 
 }
@@ -192,10 +196,14 @@ TOKEN :
 
 TOKEN :
 {
-  < EQNAME: <NCNAME> (":" <NCNAME>)? | <BRACED_URI_LITERAL> <NCNAME> >
+  < LEFT_WILDCARD : "*:" <NCNAME> >
+| < RIGHT_WILDCARD : <NCNAME> ":*" >
+| < RIGHT_URI_WILDCARD : <BRACED_URI_LITERAL> "*" >
 |
   // The actual lexical grammar for NCName is: any name except <CHAR>* ":" <CHAR>*
   < NCNAME: <NAME_START_CHAR_NO_COLON> (<NAME_CHAR_NO_COLON>)* >
+|
+  < EQNAME: <NCNAME> (":" <NCNAME>)? | <BRACED_URI_LITERAL> <NCNAME> >
 |
   < #NAME_START_CHAR_NO_COLON: [
     "A"-"Z",
@@ -354,7 +362,7 @@ void AdditiveExpr() #AdditiveExpr(>1):
 void AdditiveOperator():
 {}
 {
-    ( "+" | "-" ) { jjtThis.setImage(getToken(1).getImage()); }
+    ( "+" | "-" ) { jjtThis.setImage(getToken(0).getImage()); }
 }
 
 
@@ -371,7 +379,7 @@ void MultiplicativeOperator():
       | <DIV>
       | <IDIV>
       | <MOD>
-    ) { jjtThis.setImage(getToken(1).getImage()); }
+    ) { jjtThis.setImage(getToken(0).getImage()); }
 }
 
 void UnionExpr() #UnionExpr(>1):
@@ -385,7 +393,7 @@ void UnionOperator():
 {
     ( <UNION>
     | "|" { jjtThis.setShorthand(true); }
-    ) { jjtThis.setImage(getToken(1).getImage()); }
+    ) { jjtThis.setImage(getToken(0).getImage()); }
 }
 
 void IntersectExceptExpr() #IntersectExceptExpr(>1):
@@ -399,7 +407,7 @@ void IntersectExceptOperator():
 {
      ( <INTERSECT>
      | <EXCEPT>
-     ) { jjtThis.setImage(getToken(1).getImage()); }
+     ) { jjtThis.setImage(getToken(0).getImage()); }
 }
 
 
@@ -418,7 +426,7 @@ void TreatExpr() #TreatExpr(>1):
 void CastableExpr() #CastableExpr(>1):
 {}
 {
-  CastExpr() ( <TREAT> <AS> SingleType() )?
+  CastExpr() ( <CASTABLE> <AS> SingleType() )?
 }
 
 void CastExpr() #CastExpr(>1):
@@ -542,7 +550,7 @@ NodeTest NodeTest() #void:
 void NameTest() #void:
 {}
 {
-   ExactNameTest() | WildcardNameTest()
+   WildcardNameTest() | ExactNameTest()
 }
 
 void ExactNameTest():
@@ -554,11 +562,12 @@ void ExactNameTest():
 }
 
 void WildcardNameTest():
-{}
+{String tmpImage; }
 {
-      "*" [ ":" NCName() {jjtThis.setPrefixWildcard();} ]
-    | NCName() ":" "*" {jjtThis.setLocalNameWildcard();}
-    | <BRACED_URI_LITERAL> "*" {jjtThis.setLocalNameWildcard();}
+    "*"
+    | <LEFT_WILDCARD> { jjtThis.setLeftWildcard(getToken(0).getImage().substring("*:".length())); }
+    | <RIGHT_WILDCARD> { tmpImage = getToken(0).getImage(); jjtThis.setRightWildcard(tmpImage.substring(0, tmpImage.length() - ":*".length())); }
+    | <RIGHT_URI_WILDCARD> { tmpImage = getToken(0).getImage(); jjtThis.setRightUriWildcard(tmpImage.substring("Q{".length(), tmpImage.length() - "}*".length())); }
 }
 
 void PostfixExpr() #PostfixExpr(>1):
@@ -586,7 +595,7 @@ void PredicateList() #void:
     (Predicate())*
 }
 
-void Predicate() #void:
+void Predicate():
 {}
 {
     "[" Expr() "]"
@@ -696,15 +705,9 @@ void ElementTest():
 void AttributeTest():
 {}
 {
-    <ATTRIBUTE> AttributeTestTail()
+    <ATTRIBUTE> "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
 }
 
-
-void AttributeTestTail() #void:
-{}
-{
-    "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
-}
 
 
 
@@ -773,7 +776,6 @@ void SingleType():
 {
   SimpleTypeName() [ "?" {jjtThis.setOptionallyQuantified();} ]
 }
-
 
 
 
@@ -850,4 +852,16 @@ void SimpleTypeName() #void:
 {}
 {
    EQName()
+}
+
+String WildcardName() #void:
+{}
+{
+   <NCNAME> { return getToken(0).getImage(); }
+}
+
+String BracedUriLiteral() #void:
+{}
+{
+   <BRACED_URI_LITERAL> { return getUriFromLiteral(getToken(0)); }
 }

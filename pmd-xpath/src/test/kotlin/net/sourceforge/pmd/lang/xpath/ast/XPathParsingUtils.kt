@@ -7,36 +7,24 @@ import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.specs.AbstractFunSpec
 import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.LanguageVersionHandler
-import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.NWrapper
-import net.sourceforge.pmd.lang.ast.test.getChild
 import net.sourceforge.pmd.lang.ast.test.matchNode
-import net.sourceforge.pmd.lang.ast.test.numChildren
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule
 import java.io.StringReader
 import kotlin.reflect.KClass
+import io.kotlintest.should as kotlintestShould
 
 
 /**
- * Represents the different Java language versions.
+ * Represents the different XPath language versions.
  */
 enum class XPathVersion : Comparable<XPathVersion> {
     //X1_0, X2_0,
     X3_0;
 
-    /** Name suitable for use with */
+    /** Name suitable for use with the language version handler. */
     val pmdName: String = name.removePrefix("X").replace('_', '.')
-
-    /**
-     * Overloads the range operator, e.g. (`J9..J11`).
-     * If both operands are the same, a singleton list is returned.
-     */
-    operator fun rangeTo(last: XPathVersion): List<XPathVersion> =
-            when {
-                last == this -> listOf(this)
-                last.ordinal > this.ordinal -> values().filter { ver -> ver >= this && ver <= last }
-                else -> values().filter { ver -> ver <= this && ver >= last }
-            }
 
     companion object {
         val Latest = values().last()
@@ -87,20 +75,33 @@ fun AbstractFunSpec.parserTest(name: String,
     parserTest(name, listOf(xpathVersion), null, assertions)
 }
 
-inline fun <reified T : Throwable> AbstractFunSpec.failedParserTest(name: String,
-                                                                    xpathVersion: XPathVersion = XPathVersion.Latest,
-                                                                    source: () -> String) {
-    parserTest(name, listOf(xpathVersion), null) {
+/**
+ * Defines a group of tests that should be named similarly.
+ * Calls to "should" in the block are intercepted to create
+ * a new test, with the given [name] as a common prefix.
+ */
+fun AbstractFunSpec.testGroup(name: String,
+                              xpathVersion: XPathVersion = XPathVersion.Latest,
+                              spec: GroupTestCtx.() -> Unit) {
 
+    GroupTestCtx(this, name, xpathVersion).spec()
+}
+
+class GroupTestCtx(val funspec: AbstractFunSpec, val groupName: String, xpathVersion: XPathVersion) : ParserTestCtx(xpathVersion) {
+
+    infix fun String.should(matcher: Matcher<String>) {
+        funspec.parserTest("$groupName: '$this'") {
+            this@should kotlintestShould matcher
+        }
     }
+
 }
 
 
-data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
+open class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
     /**
-     * Returns a String matcher that parses the node using [parseXPath] with
-     * type param [N], then matches it against the [nodeSpec] using [matchNode].
+     * Returns a String matcher that matches the [nodeSpec] against the node right under the root using [matchNode].
      *
      */
     inline fun <reified N : XPathNode> matchExpr(ignoreChildren: Boolean = false,
@@ -108,16 +109,27 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
             object : Matcher<String> {
                 override fun test(value: String): Result {
 
-
-                    return matchNode(ignoreChildren, nodeSpec).test(parseXPath<N>(value))
+                    return matchNode(ignoreChildren, nodeSpec).test(parseXPathRoot(value).jjtGetChild(0))
                 }
             }
 
-    fun matchRoot(ignoreChildren: Boolean = false,
-                  nodeSpec: NWrapper<ASTXPathRoot>.() -> Unit): Matcher<String> =
+    fun throwParseFailure(): Matcher<String> =
             object : Matcher<String> {
-                override fun test(value: String): Result =
-                        matchNode(ignoreChildren, nodeSpec).test(parseXPath<ASTXPathRoot>(value))
+                override fun test(value: String): Result {
+                    val message = try {
+                        parseXPathRoot(value)
+                        "Expected parser failure but no exception was thrown"
+                    } catch (e: Throwable) {
+                        when (e) {
+                            is ParseException -> null
+                            is TokenMgrError -> null
+                            is AssertionError -> e.message
+                            else -> "Expected parser failure but ${e.javaClass.name} was thrown"
+                        }
+                    }
+
+                    return Result(message == null, message ?: "NOTNULL", "TODO")
+                }
             }
 
     /**
@@ -172,32 +184,5 @@ data class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
         languageVersionHandler.getQualifiedNameResolutionFacade(ParserTestCtx::class.java.classLoader).start(rootNode)
         return rootNode
     }
-
-    inline fun <reified N : XPathNode> parseXPath(expr: String): N =
-            parseXPathRoot(expr).findFirstNodeOnStraightLine(N::class.java)
-            ?: throw NoSuchElementException("No node of type ${N::class.java.simpleName} in the given expression:\n\t$expr")
-
-
-    /**
-     * Finds the first descendant of type [N] of [this] node which is
-     * accessible in a straight line. The descendant must be accessible
-     * from the [this] on a path where each node has a single child.
-     *
-     * If one node has another child, the search is aborted and the method
-     * returns null.
-     */
-    fun <N : Node> Node.findFirstNodeOnStraightLine(klass: Class<N>): N? {
-        return when {
-            klass.isInstance(this) -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = this as N
-                n
-            }
-            this.numChildren == 1 -> getChild(0).findFirstNodeOnStraightLine(klass)
-            else -> null
-        }
-    }
-
-
 }
 

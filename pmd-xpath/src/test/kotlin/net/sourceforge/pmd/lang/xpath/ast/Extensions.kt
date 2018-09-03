@@ -2,17 +2,18 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.Matcher
 import io.kotlintest.matchers.ToleranceMatcher
-import io.kotlintest.shouldBe
+import io.kotlintest.should
 import kotlin.reflect.KCallable
+import io.kotlintest.shouldBe as ktShouldBe
 
 
 /**
  * Extension to add the name of the property to error messages.
  *
- * @see [[shouldBe]].
+ * @see [shouldBe].
  */
 infix fun <N, V : N> KCallable<N>.shouldEqual(expected: V?) =
-        assertWrapper(this, expected) { n, v -> n shouldBe v }
+        assertWrapper(this, expected) { n, v -> n ktShouldBe v }
 
 fun <N, V> assertWrapper(callable: KCallable<N>, right: V, asserter: (N, V) -> Unit) {
 
@@ -49,6 +50,11 @@ fun <N, V> assertWrapper(callable: KCallable<N>, right: V, asserter: (N, V) -> U
  */
 infix fun <N, V : N> KCallable<N>.shouldBe(expected: V?) = this.shouldEqual(expected)
 
-infix fun <T> KCallable<T>.shouldBe(expected: Matcher<T>) = assertWrapper(this, expected) { n, v -> n shouldBe v }
+infix fun <T> KCallable<T>.shouldBe(expected: Matcher<T>) = assertWrapper(this, expected) { n, v -> n ktShouldBe v }
 
 infix fun Double.plusOrMinus(tolerance: Double): ToleranceMatcher = ToleranceMatcher(this, tolerance)
+
+/**
+ * Assert a matcher on all elements of a list.
+ */
+infix fun <T> List<T>.shouldAll(matcher: Matcher<T>) = this.forEach { it should matcher }
