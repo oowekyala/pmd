@@ -28,6 +28,8 @@ import java.util.List;
  * (: Note that Axis is not a node and is not present in the children. :)
  * (: Note that NodeTest is an interface and the child is a concrete instance of an implementor. :)
  * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} ({@linkplain ASTPredicate Predicate})*
+ *            | ".." ({@linkplain ASTPredicate Predicate})*
+ *            | "@" {@link NodeTest} ({@linkplain ASTPredicate Predicate})*
  *
  * </pre>
  */
@@ -48,10 +50,15 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
 
 
     @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
-
 
     /**
      * Returns true if this step didn't add an explicit axis,

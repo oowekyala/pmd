@@ -12,14 +12,18 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * IntersectExceptExpr ::= {@linkplain ASTInstanceofExpr InstanceofExpr} ({@linkplain ASTIntersectExceptOperator IntersectExceptOperator} {@linkplain ASTInstanceofExpr InstanceofExpr})+
  *
  * </pre>
- *
- *
  */
 public final class ASTIntersectExceptExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTIntersectExceptExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

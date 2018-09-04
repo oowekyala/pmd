@@ -72,6 +72,7 @@ public enum Axis {
     private final String name;
     private final boolean isForward;
 
+
     Axis(String name, boolean isForward) {
         this.name = name;
         this.isForward = isForward;
@@ -121,6 +122,14 @@ public enum Axis {
 
 
     /**
+     * Returns the opposite axis.
+     */
+    public Axis opposite() {
+        return null; // FIXME
+    }
+
+
+    /**
      * Returns the Axis constant that has the specified axis name,
      * or null if there is none.
      *
@@ -128,14 +137,6 @@ public enum Axis {
      */
     public static Axis fromName(String axisName) {
         return NAMES_TO_AXES.get(axisName);
-    }
-
-
-    /**
-     * Returns the opposite axis.
-     */
-    public Axis opposite() {
-        return null; // FIXME
     }
 
 }

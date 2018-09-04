@@ -22,6 +22,12 @@ public final class ASTAnyItemType extends AbstractXPathNode implements ItemType 
 
 
     @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }

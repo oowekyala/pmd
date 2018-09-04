@@ -20,5 +20,11 @@ public final class ASTNamespaceNodeTest extends AbstractXPathNode implements Kin
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
+
+
+    @Override
+    public <T> T jjtAccept(SideEffecting<T> visitor, T data) {
+        return visitor.visit(this, data);
+    }
 }
 /* JavaCC - OriginalChecksum=2ca63014f2dd56c9afb62540fb273054 (do not edit this line) */

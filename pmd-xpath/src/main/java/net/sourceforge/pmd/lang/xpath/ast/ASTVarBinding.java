@@ -28,6 +28,12 @@ public final class ASTVarBinding extends AbstractXPathNode {
 
 
     @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
@@ -40,6 +46,14 @@ public final class ASTVarBinding extends AbstractXPathNode {
      */
     public boolean isLetStyle() {
         return jjtGetParent().jjtGetParent() instanceof ASTLetExpr;
+    }
+
+
+    /**
+     * Returns the expression initializing the variable.
+     */
+    public ExprSingle getInitializerExpr() {
+        return (ExprSingle) jjtGetChild(1);
     }
 
 

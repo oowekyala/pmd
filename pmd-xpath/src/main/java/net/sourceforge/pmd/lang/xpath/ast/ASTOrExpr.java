@@ -12,13 +12,18 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * OrExpr ::= {@linkplain ASTAndExpr AndExpr} ( "or" {@linkplain ASTAndExpr AndExpr} )+
  *
  * </pre>
- *
  */
 public final class ASTOrExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTOrExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

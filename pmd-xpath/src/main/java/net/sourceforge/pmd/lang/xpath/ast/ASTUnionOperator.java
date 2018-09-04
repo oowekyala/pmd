@@ -13,7 +13,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTUnionOperator extends AbstractXPathNode {
+public final class ASTUnionOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
     private boolean isShorthand = false;
 
@@ -24,11 +24,21 @@ public final class ASTUnionOperator extends AbstractXPathNode {
 
 
     @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
+    /**
+     * Returns true if this operator was written with the shorthand "|" notation
+     * instead of the full "union".
+     */
     public boolean isShorthand() {
         return isShorthand;
     }

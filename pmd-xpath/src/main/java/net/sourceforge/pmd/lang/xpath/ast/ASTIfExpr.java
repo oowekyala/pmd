@@ -21,6 +21,38 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
     }
 
 
+    /**
+     * Returns the node that represents the guard of this conditional.
+     */
+    public Expr getGuardExpressionNode() {
+        return (Expr) jjtGetChild(0);
+    }
+
+
+    /**
+     * Returns the node that represents the expression that will be evaluated
+     * if the guard evaluates to true.
+     */
+    public ExprSingle getTrueAlternative() {
+        return (ExprSingle) jjtGetChild(1);
+    }
+
+
+    /**
+     * Returns the node that represents the expression that will be evaluated
+     * if the guard evaluates to false.
+     */
+    public ExprSingle getFalseAlternative() {
+        return (ExprSingle) jjtGetChild(2);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);

@@ -12,13 +12,18 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * MultiplicativeExpr ::= {@linkplain ASTUnionExpr UnionExpr} ({@linkplain ASTMultiplicativeOperator MultiplicativeOperator} {@linkplain ASTUnionExpr UnionExpr})+
  *
  * </pre>
- *
  */
 public final class ASTMultiplicativeExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTMultiplicativeExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

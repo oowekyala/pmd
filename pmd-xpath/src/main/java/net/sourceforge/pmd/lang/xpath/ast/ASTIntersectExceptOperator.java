@@ -15,11 +15,27 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTIntersectExceptOperator extends AbstractXPathNode {
+public final class ASTIntersectExceptOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
 
     ASTIntersectExceptOperator(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the image of the operator as it appeared in the source,
+     * {@literal i.e.} "intersect" or "except".
+     */
+    @Override
+    public String getImage() {
+        return super.getImage();
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

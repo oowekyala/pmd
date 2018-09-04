@@ -12,13 +12,18 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * UnionExpr ::= {@linkplain ASTIntersectExceptExpr IntersectExceptExpr} ( {@linkplain ASTUnionOperator UnionOperator} {@linkplain ASTIntersectExceptExpr IntersectExceptExpr} )+
  *
  * </pre>
- *
  */
 public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTUnionExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

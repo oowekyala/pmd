@@ -14,7 +14,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * NamedFunctionRef ::= {@linkplain ASTName EQName} "#" <INTEGER_LITERAL>
+ * NamedFunctionRef ::= {@linkplain ASTName EQName} "#" &lt;INTEGER_LITERAL&gt;
  *
  * </pre>
  */
@@ -25,6 +25,12 @@ public final class ASTNamedFunctionRef extends AbstractXPathNode implements Func
 
     ASTNamedFunctionRef(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

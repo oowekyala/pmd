@@ -17,5 +17,5 @@ public enum XmdNodeKind {
     NAMESPACE,
     PROCESSING_INSTRUCTION,
     COMMENT,
-    TEXT;
+    TEXT
 }

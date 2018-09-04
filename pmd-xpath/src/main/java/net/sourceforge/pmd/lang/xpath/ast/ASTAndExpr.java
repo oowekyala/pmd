@@ -12,13 +12,18 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * AndExpr ::= {@linkplain ASTComparisonExpr ComparisonExpr} ( "and" {@linkplain ASTComparisonExpr ComparisonExpr} )+
  *
  * </pre>
- *
  */
 public final class ASTAndExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTAndExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

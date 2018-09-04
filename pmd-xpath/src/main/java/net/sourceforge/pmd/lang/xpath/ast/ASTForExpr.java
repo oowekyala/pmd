@@ -21,6 +21,28 @@ public final class ASTForExpr extends AbstractXPathNode implements ExprSingle {
     }
 
 
+    /**
+     * Returns the bindings list of this binder expression.
+     */
+    public ASTVarBindingList getBindings() {
+        return (ASTVarBindingList) jjtGetChild(0);
+    }
+
+
+    /**
+     * Returns the expression evaluated on each iteration.
+     */
+    public ExprSingle getReturnExpr() {
+        return (ExprSingle) jjtGetChild(1);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);

@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
  *
  * <pre>
  *
- * ExactNameTest :: {@linkplain ASTName Name}
+ * ExactNameTest ::= {@linkplain ASTName Name}
  *
  * </pre>
  */
@@ -39,6 +39,12 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
      */
     public ASTName getNameNode() {
         return (ASTName) jjtGetChild(0);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

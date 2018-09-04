@@ -12,13 +12,27 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * MultiplicativeOperator ::= "*" | "div" | "idiv" | "mod"
  *
  * </pre>
- *
  */
 public final class ASTMultiplicativeOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
 
     ASTMultiplicativeOperator(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the image of the operator, {@literal i.e.} "*", "div", "idiv" or "mod".
+     */
+    @Override
+    public String getImage() {
+        return super.getImage();
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

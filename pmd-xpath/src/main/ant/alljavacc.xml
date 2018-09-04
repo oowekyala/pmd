@@ -1,7 +1,13 @@
 <project name="pmd" default="alljavacc" basedir="../../../../../../">
 
     <property name="javacc-home.path" value="target/lib"/>
+
     <property name="ast-package" value="net/sourceforge/pmd/lang/xpath/ast"/>
+    <property name="base-visitor-interface-name" value="XPathParserVisitor"/>
+    <property name="base-visitor-interface-file" value="${target}/${ast-package}/${base-visitor-interface-name}.java"/>
+
+    <property name="-r+p-visitor-interface-name" value="SideEffectingVisitor"/>
+    <property name="-r+p-visitor-interface-file" value="${target}/${ast-package}/${-r+p-visitor-interface-name}.java"/>
 
 
     <target name="alljavacc"
@@ -96,6 +102,14 @@
             <replacefilter token="SimpleNode" value="XPathNode"/>
             <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathGenericVisitor"/>
         </replace>
+
+        <!-- Side effecting visitor -->
+        <copy file="${base-visitor-interface-file}" tofile="${-r+p-visitor-interface-file}"/>
+        <replace file="${-r+p-visitor-interface-file}">
+            <replacefilter token="${base-visitor-interface-name}" value="${-r+p-visitor-interface-name}"/>
+            <replacefilter token="T visit" value="void visit"/>
+        </replace>
+
 
         <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"
                 dest="${target}/${ast-package}/AbstractXPathGenericVisitor.java"/>

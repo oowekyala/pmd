@@ -33,8 +33,22 @@ public final class ASTArgument extends AbstractXPathNode {
     }
 
 
+    /**
+     * Return the child, or null if this is a placeholder argument.
+     */
+    public ExprSingle getExpression() {
+        return isPlaceholder ? null : (ExprSingle) jjtGetChild(0);
+    }
+
+
     void setPlaceholder() {
         isPlaceholder = true;
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

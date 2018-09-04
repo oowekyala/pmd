@@ -15,13 +15,18 @@ import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
  * TypedFunctionTest ::= "function" {@linkplain ASTArgumentTypeList ArgumentTypeList} "as" {@linkplain ASTSequenceType SequenceType}
  *
  * </pre>
- *
  */
 public final class ASTTypedFunctionTest extends AbstractXPathNode implements FunctionTest {
 
 
     ASTTypedFunctionTest(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

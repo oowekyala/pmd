@@ -19,13 +19,28 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * TreatExpr ::= {@linkplain ASTCastableExpr CastableExpr} "treat" "as" {@linkplain ASTSequenceType SequenceType}
  *
  * </pre>
- *
  */
 public final class ASTTreatExpr extends AbstractXPathNode implements ExprSingle {
 
 
     ASTTreatExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    public ExprSingle getCastedExpr() {
+        return (ExprSingle) jjtGetChild(0);
+    }
+
+
+    public ASTSequenceType getCastedType() {
+        return (ASTSequenceType) jjtGetChild(1);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 

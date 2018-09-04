@@ -22,6 +22,28 @@ public final class ASTRangeExpr extends AbstractXPathNode implements ExprSingle 
     }
 
 
+    /**
+     * Gets the lower bound of the range.
+     */
+    public Expr getLowerBound() {
+        return (Expr) jjtGetChild(0);
+    }
+
+
+    /**
+     * Gets the upper bound of the range.
+     */
+    public Expr getUpperBound() {
+        return (Expr) jjtGetChild(1);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);

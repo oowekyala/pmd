@@ -61,6 +61,12 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
 
 
     @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
@@ -77,11 +83,27 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
      */
     public enum PathAnchor {
         /** The PathExpr starts with "/". */
-        ROOT,
+        ROOT("/"),
         /** The PathExpr starts with "//". */
-        DESCENDANT_OR_ROOT,
+        DESCENDANT_OR_ROOT("//"),
         /** The PathExpr starts with neither "/" nor "//". */
-        RELATIVE
+        RELATIVE("");
+
+
+        private final String prefix;
+
+
+        PathAnchor(String prefix) {
+            this.prefix = prefix;
+        }
+
+
+        /**
+         * Gets the string prefix corresponding to this anchor.
+         */
+        public String getPrefix() {
+            return prefix;
+        }
     }
 
 }

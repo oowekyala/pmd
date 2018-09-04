@@ -19,6 +19,17 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
     }
 
 
+    public Expr getMainExpr() {
+        return (Expr) jjtGetChild(0);
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
+    }
+
+
     @Override
     public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
         return visitor.visit(this, data);

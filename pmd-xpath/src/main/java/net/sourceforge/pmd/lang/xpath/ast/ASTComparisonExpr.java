@@ -11,6 +11,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * ComparisonExpr ::=  {@linkplain ASTStringConcatExpr StringConcatExpr} ComparisonOperator {@linkplain ASTStringConcatExpr StringConcatExpr}
  *
+ * (: Not a node :)
  * ComparisonOperator ::= "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<"
  *                      | "ne" | "eq" | "lt" | "le" | "gt" | "ge"
  *
@@ -34,8 +35,30 @@ public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSi
     }
 
 
+    /**
+     * Gets the left hand side of the comparison.
+     */
+    public Expr getLhs() {
+        return (Expr) jjtGetChild(0);
+    }
+
+
+    /**
+     * Gets the right hand side of the comparison.
+     */
+    public Expr getRhs() {
+        return (Expr) jjtGetChild(1);
+    }
+
+
     void setOperator(String s) {
         operator = s;
+    }
+
+
+    @Override
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 
 
