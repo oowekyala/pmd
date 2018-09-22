@@ -25,11 +25,47 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTInlineFunctionExpr extends AbstractXPathNode {
+public final class ASTInlineFunctionExpr extends AbstractXPathNode implements FunctionItemExpr {
 
 
     ASTInlineFunctionExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the parameter list.
+     */
+    public ASTParamList getParamList() {
+        return (ASTParamList) jjtGetChild(0);
+    }
+
+    // TODO synthesize default type node?
+
+
+    /**
+     * Returns true if this function has no return type annotation,
+     * in which case {@code item()*} is assumed.
+     */
+    public boolean isDefaultReturnType() {
+        return jjtGetNumChildren() == 2;
+    }
+
+
+    /**
+     * Returns the declared return type of the function,
+     * or null if the default is used.
+     */
+    public ASTSequenceType getDeclaredReturnType() {
+        return isDefaultReturnType() ? null : (ASTSequenceType) jjtGetChild(1);
+    }
+
+
+    /**
+     * Returns the expression that is the body of this function.
+     */
+    public Expr getBodyExpr() {
+        return (Expr) getLastChild();
     }
 
 

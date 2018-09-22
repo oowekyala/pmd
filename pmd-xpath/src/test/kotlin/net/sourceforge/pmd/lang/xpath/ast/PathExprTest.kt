@@ -179,4 +179,45 @@ class PathExprTest : FunSpec({
         }
     }
 
+    parserTest("Test predicate with abbrev descendant or self") {
+        "../A//N[@Image = 'Override']" should matchExpr<ASTPathExpr> {
+
+            child<ASTAxisStep> {
+                it.axis shouldBe Axis.PARENT
+                unspecifiedChild()
+            }
+            child<ASTAxisStep> {
+                it.axis shouldBe Axis.CHILD
+
+                it.nodeTest shouldBe child<ASTExactNameTest> {
+                    it.nameImage shouldBe "A"
+
+                    child<ASTName> { it.image shouldBe "A" }
+                }
+            }
+
+            // synthesized descendant-or-self::node()
+            child<ASTAxisStep> {
+                it.isAbbrevDescendantOrSelf shouldBe true
+
+                it.axis shouldBe Axis.DESCENDANT_OR_SELF
+
+                it.nodeTest shouldBe child<ASTAnyKindTest> {}
+            }
+
+
+            child<ASTAxisStep> {
+
+                it.axis shouldBe Axis.CHILD
+
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "N"
+
+                    child<ASTName> { it.image shouldBe "N" }
+                }
+
+                child<ASTPredicate>(ignoreChildren = true) {}
+            }
+        }
+    }
 })

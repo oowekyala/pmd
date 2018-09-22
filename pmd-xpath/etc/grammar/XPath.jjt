@@ -606,7 +606,7 @@ void PrimaryExpr() #void:
 {}
 {
       NumericLiteral()
-    | <STRING_LITERAL>      #StringLiteral
+    | StringLiteral()
     | ("$" VarName())       #VarRef
     | ("(" [ Expr() ] ")")  #ParenthesizedExpr
     | "."                   #ContextItemExpr
@@ -614,6 +614,12 @@ void PrimaryExpr() #void:
     (LOOKAHEAD (2)
       FunctionCall()
     | FunctionItemExpr() )
+}
+
+void StringLiteral():
+{}
+{
+    <STRING_LITERAL>
 }
 
 void NumericLiteral():
@@ -686,6 +692,10 @@ void KindTest() #void:
 }
 
 
+// TODO Experimental
+// Do we really need an ElementNameOrWildcard node ?
+// Do we really need an AttributeNameOrWildcard node ?
+
 void DocumentTest():
 {}
 {
@@ -696,7 +706,12 @@ void DocumentTest():
 void ElementTest():
 {}
 {
-    <ELEMENT> "(" [ (ElementName() | "*") #ElementNameOrWildcard [ "," TypeName() [ "?" ]]] ")"
+    <ELEMENT> "(" [ ( ElementName() {jjtThis.setIsWildcard(false);}
+                    | "*" {jjtThis.setIsWildcard(true);}
+                    )
+                    [ "," TypeName() [ "?" {jjtThis.setOptionalType(true);}]]
+                  ]
+              ")"
 }
 
 
@@ -705,7 +720,12 @@ void ElementTest():
 void AttributeTest():
 {}
 {
-    <ATTRIBUTE> "(" [ (AttributeName() | "*") #AttributeNameOrWildCard [ "," TypeName() ]] ")"
+    <ATTRIBUTE> "(" [ ( AttributeName() {jjtThis.setIsWildcard(false);}
+                      | "*" {jjtThis.setIsWildcard(true);}
+                      )
+                      [ "," TypeName() ]
+                    ]
+                ")"
 }
 
 
@@ -714,20 +734,20 @@ void AttributeTest():
 void SchemaAttributeTest():
 {}
 {
-    <SCHEMA_ATTRIBUTE> "(" AttributeName() #AttributeDeclaration ")"
+    <SCHEMA_ATTRIBUTE> "(" AttributeName() ")"
 }
 
 void ProcessingInstructionTest():
 {}
 {
-    <PROCESSING_INSTRUCTION> "(" (<NCNAME> | <STRING_LITERAL>)? ")"
+    <PROCESSING_INSTRUCTION> "(" (NCName() | StringLiteral())? ")"
 }
 
 
 void SchemaElementTest():
 {}
 {
-    <SCHEMA_ELEMENT> "(" ElementName() #ElementDeclaration ")"
+    <SCHEMA_ELEMENT> "(" ElementName() ")"
 }
 
 
@@ -737,7 +757,7 @@ ASTSequenceType SequenceType() :
 {}
 {
  (
-   (<EMPTY_SEQUENCE> "(" ")") { jjtThis.setCardinality(Cardinality.EMPTY); }
+   (<EMPTY_SEQUENCE> "(" ")") { jjtThis.setCardinality(null); }
  | ItemType()
    (
      "?"    {jjtThis.setCardinality(Cardinality.ZERO_OR_ONE);}
@@ -777,15 +797,6 @@ void SingleType():
   SimpleTypeName() [ "?" {jjtThis.setOptionallyQuantified();} ]
 }
 
-
-
-
-//void CtxSensitiveKeyword(String... keywords):
-//{}
-//{
-//
-//}
-
 // These all produce a Name node
 
 
@@ -793,6 +804,7 @@ void EQNameOrKWord() #Name:
 {}
 {
   <EQNAME> | <NCNAME>
+
   // Also match keywords
 
   |  <SELF> | <CHILD> | <ATTRIBUTE> | <DESCENDANT> | <DESCENDANT_OR_SELF> | <ANCESTOR>

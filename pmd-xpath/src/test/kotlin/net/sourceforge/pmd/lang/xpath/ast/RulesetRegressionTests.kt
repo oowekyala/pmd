@@ -5,10 +5,6 @@ import io.kotlintest.Spec
 import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.Rule
-import net.sourceforge.pmd.RuleSet
-import net.sourceforge.pmd.RuleSetFactory
-import net.sourceforge.pmd.lang.ast.TokenMgrError
-import net.sourceforge.pmd.lang.rule.XPathRule
 import java.time.Duration
 import kotlin.system.measureNanoTime
 
@@ -18,56 +14,37 @@ import kotlin.system.measureNanoTime
  */
 class RulesetRegressionTests : FunSpec() {
     init {
+        foreachXPathRule { rule, xpath ->
 
-        // TODO for now we have a test dependency on PMD java
-        // TODO make categories available from language module
+            // Generate one test for each XPath rule
+            parserTest("Test parsing rule ${rule.name} (${rule.ruleSetName})") {
 
+                val (root, time) = {
+                    var root: ASTXPathRoot? = null
 
-        val categories = listOf("codestyle", "performance", "bestpractices", "security", "design", "documentation", "errorprone")
+                    val time = measureNanoTime {
+                        root = parseXPathRoot(xpath)
 
-        val rsets: List<RuleSet> = categories.map { "category/java/$it.xml" }.map { RuleSetFactory().createRuleSet(it) }
-
-
-
-        rsets.flatMap { it.rules }
-                .filter { it is XPathRule }
-                .forEach { rule ->
-                    // Generate one test for each XPath rule
-                    parserTest("Test parsing rule ${rule.name} (${rule.ruleSetName})") {
-                        val xpath = rule.getProperty(XPathRule.XPATH_DESCRIPTOR)
-
-                        val (root, time) = try {
-
-                            var root: ASTXPathRoot? = null
-
-                            val time = measureNanoTime {
-                                root = parseXPathRoot(xpath)
-
-                            }
-                            Pair(root!!, time)
-
-                        } catch (e: Exception) {
-                            val ex = when (e) {
-                                is ParseException -> e
-                                is TokenMgrError -> e
-                                else -> throw e
-                            }
-                            throw AssertionError("Parser failed, xpath is:\n\n$xpath\n\n", ex)
-                        }
-
-
-                        var numNodes = 0
-                        root.jjtAccept(object : AbstractXPathGenericVisitor<Any?>() {
-
-                            override fun defaultVisit(node: XPathNode?, data: Any?): Any? {
-                                numNodes += 1
-                                return super.defaultVisit(node, data)
-                            }
-                        }, null)
-
-                        addTimingResult(TimingResult(time, numNodes, xpath.length, rule))
                     }
+                    Pair(root!!, time)
+                } catchAnyParserError {
+                    throw AssertionError("Parser failed, xpath is:\n\n$xpath\n\n", it)
                 }
+
+                var numNodes = 0
+                root.jjtAccept(object : AbstractXPathGenericVisitor<Any?>() {
+
+                    override fun defaultVisit(node: XPathNode?, data: Any?): Any? {
+                        numNodes += 1
+                        return super.defaultVisit(node, data)
+                    }
+                }, null)
+
+                addTimingResult(TimingResult(time, numNodes, xpath.length, rule))
+            }
+
+        }
+
     }
 
     override fun listeners(): List<TestListener> = listOf(TimerListener)

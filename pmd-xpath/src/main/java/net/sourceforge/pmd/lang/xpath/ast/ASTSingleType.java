@@ -5,6 +5,15 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+/**
+ * Single type node.
+ *
+ * <pre>
+ *
+ * SingleType ::= {@linkplain ASTName SimpleTypeName} ("?")?
+ *
+ * </pre>
+ */
 public final class ASTSingleType extends AbstractXPathNode {
 
     private boolean optional;
@@ -22,6 +31,14 @@ public final class ASTSingleType extends AbstractXPathNode {
 
     boolean isOptional() {
         return optional;
+    }
+
+
+    /**
+     * Gets the node representing the type name.
+     */
+    public ASTName getTypeNameNode() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

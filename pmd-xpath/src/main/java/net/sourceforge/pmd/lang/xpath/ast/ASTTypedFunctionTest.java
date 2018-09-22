@@ -24,6 +24,22 @@ public final class ASTTypedFunctionTest extends AbstractXPathNode implements Fun
     }
 
 
+    /**
+     * Returns the parameter list.
+     */
+    public ASTArgumentTypeList getParamTypeList() {
+        return (ASTArgumentTypeList) jjtGetChild(0);
+    }
+
+
+    /**
+     * Returns the declared return type of the function.
+     */
+    public ASTSequenceType getDeclaredReturnType() {
+        return (ASTSequenceType) jjtGetChild(1);
+    }
+
+
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);

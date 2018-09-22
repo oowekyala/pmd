@@ -8,11 +8,28 @@ package net.sourceforge.pmd.lang.xpath.ast;
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
+/**
+ * Schema attribute test.
+ *
+ *
+ * <pre>
+ *
+ * SchemaAttributeTest ::= "schema-attribute" "(" {@linkplain ASTName AttributeName} ")"
+ *
+ * </pre>
+ */
 public final class ASTSchemaAttributeTest extends AbstractXPathNode implements KindTest {
-
 
     ASTSchemaAttributeTest(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the node representing the name of the tested attribute.
+     */
+    public ASTName getAttributeNameNode() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

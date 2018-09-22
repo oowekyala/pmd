@@ -97,6 +97,23 @@ class GroupTestCtx(val funspec: AbstractFunSpec, val groupName: String, xpathVer
 
 }
 
+/**
+ * Catches any parser error and handles it with the given handler. Other exceptions are thrown.
+ *
+ * @param handler exception handler called on a [ParseException] or [TokenMgrError]
+ */
+inline infix fun <T> (() -> T).catchAnyParserError(handler: (Exception) -> T): T =
+        try {
+            this()
+        } catch (e: Exception) {
+            val ex = when (e) {
+                is ParseException -> e
+                is TokenMgrError -> e
+                else -> throw e
+            }
+            handler(ex)
+        }
+
 
 open class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
 

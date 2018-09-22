@@ -37,8 +37,7 @@ public final class ASTSequenceType extends AbstractXPathNode {
 
     /**
      * Gets the cardinality of this type. If this type is the
-     * empty sequence, then the cardinality returned is
-     * {@link Cardinality#EMPTY}. Check with {@link #isEmptySequence()}.
+     * empty sequence, then returns null.
      */
     public Cardinality getCardinality() {
         return cardinality;
@@ -49,7 +48,7 @@ public final class ASTSequenceType extends AbstractXPathNode {
      * Returns true if this is the empty sequence.
      */
     public boolean isEmptySequence() {
-        return cardinality == Cardinality.EMPTY;
+        return cardinality == null;
     }
 
 

@@ -37,8 +37,8 @@ public final class ASTPredicate extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(SideEffecting<T> visitor, T data) {
-        return visitor.visit(this, data);
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+        visitor.visit(this, data);
     }
 }
 /* JavaCC - OriginalChecksum=da66ad6f42ac28b3cf50f8457dd9033a (do not edit this line) */

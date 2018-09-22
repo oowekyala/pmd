@@ -20,8 +20,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTParam extends AbstractXPathNode {
 
-    // TODO synthesize default type?
-
 
     ASTParam(XPathParser p, int id) {
         super(p, id);
@@ -33,6 +31,26 @@ public final class ASTParam extends AbstractXPathNode {
      */
     public ASTName getNameNode() {
         return (ASTName) jjtGetChild(0);
+    }
+
+
+    /**
+     * Returns true if this parameter has no type annotation,
+     * in which case {@code item()*} is assumed.
+     */
+    public boolean isDefaultType() {
+        return jjtGetNumChildren() == 1;
+    }
+
+    // TODO synthesize default type node?
+
+
+    /**
+     * Returns the declared type of the parameter,
+     * or null if the default is used.
+     */
+    public ASTSequenceType getDeclaredType() {
+        return isDefaultType() ? null : (ASTSequenceType) jjtGetChild(1);
     }
 
 

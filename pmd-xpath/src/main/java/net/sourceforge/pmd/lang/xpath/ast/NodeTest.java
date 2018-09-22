@@ -42,6 +42,14 @@ public interface NodeTest extends XPathNode {
      */
     interface KindTest extends NodeTest, ItemType {
 
+        /**
+         * Groups {@linkplain ASTSchemaElementTest SchemaElementTest}
+         * and {@linkplain ASTElementTest ElementTest} under a common interface.
+         */
+        interface ElementTestOrSchemaElementTest extends KindTest {
+
+        }
+
     }
 
     /**

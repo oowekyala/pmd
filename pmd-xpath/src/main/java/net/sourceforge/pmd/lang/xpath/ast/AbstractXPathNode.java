@@ -29,6 +29,11 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
     }
 
 
+    XPathNode getLastChild() {
+        return (XPathNode) jjtGetChild(jjtGetNumChildren() - 1);
+    }
+
+
     @Override
     public List<Node> getChildren() {
         return Collections.unmodifiableList(Arrays.asList(children));
@@ -93,6 +98,17 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         childImpl.endLine = this.getEndLine();
         childImpl.beginColumn = this.getBeginColumn();
         childImpl.endColumn = this.getEndColumn();
+    }
+
+
+    /**
+     * Dumps this tree to a parsable expression string.
+     * Parsing the result should produce an equivalent tree.
+     */
+    public String toExpressionString() {
+        StringBuilder sb = new StringBuilder();
+        this.jjtAccept(new ExpressionMakerVisitor(), sb);
+        return sb.toString();
     }
 
 

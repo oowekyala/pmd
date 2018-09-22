@@ -4,12 +4,28 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-
+/**
+ * Atomic or union type.
+ *
+ * <pre>
+ *
+ * AtomicOrUnionType ::= {@linkplain ASTName EQName}
+ *
+ * </pre>
+ */
 public final class ASTAtomicOrUnionType extends AbstractXPathNode implements ItemType {
 
 
     ASTAtomicOrUnionType(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the type name.
+     */
+    public ASTName getTypeNameNode() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

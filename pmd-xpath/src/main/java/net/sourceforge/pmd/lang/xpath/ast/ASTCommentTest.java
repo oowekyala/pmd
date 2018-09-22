@@ -8,6 +8,15 @@ package net.sourceforge.pmd.lang.xpath.ast;
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
+/**
+ * Comment kind test.
+ *
+ * <pre>
+ *
+ * CommentTest ::= "comment" "(" ")"
+ *
+ * </pre>
+ */
 public final class ASTCommentTest extends AbstractXPathNode implements KindTest {
 
 

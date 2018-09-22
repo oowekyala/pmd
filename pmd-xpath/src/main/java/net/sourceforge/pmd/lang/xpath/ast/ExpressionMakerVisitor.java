@@ -13,10 +13,13 @@ import net.sourceforge.pmd.lang.ast.Node;
  * Dumps a subtree to a parsable expression. The AST of the dumped string is
  * equivalent to the original one.
  *
+ * <p>The corresponding public API is provided by {@link AbstractXPathNode#toExpressionString()},
+ * this class is private though.
+ *
  * @author Clément Fournier
  * @since 6.7.0
  */
-public final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder> {
+final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder> {
 
     /**
      * Joins some nodes on the builder with a delimiter.
@@ -56,27 +59,27 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
     @Override
     public void visit(ASTForExpr node, StringBuilder builder) {
-        appendToken(builder, "for");
+        appendToken(builder, "for ");
         visit(node.getBindings(), builder);
-        appendToken(builder, "return");
+        appendToken(builder, "return ");
         visit(node.getReturnExpr(), builder);
     }
 
 
     @Override
     public void visit(ASTLetExpr node, StringBuilder builder) {
-        appendToken(builder, "let");
+        appendToken(builder, "let ");
         visit(node.getBindings(), builder);
-        appendToken(builder, "return");
+        appendToken(builder, "return ");
         visit(node.getReturnExpr(), builder);
     }
 
 
     @Override
     public void visit(ASTQuantifiedExpr node, StringBuilder builder) {
-        appendToken(builder, node.isExistentiallyQuantified() ? "some" : "every");
+        appendToken(builder, node.isExistentiallyQuantified() ? "some " : "every ");
         visit(node.getBindings(), builder);
-        appendToken(builder, "satisfies");
+        appendToken(builder, " satisfies ");
         visit(node.getTestedExpr(), builder);
     }
 
@@ -91,7 +94,7 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     public void visit(ASTVarBinding node, StringBuilder builder) {
         appendToken(builder, "$");
         visit(node.getNameNode(), builder);
-        appendToken(builder, node.isLetStyle() ? ":=" : "in");
+        appendToken(builder, node.isLetStyle() ? " := " : " in ");
         visit(node.getInitializerExpr(), builder);
     }
 
@@ -100,22 +103,22 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     public void visit(ASTIfExpr node, StringBuilder builder) {
         appendToken(builder, "if (");
         visit(node.getGuardExpressionNode(), builder);
-        appendToken(builder, ") then");
+        appendToken(builder, ") then ");
         visit(node.getTrueAlternative(), builder);
-        appendToken(builder, "else");
+        appendToken(builder, " else ");
         visit(node.getFalseAlternative(), builder);
     }
 
 
     @Override
     public void visit(ASTOrExpr node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, childrenOf(node), "or");
+        joinExprsOnBuilder(builder, childrenOf(node), " or ");
     }
 
 
     @Override
     public void visit(ASTAndExpr node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, childrenOf(node), "and");
+        joinExprsOnBuilder(builder, childrenOf(node), " and ");
     }
 
 
@@ -129,14 +132,14 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
     @Override
     public void visit(ASTStringConcatExpr node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, childrenOf(node), "||");
+        joinExprsOnBuilder(builder, childrenOf(node), " || ");
     }
 
 
     @Override
     public void visit(ASTRangeExpr node, StringBuilder builder) {
         visit(node.getLowerBound(), builder);
-        appendToken(builder, "to");
+        appendToken(builder, " to ");
         visit(node.getUpperBound(), builder);
     }
 
@@ -192,7 +195,7 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTInstanceofExpr node, StringBuilder builder) {
         visit(node.getTestedExpr(), builder);
-        builder.append(" instance of ");
+        appendToken(builder, " instance of ");
         visit(node.getTestedType(), builder);
     }
 
@@ -200,7 +203,7 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTTreatExpr node, StringBuilder builder) {
         visit(node.getCastedExpr(), builder);
-        builder.append(" treat as ");
+        appendToken(builder, " treat as ");
         visit(node.getCastedType(), builder);
     }
 
@@ -208,7 +211,7 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTCastableExpr node, StringBuilder builder) {
         visit(node.getTestedExpr(), builder);
-        builder.append(" castable as ");
+        appendToken(builder, " castable as ");
         visit(node.getTestedType(), builder);
     }
 
@@ -216,14 +219,14 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTCastExpr node, StringBuilder builder) {
         visit(node.getCastedExpr(), builder);
-        builder.append(" cast as ");
+        appendToken(builder, " cast as ");
         visit(node.getCastedType(), builder);
     }
 
 
     @Override
     public void visit(ASTUnaryExpr node, StringBuilder builder) {
-        builder.append(node.getOperator());
+        appendToken(builder, node.getOperator());
         visit(node.getOperand(), builder);
     }
 
@@ -236,16 +239,19 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
     @Override
     public void visit(ASTPathExpr node, StringBuilder builder) {
-        builder.append(node.getPathAnchor().getPrefix());
+        appendToken(builder, node.getPathAnchor().getPrefix());
 
         Iterator<StepExpr> steps = node.iterator();
-        visit(steps.next(), builder);
+        StepExpr prev = steps.next();
+
+        visit(prev, builder);
 
         while (steps.hasNext()) {
             StepExpr step = steps.next();
-            if (!step.isAbbrevDescendantOrSelf()) {
-                builder.append("/");
+            if (!prev.isAbbrevDescendantOrSelf() && !step.isAbbrevDescendantOrSelf()) {
+                appendToken(builder, "/");
             } // else step adds "//"
+            prev = step;
             visit(step, builder);
         }
     }
@@ -254,14 +260,17 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTAxisStep node, StringBuilder builder) {
         if (node.isAbbrevDescendantOrSelf()) {
-            builder.append("//");
+            appendToken(builder, "//");
         } else if (node.isAbbrevAttributeAxis()) {
-            builder.append("@");
+            appendToken(builder, "@");
             visit(node.getNodeTest(), builder);
         } else if (node.isAbbrevParentNodeTest()) {
-            builder.append("..");
+            appendToken(builder, "..");
         } else if (!node.isAbbrevNoAxis()) {
-            builder.append(node.getAxis().getAxisName()).append("::");
+            appendToken(builder, node.getAxis().getAxisName());
+            appendToken(builder, "::");
+            visit(node.getNodeTest(), builder);
+        } else if (node.isAbbrevNoAxis()) {
             visit(node.getNodeTest(), builder);
         }
 
@@ -280,13 +289,17 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTWildcardNameTest node, StringBuilder builder) {
         if (node.isFullWildcard()) {
-            builder.append("*");
+            appendToken(builder, "*");
         } else if (node.getExpectedLocalName() != null) {
-            builder.append("*:").append(node.getExpectedLocalName());
+            appendToken(builder, "*:");
+            appendToken(builder, node.getExpectedLocalName());
         } else if (node.getExpectedNamespaceUri() != null) {
-            builder.append("Q{").append(node.getExpectedNamespaceUri()).append("}*");
+            appendToken(builder, "Q{");
+            appendToken(builder, node.getExpectedNamespaceUri());
+            appendToken(builder, "}*");
         } else if (node.getExpectedNamespacePrefix() != null) {
-            builder.append(node.getExpectedNamespacePrefix()).append(":*");
+            appendToken(builder, node.getExpectedNamespacePrefix());
+            appendToken(builder, ":*");
         }
     }
 
@@ -301,16 +314,16 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
     @Override
     public void visit(ASTArgumentList node, StringBuilder builder) {
-        builder.append("(");
+        appendToken(builder, "(");
         joinExprsOnBuilder(builder, node, ", ");
-        builder.append(")");
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTArgument node, StringBuilder builder) {
         if (node.isPlaceholder()) {
-            builder.append("?");
+            appendToken(builder, "?");
         } else {
             visit(node.getExpression(), builder);
         }
@@ -319,42 +332,42 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
     @Override
     public void visit(ASTPredicate node, StringBuilder builder) {
-        builder.append("[");
+        appendToken(builder, "[");
         visit(node.getWrappedExpression(), builder);
-        builder.append("]");
+        appendToken(builder, "]");
     }
 
 
     @Override
     public void visit(ASTStringLiteral node, StringBuilder builder) {
-        builder.append(node.getImage());
+        appendToken(builder, node.getImage());
     }
 
 
     @Override
     public void visit(ASTVarRef node, StringBuilder builder) {
-        builder.append("$");
+        appendToken(builder, "$");
         visit(node.getVariableName(), builder);
     }
 
 
     @Override
     public void visit(ASTParenthesizedExpr node, StringBuilder builder) {
-        builder.append("(");
+        appendToken(builder, "(");
         visit(node.getWrappedNode(), builder);
-        builder.append(")");
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTContextItemExpr node, StringBuilder builder) {
-        builder.append(".");
+        appendToken(builder, ".");
     }
 
 
     @Override
     public void visit(ASTNumericLiteral node, StringBuilder builder) {
-        builder.append(node.getImage());
+        appendToken(builder, node.getImage());
     }
 
 
@@ -368,164 +381,213 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
     @Override
     public void visit(ASTNamedFunctionRef node, StringBuilder builder) {
         visit(node.getFunctionName(), builder);
-        builder.append("#").append(node.getArity());
+        appendToken(builder, "#" + node.getArity());
     }
 
 
     @Override
     public void visit(ASTInlineFunctionExpr node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "function");
+        visit(node.getParamList(), builder);
+        if (!node.isDefaultReturnType()) {
+            appendToken(builder, " as ");
+            visit(node.getDeclaredReturnType(), builder);
+        }
+        appendToken(builder, "{");
+        visit(node.getBodyExpr(), builder);
+        appendToken(builder, "}");
     }
 
 
     @Override
     public void visit(ASTParamList node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "(");
+        joinExprsOnBuilder(builder, node, ", ");
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTParam node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "$");
+        visit(node.getNameNode(), builder);
+        if (!node.isDefaultType()) {
+            appendToken(builder, " as ");
+            visit(node.getDeclaredType(), builder);
+        }
     }
 
 
     @Override
     public void visit(ASTCommentTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "comment()");
     }
 
 
     @Override
     public void visit(ASTTextTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "text()");
     }
 
 
     @Override
     public void visit(ASTNamespaceNodeTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "namespace-node()");
     }
 
 
     @Override
     public void visit(ASTAnyKindTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "node()");
     }
 
 
     @Override
     public void visit(ASTDocumentTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "document(");
+        if (node.getArgumentTest() != null) {
+            visit(node.getArgumentTest(), builder);
+        }
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTElementTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
-    }
+        appendToken(builder, "element(");
+        if (!node.isEmptyParen()) {
+            if (node.getElementName() != null) {
+                visit(node.getElementName(), builder);
+            } else {
+                appendToken(builder, "*");
+            }
 
-
-    @Override
-    public void visit(ASTElementNameOrWildcard node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+            if (node.getTypeName() != null) {
+                appendToken(builder, ",");
+                visit(node.getTypeName(), builder);
+                if (node.isOptionalType()) {
+                    appendToken(builder, "?");
+                }
+            }
+        }
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTAttributeTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
-    }
+        appendToken(builder, "element(");
+        if (!node.isEmptyParen()) {
+            if (node.getAttributeName() != null) {
+                visit(node.getAttributeName(), builder);
+            } else {
+                appendToken(builder, "*");
+            }
 
-
-    @Override
-    public void visit(ASTAttributeNameOrWildCard node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+            if (node.getTypeName() != null) {
+                appendToken(builder, ",");
+                visit(node.getTypeName(), builder);
+            }
+        }
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTSchemaAttributeTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
-    }
-
-
-    @Override
-    public void visit(ASTAttributeDeclaration node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "schema-attribute(");
+        visit(node.getAttributeNameNode(), builder);
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTProcessingInstructionTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "processing-instruction(");
+        if (node.hasArgument()) {
+            visit((XPathNode) node.jjtGetChild(0), builder);
+        }
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTSchemaElementTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
-    }
-
-
-    @Override
-    public void visit(ASTElementDeclaration node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "schema-element(");
+        visit(node.getLastChild(), builder);
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTSequenceType node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        if (node.isEmptySequence()) {
+            appendToken(builder, "empty-sequence()");
+        } else {
+            visit(node.getItemType(), builder);
+            appendToken(builder, node.getCardinality().getOccurrenceIndicator());
+        }
     }
 
 
     @Override
     public void visit(ASTAnyItemType node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "item()");
     }
 
 
     @Override
     public void visit(ASTAtomicOrUnionType node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        justAppendChildren(builder, node);
     }
 
 
     @Override
     public void visit(ASTParenthesizedItemType node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "(");
+        visit(node.getWrappedNode(), builder);
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTAnyFunctionTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "function(*)");
     }
 
 
     @Override
     public void visit(ASTTypedFunctionTest node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "function");
+        visit(node.getParamTypeList(), builder);
+        appendToken(builder, "as");
+        visit(node.getDeclaredReturnType(), builder);
     }
 
 
     @Override
     public void visit(ASTArgumentTypeList node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        appendToken(builder, "(");
+        joinExprsOnBuilder(builder, node, ", ");
+        appendToken(builder, ")");
     }
 
 
     @Override
     public void visit(ASTSingleType node, StringBuilder builder) {
-        throw new UnsupportedOperationException("FIXME!!!!!!!!!!!!!!!");
+        visit(node.getTypeNameNode(), builder);
+        if (node.isOptional()) {
+            appendToken(builder, "?");
+        }
     }
 
 
     @Override
     public void visit(ASTName node, StringBuilder builder) {
-        builder.append(node.getImage());
+        appendToken(builder, node.getImage());
     }
+
+    // Utilities
 
 
     private void justAppendChildren(StringBuilder builder, XPathNode node) {
@@ -534,7 +596,52 @@ public final class ExpressionMakerVisitor implements SideEffectingVisitor<String
 
 
     private static void appendToken(StringBuilder builder, String token) {
-        builder.append(" ").append(token).append(" "); // TODO
+        if (token.isEmpty()) {
+            return;
+        }
+        if (builder.length() > 0 && isDelimitingChar(builder.charAt(builder.length() - 1))
+                || isDelimitingChar(token.charAt(0))) {
+            // No need to insert a delimiting space
+            builder.append(token);
+        } else {
+            builder.append(' ').append(token); // TODO
+        }
+    }
+
+
+    private static boolean isDelimitingChar(char c) {
+        switch (c) {
+        case '!':
+        case '\"':
+        case '#':
+        case '$':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case '-':
+        case '.':
+        case '/':
+        case ':':
+        case '<':
+        case '=':
+        case '>':
+        case '?':
+        case '@':
+        case '[':
+        case ']':
+        case '{':
+        case '|':
+        case '}':
+        case ' ':
+        case '\n':
+        case '\f':
+        case '\r':
+            return true;
+        default:
+            return false;
+        }
     }
 
 

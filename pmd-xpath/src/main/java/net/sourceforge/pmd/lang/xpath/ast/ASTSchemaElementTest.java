@@ -6,13 +6,31 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
+import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaElementTest;
 
 
-public final class ASTSchemaElementTest extends AbstractXPathNode implements KindTest {
+/**
+ * Schema element test.
+ *
+ * <pre>
+ *
+ * SchemaElementTest ::= "schema-element" "(" {@linkplain ASTName ElementName} ")"
+ *
+ * </pre>
+ */
+public final class ASTSchemaElementTest extends AbstractXPathNode implements KindTest, ElementTestOrSchemaElementTest {
 
 
     ASTSchemaElementTest(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Gets the node representing the name of the tested element.
+     */
+    public ASTName getElementNameNode() {
+        return (ASTName) jjtGetChild(0);
     }
 
 

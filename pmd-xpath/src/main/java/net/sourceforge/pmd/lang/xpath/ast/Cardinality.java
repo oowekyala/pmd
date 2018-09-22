@@ -11,14 +11,30 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @since 6.7.0
  */
 enum Cardinality {
-    /** This is the cardinality of the empty-sequence() type. */
-    EMPTY,
     /** Cardinality marked by the "?" occurrence indicator. */
-    ZERO_OR_ONE,
+    ZERO_OR_ONE("?"),
     /** Cardinality marked by the "*" occurrence indicator. */
-    ZERO_OR_MORE,
+    ZERO_OR_MORE("*"),
     /** Cardinality assumed when no occurrence indicator is present. */
-    EXACTLY_ONE,
+    EXACTLY_ONE(""),
     /** Cardinality marked by the "+" occurrence indicator. */
-    ONE_OR_MORE;
+    ONE_OR_MORE("+");
+
+
+    private final String occurrenceIndicator;
+
+
+    Cardinality(String occurrenceIndicator) {
+        this.occurrenceIndicator = occurrenceIndicator;
+    }
+
+
+    /**
+     * Returns the occurrence indicator of this cardinality.
+     * If this is {@link #EXACTLY_ONE}, then returns the empty string.
+     */
+    public String getOccurrenceIndicator() {
+        return occurrenceIndicator;
+    }
+
 }
