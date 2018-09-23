@@ -26,7 +26,7 @@ public final class ASTAdditiveOperator extends AbstractXPathNode implements Bina
      * Returns the image of the operator, {@literal i.e.} "+" or "-".
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

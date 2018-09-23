@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.List;
-
 import net.sourceforge.pmd.lang.ast.Node;
 
 
@@ -24,12 +22,5 @@ public interface XPathNode extends Node {
 
 
     <T> T childrenAccept(XPathParserVisitor<T> visitor, T data);
-
-
-    /**
-     * Returns an unmodifiable list of the children.
-     */
-    List<Node> getChildren();
-
 
 }

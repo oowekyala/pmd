@@ -13,7 +13,7 @@ class NameTest : FunSpec({
     parserTest("Test braced URI name") {
 
         val uri = "http://www.w3.org/2005/xpath-functions/math"
-        val name = "Q{$uri}pi"
+        val name = "Q{$uri}hendeck"
 
         name should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe RELATIVE
@@ -24,7 +24,7 @@ class NameTest : FunSpec({
                     child<ASTName> {
                         it.isUriLiteral shouldBe true
                         it.namespacePrefix shouldBe uri
-                        it.localName shouldBe "pi"
+                        it.localName shouldBe "hendeck"
                         it.hasNamespacePrefix() shouldBe true
                         it.image shouldBe name
                     }

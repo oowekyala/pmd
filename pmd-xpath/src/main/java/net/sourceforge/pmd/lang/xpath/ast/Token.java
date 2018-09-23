@@ -70,6 +70,7 @@ public class Token implements GenericToken, java.io.Serializable {
      * No-argument constructor
      */
     public Token() {
+        // Default
     }
 
 
@@ -167,7 +168,7 @@ public class Token implements GenericToken, java.io.Serializable {
      * variable to the appropriate type and use sit in your lexical actions.
      */
     public static Token newToken(int ofKind, String image) {
-        switch (ofKind) {
+        switch (ofKind) { // NOPMD TooFewBranchesForASwitchStatement
         default:
             return new Token(ofKind, image);
         }

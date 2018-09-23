@@ -28,7 +28,7 @@ public final class ASTIntersectExceptOperator extends AbstractXPathNode implemen
      * {@literal i.e.} "intersect" or "except".
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

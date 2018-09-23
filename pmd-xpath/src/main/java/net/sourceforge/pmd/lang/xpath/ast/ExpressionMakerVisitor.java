@@ -6,8 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
 
-import net.sourceforge.pmd.lang.ast.Node;
-
 
 /**
  * Dumps a subtree to a parsable expression. The AST of the dumped string is
@@ -306,9 +304,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
 
     @Override
     public void visit(ASTPostfixExpr node, StringBuilder builder) {
-        for (Node child : node.getChildren()) {
-            visit((XPathNode) child, builder);
-        }
+        justAppendChildren(builder, node);
     }
 
 

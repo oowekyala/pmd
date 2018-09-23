@@ -11,7 +11,7 @@ import io.kotlintest.specs.FunSpec
 class AxisTest : FunSpec({
 
 
-    parserTest("f:Attribute may start a KindTest") {
+    parserTest("Attribute may start a KindTest") {
         "/attribute(*)" should matchExpr<ASTPathExpr> {
             it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 

@@ -24,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
-    private double value;
     private Boolean literalType = null;
     private int integerPart;
     private double decimalPart;
@@ -150,7 +149,7 @@ public final class ASTNumericLiteral extends AbstractXPathNode implements Primar
      * Returns the literal as it appeared in the source.
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

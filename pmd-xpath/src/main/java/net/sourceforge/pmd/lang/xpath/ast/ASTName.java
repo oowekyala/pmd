@@ -132,7 +132,7 @@ public final class ASTName extends AbstractXPathNode {
      * Returns this name as it appears in the source.
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

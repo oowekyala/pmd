@@ -25,7 +25,7 @@ public final class ASTMultiplicativeOperator extends AbstractXPathNode implement
      * Returns the image of the operator, {@literal i.e.} "*", "div", "idiv" or "mod".
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

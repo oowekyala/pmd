@@ -20,7 +20,7 @@ class ExpressionMakerVisitorTest : FunSpec({
 
     testGroup("Test inline function expr") {
 
-        listOf("function() as xs:integer+ { 2, 3, 5, 7, 11, 13 }",
+        listOf("function() as xs:integer { 2, 3, 5, 7, 11, 13 }",
                 "function(${'$'}a as xs:double, ${'$'}b as xs:double) as xs:double { ${'$'}a * ${'$'}b }",
                 "function(${'$'}a) { ${'$'}a }",
                 "collection()/(let ${'$'}a := . return function() { ${'$'}a })")

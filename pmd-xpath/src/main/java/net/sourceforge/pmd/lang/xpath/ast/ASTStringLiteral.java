@@ -47,10 +47,11 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
 
 
     /**
-     * Returns the image of the string as it appeared in the source.
+     * Returns the image of the string as it appeared in the source,
+     * including delimiters, escapes, etc.
      */
     @Override
-    public String getImage() {
+    public String getImage() { // NOPMD
         return super.getImage();
     }
 

@@ -4,10 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -34,10 +30,7 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
     }
 
 
-    @Override
-    public List<Node> getChildren() {
-        return Collections.unmodifiableList(Arrays.asList(children));
-    }
+
 
 
     @Override
