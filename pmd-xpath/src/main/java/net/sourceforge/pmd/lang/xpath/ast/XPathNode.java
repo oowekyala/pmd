@@ -15,12 +15,15 @@ import net.sourceforge.pmd.lang.ast.Node;
  */
 public interface XPathNode extends Node {
 
-    <T> T jjtAccept(XPathParserVisitor<T> visitor, T data);
+    <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data);
 
 
     <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data);
 
 
-    <T> T childrenAccept(XPathParserVisitor<T> visitor, T data);
+    <T> T childrenAccept(XPathGenericVisitor<T> visitor, T data);
+
+
+    <T> void childrenAccept(SideEffectingVisitor<T> visitor, T data);
 
 }

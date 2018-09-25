@@ -30,17 +30,24 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
     }
 
 
-
-
-
     @Override
-    public final <T> T childrenAccept(XPathParserVisitor<T> visitor, T data) {
+    public final <T> T childrenAccept(XPathGenericVisitor<T> visitor, T data) {
         if (children != null) {
             for (Node child : children) {
                 ((XPathNode) child).jjtAccept(visitor, data);
             }
         }
         return data;
+    }
+
+
+    @Override
+    public final <T> void childrenAccept(SideEffectingVisitor<T> visitor, T data) {
+        if (children != null) {
+            for (Node child : children) {
+                ((XPathNode) child).jjtAccept(visitor, data);
+            }
+        }
     }
 
 

@@ -13,7 +13,7 @@ import net.sourceforge.pmd.lang.rule.AbstractRuleChainVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.ast.AbstractXPathGenericVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
-import net.sourceforge.pmd.lang.xpath.ast.XPathParserVisitor;
+import net.sourceforge.pmd.lang.xpath.ast.XPathGenericVisitor;
 
 
 /**
@@ -25,7 +25,7 @@ public class XPathRuleChainVisitor extends AbstractRuleChainVisitor {
 
     @Override
     protected void indexNodes(List<Node> nodes, RuleContext ctx) {
-        XPathParserVisitor<?> javaParserVistor = new AbstractXPathGenericVisitor<Object>() {
+        XPathGenericVisitor<?> javaParserVistor = new AbstractXPathGenericVisitor<Object>() {
             // Perform a visitation of the AST to index nodes which need
             // visiting by type
 
@@ -47,7 +47,7 @@ public class XPathRuleChainVisitor extends AbstractRuleChainVisitor {
     protected void visit(Rule rule, Node node, RuleContext ctx) {
 
         // Rule better either be a vfParserVisitor, or a XPathRule
-        if (rule instanceof XPathParserVisitor) {
+        if (rule instanceof XPathGenericVisitor) {
             ((XPathNode) node).jjtAccept((PmdXPathRule) rule, ctx);
         } else {
             ((net.sourceforge.pmd.lang.rule.XPathRule) rule).evaluate(node, ctx);

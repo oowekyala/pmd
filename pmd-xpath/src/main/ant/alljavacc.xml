@@ -3,11 +3,15 @@
     <property name="javacc-home.path" value="target/lib"/>
 
     <property name="ast-package" value="net/sourceforge/pmd/lang/xpath/ast"/>
-    <property name="base-visitor-interface-name" value="XPathParserVisitor"/>
-    <property name="base-visitor-interface-file" value="${target}/${ast-package}/${base-visitor-interface-name}.java"/>
 
+    <property name="base-visitor-interface-name" value="XPathGenericVisitor"/>
+    <property name="base-visitor-interface-file" value="${target}/${ast-package}/${base-visitor-interface-name}.java"/>
+    <property name="base-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${base-visitor-interface-name}.java"/>
+
+    <!-- -r+p = no return, one param -->
     <property name="-r+p-visitor-interface-name" value="SideEffectingVisitor"/>
     <property name="-r+p-visitor-interface-file" value="${target}/${ast-package}/${-r+p-visitor-interface-name}.java"/>
+    <property name="-r+p-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${-r+p-visitor-interface-name}.java"/>
 
 
     <target name="alljavacc"
@@ -49,6 +53,21 @@
         <delete file="${target}/${ast-package}/SimpleNode.java"/>
         <delete file="${target}/${ast-package}/CharStream.java"/>
         <delete file="${target}/${ast-package}/TokenMgrError.java"/>
+        <delete file="${target}/${ast-package}/Token.java"/>
+        <delete file="${target}/${ast-package}/ParseException.java"/>
+        <delete>
+            <fileset dir="${target}/${ast-package}">
+                <include name="AST*.java"/>
+            </fileset>
+        </delete>
+
+
+        <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"
+                dest="${base-visitor-abstract-class-file}"/>
+
+        <rename src="${target}/${ast-package}/XPathParserVisitor.java"
+                dest="${base-visitor-interface-file}"/>
+
 
         <replace token="import .*;"
                  value="">
@@ -90,8 +109,10 @@
         <replace file="${target}/${ast-package}/XPathParser.java"
                  token="throw new Error"
                  value="throw new RuntimeException"/>
-        <delete file="${target}/${ast-package}/ParseException.java"/>
-        <replace file="${target}/${ast-package}/XPathParserVisitor.java"
+
+
+        <!-- Base visitor -->
+        <replace file="${base-visitor-interface-file}"
                  token="SimpleNode"
                  value="XPathNode"/>
 
@@ -99,9 +120,11 @@
             <include name="*Visitor.java"/>
             <replacefilter token="Visitor" value="Visitor&lt;T&gt;"/>
             <replacefilter token="Object" value="T"/>
+            <replacefilter token="XPathParserVisitor" value="${base-visitor-interface-name}"/>
             <replacefilter token="SimpleNode" value="XPathNode"/>
             <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathGenericVisitor"/>
         </replace>
+
 
         <!-- Side effecting visitor -->
         <copy file="${base-visitor-interface-file}" tofile="${-r+p-visitor-interface-file}"/>
@@ -110,9 +133,16 @@
             <replacefilter token="T visit" value="void visit"/>
         </replace>
 
+        <copy file="${base-visitor-abstract-class-file}" tofile="${-r+p-visitor-abstract-class-file}"/>
+        <replace file="${-r+p-visitor-abstract-class-file}">
+            <replacefilter token="${base-visitor-interface-name}" value="${-r+p-visitor-interface-name}"/>
+            <replacefilter token="T visit" value="void visit"/>
+            <replacefilter token="T defaultVisit" value="void defaultVisit"/>
+            <replacefilter token="return data;" value=""/>
+            <replacefilter token="return " value=""/>
+            <replacefilter token="implements ${base-visitor-interface-name}" value="implements ${-r+p-visitor-interface-file}"/>
+        </replace>
 
-        <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"
-                dest="${target}/${ast-package}/AbstractXPathGenericVisitor.java"/>
 
         <replace file="${target}/${ast-package}/JJTXPathParserState.java">
             <replacetoken>public class</replacetoken>
@@ -121,13 +151,5 @@
 public class]]></replacevalue>
         </replace>
 
-
-        <delete file="${target}/${ast-package}/Token.java"/>
-
-        <delete>
-            <fileset dir="${target}/${ast-package}">
-                <include name="AST*.java"/>
-            </fileset>
-        </delete>
     </target>
 </project>

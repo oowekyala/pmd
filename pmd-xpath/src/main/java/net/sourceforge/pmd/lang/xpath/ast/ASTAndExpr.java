@@ -28,7 +28,7 @@ public final class ASTAndExpr extends AbstractXPathNode implements ExprSingle {
 
 
     @Override
-    public <T> T jjtAccept(XPathParserVisitor<T> visitor, T data) {
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }
