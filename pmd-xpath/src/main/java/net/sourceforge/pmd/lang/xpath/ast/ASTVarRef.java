@@ -29,8 +29,17 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
      * Gets the node representing the name of
      * the referenced variable.
      */
-    public ASTName getVariableName() {
+    public ASTName getVarNameNode() {
         return (ASTName) jjtGetChild(0);
+    }
+
+    public String getVarName() {
+        return getVarNameNode().getLocalName();
+    }
+
+
+    void setBinding(ASTVarBinding binding) {
+        this.binding = binding;
     }
 
 

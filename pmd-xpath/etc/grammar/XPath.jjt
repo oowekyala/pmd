@@ -280,11 +280,12 @@ void QuantifiedExpr():
 {}
 {
   (<SOME> { jjtThis.setUniversallyQuantified(false); }| <EVERY> {jjtThis.setUniversallyQuantified(true);})
-  VarBindingList(false)
+  VarBinding(false)
   <SATISFIES> ExprSingle()
 }
 
-void VarBindingList(boolean isLetCtx):
+// void because it's more convenient to manipulate a List<ASTVarBinding>
+void VarBindingList(boolean isLetCtx) #void:
 {}
 {
     VarBinding(isLetCtx) ("," VarBinding(isLetCtx))*

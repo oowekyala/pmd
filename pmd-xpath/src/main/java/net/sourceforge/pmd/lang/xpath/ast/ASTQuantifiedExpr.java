@@ -4,16 +4,20 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.Collections;
+import java.util.List;
+
+
 /**
  * Quantified expression.
  *
  * <pre>
  *
- * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBindingList VarBindingList} "satisfies" {@link ExprSingle}
+ * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding} "satisfies" {@link ExprSingle}
  *
  * </pre>
  */
-public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
 
     private boolean isUniversallyQuantified;
 
@@ -28,29 +32,44 @@ public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSi
     }
 
 
+    /**
+     * Returns true if this expression asserts that every element
+     * of a sequence satisfy the predicate.
+     */
     public boolean isUniversallyQuantified() {
         return isUniversallyQuantified;
     }
 
 
+    /**
+     * Returns true if this expression asserts only that some element
+     * of a sequence satisfy the predicate.
+     */
     public boolean isExistentiallyQuantified() {
         return !isUniversallyQuantified;
     }
 
 
     /**
-     * Returns the bindings list of this let  expression.
+     * Returns the variable binding.
      */
-    public ASTVarBindingList getBindings() {
-        return (ASTVarBindingList) jjtGetChild(0);
+    public ASTVarBinding getBinding() {
+        return (ASTVarBinding) jjtGetChild(0);
     }
 
 
     /**
-     * Returns the tested expression.
+     * Returns the predicate expression (the one after the "satisfies").
      */
-    public ExprSingle getTestedExpr() {
+    @Override
+    public ExprSingle getBodyExpr() {
         return (ExprSingle) jjtGetChild(1);
+    }
+
+
+    @Override
+    public List<ASTVarBinding> getBindings() {
+        return Collections.singletonList(getBinding());
     }
 
 

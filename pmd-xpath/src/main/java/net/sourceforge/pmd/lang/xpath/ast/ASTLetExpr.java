@@ -10,31 +10,23 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * LetExpr ::= "let" {@linkplain ASTVarBindingList VarBindingList} "return" {@link ExprSingle}
+ * LetExpr ::= "let" {@linkplain ASTVarBinding VarBinding} ( "," {@linkplain ASTVarBinding VarBinding} )* "return" {@link ExprSingle}
  *
  * </pre>
  */
-public final class ASTLetExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTLetExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
 
 
     ASTLetExpr(XPathParser p, int id) {
         super(p, id);
     }
 
-
-    /**
-     * Returns the bindings list of this let  expression.
-     */
-    public ASTVarBindingList getBindings() {
-        return (ASTVarBindingList) jjtGetChild(0);
-    }
-
-
     /**
      * Returns the expression evaluated.
      */
-    public ExprSingle getReturnExpr() {
-        return (ExprSingle) jjtGetChild(1);
+    @Override
+    public ExprSingle getBodyExpr() {
+        return (ExprSingle) getLastChild();
     }
 
 

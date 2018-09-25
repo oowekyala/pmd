@@ -1,5 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
+import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 
@@ -113,7 +114,7 @@ class InlineFunctionExprTest : FunSpec({
 
                 child<ASTVarRef> {
 
-                    it.variableName shouldBe child {
+                    it.varNameNode shouldBe child {
                         it.image shouldBe "a"
                         it.localName shouldBe "a"
                         it.namespacePrefix shouldBe ""
@@ -126,7 +127,7 @@ class InlineFunctionExprTest : FunSpec({
                 }
                 child<ASTVarRef> {
 
-                    it.variableName shouldBe child {
+                    it.varNameNode shouldBe child {
                         it.image shouldBe "b"
                         it.localName shouldBe "b"
                         it.namespacePrefix shouldBe ""
@@ -158,7 +159,7 @@ class InlineFunctionExprTest : FunSpec({
             }
             it.bodyExpr shouldBe child<ASTVarRef> {
 
-                it.variableName shouldBe child {
+                it.varNameNode shouldBe child {
                     it.image shouldBe "a"
                     it.localName shouldBe "a"
                     it.namespacePrefix shouldBe ""
@@ -186,25 +187,26 @@ class InlineFunctionExprTest : FunSpec({
 
                 it.wrappedNode shouldBe child<ASTLetExpr> {
 
-                    it.bindings shouldBe child {
+                    val binding = child<ASTVarBinding> {
+                        it.isLetStyle shouldBe true
+                        it.varName shouldBe "a"
 
-                        child<ASTVarBinding> {
-                            it.isLetStyle shouldBe true
-                            it.varName shouldBe "a"
+                        it.varNameNode shouldBe child {
+                            it.image shouldBe "a"
+                            it.localName shouldBe "a"
+                            it.namespacePrefix shouldBe ""
+                            it.isUriLiteral shouldBe false
 
-                            it.nameNode shouldBe child {
-                                it.image shouldBe "a"
-                                it.localName shouldBe "a"
-                                it.namespacePrefix shouldBe ""
-                                it.isUriLiteral shouldBe false
+                        }
+                        it.initializerExpr shouldBe child<ASTContextItemExpr> {
 
-                            }
-                            it.initializerExpr shouldBe child<ASTContextItemExpr> {
-
-                            }
                         }
                     }
-                    it.returnExpr shouldBe child<ASTInlineFunctionExpr> {
+
+                    it.bindings.shouldContainAll(binding)
+
+
+                    it.bodyExpr shouldBe child<ASTInlineFunctionExpr> {
                         it.declaredReturnType shouldBe null
                         it.isDefaultReturnType shouldBe true
 
@@ -212,7 +214,7 @@ class InlineFunctionExprTest : FunSpec({
 
                         it.bodyExpr shouldBe child<ASTVarRef> {
 
-                            it.variableName shouldBe child {
+                            it.varNameNode shouldBe child {
                                 it.image shouldBe "a"
                                 it.localName shouldBe "a"
                                 it.namespacePrefix shouldBe ""

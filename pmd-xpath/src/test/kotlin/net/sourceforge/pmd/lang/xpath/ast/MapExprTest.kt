@@ -217,6 +217,5 @@ class MapExprTest : FunSpec({
                 }
             }
         }
-
     }
 })

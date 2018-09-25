@@ -20,6 +20,6 @@ public class XPathLanguageModule extends BaseLanguageModule {
 
     public XPathLanguageModule() {
         super(NAME, SHORT_NAME, TERSE_NAME, XPathRuleChainVisitor.class, "page", "component");
-        addVersion("3.0", new XPathHandler(), true);
+        addVersion("3.0", new XPathLanguageHandler(), true);
     }
 }

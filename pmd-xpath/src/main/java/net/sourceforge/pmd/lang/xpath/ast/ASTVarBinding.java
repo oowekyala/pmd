@@ -6,9 +6,8 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 
 /**
- * Binding of a name to an expression, occurring in {@linkplain ASTVarBindingList VarBindingList}.
- * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, a
- * {@linkplain PrimaryExpr primary expression}.
+ * Binding of a name to an expression, occurring in a {@linkplain BinderExpr binder expressions}.
+ * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, which is a {@linkplain PrimaryExpr primary expression}.
  *
  * <p>Bindings have a different syntax depending on where they occur. In let-expressions, the symbol
  * {@code :=} is used, whereas in other expressions it's the keyword {@code in}.
@@ -51,7 +50,7 @@ public final class ASTVarBinding extends AbstractXPathNode {
      * token "in".
      */
     public boolean isLetStyle() {
-        return jjtGetParent().jjtGetParent() instanceof ASTLetExpr;
+        return jjtGetParent() instanceof ASTLetExpr;
     }
 
 
@@ -66,7 +65,7 @@ public final class ASTVarBinding extends AbstractXPathNode {
     /**
      * Returns the node representing the name of the variable.
      */
-    public ASTName getNameNode() {
+    public ASTName getVarNameNode() {
         return (ASTName) jjtGetChild(0);
     }
 
@@ -75,6 +74,6 @@ public final class ASTVarBinding extends AbstractXPathNode {
      * Returns the name of the variable.
      */
     public String getVarName() {
-        return getNameNode().getLocalName();
+        return getVarNameNode().getLocalName();
     }
 }

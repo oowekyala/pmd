@@ -95,6 +95,15 @@ class GroupTestCtx(val funspec: AbstractFunSpec, val groupName: String, xpathVer
         }
     }
 
+    /**
+     * Create a new test for the matcher and give it focus.
+     */
+    infix fun String.SHOULD(matcher: Matcher<String>) {
+        funspec.parserTest("f:$groupName: '$this'") {
+            this@SHOULD kotlintestShould matcher
+        }
+    }
+
 }
 
 /**
@@ -195,10 +204,9 @@ open class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
 
     fun parseXPathRoot(expr: String): ASTXPathRoot {
-        val languageVersionHandler = getLangVersionHandler(xpathVersion)
-        val rootNode = languageVersionHandler.getParser(languageVersionHandler.defaultParserOptions)
-                .parse(":test:", StringReader(expr)) as ASTXPathRoot
-        languageVersionHandler.getQualifiedNameResolutionFacade(ParserTestCtx::class.java.classLoader).start(rootNode)
+        val lvh = getLangVersionHandler(xpathVersion)
+        val rootNode = lvh.getParser(lvh.defaultParserOptions).parse(":test:", StringReader(expr)) as ASTXPathRoot
+        lvh.symbolFacade.start(rootNode)
         return rootNode
     }
 }

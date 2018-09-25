@@ -58,40 +58,34 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     @Override
     public void visit(ASTForExpr node, StringBuilder builder) {
         appendToken(builder, "for ");
-        visit(node.getBindings(), builder);
+        joinExprsOnBuilder(builder, node.getBindings(), ", ");
         appendToken(builder, "return ");
-        visit(node.getReturnExpr(), builder);
+        visit(node.getBodyExpr(), builder);
     }
 
 
     @Override
     public void visit(ASTLetExpr node, StringBuilder builder) {
         appendToken(builder, "let ");
-        visit(node.getBindings(), builder);
-        appendToken(builder, "return ");
-        visit(node.getReturnExpr(), builder);
+        joinExprsOnBuilder(builder, node.getBindings(), ", ");
+        appendToken(builder, " return ");
+        visit(node.getBodyExpr(), builder);
     }
 
 
     @Override
     public void visit(ASTQuantifiedExpr node, StringBuilder builder) {
         appendToken(builder, node.isExistentiallyQuantified() ? "some " : "every ");
-        visit(node.getBindings(), builder);
+        joinExprsOnBuilder(builder, node.getBindings(), ", ");
         appendToken(builder, " satisfies ");
-        visit(node.getTestedExpr(), builder);
-    }
-
-
-    @Override
-    public void visit(ASTVarBindingList node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, node, ", ");
+        visit(node.getBodyExpr(), builder);
     }
 
 
     @Override
     public void visit(ASTVarBinding node, StringBuilder builder) {
         appendToken(builder, "$");
-        visit(node.getNameNode(), builder);
+        visit(node.getVarNameNode(), builder);
         appendToken(builder, node.isLetStyle() ? " := " : " in ");
         visit(node.getInitializerExpr(), builder);
     }
@@ -343,7 +337,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     @Override
     public void visit(ASTVarRef node, StringBuilder builder) {
         appendToken(builder, "$");
-        visit(node.getVariableName(), builder);
+        visit(node.getVarNameNode(), builder);
     }
 
 

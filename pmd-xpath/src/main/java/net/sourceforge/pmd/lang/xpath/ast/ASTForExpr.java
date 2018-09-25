@@ -9,31 +9,23 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * ForExpr ::= "for" {@linkplain ASTVarBindingList VarBindingList} "return" {@link ExprSingle}
+ * ForExpr ::= "for" {@linkplain ASTVarBinding VarBinding} ( "," {@linkplain ASTVarBinding VarBinding} )* "return" {@link ExprSingle}
  *
  * </pre>
  */
-public final class ASTForExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTForExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
 
 
     ASTForExpr(XPathParser p, int id) {
         super(p, id);
     }
 
-
     /**
-     * Returns the bindings list of this binder expression.
+     * Returns the expression evaluated on each iteration (after the "return").
      */
-    public ASTVarBindingList getBindings() {
-        return (ASTVarBindingList) jjtGetChild(0);
-    }
-
-
-    /**
-     * Returns the expression evaluated on each iteration.
-     */
-    public ExprSingle getReturnExpr() {
-        return (ExprSingle) jjtGetChild(1);
+    @Override
+    public ExprSingle getBodyExpr() {
+        return (ExprSingle) getLastChild();
     }
 
 
