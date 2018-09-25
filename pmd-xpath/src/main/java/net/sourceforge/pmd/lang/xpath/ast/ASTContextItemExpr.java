@@ -33,5 +33,11 @@ public final class ASTContextItemExpr extends AbstractXPathNode implements Prima
     }
 
 
+    @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
+
+
 }
 /* JavaCC - OriginalChecksum=f84ce10a4a9a29e0d18b17f6a11e34f8 (do not edit this line) */

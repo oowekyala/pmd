@@ -16,7 +16,6 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  * NamespaceNodeTest ::= "namespace-node" "(" ")"
  *
  * </pre>
-
  */
 public final class ASTNamespaceNodeTest extends AbstractXPathNode implements KindTest {
 
@@ -35,6 +34,12 @@ public final class ASTNamespaceNodeTest extends AbstractXPathNode implements Kin
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
+    }
+
+
+    @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
     }
 }
 /* JavaCC - OriginalChecksum=2ca63014f2dd56c9afb62540fb273054 (do not edit this line) */

@@ -52,6 +52,16 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
 
     @Override
+    public final void childrenAccept(ParameterlessSideEffectingVisitor visitor) {
+        if (children != null) {
+            for (Node child : children) {
+                ((XPathNode) child).jjtAccept(visitor);
+            }
+        }
+    }
+
+
+    @Override
     public void jjtOpen() {
         if (beginLine == -1 && parser.token.next != null) {
             beginLine = parser.token.next.beginLine;

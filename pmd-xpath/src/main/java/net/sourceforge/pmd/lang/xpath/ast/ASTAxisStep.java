@@ -56,9 +56,16 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
 
 
     @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }
+
 
     /**
      * Returns true if this step didn't add an explicit axis,

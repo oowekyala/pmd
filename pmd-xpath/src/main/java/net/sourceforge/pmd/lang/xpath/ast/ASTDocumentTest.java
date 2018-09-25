@@ -43,5 +43,11 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
+
+
+    @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
 }
 /* JavaCC - OriginalChecksum=83dc39618e2fa96fb72e304333aa5cac (do not edit this line) */

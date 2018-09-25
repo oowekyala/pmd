@@ -38,6 +38,12 @@ public final class ASTInstanceofExpr extends AbstractXPathNode implements ExprSi
 
 
     @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }

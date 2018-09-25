@@ -21,9 +21,17 @@ public interface XPathNode extends Node {
     <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data);
 
 
+    default void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
+
+
     <T> T childrenAccept(XPathGenericVisitor<T> visitor, T data);
 
 
     <T> void childrenAccept(SideEffectingVisitor<T> visitor, T data);
+
+
+    void childrenAccept(ParameterlessSideEffectingVisitor visitor);
 
 }

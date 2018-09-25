@@ -35,6 +35,12 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
 
     @Override
+    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
+        visitor.visit(this);
+    }
+
+
+    @Override
     public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
         return visitor.visit(this, data);
     }

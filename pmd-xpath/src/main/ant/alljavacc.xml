@@ -13,6 +13,11 @@
     <property name="-r+p-visitor-interface-file" value="${target}/${ast-package}/${-r+p-visitor-interface-name}.java"/>
     <property name="-r+p-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${-r+p-visitor-interface-name}.java"/>
 
+    <!-- -r-p = no return, no param -->
+    <property name="-r-p-visitor-interface-name" value="ParameterlessSideEffectingVisitor"/>
+    <property name="-r-p-visitor-interface-file" value="${target}/${ast-package}/${-r-p-visitor-interface-name}.java"/>
+    <property name="-r-p-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${-r-p-visitor-interface-name}.java"/>
+
 
     <target name="alljavacc"
             description="Generates all XPathCC aspects within PMD"
@@ -62,11 +67,11 @@
         </delete>
 
 
-        <rename src="${target}/${ast-package}/XPathParserDefaultVisitor.java"
-                dest="${base-visitor-abstract-class-file}"/>
+        <move file="${target}/${ast-package}/XPathParserDefaultVisitor.java"
+              tofile="${base-visitor-abstract-class-file}"/>
 
-        <rename src="${target}/${ast-package}/XPathParserVisitor.java"
-                dest="${base-visitor-interface-file}"/>
+        <move file="${target}/${ast-package}/XPathParserVisitor.java"
+              tofile="${base-visitor-interface-file}"/>
 
 
         <replace token="import .*;"
@@ -92,6 +97,13 @@
                        replace="\0package net.sourceforge.pmd.lang.xpath.ast;">
         </replaceregexp>
 
+
+        <replace file="${target}/${ast-package}/JJTXPathParserState.java">
+            <replacetoken>public class</replacetoken>
+            <replacevalue><![CDATA[import net.sourceforge.pmd.lang.ast.Node;
+
+public class]]></replacevalue>
+        </replace>
 
         <replace file="${target}/${ast-package}/XPathParserTokenManager.java">
             <replacefilter token="public class XPathParserTokenManager"
@@ -140,16 +152,22 @@
             <replacefilter token="T defaultVisit" value="void defaultVisit"/>
             <replacefilter token="return data;" value=""/>
             <replacefilter token="return " value=""/>
-            <replacefilter token="implements ${base-visitor-interface-name}" value="implements ${-r+p-visitor-interface-file}"/>
+            <replacefilter token="implements ${base-visitor-interface-name}" value="implements ${-r+p-visitor-interface-name}"/>
         </replace>
 
 
-        <replace file="${target}/${ast-package}/JJTXPathParserState.java">
-            <replacetoken>public class</replacetoken>
-            <replacevalue><![CDATA[import net.sourceforge.pmd.lang.ast.Node;
+        <!-- Parameterless side-effecting visitor -->
+        <copy file="${-r+p-visitor-interface-file}" tofile="${-r-p-visitor-interface-file}"/>
+        <copy file="${-r+p-visitor-abstract-class-file}" tofile="${-r-p-visitor-abstract-class-file}"/>
+        <replace dir="${target}/${ast-package}">
+            <include name="*Parameterless*"/>
 
-public class]]></replacevalue>
+            <replacefilter token="${-r+p-visitor-interface-name}" value="${-r-p-visitor-interface-name}"/>
+            <replacefilter token=", T data" value=""/>
+            <replacefilter token=", data" value=""/>
+            <replacefilter token="&lt;T>" value=""/>
         </replace>
+
 
     </target>
 </project>
