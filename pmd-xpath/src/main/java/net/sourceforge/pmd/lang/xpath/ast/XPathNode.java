@@ -16,6 +16,12 @@ import net.sourceforge.pmd.lang.ast.Node;
 public interface XPathNode extends Node {
 
     /**
+     * Returns the last child of this node, or null if this node has no children.
+     */
+    XPathNode getLastChild();
+
+
+    /**
      * Returns true if this node was not created by regular
      * parsing. Tokens may be missing.
      */

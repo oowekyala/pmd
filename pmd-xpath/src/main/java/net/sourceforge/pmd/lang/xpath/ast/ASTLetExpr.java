@@ -26,14 +26,6 @@ public final class ASTLetExpr extends AbstractXPathNode implements ExprSingle, B
         super(p, id);
     }
 
-    /**
-     * Returns the expression evaluated.
-     */
-    @Override
-    public ExprSingle getBodyExpr() {
-        return (ExprSingle) getLastChild();
-    }
-
 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {

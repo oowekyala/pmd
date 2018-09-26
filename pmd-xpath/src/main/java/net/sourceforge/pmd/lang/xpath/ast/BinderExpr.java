@@ -36,6 +36,8 @@ public interface BinderExpr extends ExprSingle {
      * in scope. Variables are also in scope in the initializers
      * of variables declared after themselves.
      */
-    ExprSingle getBodyExpr();
+    default ExprSingle getBodyExpr() {
+        return (ExprSingle) getLastChild();
+    }
 
 }

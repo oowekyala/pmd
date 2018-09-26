@@ -26,8 +26,9 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
     }
 
 
-    XPathNode getLastChild() {
-        return (XPathNode) jjtGetChild(jjtGetNumChildren() - 1);
+    @Override
+    public XPathNode getLastChild() {
+        return jjtGetNumChildren() > 0 ? (XPathNode) jjtGetChild(jjtGetNumChildren() - 1) : null;
     }
 
 

@@ -4,27 +4,24 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Collections;
-import java.util.List;
-
-
 /**
  * Quantified expression.
  *
  * <pre>
  *
- * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding} "satisfies" {@link ExprSingle}
+ * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding}  ( "," {@linkplain ASTVarBinding VarBinding} )* "satisfies" {@link ExprSingle}
  *
  * </pre>
  */
 public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
 
+    private boolean isUniversallyQuantified;
+
+
     /** Constructor for synthetic node. */
     public ASTQuantifiedExpr() {
         super(null, XPathParserTreeConstants.JJTQUANTIFIEDEXPR);
     }
-
-    private boolean isUniversallyQuantified;
 
 
     ASTQuantifiedExpr(XPathParser p, int id) {
@@ -52,29 +49,6 @@ public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSi
      */
     public boolean isExistentiallyQuantified() {
         return !isUniversallyQuantified;
-    }
-
-
-    /**
-     * Returns the variable binding.
-     */
-    public ASTVarBinding getBinding() {
-        return (ASTVarBinding) jjtGetChild(0);
-    }
-
-
-    /**
-     * Returns the predicate expression (the one after the "satisfies").
-     */
-    @Override
-    public ExprSingle getBodyExpr() {
-        return (ExprSingle) jjtGetChild(1);
-    }
-
-
-    @Override
-    public List<ASTVarBinding> getBindings() {
-        return Collections.singletonList(getBinding());
     }
 
 

@@ -25,15 +25,6 @@ public final class ASTForExpr extends AbstractXPathNode implements ExprSingle, B
         super(p, id);
     }
 
-    /**
-     * Returns the expression evaluated on each iteration (after the "return").
-     */
-    @Override
-    public ExprSingle getBodyExpr() {
-        return (ExprSingle) getLastChild();
-    }
-
-
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);

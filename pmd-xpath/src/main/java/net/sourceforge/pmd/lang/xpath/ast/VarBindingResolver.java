@@ -33,7 +33,6 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
             // visit the initializer before putting the binding in scope
             binding.getInitializerExpr().jjtAccept(this);
             bindings.push(binding);
-            System.err.println(binding.getVarName());
         }
         // now every binding is in scope
 

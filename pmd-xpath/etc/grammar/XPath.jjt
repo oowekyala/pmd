@@ -280,7 +280,7 @@ void QuantifiedExpr():
 {}
 {
   (<SOME> { jjtThis.setUniversallyQuantified(false); }| <EVERY> {jjtThis.setUniversallyQuantified(true);})
-  VarBinding(false)
+  VarBindingList(false)
   <SATISFIES> ExprSingle()
 }
 
