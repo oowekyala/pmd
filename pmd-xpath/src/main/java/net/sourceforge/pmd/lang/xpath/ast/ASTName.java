@@ -28,14 +28,20 @@ import java.util.regex.Pattern;
 // @formatter:on
 public final class ASTName extends AbstractXPathNode {
 
-    /** Constructor for synthetic node. */
-    ASTName() {
-        super(null, XPathParserTreeConstants.JJTNAME);
-    }
-
     private String namespace = null;
     private String localName = null;
     private boolean isUriLiteral = false;
+
+
+    /**
+     * Constructor for synthetic node.
+     *
+     * @param image Image of the name, may match any of the syntax above
+     */
+    public ASTName(String image) {
+        super(null, XPathParserTreeConstants.JJTNAME);
+        setImage(image);
+    }
 
 
     ASTName(XPathParser p, int id) {
@@ -44,9 +50,8 @@ public final class ASTName extends AbstractXPathNode {
 
 
     @Override
-    public void jjtClose() {
-        super.jjtClose();
-        setImage(jjtGetFirstToken().getImage());
+    public void setImage(String image) {
+        super.setImage(image);
         initUri();
     }
 

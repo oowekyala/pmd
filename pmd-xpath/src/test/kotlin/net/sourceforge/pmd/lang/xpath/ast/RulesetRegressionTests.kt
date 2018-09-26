@@ -4,7 +4,10 @@ import io.kotlintest.Description
 import io.kotlintest.Spec
 import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.FunSpec
+import net.sf.saxon.sxpath.IndependentContext
+import net.sf.saxon.sxpath.XPathEvaluator
 import net.sourceforge.pmd.Rule
+import net.sourceforge.pmd.lang.xpath.Initializer
 import java.time.Duration
 import kotlin.system.measureNanoTime
 
@@ -19,14 +22,27 @@ class RulesetRegressionTests : FunSpec() {
             // Generate one test for each XPath rule
             parserTest("Test parsing rule ${rule.name} (${rule.ruleSetName})") {
 
-                val (root, time) = {
+                val (root, time, saxonTime) = {
                     var root: ASTXPathRoot? = null
 
                     val time = measureNanoTime {
                         root = parseXPathRoot(xpath)
-
                     }
-                    Pair(root!!, time)
+
+                    val saxonTime = measureNanoTime {
+                        val xpathEvaluator = XPathEvaluator()
+                        val xpathStaticContext = xpathEvaluator.staticContext
+
+                        rule.propertyDescriptors.forEach {
+                            xpathStaticContext.declareVariable(null, it.name())
+                        }
+
+                        // Register PMD functions
+                        Initializer.initialize(xpathStaticContext as IndependentContext)
+                        xpathEvaluator.createExpression(xpath)
+                    }
+
+                    Triple(root!!, time, saxonTime)
                 } catchAnyParserError {
                     throw AssertionError("Parser failed, xpath is:\n\n$xpath\n\n", it)
                 }
@@ -40,7 +56,7 @@ class RulesetRegressionTests : FunSpec() {
                     }
                 }, null)
 
-                addTimingResult(TimingResult(time, numNodes, xpath.length, rule))
+                addTimingResult(TimingResult(time, saxonTime, numNodes, xpath.length, rule))
             }
 
         }
@@ -51,10 +67,10 @@ class RulesetRegressionTests : FunSpec() {
 
     internal companion object {
 
-        data class TimingResult(val time: Long, val numNodes: Int, val sourceLength: Int, val rule: Rule) {
+        data class TimingResult(val timeNano: Long, val saxonTimeNano: Long, val numNodes: Int, val sourceLength: Int, val rule: Rule) {
 
             override fun toString(): String {
-                return "$time\t$numNodes\t$sourceLength\t${rule.name}"
+                return "$timeNano\t$saxonTimeNano\t$numNodes\t$sourceLength\t${rule.name}"
 
             }
 
@@ -76,20 +92,24 @@ class RulesetRegressionTests : FunSpec() {
             // This is for eg spreadsheet plotting
             override fun afterSpec(description: Description, spec: Spec) {
 
-                results.sortBy { it.time }
+                results.sortBy { it.timeNano }
 
-                val totalTime = results.map { it.time }.sum().let { toMillis(it) }
+                val totalTime = toMillis(results.asSequence().map { it.timeNano }.sum())
+                val totalSaxonTime = toMillis(results.asSequence().map { it.saxonTimeNano }.sum())
 
                 val averageTime = totalTime.toDouble() / results.size
+                val averageSaxonTime = totalSaxonTime.toDouble() / results.size
 
                 val medianNano =
-                        if (results.size % 2 == 0) (results[results.size / 2].time + results[results.size / 2 - 1].time).toDouble() / 2
-                        else results[results.size / 2].time.toDouble()
+                        if (results.size % 2 == 0) (results[results.size / 2].timeNano + results[results.size / 2 - 1].timeNano).toDouble() / 2
+                        else results[results.size / 2].timeNano.toDouble()
 
                 val medianTime = medianNano * 1e-6
 
                 println("Total time: $totalTime ms")
+                println("Total time (saxon): $totalSaxonTime ms")
                 println("Average time: $averageTime ms")
+                println("Average time: $averageSaxonTime ms")
                 println("Median time: $medianTime ms")
 
                 results.sortedBy { it.rule.name }.forEach { println(it) }

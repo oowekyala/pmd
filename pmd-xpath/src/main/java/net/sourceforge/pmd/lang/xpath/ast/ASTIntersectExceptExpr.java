@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTIntersectExceptExpr extends AbstractXPathNode implements ExprSingle {
 
     /** Constructor for synthetic node. */
-    ASTIntersectExceptExpr() {
+    public ASTIntersectExceptExpr() {
         super(null, XPathParserTreeConstants.JJTINTERSECTEXCEPTEXPR);
     }
 

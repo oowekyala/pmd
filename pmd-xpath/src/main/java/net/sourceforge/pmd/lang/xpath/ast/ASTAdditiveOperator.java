@@ -17,7 +17,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTAdditiveOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
     /** Constructor for synthetic node. */
-    ASTAdditiveOperator() {
+    public ASTAdditiveOperator() {
         super(null, XPathParserTreeConstants.JJTADDITIVEOPERATOR);
     }
 

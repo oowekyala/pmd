@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTMultiplicativeExpr extends AbstractXPathNode implements ExprSingle {
 
     /** Constructor for synthetic node. */
-    ASTMultiplicativeExpr() {
+    public ASTMultiplicativeExpr() {
         super(null, XPathParserTreeConstants.JJTMULTIPLICATIVEEXPR);
     }
 

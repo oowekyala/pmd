@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTParenthesizedItemType extends AbstractXPathNode implements ItemType, ParenthesizedNode<ItemType> {
 
     /** Constructor for synthetic node. */
-    ASTParenthesizedItemType() {
+    public ASTParenthesizedItemType() {
         super(null, XPathParserTreeConstants.JJTPARENTHESIZEDITEMTYPE);
     }
 

@@ -21,12 +21,14 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public final class ASTStringLiteral extends AbstractXPathNode implements PrimaryExpr {
 
-    /** Constructor for synthetic node. */
-    ASTStringLiteral() {
-        super(null, XPathParserTreeConstants.JJTSTRINGLITERAL);
-    }
-
     private String value;
+
+
+    /** Constructor for synthetic node. */
+    public ASTStringLiteral(String image) {
+        super(null, XPathParserTreeConstants.JJTSTRINGLITERAL);
+        setImage(image);
+    }
 
 
     ASTStringLiteral(XPathParser p, int id) {
@@ -35,19 +37,23 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
 
 
     @Override
-    public void jjtClose() {
-        super.jjtClose();
+    public void setImage(String image) {
+        super.setImage(image);
+        init();
+    }
 
-        setImage(jjtGetFirstToken().getImage());
 
-        if (getImage() == null || getImage().length() < 2) {
+    private void init() {
+        String image = getImage();
+
+        if (image == null || image.length() < 2) {
             throw new IllegalStateException("Malformed string literal!");
         }
 
         String delim = String.valueOf(getDelimiter());
 
-        this.value = getImage().substring(1, getImage().length() - 1)
-                               .replaceAll(delim + delim, delim);
+        this.value = image.substring(1, getImage().length() - 1)
+                          .replaceAll(delim + delim, delim);
     }
 
 

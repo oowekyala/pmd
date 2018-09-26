@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Iterator;
 
 
 /**
@@ -29,18 +28,12 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
         super.visit(node);
     }
 
-
-    @Override
-    public void visit(ASTQuantifiedExpr node) {
-        addBindings(node);
-    }
-
-
     void addBindings(BinderExpr node) {
         for (ASTVarBinding binding : node.getBindings()) {
             // visit the initializer before putting the binding in scope
             binding.getInitializerExpr().jjtAccept(this);
             bindings.push(binding);
+            System.err.println(binding.getVarName());
         }
         // now every binding is in scope
 
@@ -49,6 +42,12 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
         for (int i = 0; i < node.getBindings().size(); i++) {
             bindings.pop();
         }
+    }
+
+
+    @Override
+    public void visit(ASTQuantifiedExpr node) {
+        addBindings(node);
     }
 
 
@@ -74,17 +73,14 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
     @Override
     public void visit(ASTVarRef node) {
 
-        Iterator<ASTVarBinding> iter = bindings.descendingIterator();
-
-        while (iter.hasNext()) {
-            ASTVarBinding b = iter.next();
+        for (ASTVarBinding b : bindings) {
             if (b.getVarName().equals(node.getVarName())) {
                 node.setBinding(b);
                 return;
             }
         }
 
-        // free variable
+        // else the var is free
         root.addFreeVar(node);
     }
 }

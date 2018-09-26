@@ -33,7 +33,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 public final class ASTAttributeTest extends AbstractXPathNode implements KindTest {
 
     /** Constructor for synthetic node. */
-    ASTAttributeTest() {
+    public ASTAttributeTest() {
         super(null, XPathParserTreeConstants.JJTATTRIBUTETEST);
     }
 

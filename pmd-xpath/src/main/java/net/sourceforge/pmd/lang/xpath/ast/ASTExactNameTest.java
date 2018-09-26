@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
 public final class ASTExactNameTest extends AbstractXPathNode implements NameTest {
 
     /** Constructor for synthetic node. */
-    ASTExactNameTest() {
+    public ASTExactNameTest() {
         super(null, XPathParserTreeConstants.JJTEXACTNAMETEST);
     }
 

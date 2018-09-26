@@ -4,6 +4,11 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.Objects;
+
+import net.sourceforge.pmd.lang.ast.Node;
+
+
 /**
  * Function call.
  *
@@ -15,9 +20,14 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryExpr {
 
-    /** Constructor for synthetic node. */
-    ASTFunctionCall() {
+    /**
+     * Constructor for synthetic node.
+     */
+    public ASTFunctionCall(ASTName functionName, ASTArgumentList arguments) {
         super(null, XPathParserTreeConstants.JJTFUNCTIONCALL);
+        children = new Node[2];
+        children[0] = Objects.requireNonNull(functionName);
+        children[1] = Objects.requireNonNull(arguments);
     }
 
 

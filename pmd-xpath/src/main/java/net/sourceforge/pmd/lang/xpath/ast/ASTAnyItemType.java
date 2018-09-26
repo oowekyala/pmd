@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTAnyItemType extends AbstractXPathNode implements ItemType {
 
     /** Constructor for synthetic node. */
-    ASTAnyItemType() {
+    public ASTAnyItemType() {
         super(null, XPathParserTreeConstants.JJTANYITEMTYPE);
     }
 

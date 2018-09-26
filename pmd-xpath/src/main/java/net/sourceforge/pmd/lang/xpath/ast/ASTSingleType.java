@@ -17,7 +17,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTSingleType extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
-    ASTSingleType() {
+    public ASTSingleType() {
         super(null, XPathParserTreeConstants.JJTSINGLETYPE);
     }
 

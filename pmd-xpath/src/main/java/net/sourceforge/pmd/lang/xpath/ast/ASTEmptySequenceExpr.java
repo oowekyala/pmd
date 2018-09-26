@@ -22,7 +22,7 @@ public final class ASTEmptySequenceExpr extends AbstractXPathNode implements Exp
 
 
     /** Constructor for synthetic node. */
-    ASTEmptySequenceExpr() {
+    public ASTEmptySequenceExpr() {
         super(null, XPathParserTreeConstants.JJTEMPTYSEQUENCEEXPR);
     }
 

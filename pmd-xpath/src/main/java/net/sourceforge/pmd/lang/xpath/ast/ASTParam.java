@@ -21,7 +21,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTParam extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
-    ASTParam() {
+    public ASTParam() {
         super(null, XPathParserTreeConstants.JJTPARAM);
     }
 

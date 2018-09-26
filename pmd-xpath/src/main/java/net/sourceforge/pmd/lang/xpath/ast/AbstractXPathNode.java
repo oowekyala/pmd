@@ -32,6 +32,12 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
 
     @Override
+    public boolean isSynthetic() {
+        return parser == null;
+    }
+
+
+    @Override
     public final <T> T childrenAccept(XPathGenericVisitor<T> visitor, T data) {
         if (children != null) {
             for (Node child : children) {
@@ -84,7 +90,37 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
     }
 
 
+    /**
+     * Replaces this node with the given node in the children of its parent.
+     * This can lead to inconsistencies and runtime failures if the node is
+     * not compatible with the grammar of its parent.
+     *
+     * <p>Also sets the parent of this node to null.
+     *
+     * @param node Node with which to replace this node
+     */
+    public void replaceWith(XPathNode node) {
+        AbstractXPathNode parent = (AbstractXPathNode) jjtGetParent();
+        if (parent == null) {
+            throw new IllegalStateException();
+        }
+        parent.children[this.jjtGetChildIndex()] = null;
+        parent.insertChild(node, this.jjtGetChildIndex(), false);
+
+        // remove reference to the parent to avoid memory leak
+        this.jjtSetParent(null);
+        this.jjtSetChildIndex(-1);
+
+        // and hope this node can be garbage collected
+    }
+
+
     void insertSyntheticChild(XPathNode child, int index) {
+        insertChild(child, index, true);
+    }
+
+
+    private void insertChild(XPathNode child, int index, boolean setLineNums) {
         // Allow to insert a child at random insert without overwriting
         if (children != null && index < children.length) {
             Node[] newChildren = new Node[children.length + 1];
@@ -102,13 +138,15 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         super.jjtAddChild(child, index);
         child.jjtSetParent(this);
 
-        AbstractXPathNode childImpl = (AbstractXPathNode) child;
+        if (setLineNums) {
+            AbstractXPathNode childImpl = (AbstractXPathNode) child;
 
-        // Line numbers
-        childImpl.beginLine = this.getBeginLine();
-        childImpl.endLine = this.getEndLine();
-        childImpl.beginColumn = this.getBeginColumn();
-        childImpl.endColumn = this.getEndColumn();
+            // Line numbers
+            childImpl.beginLine = this.getBeginLine();
+            childImpl.endLine = this.getEndLine();
+            childImpl.beginColumn = this.getBeginColumn();
+            childImpl.endColumn = this.getEndColumn();
+        }
     }
 
 

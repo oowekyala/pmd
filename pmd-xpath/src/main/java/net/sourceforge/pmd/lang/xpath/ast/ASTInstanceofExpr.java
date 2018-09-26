@@ -17,7 +17,7 @@ public final class ASTInstanceofExpr extends AbstractXPathNode implements ExprSi
 
 
     /** Constructor for synthetic node. */
-    ASTInstanceofExpr() {
+    public ASTInstanceofExpr() {
         super(null, XPathParserTreeConstants.JJTINSTANCEOFEXPR);
     }
 

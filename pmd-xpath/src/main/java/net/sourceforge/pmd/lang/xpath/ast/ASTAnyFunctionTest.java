@@ -20,7 +20,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
 public final class ASTAnyFunctionTest extends AbstractXPathNode implements FunctionTest {
 
     /** Constructor for synthetic node. */
-    ASTAnyFunctionTest() {
+    public ASTAnyFunctionTest() {
         super(null, XPathParserTreeConstants.JJTANYFUNCTIONTEST);
     }
 

@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaE
 public final class ASTSchemaElementTest extends AbstractXPathNode implements KindTest, ElementTestOrSchemaElementTest {
 
     /** Constructor for synthetic node. */
-    ASTSchemaElementTest() {
+    public ASTSchemaElementTest() {
         super(null, XPathParserTreeConstants.JJTSCHEMAELEMENTTEST);
     }
 

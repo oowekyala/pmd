@@ -15,14 +15,15 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
-    /** Constructor for synthetic node. */
-    ASTVarRef() {
-        super(null, XPathParserTreeConstants.JJTVARREF);
-    }
-
     // The binder for this variable
     // If null, then the variable is free in this expression
     private ASTVarBinding binding;
+
+
+    /** Constructor for synthetic node. */
+    public ASTVarRef() {
+        super(null, XPathParserTreeConstants.JJTVARREF);
+    }
 
 
     ASTVarRef(XPathParser p, int id) {
@@ -37,6 +38,7 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
     public ASTName getVarNameNode() {
         return (ASTName) jjtGetChild(0);
     }
+
 
     public String getVarName() {
         return getVarNameNode().getLocalName();
@@ -67,6 +69,22 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
      */
     public boolean isFree() {
         return binding == null;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Using this method while looping on {@link ASTXPathRoot#getFreeVarRefs()} will cause a
+     * ConcurrentModificationException.
+     *
+     * @param node Node with which to replace this node
+     */
+    @Override
+    public void replaceWith(XPathNode node) {
+        ASTXPathRoot root = getFirstParentOfType(ASTXPathRoot.class);
+        root.removeFreeVar(this); // avoid dangling reference
+        super.replaceWith(node);
     }
 
 

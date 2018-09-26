@@ -15,6 +15,13 @@ import net.sourceforge.pmd.lang.ast.Node;
  */
 public interface XPathNode extends Node {
 
+    /**
+     * Returns true if this node was not created by regular
+     * parsing. Tokens may be missing.
+     */
+    boolean isSynthetic();
+
+
     <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data);
 
 

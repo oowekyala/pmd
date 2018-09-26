@@ -23,7 +23,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTTreatExpr extends AbstractXPathNode implements ExprSingle {
 
     /** Constructor for synthetic node. */
-    ASTTreatExpr() {
+    public ASTTreatExpr() {
         super(null, XPathParserTreeConstants.JJTTREATEXPR);
     }
 

@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTOrExpr extends AbstractXPathNode implements ExprSingle {
 
     /** Constructor for synthetic node. */
-    ASTOrExpr() {
+    public ASTOrExpr() {
         super(null, XPathParserTreeConstants.JJTOREXPR);
     }
 

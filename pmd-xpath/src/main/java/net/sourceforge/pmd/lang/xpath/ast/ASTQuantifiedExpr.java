@@ -20,7 +20,7 @@ import java.util.List;
 public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
 
     /** Constructor for synthetic node. */
-    ASTQuantifiedExpr() {
+    public ASTQuantifiedExpr() {
         super(null, XPathParserTreeConstants.JJTQUANTIFIEDEXPR);
     }
 

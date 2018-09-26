@@ -27,7 +27,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTSequenceType extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
-    ASTSequenceType() {
+    public ASTSequenceType() {
         super(null, XPathParserTreeConstants.JJTSEQUENCETYPE);
     }
 

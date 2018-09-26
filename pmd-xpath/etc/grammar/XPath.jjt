@@ -622,15 +622,17 @@ void PrimaryExpr() #void:
 void StringLiteral():
 {}
 {
-    <STRING_LITERAL>
+    <STRING_LITERAL> { jjtThis.setImage(token.getImage()); }
 }
 
 void NumericLiteral():
 {}
 {
-      <INTEGER_LITERAL> { jjtThis.setIntegerLiteral(); }
+    ( <INTEGER_LITERAL> { jjtThis.setIntegerLiteral(); }
     | <DECIMAL_LITERAL> { jjtThis.setDecimalLiteral(); }
     | <DOUBLE_LITERAL>  { jjtThis.setDoubleLiteral();  }
+    )
+    { jjtThis.setImage(token.getImage()); }
 }
 
 
@@ -828,13 +830,13 @@ void EQNameOrKWord() #Name:
 void EQName() #Name:
 {}
 {
-  <EQNAME> | <NCNAME>
+  (<EQNAME> | <NCNAME>) { jjtThis.setImage(token.getImage()); }
 }
 
 void NCName() #Name:
 {}
 {
-  <NCNAME>
+  <NCNAME> { jjtThis.setImage(token.getImage()); }
 }
 
 

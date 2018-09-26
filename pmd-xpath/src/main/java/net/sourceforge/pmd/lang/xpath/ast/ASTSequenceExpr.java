@@ -6,6 +6,9 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 
 import java.util.Iterator;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.Node;
 
 
 /**
@@ -22,8 +25,19 @@ import java.util.Iterator;
 public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<ExprSingle>, Expr, SequenceExpr {
 
     /** Constructor for synthetic node. */
-    ASTSequenceExpr() {
+    public ASTSequenceExpr(List<? extends ExprSingle> elts) {
         super(null, XPathParserTreeConstants.JJTSEQUENCEEXPR);
+
+        if (elts.isEmpty()) {
+            throw new IllegalArgumentException("ASTSequenceExpr cannot represent empty sequence");
+        }
+
+        children = new Node[elts.size()];
+
+        int i = 0;
+        for (ExprSingle elt : elts) {
+            insertSyntheticChild(elt, i++);
+        }
     }
 
 

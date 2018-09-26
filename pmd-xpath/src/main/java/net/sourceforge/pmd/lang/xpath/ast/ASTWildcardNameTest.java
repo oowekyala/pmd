@@ -24,7 +24,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
 public final class ASTWildcardNameTest extends AbstractXPathNode implements NameTest {
 
     /** Constructor for synthetic node. */
-    ASTWildcardNameTest() {
+    public ASTWildcardNameTest() {
         super(null, XPathParserTreeConstants.JJTWILDCARDNAMETEST);
     }
 

@@ -18,7 +18,7 @@ import net.sourceforge.pmd.lang.ast.RootNode;
 public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
     /** Constructor for synthetic node. */
-    ASTXPathRoot() {
+    public ASTXPathRoot() {
         super(null, XPathParserTreeConstants.JJTXPATHROOT);
     }
 
@@ -43,10 +43,15 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
         freeVars.add(ref);
     }
 
+    /** Remove a reference to a free variable. */
+    void removeFreeVar(ASTVarRef ref) {
+        freeVars.add(ref);
+    }
+
 
     /**
-     * Returns the set of references to free variables (variables not bound
-     * by a {@link BinderExpr} within the expression itself).
+     * Returns an unmodifiable set of references to free variables (variables
+     * not bound by a {@link BinderExpr} within the expression itself).
      */
     public Set<ASTVarRef> getFreeVarRefs() {
         return Collections.unmodifiableSet(freeVars);

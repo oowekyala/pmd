@@ -29,7 +29,7 @@ import java.util.Iterator;
 public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, ExprSingle {
 
     /** Constructor for synthetic node. */
-    ASTPathExpr() {
+    public ASTPathExpr() {
         super(null, XPathParserTreeConstants.JJTPATHEXPR);
     }
 

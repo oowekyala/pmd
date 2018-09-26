@@ -123,8 +123,7 @@ inline infix fun <T> (() -> T).catchAnyParserError(handler: (Exception) -> T): T
             handler(ex)
         }
 
-
-open class ParserTestCtx(val xpathVersion: XPathVersion = XPathVersion.Latest) {
+open class ParserTestCtx(private val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
     /**
      * Returns a String matcher that matches the [nodeSpec] against the node right under the root using [matchNode].

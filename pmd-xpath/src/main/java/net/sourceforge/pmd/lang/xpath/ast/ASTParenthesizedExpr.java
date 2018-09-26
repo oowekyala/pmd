@@ -16,9 +16,14 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTParenthesizedExpr extends AbstractXPathNode implements PrimaryExpr, ParenthesizedNode<Expr> {
 
-    /** Constructor for synthetic node. */
-    ASTParenthesizedExpr() {
+    /**
+     * Constructor for synthetic node.
+     *
+     * @param wrapped Node wrapped in the parentheses
+     */
+    public ASTParenthesizedExpr(Expr wrapped) {
         super(null, XPathParserTreeConstants.JJTPARENTHESIZEDEXPR);
+        insertSyntheticChild(wrapped, 0);
     }
 
 

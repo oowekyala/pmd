@@ -36,17 +36,16 @@ import java.util.List;
 // @formatter:on
 public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
 
-    /** Constructor for synthetic node. */
-    ASTAxisStep() {
-        super(null, XPathParserTreeConstants.JJTAXISSTEP);
-    }
-
     Axis axis; // parser only
     private boolean isAbbrevAttributeAxis;
     private boolean isAbbrevParentNodeTest;
     private boolean isAbbrevDescendantOrSelfStep;
-
     private boolean isAbbrevNoAxis;
+
+    /** Constructor for synthetic node. */
+    public ASTAxisStep() {
+        super(null, XPathParserTreeConstants.JJTAXISSTEP);
+    }
 
 
     ASTAxisStep(XPathParser p, int id) {
@@ -101,7 +100,7 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
     public void jjtClose() {
         super.jjtClose();
         if (isAbbrevParentNodeTest()) {
-            insertSyntheticChild(SyntheticNodeFactory.synthesizeNodeTest("node()"), 0);
+            insertSyntheticChild(new ASTAnyKindTest(), 0);
         } else if (isAbbrevNoAxis()) {
             // then the implied axis depends on the nodeTest
 
@@ -174,8 +173,7 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
         this.axis = Axis.DESCENDANT_OR_SELF;
         // This is not done in jjtClose because the parser closes the node before the call to this method
         // Besides, since AbbrevPathOperator has only one token and no children, this is safe
-        NodeTest step = SyntheticNodeFactory.synthesizeNodeTest("node()");
-        insertSyntheticChild(step, 0);
+        insertSyntheticChild(new ASTAnyKindTest(), 0);
     }
 }
 /* JavaCC - OriginalChecksum=1b2f7cc49a50ed5ffaad09284531e531 (do not edit this line) */

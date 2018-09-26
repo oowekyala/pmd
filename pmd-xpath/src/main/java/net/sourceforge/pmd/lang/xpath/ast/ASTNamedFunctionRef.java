@@ -21,7 +21,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 public final class ASTNamedFunctionRef extends AbstractXPathNode implements FunctionItemExpr {
 
     /** Constructor for synthetic node. */
-    ASTNamedFunctionRef() {
+    public ASTNamedFunctionRef() {
         super(null, XPathParserTreeConstants.JJTNAMEDFUNCTIONREF);
     }
 

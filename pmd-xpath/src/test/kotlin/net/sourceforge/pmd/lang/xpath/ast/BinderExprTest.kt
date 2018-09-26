@@ -6,6 +6,8 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 
 /**
+ * Tests about BinderExpr and scope/VarRef resolution
+ *
  * @author Clément Fournier
  * @since 6.7.0
  */
@@ -48,7 +50,7 @@ class BinderExprTest : FunSpec({
     }
 
 
-    testGroup("A variable's scope should not include its initialiser") {
+    testGroup("A variable's scope should not include its own initialiser") {
         "let \$a := \$a + 2 return \$a" should matchExpr<ASTLetExpr> {
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
@@ -172,4 +174,40 @@ class BinderExprTest : FunSpec({
             it.bindings.shouldContainExactly(aBinding, bBinding)
         }
     }
+
+    testGroup("A variable binding should shadow other lexically enclosing bindings") {
+        "let \$a := 2 return let \$a := \$a return \$a" SHOULD matchExpr<ASTLetExpr> {
+            val fstABinding = child<ASTVarBinding> {
+                it.varName shouldBe "a"
+
+                child<ASTName> { }
+                it.initializerExpr shouldBe child<ASTNumericLiteral> {}
+            }
+
+            it.bodyExpr shouldBe child<ASTLetExpr> {
+                val sndABinding = child<ASTVarBinding> {
+                    it.varName shouldBe "a"
+
+                    child<ASTName> { }
+                    it.initializerExpr shouldBe child<ASTVarRef> {
+                        it.isFree shouldBe false
+                        it.binding shouldBe fstABinding // ref to the first var
+                        it.varName shouldBe "a"
+                        child<ASTName> { }
+                    }
+                }
+
+                it.bodyExpr shouldBe child<ASTVarRef> {
+                    it.isFree shouldBe false
+                    it.binding shouldBe sndABinding // ref to the second var
+                    child<ASTName> { }
+                }
+
+                it.bindings.shouldContainExactly(sndABinding)
+            }
+
+            it.bindings.shouldContainExactly(fstABinding)
+        }
+    }
+
 })

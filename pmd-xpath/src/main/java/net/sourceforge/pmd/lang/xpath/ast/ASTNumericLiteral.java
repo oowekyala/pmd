@@ -24,16 +24,18 @@ import org.apache.commons.lang3.StringUtils;
  */
 public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
-    /** Constructor for synthetic node. */
-    ASTNumericLiteral() {
-        super(null, XPathParserTreeConstants.JJTNUMERICLITERAL);
-    }
-
     private Boolean literalType = null;
     private int integerPart;
     private double decimalPart;
     private int exponent;
     private double doubleValue;
+
+
+    /** Constructor for synthetic node. */
+    public ASTNumericLiteral(String image) {
+        super(null, XPathParserTreeConstants.JJTNUMERICLITERAL);
+        setImage(image);
+    }
 
 
     ASTNumericLiteral(XPathParser p, int id) {
@@ -42,12 +44,10 @@ public final class ASTNumericLiteral extends AbstractXPathNode implements Primar
 
 
     @Override
-    public void jjtClose() {
-        super.jjtClose();
-
-        setImage(jjtGetFirstToken().getImage());
+    public void setImage(String image) {
+        super.setImage(image);
+        decomposeNumber();
     }
-
 
     private void decomposeNumber() {
         String image = getImage();
@@ -110,19 +110,16 @@ public final class ASTNumericLiteral extends AbstractXPathNode implements Primar
 
     void setDoubleLiteral() {
         literalType = Boolean.FALSE;
-        decomposeNumber();
     }
 
 
     void setIntegerLiteral() {
         literalType = null;
-        decomposeNumber();
     }
 
 
     void setDecimalLiteral() {
         literalType = Boolean.TRUE;
-        decomposeNumber();
     }
 
 
