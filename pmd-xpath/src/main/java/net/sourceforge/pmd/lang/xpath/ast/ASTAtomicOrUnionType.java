@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTAtomicOrUnionType extends AbstractXPathNode implements ItemType {
 
+    /** Constructor for synthetic node. */
+    ASTAtomicOrUnionType() {
+        super(null, XPathParserTreeConstants.JJTATOMICORUNIONTYPE);
+    }
+
 
     ASTAtomicOrUnionType(XPathParser p, int id) {
         super(p, id);

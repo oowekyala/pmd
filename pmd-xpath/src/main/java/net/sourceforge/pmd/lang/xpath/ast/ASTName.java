@@ -28,6 +28,11 @@ import java.util.regex.Pattern;
 // @formatter:on
 public final class ASTName extends AbstractXPathNode {
 
+    /** Constructor for synthetic node. */
+    ASTName() {
+        super(null, XPathParserTreeConstants.JJTNAME);
+    }
+
     private String namespace = null;
     private String localName = null;
     private boolean isUriLiteral = false;

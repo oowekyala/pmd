@@ -36,6 +36,11 @@ import java.util.List;
 // @formatter:on
 public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
 
+    /** Constructor for synthetic node. */
+    ASTAxisStep() {
+        super(null, XPathParserTreeConstants.JJTAXISSTEP);
+    }
+
     Axis axis; // parser only
     private boolean isAbbrevAttributeAxis;
     private boolean isAbbrevParentNodeTest;

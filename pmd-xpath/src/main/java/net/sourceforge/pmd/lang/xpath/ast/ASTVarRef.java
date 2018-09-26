@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
+    /** Constructor for synthetic node. */
+    ASTVarRef() {
+        super(null, XPathParserTreeConstants.JJTVARREF);
+    }
+
     // The binder for this variable
     // If null, then the variable is free in this expression
     private ASTVarBinding binding;

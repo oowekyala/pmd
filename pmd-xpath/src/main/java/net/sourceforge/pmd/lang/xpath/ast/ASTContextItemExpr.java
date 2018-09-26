@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTContextItemExpr extends AbstractXPathNode implements PrimaryExpr {
 
+    /** Constructor for synthetic node. */
+    ASTContextItemExpr() {
+        super(null, XPathParserTreeConstants.JJTCONTEXTITEMEXPR);
+    }
+
 
     ASTContextItemExpr(XPathParser p, int id) {
         super(p, id);

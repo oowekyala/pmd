@@ -21,6 +21,11 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public final class ASTStringLiteral extends AbstractXPathNode implements PrimaryExpr {
 
+    /** Constructor for synthetic node. */
+    ASTStringLiteral() {
+        super(null, XPathParserTreeConstants.JJTSTRINGLITERAL);
+    }
+
     private String value;
 
 

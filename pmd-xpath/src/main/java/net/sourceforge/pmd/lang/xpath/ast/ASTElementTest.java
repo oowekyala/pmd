@@ -39,6 +39,11 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaE
 // @formatter:on
 public final class ASTElementTest extends AbstractXPathNode implements KindTest, ElementTestOrSchemaElementTest {
 
+    /** Constructor for synthetic node. */
+    ASTElementTest() {
+        super(null, XPathParserTreeConstants.JJTELEMENTTEST);
+    }
+
     // null means absent
     private Boolean isWildcard = null;
     private boolean isOptionalType;

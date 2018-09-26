@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTMultiplicativeOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
+    /** Constructor for synthetic node. */
+    ASTMultiplicativeOperator() {
+        super(null, XPathParserTreeConstants.JJTMULTIPLICATIVEOPERATOR);
+    }
+
 
     ASTMultiplicativeOperator(XPathParser p, int id) {
         super(p, id);

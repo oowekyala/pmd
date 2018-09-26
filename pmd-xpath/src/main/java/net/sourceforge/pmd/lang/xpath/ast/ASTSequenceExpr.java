@@ -21,6 +21,11 @@ import java.util.Iterator;
  */
 public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<ExprSingle>, Expr, SequenceExpr {
 
+    /** Constructor for synthetic node. */
+    ASTSequenceExpr() {
+        super(null, XPathParserTreeConstants.JJTSEQUENCEEXPR);
+    }
+
 
     ASTSequenceExpr(XPathParser p, int id) {
         super(p, id);

@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTUnionOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
+    /** Constructor for synthetic node. */
+    ASTUnionOperator() {
+        super(null, XPathParserTreeConstants.JJTUNIONOPERATOR);
+    }
+
     private boolean isShorthand = false;
 
 

@@ -19,6 +19,11 @@ import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
  */
 public final class ASTAnyFunctionTest extends AbstractXPathNode implements FunctionTest {
 
+    /** Constructor for synthetic node. */
+    ASTAnyFunctionTest() {
+        super(null, XPathParserTreeConstants.JJTANYFUNCTIONTEST);
+    }
+
 
     ASTAnyFunctionTest(XPathParser p, int id) {
         super(p, id);

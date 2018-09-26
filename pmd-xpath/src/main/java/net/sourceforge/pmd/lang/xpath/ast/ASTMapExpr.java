@@ -18,6 +18,11 @@ import java.util.List;
  */
 public final class ASTMapExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTMapExpr() {
+        super(null, XPathParserTreeConstants.JJTMAPEXPR);
+    }
+
 
     ASTMapExpr(XPathParser p, int id) {
         super(p, id);

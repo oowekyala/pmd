@@ -19,6 +19,11 @@ import java.util.Iterator;
  */
 public final class ASTParamList extends AbstractXPathNode implements Iterable<ASTParam> {
 
+    /** Constructor for synthetic node. */
+    ASTParamList() {
+        super(null, XPathParserTreeConstants.JJTPARAMLIST);
+    }
+
 
     ASTParamList(XPathParser p, int id) {
         super(p, id);

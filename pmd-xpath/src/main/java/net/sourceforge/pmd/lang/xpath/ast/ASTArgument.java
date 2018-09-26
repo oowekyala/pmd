@@ -16,6 +16,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTArgument extends AbstractXPathNode {
 
+    /** Constructor for synthetic node. */
+    ASTArgument() {
+        super(null, XPathParserTreeConstants.JJTARGUMENT);
+    }
+
 
     private boolean isPlaceholder;
 

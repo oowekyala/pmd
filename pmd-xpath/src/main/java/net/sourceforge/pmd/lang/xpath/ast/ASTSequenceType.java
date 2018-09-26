@@ -26,6 +26,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTSequenceType extends AbstractXPathNode {
 
+    /** Constructor for synthetic node. */
+    ASTSequenceType() {
+        super(null, XPathParserTreeConstants.JJTSEQUENCETYPE);
+    }
+
     // the setter is called on ?+*, so this is the default
     private Cardinality cardinality = Cardinality.EXACTLY_ONE;
 

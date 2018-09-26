@@ -19,6 +19,11 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  */
 public final class ASTNamespaceNodeTest extends AbstractXPathNode implements KindTest {
 
+    /** Constructor for synthetic node. */
+    ASTNamespaceNodeTest() {
+        super(null, XPathParserTreeConstants.JJTNAMESPACENODETEST);
+    }
+
 
     ASTNamespaceNodeTest(XPathParser p, int id) {
         super(p, id);

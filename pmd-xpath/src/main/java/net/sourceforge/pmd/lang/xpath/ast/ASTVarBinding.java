@@ -20,6 +20,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTVarBinding extends AbstractXPathNode {
 
+    /** Constructor for synthetic node. */
+    ASTVarBinding() {
+        super(null, XPathParserTreeConstants.JJTVARBINDING);
+    }
+
 
     ASTVarBinding(XPathParser p, int id) {
         super(p, id);

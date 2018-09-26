@@ -16,6 +16,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTCastableExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTCastableExpr() {
+        super(null, XPathParserTreeConstants.JJTCASTABLEEXPR);
+    }
+
 
     ASTCastableExpr(XPathParser p, int id) {
         super(p, id);

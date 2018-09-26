@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTUnionExpr() {
+        super(null, XPathParserTreeConstants.JJTUNIONEXPR);
+    }
+
 
     ASTUnionExpr(XPathParser p, int id) {
         super(p, id);

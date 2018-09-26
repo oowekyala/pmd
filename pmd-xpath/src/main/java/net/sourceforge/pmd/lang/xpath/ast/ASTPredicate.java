@@ -16,6 +16,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTPredicate extends AbstractXPathNode {
 
+    /** Constructor for synthetic node. */
+    ASTPredicate() {
+        super(null, XPathParserTreeConstants.JJTPREDICATE);
+    }
+
 
     ASTPredicate(XPathParser p, int id) {
         super(p, id);

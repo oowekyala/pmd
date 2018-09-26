@@ -18,6 +18,11 @@ import java.util.Iterator;
  */
 public final class ASTArgumentList extends AbstractXPathNode implements Iterable<ASTArgument> {
 
+    /** Constructor for synthetic node. */
+    ASTArgumentList() {
+        super(null, XPathParserTreeConstants.JJTARGUMENTLIST);
+    }
+
 
     ASTArgumentList(XPathParser p, int id) {
         super(p, id);

@@ -16,6 +16,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTStringConcatExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTStringConcatExpr() {
+        super(null, XPathParserTreeConstants.JJTSTRINGCONCATEXPR);
+    }
+
 
     ASTStringConcatExpr(XPathParser p, int id) {
         super(p, id);

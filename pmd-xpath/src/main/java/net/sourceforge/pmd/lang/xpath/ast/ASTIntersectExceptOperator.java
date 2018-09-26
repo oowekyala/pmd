@@ -17,6 +17,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTIntersectExceptOperator extends AbstractXPathNode implements BinaryOperatorNode {
 
+    /** Constructor for synthetic node. */
+    ASTIntersectExceptOperator() {
+        super(null, XPathParserTreeConstants.JJTINTERSECTEXCEPTOPERATOR);
+    }
+
 
     ASTIntersectExceptOperator(XPathParser p, int id) {
         super(p, id);

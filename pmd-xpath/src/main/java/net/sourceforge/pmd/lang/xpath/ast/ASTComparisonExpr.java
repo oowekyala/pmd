@@ -19,6 +19,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTComparisonExpr() {
+        super(null, XPathParserTreeConstants.JJTCOMPARISONEXPR);
+    }
+
     private String operator;
 
 

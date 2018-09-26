@@ -15,6 +15,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryExpr {
 
+    /** Constructor for synthetic node. */
+    ASTFunctionCall() {
+        super(null, XPathParserTreeConstants.JJTFUNCTIONCALL);
+    }
+
 
     ASTFunctionCall(XPathParser p, int id) {
         super(p, id);

@@ -27,6 +27,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTInlineFunctionExpr extends AbstractXPathNode implements FunctionItemExpr {
 
+    /** Constructor for synthetic node. */
+    ASTInlineFunctionExpr() {
+        super(null, XPathParserTreeConstants.JJTINLINEFUNCTIONEXPR);
+    }
+
 
     ASTInlineFunctionExpr(XPathParser p, int id) {
         super(p, id);

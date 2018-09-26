@@ -24,6 +24,11 @@ import org.apache.commons.lang3.StringUtils;
  */
 public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
 
+    /** Constructor for synthetic node. */
+    ASTNumericLiteral() {
+        super(null, XPathParserTreeConstants.JJTNUMERICLITERAL);
+    }
+
     private Boolean literalType = null;
     private int integerPart;
     private double decimalPart;

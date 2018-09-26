@@ -18,6 +18,11 @@ import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
  */
 public final class ASTTypedFunctionTest extends AbstractXPathNode implements FunctionTest {
 
+    /** Constructor for synthetic node. */
+    ASTTypedFunctionTest() {
+        super(null, XPathParserTreeConstants.JJTTYPEDFUNCTIONTEST);
+    }
+
 
     ASTTypedFunctionTest(XPathParser p, int id) {
         super(p, id);

@@ -32,6 +32,11 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  */
 public final class ASTAttributeTest extends AbstractXPathNode implements KindTest {
 
+    /** Constructor for synthetic node. */
+    ASTAttributeTest() {
+        super(null, XPathParserTreeConstants.JJTATTRIBUTETEST);
+    }
+
     // null means absent
     private Boolean isWildcard = null;
 

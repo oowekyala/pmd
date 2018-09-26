@@ -17,6 +17,11 @@ import net.sourceforge.pmd.lang.ast.RootNode;
  */
 public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
+    /** Constructor for synthetic node. */
+    ASTXPathRoot() {
+        super(null, XPathParserTreeConstants.JJTXPATHROOT);
+    }
+
     private Set<ASTVarRef> freeVars = new HashSet<>();
 
 

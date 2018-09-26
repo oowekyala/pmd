@@ -19,6 +19,11 @@ import java.util.List;
  */
 public final class ASTPostfixExpr extends AbstractXPathNode implements ExprSingle, StepExpr {
 
+    /** Constructor for synthetic node. */
+    ASTPostfixExpr() {
+        super(null, XPathParserTreeConstants.JJTPOSTFIXEXPR);
+    }
+
 
     ASTPostfixExpr(XPathParser p, int id) {
         super(p, id);

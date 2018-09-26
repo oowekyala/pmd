@@ -23,6 +23,11 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
  */
 public final class ASTWildcardNameTest extends AbstractXPathNode implements NameTest {
 
+    /** Constructor for synthetic node. */
+    ASTWildcardNameTest() {
+        super(null, XPathParserTreeConstants.JJTWILDCARDNAMETEST);
+    }
+
     // they don't have the same name as the getters because kotlin gets
     // confused with properties since they're package private
     private String expectedLocalName = null;

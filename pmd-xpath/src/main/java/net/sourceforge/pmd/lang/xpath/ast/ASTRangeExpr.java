@@ -16,6 +16,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public final class ASTRangeExpr extends AbstractXPathNode implements ExprSingle {
 
+    /** Constructor for synthetic node. */
+    ASTRangeExpr() {
+        super(null, XPathParserTreeConstants.JJTRANGEEXPR);
+    }
+
 
     ASTRangeExpr(XPathParser p, int id) {
         super(p, id);
