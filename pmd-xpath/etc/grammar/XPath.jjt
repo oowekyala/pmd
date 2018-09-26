@@ -609,8 +609,10 @@ void PrimaryExpr() #void:
       NumericLiteral()
     | StringLiteral()
     | ("$" VarName())       #VarRef
-    | ("(" [ Expr() ] ")")  #ParenthesizedExpr
     | "."                   #ContextItemExpr
+    | (LOOKAHEAD (2)
+       ("(" Expr() ")")     #ParenthesizedExpr
+     | ("(" ")")            #EmptySequenceExpr)
     |
     (LOOKAHEAD (2)
       FunctionCall()

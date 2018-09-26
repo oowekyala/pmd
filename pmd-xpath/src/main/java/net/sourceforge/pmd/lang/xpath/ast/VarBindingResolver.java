@@ -19,6 +19,15 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
 
 
     private Deque<ASTVarBinding> bindings = new ArrayDeque<>();
+    private ASTXPathRoot root;
+
+
+    @Override
+    public void visit(ASTXPathRoot node) {
+        bindings.clear();
+        root = node;
+        super.visit(node);
+    }
 
 
     @Override
@@ -74,5 +83,8 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
                 return;
             }
         }
+
+        // free variable
+        root.addFreeVar(node);
     }
 }

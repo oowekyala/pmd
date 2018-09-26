@@ -5,6 +5,10 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import net.sourceforge.pmd.lang.ast.RootNode;
 
 
@@ -13,14 +17,34 @@ import net.sourceforge.pmd.lang.ast.RootNode;
  */
 public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
+    private Set<ASTVarRef> freeVars = new HashSet<>();
+
 
     ASTXPathRoot(XPathParser p, int id) {
         super(p, id);
     }
 
 
+    /**
+     * Returns the main expr of the XPath tree.
+     */
     public Expr getMainExpr() {
         return (Expr) jjtGetChild(0);
+    }
+
+
+    /** Add a reference to a free variable. */
+    void addFreeVar(ASTVarRef ref) {
+        freeVars.add(ref);
+    }
+
+
+    /**
+     * Returns the set of references to free variables (variables not bound
+     * by a {@link BinderExpr} within the expression itself).
+     */
+    public Set<ASTVarRef> getFreeVarRefs() {
+        return Collections.unmodifiableSet(freeVars);
     }
 
 

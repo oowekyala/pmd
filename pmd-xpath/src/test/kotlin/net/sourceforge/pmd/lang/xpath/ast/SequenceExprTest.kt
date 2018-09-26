@@ -1,5 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
+import io.kotlintest.matchers.collections.shouldBeEmpty
 import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.should
 import io.kotlintest.shouldBe
@@ -34,6 +35,42 @@ class SequenceExprTest : FunSpec({
                 val snd = child<ASTPathExpr>(ignoreChildren = true) { }
                 val thrd = child<ASTUnionExpr>(ignoreChildren = true) { }
 
+                it.toList().shouldContainExactly(fst, snd, thrd)
+                it.size shouldBe 3
+            }
+        }
+    }
+
+
+    parserTest("Test empty sequence") {
+
+        "()" should matchExpr<ASTEmptySequenceExpr> {
+            it.isEmpty shouldBe true
+            it.toList().shouldBeEmpty()
+        }
+    }
+
+
+
+    parserTest("Test nested sequences") {
+
+        "(1, (2, 3), ())" should matchExpr<ASTParenthesizedExpr> {
+            child<ASTSequenceExpr> {
+                it.isEmpty shouldBe false
+
+                val fst = child<ASTNumericLiteral> { }
+                val snd = child<ASTParenthesizedExpr> {
+                    child<ASTSequenceExpr> {
+                        child<ASTNumericLiteral> {  }
+                        child<ASTNumericLiteral> {  }
+                    }
+                }
+                val thrd = child<ASTEmptySequenceExpr> {
+                    it.isEmpty shouldBe true
+                    it.size shouldBe 0
+                }
+
+                it.size shouldBe 3
                 it.toList().shouldContainExactly(fst, snd, thrd)
             }
         }

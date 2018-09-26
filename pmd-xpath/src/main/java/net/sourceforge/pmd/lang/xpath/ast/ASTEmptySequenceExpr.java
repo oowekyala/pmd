@@ -5,31 +5,35 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Collections;
 import java.util.Iterator;
 
 
 /**
- * Sequence expression. The comma separated expressions compose a sequence.
- * The comma operator has the lowest priority of all, and this expression is
- * forbidden in some contexts unless it's {@linkplain ASTParenthesizedExpr parenthesized}.
+ * Empty sequence expression.
  *
  * <pre>
  *
- * SequenceExpr ::= {@link ExprSingle} ("," {@link ExprSingle})+
+ * EmptySequenceExpr ::= "(" ")"
  *
  * </pre>
  */
-public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<ExprSingle>, Expr, SequenceExpr {
+public final class ASTEmptySequenceExpr extends AbstractXPathNode implements ExprSingle, SequenceExpr {
+
+    /** Constructor for synthetic node. */
+    ASTEmptySequenceExpr() {
+        super(null, XPathParserTreeConstants.JJTEMPTYSEQUENCEEXPR);
+    }
 
 
-    ASTSequenceExpr(XPathParser p, int id) {
+    ASTEmptySequenceExpr(XPathParser p, int id) {
         super(p, id);
     }
 
 
     @Override
     public int getSize() {
-        return jjtGetNumChildren();
+        return 0;
     }
 
 
@@ -53,7 +57,7 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
     @Override
     public Iterator<ExprSingle> iterator() {
-        return new NodeChildrenIterator<>(this, ExprSingle.class);
+        return Collections.emptyIterator();
     }
 }
 /* JavaCC - OriginalChecksum=2e2c123dc1554f24119210ce5dedcec4 (do not edit this line) */

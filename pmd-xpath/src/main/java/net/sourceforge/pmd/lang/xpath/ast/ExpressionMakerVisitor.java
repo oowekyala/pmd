@@ -56,6 +56,12 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
 
 
     @Override
+    public void visit(ASTEmptySequenceExpr node, StringBuilder builder) {
+        appendToken(builder, "()");
+    }
+
+
+    @Override
     public void visit(ASTForExpr node, StringBuilder builder) {
         appendToken(builder, "for ");
         joinExprsOnBuilder(builder, node.getBindings(), ", ");

@@ -16,6 +16,7 @@ import net.sourceforge.pmd.lang.ast.Node;
  */
 abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
+    /** May be null if the node is synthetic. */
     protected final XPathParser parser;
 
 
