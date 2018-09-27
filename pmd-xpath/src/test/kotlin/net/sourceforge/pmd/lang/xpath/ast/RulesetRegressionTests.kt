@@ -7,6 +7,7 @@ import io.kotlintest.specs.FunSpec
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.sxpath.XPathEvaluator
 import net.sourceforge.pmd.Rule
+import net.sourceforge.pmd.lang.java.xpath.JavaFunctions
 import net.sourceforge.pmd.lang.xpath.Initializer
 import java.time.Duration
 import kotlin.system.measureNanoTime
@@ -39,6 +40,9 @@ class RulesetRegressionTests : FunSpec() {
 
                         // Register PMD functions
                         Initializer.initialize(xpathStaticContext as IndependentContext)
+
+                        xpathStaticContext.declareNamespace("pmd-java", "java:" + JavaFunctions::class.java.name)
+
                         xpathEvaluator.createExpression(xpath)
                     }
 
@@ -109,8 +113,9 @@ class RulesetRegressionTests : FunSpec() {
                 println("Total time: $totalTime ms")
                 println("Total time (saxon): $totalSaxonTime ms")
                 println("Average time: $averageTime ms")
-                println("Average time: $averageSaxonTime ms")
+                println("Average time (saxon): $averageSaxonTime ms")
                 println("Median time: $medianTime ms")
+                println()
 
                 results.sortedBy { it.rule.name }.forEach { println(it) }
             }

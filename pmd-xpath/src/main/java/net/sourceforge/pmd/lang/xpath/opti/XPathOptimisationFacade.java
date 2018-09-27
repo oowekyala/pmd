@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.xpath.opti;
 import java.io.StringReader;
 import java.util.Map;
 
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
@@ -26,6 +27,9 @@ public class XPathOptimisationFacade {
         this.version = version;
     }
 
+    public XPathOptimisationFacade() {
+        version = LanguageRegistry.findLanguageByTerseName("xpath").getDefaultVersion();
+    }
 
     private ASTXPathRoot parse(String expression) {
         LanguageVersionHandler lvh = version.getLanguageVersionHandler();

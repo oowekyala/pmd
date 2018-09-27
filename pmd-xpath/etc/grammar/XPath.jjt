@@ -333,7 +333,7 @@ void ComparisonExpr() #ComparisonExpr(>1):
 String ComparisonOperator() #void:
 {}
 {
-   ( <COMP> | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE> )
+   ( <COMP> | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE> | <IS> )
    { return token.getImage(); }
 }
 
@@ -586,7 +586,7 @@ void ArgumentList():
 void Argument():
 {}
 {
-    ExprSingle() | "?" {jjtThis.setPlaceholder();}// TODO that's called placeholder
+    ExprSingle() | "?" { jjtThis.setPlaceholder(); }
 }
 
 
@@ -808,7 +808,7 @@ void SingleType():
 void EQNameOrKWord() #Name:
 {}
 {
-  <EQNAME> | <NCNAME>
+  (<EQNAME> | <NCNAME>
 
   // Also match keywords
 
@@ -824,7 +824,8 @@ void EQNameOrKWord() #Name:
   | <EMPTY_SEQUENCE> | <ITEM>
 
   | <NODE> | <DOCUMENT_NODE> | <TEXT> | <COMMENT> | <NAMESPACE_NODE>
-  | <PROCESSING_INSTRUCTION> | <SCHEMA_ATTRIBUTE> | <ELEMENT> | <SCHEMA_ELEMENT> | <FUNCTION>
+  | <PROCESSING_INSTRUCTION> | <SCHEMA_ATTRIBUTE> | <ELEMENT> | <SCHEMA_ELEMENT> | <FUNCTION>)
+  { jjtThis.setImage(token.getImage()); }
 }
 
 void EQName() #Name:

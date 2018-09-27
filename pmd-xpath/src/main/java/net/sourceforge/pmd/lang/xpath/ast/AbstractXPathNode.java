@@ -120,10 +120,11 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         insertChild(child, index, true);
     }
 
-
+    // insert a child at a given index
     private void insertChild(XPathNode child, int index, boolean setLineNums) {
-        // Allow to insert a child at random insert without overwriting
-        if (children != null && index < children.length) {
+        // Allow to insert a child at random index without overwriting
+        // If the child is null, it is replaced. If it is not null, children are shifted
+        if (children != null && index < children.length && children[index] != null) {
             Node[] newChildren = new Node[children.length + 1];
 
             // toShift nodes are to the right of the insertion index

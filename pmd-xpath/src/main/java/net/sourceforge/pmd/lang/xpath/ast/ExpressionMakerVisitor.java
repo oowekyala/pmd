@@ -123,7 +123,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     @Override
     public void visit(ASTComparisonExpr node, StringBuilder builder) {
         visit(node.getLhs(), builder);
-        appendToken(builder, node.getOperator());
+        appendToken(builder, node.getOperatorImage());
         visit(node.getRhs(), builder);
     }
 
