@@ -15,7 +15,7 @@ class RangeExprTest : FunSpec({
 
         "fn:reverse(10 to 15)" should matchExpr<ASTFunctionCall> {
 
-            it.functionName shouldBe child {
+            it.functionNameNode shouldBe child {
                 it.image shouldBe "fn:reverse"
                 it.localName shouldBe "reverse"
                 it.namespacePrefix shouldBe "fn"

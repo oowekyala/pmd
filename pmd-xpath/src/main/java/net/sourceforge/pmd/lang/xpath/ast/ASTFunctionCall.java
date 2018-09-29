@@ -37,9 +37,44 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
 
 
     /**
+     * Returns true if this function call represents the true
+     * boolean value.
+     */
+    public boolean isBooleanTrueLiteral() {
+        return getFunctionNameNode().getLocalName().equals("true")
+                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && getArguments().getArgumentNumber() == 0;
+    }
+
+
+    /**
+     * Returns true if this function call represents the false
+     * boolean value.
+     */
+    public boolean isBooleanFalseLiteral() {
+        return getFunctionNameNode().getLocalName().equals("false")
+                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && getArguments().getArgumentNumber() == 0;
+    }
+
+
+    /**
+     * Returns true if this function call represents a boolean
+     * literal (false() or true()).
+     */
+    public boolean isBooleanLiteral() {
+        String localName = getFunctionNameNode().getLocalName();
+
+        return getArguments().getArgumentNumber() == 0
+                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && "true".equals(localName) || "false".equals(localName);
+    }
+
+
+    /**
      * Get the node representing the function name.
      */
-    public ASTName getFunctionName() {
+    public ASTName getFunctionNameNode() {
         return (ASTName) jjtGetChild(0);
     }
 

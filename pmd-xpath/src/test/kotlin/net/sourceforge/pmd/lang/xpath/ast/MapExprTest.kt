@@ -58,7 +58,7 @@ class MapExprTest : FunSpec({
                 }
                 child<ASTFunctionCall> {
 
-                    it.functionName shouldBe child {
+                    it.functionNameNode shouldBe child {
                         it.image shouldBe "string"
                         it.localName shouldBe "string"
                         it.namespacePrefix shouldBe ""
@@ -70,7 +70,7 @@ class MapExprTest : FunSpec({
             }
             child<ASTFunctionCall> {
 
-                it.functionName shouldBe child {
+                it.functionNameNode shouldBe child {
                     it.image shouldBe "concat"
                     it.localName shouldBe "concat"
                     it.namespacePrefix shouldBe ""
@@ -101,7 +101,7 @@ class MapExprTest : FunSpec({
 
         "avg( //employee / salary ! translate(., '\$a', '') ! number(.))" should matchExpr<ASTFunctionCall> {
 
-            it.functionName shouldBe child {
+            it.functionNameNode shouldBe child {
                 it.image shouldBe "avg"
                 it.localName shouldBe "avg"
                 it.namespacePrefix shouldBe ""
@@ -159,7 +159,7 @@ class MapExprTest : FunSpec({
                         }
                         child<ASTFunctionCall> {
 
-                            it.functionName shouldBe child {
+                            it.functionNameNode shouldBe child {
                                 it.image shouldBe "translate"
                                 it.localName shouldBe "translate"
                                 it.namespacePrefix shouldBe ""
@@ -197,7 +197,7 @@ class MapExprTest : FunSpec({
                         }
                         child<ASTFunctionCall> {
 
-                            it.functionName shouldBe child {
+                            it.functionNameNode shouldBe child {
                                 it.image shouldBe "number"
                                 it.localName shouldBe "number"
                                 it.namespacePrefix shouldBe ""

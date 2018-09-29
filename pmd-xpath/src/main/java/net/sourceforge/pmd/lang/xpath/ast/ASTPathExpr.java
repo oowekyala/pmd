@@ -28,13 +28,13 @@ import java.util.Iterator;
  */
 public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, ExprSingle {
 
+    private PathAnchor pathAnchor;
+
+
     /** Constructor for synthetic node. */
     public ASTPathExpr() {
         super(null, XPathParserTreeConstants.JJTPATHEXPR);
     }
-
-
-    private PathAnchor pathAnchor;
 
 
     ASTPathExpr(XPathParser p, int id) {
@@ -58,10 +58,26 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
 
 
     /**
+     * Sets the anchor of the path.
+     */
+    public void setPathAnchor(PathAnchor pathAnchor) {
+        this.pathAnchor = pathAnchor;
+    }
+
+
+    /**
      * Gets the anchor of the first segment of the path.
      */
     public PathAnchor getPathAnchor() {
         return pathAnchor;
+    }
+
+
+    /**
+     * Gets the first step.
+     */
+    public StepExpr getFirstStep() {
+        return (StepExpr) jjtGetChild(0);
     }
 
 

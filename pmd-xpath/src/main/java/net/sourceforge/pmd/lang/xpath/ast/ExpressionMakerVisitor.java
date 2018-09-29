@@ -369,7 +369,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
 
     @Override
     public void visit(ASTFunctionCall node, StringBuilder builder) {
-        visit(node.getFunctionName(), builder);
+        visit(node.getFunctionNameNode(), builder);
         visit(node.getArguments(), builder);
     }
 

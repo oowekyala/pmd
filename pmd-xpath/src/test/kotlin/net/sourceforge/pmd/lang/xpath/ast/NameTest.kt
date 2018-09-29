@@ -37,7 +37,7 @@ class NameTest : FunSpec({
 
         "pmd-java:typeIs(\"LolWhat\", ?)" should matchExpr<ASTFunctionCall> {
 
-            it.functionName shouldBe child {
+            it.functionNameNode shouldBe child {
                 it.isUriLiteral shouldBe false
                 it.namespacePrefix shouldBe "pmd-java"
                 it.localName shouldBe "typeIs"

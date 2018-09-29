@@ -72,22 +72,6 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
     }
 
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>Using this method while looping on {@link ASTXPathRoot#getFreeVarRefs()} will cause a
-     * ConcurrentModificationException.
-     *
-     * @param node Node with which to replace this node
-     */
-    @Override
-    public void replaceWith(XPathNode node) {
-        ASTXPathRoot root = getFirstParentOfType(ASTXPathRoot.class);
-        root.removeFreeVar(this); // avoid dangling reference
-        super.replaceWith(node);
-    }
-
-
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);

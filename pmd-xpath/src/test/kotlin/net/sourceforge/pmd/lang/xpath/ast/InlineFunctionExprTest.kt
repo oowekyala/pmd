@@ -174,7 +174,7 @@ class InlineFunctionExprTest : FunSpec({
 
             child<ASTFunctionCall> {
 
-                it.functionName shouldBe child {
+                it.functionNameNode shouldBe child {
                     it.image shouldBe "collection"
                     it.localName shouldBe "collection"
                     it.namespacePrefix shouldBe ""

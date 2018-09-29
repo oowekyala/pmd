@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import net.sourceforge.pmd.lang.ast.RootNode;
@@ -14,15 +12,20 @@ import net.sourceforge.pmd.lang.ast.RootNode;
 
 /**
  * Root node of all XPath trees. Always has a unique child.
+ *
+ * <pre>
+ *
+ * XPathRoot ::= {@link Expr}
+ *
+ * </pre>
  */
 public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
+
 
     /** Constructor for synthetic node. */
     public ASTXPathRoot() {
         super(null, XPathParserTreeConstants.JJTXPATHROOT);
     }
-
-    private Set<ASTVarRef> freeVars = new HashSet<>();
 
 
     ASTXPathRoot(XPathParser p, int id) {
@@ -31,30 +34,22 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
 
     /**
-     * Returns the main expr of the XPath tree.
+     * Returns the toplevel expression of the XPath tree.
      */
     public Expr getMainExpr() {
         return (Expr) jjtGetChild(0);
     }
 
 
-    /** Add a reference to a free variable. */
-    void addFreeVar(ASTVarRef ref) {
-        freeVars.add(ref);
-    }
-
-    /** Remove a reference to a free variable. */
-    void removeFreeVar(ASTVarRef ref) {
-        freeVars.add(ref);
-    }
-
-
     /**
-     * Returns an unmodifiable set of references to free variables (variables
+     * Returns a set of references to free variables (variables
      * not bound by a {@link BinderExpr} within the expression itself).
+     * Modifications on the returned set do not affect this node.
      */
     public Set<ASTVarRef> getFreeVarRefs() {
-        return Collections.unmodifiableSet(freeVars);
+        VarBindingResolver visitor = new VarBindingResolver();
+        this.jjtAccept(visitor);
+        return visitor.getFreeVars();
     }
 
 

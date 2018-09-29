@@ -22,17 +22,11 @@ public interface XPathQuery {
 
 
     /**
-     * Inlines the values of property descriptors.
-     */
-    void inlineProperties();
-
-
-    /**
      * Retrieves the queries to be used by a rulechain pass.
      * Returns an empty map if the query cannot be split into
      * rulechain subqueries.
      */
-    Map<NodeIdentifier, XPathQuery> getRulechainQueries();
+    Map<String, String> getRulechainQueries();
 
 
 }

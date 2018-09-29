@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.List;
+
+
 /**
  * Union expression.
  *
@@ -23,6 +26,14 @@ public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle 
 
     ASTUnionExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the nodes that represent the alternatives of this union.
+     */
+    public List<ExprSingle> getAlternatives() {
+        return findChildrenOfType(ExprSingle.class);
     }
 
 

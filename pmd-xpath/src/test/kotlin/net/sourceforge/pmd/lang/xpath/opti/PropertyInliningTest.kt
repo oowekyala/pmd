@@ -55,7 +55,7 @@ class PropertyInliningTest : FunSpec({
 
 
         val query = XPathOptimisationFacade().makeQuery(expr, pMap) as XPathQueryImpl
-        query.inlineProperties()
+        query.optimise()
 
         query.root should matcherWithHole {
             child<ASTNumericLiteral> {

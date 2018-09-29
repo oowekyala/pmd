@@ -28,6 +28,9 @@ public final class ASTArgumentList extends AbstractXPathNode implements Iterable
         super(p, id);
     }
 
+    public int getArgumentNumber() {
+        return jjtGetNumChildren();
+    }
 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {

@@ -162,7 +162,7 @@ class PathExprTest : FunSpec({
                 val pred = child<ASTPredicate> {
                     child<ASTComparisonExpr> {
                         child<ASTFunctionCall> {
-                            it.functionName shouldBe child {
+                            it.functionNameNode shouldBe child {
                                 it.localName shouldBe "position"
                                 it.namespacePrefix shouldBe "fn"
                             }

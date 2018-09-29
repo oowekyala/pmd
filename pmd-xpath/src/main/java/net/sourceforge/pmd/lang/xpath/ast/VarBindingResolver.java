@@ -6,10 +6,13 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
  * Populates {@link ASTVarRef} with their corresponding {@link ASTVarBinding}.
+ * This visitor is single use, and must be started on an XPathRoot node.
  *
  * @author Clément Fournier
  * @since 6.7.0
@@ -18,17 +21,27 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
 
 
     private Deque<ASTVarBinding> bindings = new ArrayDeque<>();
-    private ASTXPathRoot root;
+    private Set<ASTVarRef> freeVars;
+
+
+    /**
+     * Returns the set of free variable references found after traversal.
+     * Returns null if no tree has been traversed.
+     */
+    public Set<ASTVarRef> getFreeVars() {
+        return freeVars;
+    }
 
 
     @Override
     public void visit(ASTXPathRoot node) {
         bindings.clear();
-        root = node;
+        freeVars = new HashSet<>();
         super.visit(node);
     }
 
-    void addBindings(BinderExpr node) {
+
+    private void addBindings(BinderExpr node) {
         for (ASTVarBinding binding : node.getBindings()) {
             // visit the initializer before putting the binding in scope
             binding.getInitializerExpr().jjtAccept(this);
@@ -80,6 +93,6 @@ public class VarBindingResolver extends AbstractParameterlessSideEffectingVisito
         }
 
         // else the var is free
-        root.addFreeVar(node);
+        freeVars.add(node);
     }
 }

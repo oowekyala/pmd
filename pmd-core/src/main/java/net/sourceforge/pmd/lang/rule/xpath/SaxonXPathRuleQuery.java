@@ -208,7 +208,6 @@ public class SaxonXPathRuleQuery extends AbstractXPathRuleQuery {
                     xpathVariables.add(xpathVariable);
                 }
             }
-
             // TODO Come up with a way to make use of RuleChain. I had hacked up
             // an approach which used Jaxen's stuff, but that only works for
             // 1.0 compatibility mode. Rather do it right instead of kludging.
