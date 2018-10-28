@@ -1,0 +1,92 @@
+<ruleset name="string" xmlns="http://pmd.sourceforge.net/ruleset/7.0.0">
+    <description>string</description>
+    <!--Zero or more repetitions:-->
+    <exclude-pattern>string</exclude-pattern>
+    <!--Zero or more repetitions:-->
+    <include-pattern>string</include-pattern>
+    <!--Zero or more repetitions:-->
+    <java-rule name="stringy"
+               class="string"
+               message="string"
+               language="java"
+               priority="5"
+               minimumLanguageVersion="string"
+               maximumLanguageVersion="string"
+               since="string"
+               externalInfoUrl="string"
+               deprecated="false">
+        <!--Optional:-->
+        <description>string</description>
+        <!--Optional:-->
+        <properties>
+            <!--1 or more repetitions:-->
+            <property name="string">
+                <!--Zero or more repetitions:-->
+                <value>string</value>
+            </property>
+        </properties>
+        <!--Optional:-->
+        <examples>
+            <!--Zero or more repetitions:-->
+            <example>string</example>
+        </examples>
+    </java-rule>
+    <!--Zero or more repetitions:-->
+    <xpath-rule name="stringx"
+                language="apex"
+                message="string"
+                priority="5"
+                minimumLanguageVersion="string"
+                maximumLanguageVersion="string"
+                since="string"
+                externalInfoUrl="string"
+                deprecated="false">
+        <description>string</description>
+        <xpath version="2.0"><![CDATA[
+
+
+
+        ]]></xpath>
+
+
+        <!--Optional:-->
+        <properties>
+            <!--Zero or more repetitions:-->
+            <property-def name="string" type="String" description="string">
+                <default>
+                    <!-- This is the empty sequence. -->
+                </default>
+            </property-def>
+            <blank-property-def name="s" type="Integer" description="a description"/>
+        </properties>
+        <!--Optional:-->
+        <examples>
+            <!--Zero or more repetitions:-->
+            <example>string</example>
+        </examples>
+    </xpath-rule>
+    <!--Zero or more repetitions:-->
+    <rule-import ref="string" priority="5" name="string" message="string" deprecated="false">
+        <!--Optional:-->
+        <description>string</description>
+        <!--Optional:-->
+        <properties>
+            <!--1 or more repetitions:-->
+            <property name="string">
+                <edit-values>
+                    <plus>hello</plus>
+                    <minus>foo</minus>
+                </edit-values>
+            </property>
+        </properties>
+        <!--Optional:-->
+        <examples>
+            <!--Zero or more repetitions:-->
+            <example>string</example>
+        </examples>
+    </rule-import>
+    <!--Zero or more repetitions:-->
+    <ruleset-import ref="string">
+        <exclude-rule name="string"/>
+    </ruleset-import>
+</ruleset>

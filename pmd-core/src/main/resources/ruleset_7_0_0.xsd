@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+           targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
+           elementFormDefault="qualified">
+
+    <!-- TODO use xsd:documentation and xsd:annotation to document the schema -->
+
+    <!-- Type allowing only valid values for a language name -->
+    <xs:simpleType name="language-id">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="java"/>
+            <xs:enumeration value="apex"/>
+            <xs:enumeration value="xml"/>
+            <!-- etc -->
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="priority">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="5"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="ruleset">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="exclude-pattern" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="include-pattern" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <!-- Rule definitions and imports. This XSD allows an empty ruleset to be defined -->
+                <xs:element name="java-rule" type="java-rule" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="xpath-rule" type="xpath-rule" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="rule-import" type="rule-import" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="ruleset-import" type="ruleset-import" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Attributes common to both rule def elements -->
+    <xs:attributeGroup name="optional-rule-def-attrs">
+        <xs:attribute name="priority" type="priority" default="5"/>
+        <xs:attribute name="minimumLanguageVersion" type="xs:string"/>
+        <xs:attribute name="maximumLanguageVersion" type="xs:string"/>
+        <xs:attribute name="since" type="xs:string"/>
+        <xs:attribute name="externalInfoUrl" type="xs:string"/>
+        <xs:attribute name="deprecated" type="xs:boolean" default="false"/>
+    </xs:attributeGroup>
+
+    <!-- XPath rule definition -->
+    <xs:complexType name="xpath-rule">
+        <xs:sequence>
+            <xs:element name="description" type="xs:string" minOccurs="0"/>
+            <!-- Required: -->
+            <xs:element name="xpath">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <!-- The XPath expression is contained as the text content -->
+                        <xs:extension base="xs:string">
+                            <!-- XPath version attribute -->
+                            <xs:attribute name="version">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="1.0"/>
+                                        <xs:enumeration value="2.0"/>
+                                        <xs:enumeration value="3.0"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+            <!-- Properties element -->
+            <xs:element name="properties" type="property-defs" minOccurs="0"/>
+            <!-- Example list. TODO mandate it? -->
+            <xs:element name="examples" type="examples" minOccurs="0"/>
+        </xs:sequence>
+        <!-- Required: -->
+        <xs:attribute name="name" type="xs:ID" use="required"/>
+        <xs:attribute name="language" type="language-id" use="required"/>
+        <xs:attribute name="message" type="xs:string" use="required"/>
+        <!-- Forbidden: class, ref -->
+        <xs:attribute name="class" type="xs:NMTOKEN" use="prohibited"/>
+        <xs:attribute name="ref" type="xs:string" use="prohibited"/>
+        <!-- Optional: -->
+        <xs:attributeGroup ref="optional-rule-def-attrs"/>
+    </xs:complexType>
+
+    <!-- Java rule def -->
+    <xs:complexType name="java-rule">
+        <xs:sequence>
+            <xs:element name="description" type="xs:string" minOccurs="0"/>
+            <!-- Allow to override a property directly -->
+            <xs:element name="properties" type="properties" minOccurs="0"/>
+            <!-- Example list. TODO mandate it? -->
+            <xs:element name="examples" type="examples" minOccurs="0"/>
+        </xs:sequence>
+        <!-- Required: -->
+        <xs:attribute name="name" type="xs:ID" use="required"/>
+        <xs:attribute name="class" type="xs:NMTOKEN" use="required"/>
+        <!-- Forbidden: ref -->
+        <xs:attribute name="ref" type="xs:string" use="prohibited"/>
+        <!-- Optional: -->
+        <xs:attribute name="message" type="xs:string"/>
+        <!-- Language is optional because some rule base classes define the language -->
+        <xs:attribute name="language" type="language-id"/>
+        <xs:attributeGroup ref="optional-rule-def-attrs"/>
+    </xs:complexType>
+
+    <!-- Imports a whole ruleset -->
+    <xs:complexType name="ruleset-import">
+        <!-- Must be a reference to a ruleset/category -->
+        <xs:sequence>
+            <xs:element name="exclude-rule" type="exclude"/>
+        </xs:sequence>
+        <xs:attribute name="ref" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="exclude">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+    </xs:complexType>
+
+    <!-- References a *single* rule. -->
+    <xs:complexType name="rule-import">
+        <xs:sequence>
+            <xs:element name="description" type="xs:string" minOccurs="0"/>
+            <xs:element name="properties" type="properties" minOccurs="0"/>
+            <!-- If this elt is present, all examples are overridden -->
+            <xs:element name="examples" type="examples" minOccurs="0"/>
+        </xs:sequence>
+        <!-- Must be a reference to a rule -->
+        <xs:attribute name="ref" type="xs:string" use="required"/>
+        <!-- Overridable elements: -->
+        <xs:attribute name="priority" type="priority" default="5"/>
+        <xs:attribute name="name" type="xs:ID"/>
+        <xs:attribute name="message" type="xs:string"/>
+        <xs:attribute name="deprecated" type="xs:boolean" default="false"/>
+        <!-- Forbidden -->
+        <xs:attribute name="language" type="xs:string" use="prohibited"/>
+        <!-- <xs:attribute name="minimumLanguageVersion" type="xs:string" use="optional" /> -->
+        <!-- <xs:attribute name="maximumLanguageVersion" type="xs:string" use="optional" /> -->
+        <!-- <xs:attribute name="since" type="xs:string" use="optional" /> -->
+    </xs:complexType>
+
+    <!-- Represents a list of examples. An empty list is also allowed! -->
+    <xs:complexType name="examples">
+        <xs:sequence>
+            <xs:element name="example" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- PROPERTIES -->
+
+    <!-- Property element forbidding new properties to be defined -->
+    <xs:complexType name="properties">
+        <xs:sequence>
+            <xs:element name="property" type="property" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Override the value of a pre-existing property.
+                        The property is identified by its name.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Property element allowing new properties to be defined -->
+    <!-- Only allowed on XPath rules -->
+    <xs:complexType name="property-defs">
+        <xs:sequence>
+            <xs:element name="property-def" type="new-property-with-default" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Define a new property using its name, type, description, and default value.
+
+                        Specifying a default value is not optional. If you have a hard time finding one, maybe the
+                        property is very abstract, in which case consider using a blank property.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <!-- We need another name for the schema to forbid having a default value. -->
+            <xs:element name="blank-property-def" type="new-required-property" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Define a new blank property using its name, type, and description.
+
+                        Blank properties cannot have a default value. To use the rule,
+                        users are required to override the value.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- Type allowing only valid values for a property type -->
+    <xs:simpleType name="property-type-id">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Integer">
+                <xs:annotation>
+                    <xs:documentation>
+                        Single-value property with Integer type.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="String"/>
+            <xs:enumeration value="Boolean"/>
+            <xs:enumeration value="Double"/>
+            <!-- etc -->
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <xs:complexType name="new-property" abstract="true">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Name of the property being defined. This name must
+                    be unique among the other properties of this rule,
+                    or a construction exception will be thrown.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="type" type="property-type-id" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Type of values this property can take. Values of the
+                    property will be type-checked with specific rules.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="description" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <!-- New property definition. Only allowed for XPath rules. -->
+    <!-- Variant for non-required properties (ie, must have default value) -->
+    <xs:complexType name="new-property-with-default">
+        <xs:complexContent>
+            <xs:extension base="new-property">
+                <xs:sequence>
+                    <xs:element name="default">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Default value for the property being defined.
+                                This is a sequence of &lt;value&gt; elements.
+
+                                For properties that take only a single value,
+                                this element must have exactly one &lt;value&gt; child,
+                                or a construction exception will be thrown.
+
+                                For properties that take multiple values, each
+                                &lt;value&gt; child represents an element in the
+                                sequence. If this element has no children then the
+                                empty sequence is assumed.
+                            </xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="value" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+                <xs:attribute name="required" type="xs:boolean" fixed="false"/>
+            </xs:extension>
+        </xs:complexContent>
+
+        <!-- <xs:attribute name="min" type="xs:string" use="optional" /> -->
+        <!-- <xs:attribute name="max" type="xs:string" use="optional" /> -->
+    </xs:complexType>
+
+    <!-- Variant for required property, ie default value is forbidden. -->
+    <xs:complexType name="new-required-property">
+        <xs:complexContent>
+            <xs:extension base="new-property">
+                <xs:attribute name="required" type="xs:boolean" fixed="true"/>
+            </xs:extension>
+        </xs:complexContent>
+        <!-- <xs:attribute name="min" type="xs:string" use="optional" /> -->
+        <!-- <xs:attribute name="max" type="xs:string" use="optional" /> -->
+    </xs:complexType>
+
+    <!-- Property value override. Overriding anything else makes no sense. -->
+    <xs:complexType name="property">
+        <xs:choice>
+            <!-- Simple sequence of values -->
+            <xs:sequence>
+                <xs:element name="value" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <!-- Or edition of the previous value -->
+            <xs:element name="edit-values" type="sequenceEdition"/>
+        </xs:choice>
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="property-value">
+        <xs:sequence>
+            <xs:element name="value" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Element specifying additions and removals of values from another sequence -->
+    <xs:complexType name="sequenceEdition">
+        <xs:sequence>
+            <xs:choice>
+                <xs:element name="plus" type="xs:string"/>
+                <xs:element name="minus" type="xs:string"/>
+            </xs:choice>
+            <xs:element name="plus" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="minus" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>
