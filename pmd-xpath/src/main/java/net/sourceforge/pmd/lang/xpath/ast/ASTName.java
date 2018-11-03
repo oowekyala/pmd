@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,12 +85,12 @@ public final class ASTName extends AbstractXPathNode {
                 localName = parts[1];
             } else {
                 // 1
-                namespace = "";
+                namespace = null;
                 localName = parts[0];
             }
         }
 
-        if (namespace == null || localName == null || localName.isEmpty()) {
+        if (localName == null || localName.isEmpty()) {
             // this catches the case in which "parts" above has length 0 or above 2
             throw new IllegalStateException("Malformed name or procedure doesn't work");
         }
@@ -99,23 +100,12 @@ public final class ASTName extends AbstractXPathNode {
 
 
     /**
-     * Returns true if there is a namespace prefix,
-     * in which case {@link #getNamespacePrefix()}
-     * returns a non-empty string.
+     * Returns the namespace prefix if it is explicitly specified,
+     * e.g. with the syntax "prefix:local". If this is {@linkplain #isUriLiteral() a URI literal},
+     * then returns the full URI.
      */
-    public boolean hasNamespacePrefix() {
-        return !namespace.isEmpty();
-    }
-
-
-    /**
-     * Returns the namespace prefix. Never null,
-     * if there is no prefix, returns an empty string.
-     *
-     * @see #hasNamespacePrefix()
-     */
-    public String getNamespacePrefix() {
-        return namespace;
+    public Optional<String> getExplicitNamespacePrefix() {
+        return Optional.ofNullable(namespace);
     }
 
 

@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
@@ -33,8 +35,8 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
     /**
      * Returns the argument kind test, or null if there is none.
      */
-    public ElementTestOrSchemaElementTest getArgumentTest() {
-        return jjtGetNumChildren() == 0 ? null : (ElementTestOrSchemaElementTest) jjtGetChild(0);
+    public Optional<ElementTestOrSchemaElementTest> getArgumentTest() {
+        return jjtGetNumChildren() == 0 ? Optional.empty() : Optional.of((ElementTestOrSchemaElementTest) jjtGetChild(0));
     }
 
 

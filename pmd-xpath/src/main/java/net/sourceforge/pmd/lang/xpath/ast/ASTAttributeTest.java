@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
@@ -32,13 +34,14 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  */
 public final class ASTAttributeTest extends AbstractXPathNode implements KindTest {
 
+    // null means absent
+    private Boolean isWildcard = null;
+
+
     /** Constructor for synthetic node. */
     public ASTAttributeTest() {
         super(null, XPathParserTreeConstants.JJTATTRIBUTETEST);
     }
-
-    // null means absent
-    private Boolean isWildcard = null;
 
 
     ASTAttributeTest(XPathParser p, int id) {
@@ -68,10 +71,10 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
      * <li>attribute(*, currency)
      * </ul>
      */
-    public ASTName getAttributeName() {
+    public Optional<ASTName> getAttributeName() {
         return isWildcard == null || isWildcard
-               ? null
-               : (ASTName) jjtGetChild(0);
+               ? Optional.empty()
+               : Optional.of((ASTName) jjtGetChild(0));
     }
 
 
@@ -85,13 +88,13 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
      *
      * Otherwise returns null.
      */
-    public ASTName getTypeName() {
-        if (getAttributeName() == null && jjtGetNumChildren() == 1) {
-            return (ASTName) jjtGetChild(0);
-        } else if (getAttributeName() != null && jjtGetNumChildren() == 2) {
-            return (ASTName) jjtGetChild(1);
+    public Optional<ASTName> getTypeName() {
+        if (!getAttributeName().isPresent() && jjtGetNumChildren() == 1) {
+            return Optional.of((ASTName) jjtGetChild(0));
+        } else if (getAttributeName().isPresent() && jjtGetNumChildren() == 2) {
+            return Optional.of((ASTName) jjtGetChild(1));
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 

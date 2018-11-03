@@ -4,7 +4,9 @@ import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.xpath.ast.ASTComparisonExpr.ComparisonOperator.G_EQUALS
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -164,12 +166,12 @@ class PathExprTest : FunSpec({
                         child<ASTFunctionCall> {
                             it.functionNameNode shouldBe child {
                                 it.localName shouldBe "position"
-                                it.namespacePrefix shouldBe "fn"
+                                it.explicitNamespacePrefix shouldBe Optional.of("fn")
                             }
 
                             child<ASTArgumentList> { }
                         }
-                        it.operator shouldBe "="
+                        it.operator shouldBe G_EQUALS
                         child<ASTNumericLiteral> { }
                     }
                 }

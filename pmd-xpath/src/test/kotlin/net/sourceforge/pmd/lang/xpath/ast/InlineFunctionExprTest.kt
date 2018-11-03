@@ -3,6 +3,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -18,7 +19,7 @@ class InlineFunctionExprTest : FunSpec({
             it.paramList shouldBe child {
 
             }
-            it.declaredReturnType shouldBe child {
+            it.declaredReturnType shouldBe childOpt<ASTSequenceType> {
                 it.cardinality shouldBe Cardinality.ONE_OR_MORE
                 it.isEmptySequence shouldBe false
 
@@ -27,7 +28,7 @@ class InlineFunctionExprTest : FunSpec({
                     it.typeNameNode shouldBe child {
                         it.image shouldBe "xs:integer"
                         it.localName shouldBe "integer"
-                        it.namespacePrefix shouldBe "xs"
+                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
                         it.isUriLiteral shouldBe false
 
                     }
@@ -48,11 +49,11 @@ class InlineFunctionExprTest : FunSpec({
                     it.nameNode shouldBe child {
                         it.image shouldBe "a"
                         it.localName shouldBe "a"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
 
                     }
-                    it.declaredType shouldBe child {
+                    it.declaredType shouldBe childOpt<ASTSequenceType> {
                         it.cardinality shouldBe Cardinality.EXACTLY_ONE
                         it.isEmptySequence shouldBe false
 
@@ -61,7 +62,7 @@ class InlineFunctionExprTest : FunSpec({
                             it.typeNameNode shouldBe child {
                                 it.image shouldBe "xs:double"
                                 it.localName shouldBe "double"
-                                it.namespacePrefix shouldBe "xs"
+                                it.explicitNamespacePrefix shouldBe Optional.of("xs")
                                 it.isUriLiteral shouldBe false
 
                             }
@@ -74,11 +75,11 @@ class InlineFunctionExprTest : FunSpec({
                     it.nameNode shouldBe child {
                         it.image shouldBe "b"
                         it.localName shouldBe "b"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
 
                     }
-                    it.declaredType shouldBe child {
+                    it.declaredType shouldBe childOpt<ASTSequenceType> {
                         it.cardinality shouldBe Cardinality.EXACTLY_ONE
                         it.isEmptySequence shouldBe false
 
@@ -87,7 +88,7 @@ class InlineFunctionExprTest : FunSpec({
                             it.typeNameNode shouldBe child {
                                 it.image shouldBe "xs:double"
                                 it.localName shouldBe "double"
-                                it.namespacePrefix shouldBe "xs"
+                                it.explicitNamespacePrefix shouldBe Optional.of("xs")
                                 it.isUriLiteral shouldBe false
 
                             }
@@ -95,7 +96,7 @@ class InlineFunctionExprTest : FunSpec({
                     }
                 }
             }
-            it.declaredReturnType shouldBe child {
+            it.declaredReturnType shouldBe childOpt<ASTSequenceType> {
                 it.cardinality shouldBe Cardinality.EXACTLY_ONE
                 it.isEmptySequence shouldBe false
 
@@ -104,7 +105,7 @@ class InlineFunctionExprTest : FunSpec({
                     it.typeNameNode shouldBe child {
                         it.image shouldBe "xs:double"
                         it.localName shouldBe "double"
-                        it.namespacePrefix shouldBe "xs"
+                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
                         it.isUriLiteral shouldBe false
 
                     }
@@ -117,7 +118,7 @@ class InlineFunctionExprTest : FunSpec({
                     it.varNameNode shouldBe child {
                         it.image shouldBe "a"
                         it.localName shouldBe "a"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
 
                     }
@@ -130,7 +131,7 @@ class InlineFunctionExprTest : FunSpec({
                     it.varNameNode shouldBe child {
                         it.image shouldBe "b"
                         it.localName shouldBe "b"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
 
                     }
@@ -139,19 +140,19 @@ class InlineFunctionExprTest : FunSpec({
         }
 
         "function(${'$'}a) { ${'$'}a }" should matchExpr<ASTInlineFunctionExpr> {
-            it.declaredReturnType shouldBe null
+            it.declaredReturnType shouldBe Optional.empty()
             it.isDefaultReturnType shouldBe true
 
             it.paramList shouldBe child {
 
                 child<ASTParam> {
-                    it.declaredType shouldBe null
+                    it.declaredType shouldBe Optional.empty()
                     it.isDefaultType shouldBe true
 
                     it.nameNode shouldBe child {
                         it.image shouldBe "a"
                         it.localName shouldBe "a"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
 
                     }
@@ -162,7 +163,7 @@ class InlineFunctionExprTest : FunSpec({
                 it.varNameNode shouldBe child {
                     it.image shouldBe "a"
                     it.localName shouldBe "a"
-                    it.namespacePrefix shouldBe ""
+                    it.explicitNamespacePrefix shouldBe Optional.empty()
                     it.isUriLiteral shouldBe false
 
                 }
@@ -177,7 +178,7 @@ class InlineFunctionExprTest : FunSpec({
                 it.functionNameNode shouldBe child {
                     it.image shouldBe "collection"
                     it.localName shouldBe "collection"
-                    it.namespacePrefix shouldBe ""
+                    it.explicitNamespacePrefix shouldBe Optional.empty()
                     it.isUriLiteral shouldBe false
 
                 }
@@ -194,7 +195,7 @@ class InlineFunctionExprTest : FunSpec({
                         it.varNameNode shouldBe child {
                             it.image shouldBe "a"
                             it.localName shouldBe "a"
-                            it.namespacePrefix shouldBe ""
+                            it.explicitNamespacePrefix shouldBe Optional.empty()
                             it.isUriLiteral shouldBe false
 
                         }
@@ -207,7 +208,7 @@ class InlineFunctionExprTest : FunSpec({
 
 
                     it.bodyExpr shouldBe child<ASTInlineFunctionExpr> {
-                        it.declaredReturnType shouldBe null
+                        it.declaredReturnType shouldBe Optional.empty()
                         it.isDefaultReturnType shouldBe true
 
                         it.paramList shouldBe child {}
@@ -217,7 +218,7 @@ class InlineFunctionExprTest : FunSpec({
                             it.varNameNode shouldBe child {
                                 it.image shouldBe "a"
                                 it.localName shouldBe "a"
-                                it.namespacePrefix shouldBe ""
+                                it.explicitNamespacePrefix shouldBe Optional.empty()
                                 it.isUriLiteral shouldBe false
 
                             }

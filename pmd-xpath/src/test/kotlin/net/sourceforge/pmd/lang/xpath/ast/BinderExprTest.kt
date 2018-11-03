@@ -4,6 +4,7 @@ import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * Tests about BinderExpr and scope/VarRef resolution
@@ -32,8 +33,7 @@ class BinderExprTest : FunSpec({
 
             child<ASTMultiplicativeExpr> {
                 child<ASTVarRef> {
-                    it.binding shouldBe iBinding
-                    it.isFree shouldBe false
+                    it.binding shouldBe Optional.of(iBinding)
 
                     it.varNameNode shouldBe child {
                         it.localName shouldBe "i"
@@ -57,8 +57,7 @@ class BinderExprTest : FunSpec({
 
                 it.initializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.isFree shouldBe true
-                        it.binding shouldBe null
+                        it.binding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -66,8 +65,7 @@ class BinderExprTest : FunSpec({
             }
 
             it.bodyExpr shouldBe child<ASTVarRef> {
-                it.isFree shouldBe false
-                it.binding shouldBe aBinding
+                it.binding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
@@ -78,8 +76,7 @@ class BinderExprTest : FunSpec({
 
                 it.initializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.isFree shouldBe true
-                        it.binding shouldBe null
+                        it.binding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -87,8 +84,7 @@ class BinderExprTest : FunSpec({
             }
 
             it.bodyExpr shouldBe child<ASTVarRef> {
-                it.isFree shouldBe false
-                it.binding shouldBe aBinding
+                it.binding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
@@ -99,8 +95,7 @@ class BinderExprTest : FunSpec({
 
                 it.initializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.isFree shouldBe true
-                        it.binding shouldBe null
+                        it.binding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -108,8 +103,7 @@ class BinderExprTest : FunSpec({
             }
 
             it.bodyExpr shouldBe child<ASTVarRef> {
-                it.isFree shouldBe false
-                it.binding shouldBe aBinding
+                it.binding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
@@ -127,15 +121,13 @@ class BinderExprTest : FunSpec({
                 child<ASTName> { }
 
                 it.initializerExpr shouldBe child<ASTVarRef> {
-                    it.isFree shouldBe false
-                    it.binding shouldBe aBinding
+                    it.binding shouldBe Optional.of(aBinding)
                     child<ASTName> { }
                 }
             }
 
             it.bodyExpr shouldBe child<ASTVarRef> {
-                it.isFree shouldBe false
-                it.binding shouldBe bBinding
+                it.binding shouldBe Optional.of(bBinding)
                 child<ASTName> { }
             }
 
@@ -156,8 +148,7 @@ class BinderExprTest : FunSpec({
                     child<ASTArgumentList> {
                         child<ASTArgument> {
                             child<ASTVarRef> {
-                                it.isFree shouldBe false
-                                it.binding shouldBe aBinding
+                                it.binding shouldBe Optional.of(aBinding)
                                 child<ASTName> { }
                             }
                         }
@@ -166,8 +157,7 @@ class BinderExprTest : FunSpec({
             }
 
             it.bodyExpr shouldBe child<ASTVarRef> {
-                it.isFree shouldBe false
-                it.binding shouldBe bBinding
+                it.binding shouldBe Optional.of(bBinding)
                 child<ASTName> { }
             }
 
@@ -176,7 +166,8 @@ class BinderExprTest : FunSpec({
     }
 
     testGroup("A variable binding should shadow other lexically enclosing bindings") {
-        "let \$a := 2 return let \$a := \$a return \$a" SHOULD matchExpr<ASTLetExpr> {
+
+        "let \$a := 2 return let \$a := 1 return \$a" should matchExpr<ASTLetExpr> {
             val fstABinding = child<ASTVarBinding> {
                 it.varName shouldBe "a"
 
@@ -189,17 +180,11 @@ class BinderExprTest : FunSpec({
                     it.varName shouldBe "a"
 
                     child<ASTName> { }
-                    it.initializerExpr shouldBe child<ASTVarRef> {
-                        it.isFree shouldBe false
-                        it.binding shouldBe fstABinding // ref to the first var
-                        it.varName shouldBe "a"
-                        child<ASTName> { }
-                    }
+                    it.initializerExpr shouldBe child<ASTNumericLiteral> { }
                 }
 
                 it.bodyExpr shouldBe child<ASTVarRef> {
-                    it.isFree shouldBe false
-                    it.binding shouldBe sndABinding // ref to the second var
+                    it.binding shouldBe Optional.of(sndABinding) // ref to the second var
                     child<ASTName> { }
                 }
 

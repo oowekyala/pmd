@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaElementTest;
 
@@ -83,7 +85,7 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
 
 
     /**
-     * Returns null if this kind test is of the form:
+     * Returns an empty optional if this kind test is of the form:
      * <ul>
      * <li>element()
      * <li>element(*)
@@ -93,15 +95,15 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
      *
      * Otherwise returns the element name.
      */
-    public ASTName getElementName() {
+    public Optional<ASTName> getElementName() {
         return isWildcard == null || isWildcard
-               ? null
-               : (ASTName) jjtGetChild(0);
+               ? Optional.empty()
+               : Optional.of((ASTName) jjtGetChild(0));
     }
 
 
     /**
-     * Returns the type name if it is present. {@literal i.e.} returns a non-null
+     * Returns the type name if it is present. {@literal i.e.} returns a non-empty
      * value if this test is of the form:
      * <ul>
      * <li>element(person, surgeon)
@@ -110,15 +112,15 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
      * <li>element(*, surgeon?)
      * </ul>
      *
-     * Otherwise returns null.
+     * Otherwise returns an empty optional.
      */
-    public ASTName getTypeName() {
-        if (getElementName() == null && jjtGetNumChildren() == 1) {
-            return (ASTName) jjtGetChild(0);
+    public Optional<ASTName> getTypeName() {
+        if (!getElementName().isPresent() && jjtGetNumChildren() == 1) {
+            return Optional.of((ASTName) jjtGetChild(0));
         } else if (getElementName() != null && jjtGetNumChildren() == 2) {
-            return (ASTName) jjtGetChild(1);
+            return Optional.of((ASTName) jjtGetChild(1));
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 

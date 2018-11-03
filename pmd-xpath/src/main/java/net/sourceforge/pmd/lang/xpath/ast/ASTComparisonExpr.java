@@ -38,7 +38,7 @@ public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSi
      * Gets an enum constant representing the operator.
      */
     public ComparisonOperator getOperator() {
-        return ComparisonOperator.valueOf(operator);
+        return ComparisonOperator.getConstant(operator);
     }
 
 
@@ -105,24 +105,40 @@ public final class ASTComparisonExpr extends AbstractXPathNode implements ExprSi
      */
     public enum ComparisonOperator {
         // ValueComp
+
+        /** Operator "=". */
         G_EQUALS("="),
+        /** Operator "!=". */
         G_NOT_EQUALS("!="),
+        /** Operator "<". */
         G_LOWER("<"),
+        /** Operator "<=". */
         G_LOWER_EQUALS("<="),
+        /** Operator ">". */
         G_GREATER(">"),
+        /** Operator ">=". */
         G_GREATER_EQUALS(">="),
 
         // GeneralComp
+        /** Operator "eq". */
         V_EQ("eq"),
+        /** Operator "ne". */
         V_NE("ne"),
+        /** Operator "lt". */
         V_LT("lt"),
+        /** Operator "le". */
         V_LE("le"),
+        /** Operator "gt". */
         V_GT("gt"),
+        /** Operator "ge". */
         V_GE("ge"),
 
         // NodeComp
+        /** Operator "<<". */
         N_PRECEDES("<<"),
+        /** Operator ">>". */
         N_FOLLOWS(">>"),
+        /** Operator "is". */
         N_IDENTITY("is");
 
         private static final Map<String, ComparisonOperator> IMAGE_TO_OP;

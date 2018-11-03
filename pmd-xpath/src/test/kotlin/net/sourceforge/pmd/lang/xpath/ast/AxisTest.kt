@@ -3,6 +3,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -21,8 +22,8 @@ class AxisTest : FunSpec({
                 it.axis shouldBe Axis.ATTRIBUTE
 
                 child<ASTAttributeTest> {
-                    it.attributeName shouldBe null
-                    it.typeName shouldBe null
+                    it.attributeName shouldBe Optional.empty()
+                    it.typeName shouldBe Optional.empty()
                 }
             }
         }

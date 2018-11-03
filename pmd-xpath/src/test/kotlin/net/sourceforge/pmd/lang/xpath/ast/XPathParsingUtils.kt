@@ -7,11 +7,13 @@ import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.specs.AbstractFunSpec
 import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.LanguageVersionHandler
+import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.NWrapper
 import net.sourceforge.pmd.lang.ast.test.matchNode
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule
 import java.io.StringReader
+import java.util.*
 import kotlin.reflect.KClass
 import io.kotlintest.should as kotlintestShould
 
@@ -74,6 +76,14 @@ fun AbstractFunSpec.parserTest(name: String,
                                assertions: ParserTestCtx.() -> Unit) {
     parserTest(name, listOf(xpathVersion), null, assertions)
 }
+
+inline fun <reified M : Node> NWrapper<*>.childOpt(ignoreChildren: Boolean = false, noinline nodeSpec: NWrapper<M>.() -> Unit): Optional<M> {
+    return childRet<M, Optional<M>> {
+        nodeSpec()
+        Optional.of(it)
+    }
+}
+
 
 /**
  * Defines a group of tests that should be named similarly.

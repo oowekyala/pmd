@@ -21,6 +21,10 @@ public interface XPathNode extends Node {
     XPathNode getLastChild();
 
 
+    @Override
+    XPathNode jjtGetParent();
+
+
     /**
      * Returns true if this node was not created by regular
      * parsing. Tokens may be missing.

@@ -2,6 +2,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -32,7 +33,7 @@ class MapExprTest : FunSpec({
                         it.nameNode shouldBe child {
                             it.image shouldBe "div1"
                             it.localName shouldBe "div1"
-                            it.namespacePrefix shouldBe ""
+                            it.explicitNamespacePrefix shouldBe Optional.empty()
                             it.isUriLiteral shouldBe false
                         }
                     }
@@ -51,7 +52,7 @@ class MapExprTest : FunSpec({
                         it.nameNode shouldBe child {
                             it.image shouldBe "para"
                             it.localName shouldBe "para"
-                            it.namespacePrefix shouldBe ""
+                            it.explicitNamespacePrefix shouldBe Optional.empty()
                             it.isUriLiteral shouldBe false
                         }
                     }
@@ -61,7 +62,7 @@ class MapExprTest : FunSpec({
                     it.functionNameNode shouldBe child {
                         it.image shouldBe "string"
                         it.localName shouldBe "string"
-                        it.namespacePrefix shouldBe ""
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.isUriLiteral shouldBe false
                     }
                     it.arguments shouldBe child {
@@ -73,7 +74,7 @@ class MapExprTest : FunSpec({
                 it.functionNameNode shouldBe child {
                     it.image shouldBe "concat"
                     it.localName shouldBe "concat"
-                    it.namespacePrefix shouldBe ""
+                    it.explicitNamespacePrefix shouldBe Optional.empty()
                     it.isUriLiteral shouldBe false
                 }
                 it.arguments shouldBe child {
@@ -81,7 +82,7 @@ class MapExprTest : FunSpec({
                     child<ASTArgument> {
                         it.isPlaceholder shouldBe false
 
-                        it.expression shouldBe child<ASTStringLiteral> {
+                        it.expression shouldBe childOpt<ASTStringLiteral> {
                             //it.delimiter
                             it.image shouldBe "\"id-\""
                             it.unescapedValue shouldBe "id-"
@@ -91,7 +92,7 @@ class MapExprTest : FunSpec({
                     child<ASTArgument> {
                         it.isPlaceholder shouldBe false
 
-                        it.expression shouldBe child<ASTContextItemExpr> {
+                        it.expression shouldBe childOpt<ASTContextItemExpr> {
                         }
                     }
                 }
@@ -104,7 +105,7 @@ class MapExprTest : FunSpec({
             it.functionNameNode shouldBe child {
                 it.image shouldBe "avg"
                 it.localName shouldBe "avg"
-                it.namespacePrefix shouldBe ""
+                it.explicitNamespacePrefix shouldBe Optional.empty()
                 it.isUriLiteral shouldBe false
             }
             it.arguments shouldBe child {
@@ -112,7 +113,7 @@ class MapExprTest : FunSpec({
                 child<ASTArgument> {
                     it.isPlaceholder shouldBe false
 
-                    it.expression shouldBe child<ASTMapExpr> {
+                    it.expression shouldBe childOpt<ASTMapExpr> {
                         // it.operands shouldBe it.children
 
                         child<ASTPathExpr> {
@@ -132,7 +133,7 @@ class MapExprTest : FunSpec({
                                     it.nameNode shouldBe child {
                                         it.image shouldBe "employee"
                                         it.localName shouldBe "employee"
-                                        it.namespacePrefix shouldBe ""
+                                        it.explicitNamespacePrefix shouldBe Optional.empty()
                                         it.isUriLiteral shouldBe false
                                     }
                                 }
@@ -151,7 +152,7 @@ class MapExprTest : FunSpec({
                                     it.nameNode shouldBe child {
                                         it.image shouldBe "salary"
                                         it.localName shouldBe "salary"
-                                        it.namespacePrefix shouldBe ""
+                                        it.explicitNamespacePrefix shouldBe Optional.empty()
                                         it.isUriLiteral shouldBe false
                                     }
                                 }
@@ -162,7 +163,7 @@ class MapExprTest : FunSpec({
                             it.functionNameNode shouldBe child {
                                 it.image shouldBe "translate"
                                 it.localName shouldBe "translate"
-                                it.namespacePrefix shouldBe ""
+                                it.explicitNamespacePrefix shouldBe Optional.empty()
                                 it.isUriLiteral shouldBe false
                             }
                             it.arguments shouldBe child {
@@ -170,13 +171,13 @@ class MapExprTest : FunSpec({
                                 child<ASTArgument> {
                                     it.isPlaceholder shouldBe false
 
-                                    it.expression shouldBe child<ASTContextItemExpr> {
+                                    it.expression shouldBe childOpt<ASTContextItemExpr> {
                                     }
                                 }
                                 child<ASTArgument> {
                                     it.isPlaceholder shouldBe false
 
-                                    it.expression shouldBe child<ASTStringLiteral> {
+                                    it.expression shouldBe childOpt<ASTStringLiteral> {
                                         //it.delimiter
                                         it.image shouldBe "'${'$'}a'"
                                         it.unescapedValue shouldBe "${'$'}a"
@@ -186,7 +187,7 @@ class MapExprTest : FunSpec({
                                 child<ASTArgument> {
                                     it.isPlaceholder shouldBe false
 
-                                    it.expression shouldBe child<ASTStringLiteral> {
+                                    it.expression shouldBe childOpt<ASTStringLiteral> {
                                         //it.delimiter
                                         it.image shouldBe "''"
                                         it.unescapedValue shouldBe ""
@@ -200,7 +201,7 @@ class MapExprTest : FunSpec({
                             it.functionNameNode shouldBe child {
                                 it.image shouldBe "number"
                                 it.localName shouldBe "number"
-                                it.namespacePrefix shouldBe ""
+                                it.explicitNamespacePrefix shouldBe Optional.empty()
                                 it.isUriLiteral shouldBe false
                             }
                             it.arguments shouldBe child {
@@ -208,7 +209,7 @@ class MapExprTest : FunSpec({
                                 child<ASTArgument> {
                                     it.isPlaceholder shouldBe false
 
-                                    it.expression shouldBe child<ASTContextItemExpr> {
+                                    it.expression shouldBe childOpt<ASTContextItemExpr> {
                                     }
                                 }
                             }

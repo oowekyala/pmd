@@ -2,6 +2,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -20,7 +21,7 @@ class InstanceOfExprTest : FunSpec({
             child<ASTSequenceType> {
                 it.itemType shouldBe child<ASTAtomicOrUnionType> {
                     it.typeNameNode shouldBe child {
-                        it.namespacePrefix shouldBe "xs"
+                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
                         it.localName shouldBe "integer"
                     }
                 }
@@ -36,7 +37,7 @@ class InstanceOfExprTest : FunSpec({
             child<ASTSequenceType> {
                 it.itemType shouldBe child<ASTAtomicOrUnionType> {
                     it.typeNameNode shouldBe child {
-                        it.namespacePrefix shouldBe "xs"
+                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
                         it.localName shouldBe "integer"
                     }
                 }
@@ -51,8 +52,8 @@ class InstanceOfExprTest : FunSpec({
                 it.itemType shouldBe child<ASTElementTest> {
                     it.isEmptyParen shouldBe true
                     it.isOptionalType shouldBe false
-                    it.typeName shouldBe null
-                    it.elementName shouldBe null
+                    it.typeName shouldBe Optional.empty()
+                    it.elementName shouldBe Optional.empty()
                 }
                 it.cardinality shouldBe Cardinality.EXACTLY_ONE
             }

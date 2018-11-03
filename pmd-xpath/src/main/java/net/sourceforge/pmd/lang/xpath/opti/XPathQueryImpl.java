@@ -46,7 +46,7 @@ class XPathQueryImpl implements XPathQuery {
     }
 
 
-    private void optimise() {
+    public void optimise() {
         inlineProperties();
     }
 
@@ -139,6 +139,8 @@ class XPathQueryImpl implements XPathQuery {
                 }
             }
         }
+
+        return null;
     }
 
 

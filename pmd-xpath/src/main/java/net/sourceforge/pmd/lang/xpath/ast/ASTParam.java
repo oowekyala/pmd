@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
+
 /**
  * Parameter of an {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}.
  * Wrapped in a {@link ASTParamList}.
@@ -52,10 +55,10 @@ public final class ASTParam extends AbstractXPathNode {
 
     /**
      * Returns the declared type of the parameter,
-     * or null if the default is used.
+     * or empty if the default is used.
      */
-    public ASTSequenceType getDeclaredType() {
-        return isDefaultType() ? null : (ASTSequenceType) jjtGetChild(1);
+    public Optional<ASTSequenceType> getDeclaredType() {
+        return isDefaultType() ? Optional.empty() : Optional.of((ASTSequenceType) jjtGetChild(1));
     }
 
 

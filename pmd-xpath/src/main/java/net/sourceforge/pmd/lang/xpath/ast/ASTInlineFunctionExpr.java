@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
+
 /**
  * Inline function expression. An inline function expression creates an anonymous function
  * defined directly in the inline function expression itself. An inline function expression
@@ -59,10 +62,10 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
 
     /**
      * Returns the declared return type of the function,
-     * or null if the default is used.
+     * or an empty optional if the default is used.
      */
-    public ASTSequenceType getDeclaredReturnType() {
-        return isDefaultReturnType() ? null : (ASTSequenceType) jjtGetChild(1);
+    public Optional<ASTSequenceType> getDeclaredReturnType() {
+        return isDefaultReturnType() ? Optional.empty() : Optional.of((ASTSequenceType) jjtGetChild(1));
     }
 
 

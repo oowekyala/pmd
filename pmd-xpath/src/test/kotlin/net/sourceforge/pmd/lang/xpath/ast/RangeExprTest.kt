@@ -2,6 +2,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -18,7 +19,7 @@ class RangeExprTest : FunSpec({
             it.functionNameNode shouldBe child {
                 it.image shouldBe "fn:reverse"
                 it.localName shouldBe "reverse"
-                it.namespacePrefix shouldBe "fn"
+                it.explicitNamespacePrefix shouldBe Optional.of("fn")
                 it.isUriLiteral shouldBe false
             }
             it.arguments shouldBe child {
@@ -26,7 +27,7 @@ class RangeExprTest : FunSpec({
                 child<ASTArgument> {
                     it.isPlaceholder shouldBe false
 
-                    it.expression shouldBe child<ASTRangeExpr> {
+                    it.expression shouldBe childOpt<ASTRangeExpr> {
                         it.lowerBound shouldBe child<ASTNumericLiteral> {}
                         it.upperBound shouldBe child<ASTNumericLiteral> {}
                     }

@@ -4,6 +4,10 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import java.util.Iterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -120,6 +124,7 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         insertChild(child, index, true);
     }
 
+
     // insert a child at a given index
     private void insertChild(XPathNode child, int index, boolean setLineNums) {
         // Allow to insert a child at random index without overwriting
@@ -160,6 +165,38 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         StringBuilder sb = new StringBuilder();
         this.jjtAccept(new ExpressionMakerVisitor(), sb);
         return sb.toString();
+    }
+
+
+    @Override
+    public final XPathNode jjtGetParent() {
+        return (XPathNode) super.jjtGetParent();
+    }
+
+
+    /**
+     * Returns an iterator giving out parents one by one, in to out.
+     * The first value is the parent of this node, not this node.
+     */
+    protected Stream<XPathNode> getParentStream() {
+        Iterable<XPathNode> iterable = () -> new Iterator<XPathNode>() {
+            XPathNode currentNode = AbstractXPathNode.this;
+
+
+            @Override
+            public boolean hasNext() {
+                return currentNode.jjtGetParent() != null;
+            }
+
+
+            @Override
+            public XPathNode next() {
+                currentNode = currentNode.jjtGetParent();
+                return currentNode;
+            }
+        };
+
+        return StreamSupport.stream(iterable.spliterator(), false);
     }
 
 

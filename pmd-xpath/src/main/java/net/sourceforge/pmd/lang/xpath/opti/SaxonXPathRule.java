@@ -36,7 +36,6 @@ public class SaxonXPathRule extends AbstractRule {
 
     private void initExpression() {
         XPathQuery query = new XPathOptimisationFacade().makeQuery(getProperty(XPATH_DESCRIPTOR), getPropertiesByPropertyDescriptor());
-        query.optimise();
         // Jaxen compatibility layer
         String dump = query.toParsableString();
 

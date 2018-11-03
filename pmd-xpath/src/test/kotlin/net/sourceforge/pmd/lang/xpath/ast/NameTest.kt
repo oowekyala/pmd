@@ -1,11 +1,10 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.matchers.string.shouldBeEmpty
 import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.RELATIVE
+import java.util.*
 
 class NameTest : FunSpec({
 
@@ -23,9 +22,8 @@ class NameTest : FunSpec({
                 child<ASTExactNameTest> {
                     child<ASTName> {
                         it.isUriLiteral shouldBe true
-                        it.namespacePrefix shouldBe uri
+                        it.explicitNamespacePrefix shouldBe Optional.of(uri)
                         it.localName shouldBe "hendeck"
-                        it.hasNamespacePrefix() shouldBe true
                         it.image shouldBe name
                     }
                 }
@@ -39,9 +37,8 @@ class NameTest : FunSpec({
 
             it.functionNameNode shouldBe child {
                 it.isUriLiteral shouldBe false
-                it.namespacePrefix shouldBe "pmd-java"
+                it.explicitNamespacePrefix shouldBe Optional.of("pmd-java")
                 it.localName shouldBe "typeIs"
-                it.hasNamespacePrefix() shouldBe true
                 it.image shouldBe "pmd-java:typeIs"
             }
 
@@ -74,10 +71,8 @@ class NameTest : FunSpec({
                 child<ASTExactNameTest> {
                     child<ASTName> {
                         it.isUriLiteral shouldBe false
-                        it.namespacePrefix shouldNotBe null
-                        it.namespacePrefix.shouldBeEmpty()
+                        it.explicitNamespacePrefix shouldBe Optional.empty()
                         it.localName shouldBe "pmd-java"
-                        it.hasNamespacePrefix() shouldBe false
                         it.image shouldBe "pmd-java"
                     }
                 }

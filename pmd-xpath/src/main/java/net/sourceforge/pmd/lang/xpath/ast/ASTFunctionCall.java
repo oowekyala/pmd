@@ -42,7 +42,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      */
     public boolean isBooleanTrueLiteral() {
         return getFunctionNameNode().getLocalName().equals("true")
-                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
                 && getArguments().getArgumentNumber() == 0;
     }
 
@@ -53,7 +53,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      */
     public boolean isBooleanFalseLiteral() {
         return getFunctionNameNode().getLocalName().equals("false")
-                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
                 && getArguments().getArgumentNumber() == 0;
     }
 
@@ -66,7 +66,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
         String localName = getFunctionNameNode().getLocalName();
 
         return getArguments().getArgumentNumber() == 0
-                && getFunctionNameNode().getNamespacePrefix().isEmpty()
+                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
                 && "true".equals(localName) || "false".equals(localName);
     }
 

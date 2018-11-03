@@ -13,9 +13,7 @@ import net.sourceforge.pmd.lang.VisitorStarter;
 import net.sourceforge.pmd.lang.XPathHandler;
 import net.sourceforge.pmd.lang.ast.xpath.DefaultASTXPathHandler;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
-import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.rule.XPathRuleViolationFactory;
-import net.sourceforge.pmd.lang.xpath.symboltable.SymbolTableFacade;
 
 
 public class XPathLanguageHandler extends AbstractLanguageVersionHandler {
@@ -23,12 +21,6 @@ public class XPathLanguageHandler extends AbstractLanguageVersionHandler {
     @Override
     public XPathHandler getXPathHandler() {
         return new DefaultASTXPathHandler();
-    }
-
-
-    @Override
-    public VisitorStarter getSymbolFacade() {
-        return rootNode -> SymbolTableFacade.runOn((ASTXPathRoot) rootNode);
     }
 
 

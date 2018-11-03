@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import java.util.Optional;
+
+
 /**
  * Argument of a {@linkplain ASTFunctionCall}.
  *
@@ -39,10 +42,10 @@ public final class ASTArgument extends AbstractXPathNode {
 
 
     /**
-     * Return the child, or null if this is a placeholder argument.
+     * Return the child, or an empty optional if this is a placeholder argument.
      */
-    public ExprSingle getExpression() {
-        return isPlaceholder ? null : (ExprSingle) jjtGetChild(0);
+    public Optional<ExprSingle> getExpression() {
+        return isPlaceholder ? Optional.empty() : Optional.of((ExprSingle) jjtGetChild(0));
     }
 
 

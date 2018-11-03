@@ -4,6 +4,7 @@ import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.DESCENDANT_OR_ROOT
+import java.util.*
 
 /**
  * @author Clément Fournier
@@ -39,8 +40,7 @@ class ExprTest : FunSpec({
 
 
             child<ASTVarRef> {
-                it.binding shouldBe iBinding
-                it.isFree shouldBe false
+                it.binding shouldBe Optional.of(iBinding)
 
                 it.varNameNode shouldBe child {
                     it.localName shouldBe "i"
