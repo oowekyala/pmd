@@ -11,6 +11,7 @@ import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule;
+import net.sourceforge.pmd.lang.xpath.ast.ASTIfExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
 

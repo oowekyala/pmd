@@ -11,12 +11,10 @@
     <!-- -r+p = no return, one param -->
     <property name="-r+p-visitor-interface-name" value="SideEffectingVisitor"/>
     <property name="-r+p-visitor-interface-file" value="${target}/${ast-package}/${-r+p-visitor-interface-name}.java"/>
-    <property name="-r+p-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${-r+p-visitor-interface-name}.java"/>
 
     <!-- -r-p = no return, no param -->
     <property name="-r-p-visitor-interface-name" value="ParameterlessSideEffectingVisitor"/>
     <property name="-r-p-visitor-interface-file" value="${target}/${ast-package}/${-r-p-visitor-interface-name}.java"/>
-    <property name="-r-p-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${-r-p-visitor-interface-name}.java"/>
 
 
     <target name="alljavacc"
@@ -67,8 +65,7 @@
         </delete>
 
 
-        <move file="${target}/${ast-package}/XPathParserDefaultVisitor.java"
-              tofile="${base-visitor-abstract-class-file}"/>
+        <delete file="${target}/${ast-package}/XPathParserDefaultVisitor.java" />
 
         <move file="${target}/${ast-package}/XPathParserVisitor.java"
               tofile="${base-visitor-interface-file}"/>
@@ -123,18 +120,18 @@ public class]]></replacevalue>
                  value="throw new RuntimeException"/>
 
 
-        <!-- Base visitor -->
-        <replace file="${base-visitor-interface-file}"
-                 token="SimpleNode"
-                 value="XPathNode"/>
-
+        <!-- Generic visitor -->
         <replace dir="${target}/${ast-package}">
-            <include name="*Visitor.java"/>
+            <include name="${base-visitor-interface-name}.java"/>
             <replacefilter token="Visitor" value="Visitor&lt;T&gt;"/>
             <replacefilter token="Object" value="T"/>
             <replacefilter token="XPathParserVisitor" value="${base-visitor-interface-name}"/>
             <replacefilter token="SimpleNode" value="XPathNode"/>
             <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathGenericVisitor"/>
+            <replacefilter token="public T" value="default T"/>
+            <replacefilter token=");" value=") { return visit((XPathNode) node, data); }"/>
+            <replacefilter token="default T visit(XPathNode node, T data) { return visit((XPathNode) node, data); }"
+                           value="default T visit(XPathNode node, T data) { return visitChildren(node, data); } default T visitChildren(XPathNode node, T data){ node.childrenAccept(this, data); return data;}"/>
         </replace>
 
 
@@ -143,22 +140,12 @@ public class]]></replacevalue>
         <replace file="${-r+p-visitor-interface-file}">
             <replacefilter token="${base-visitor-interface-name}" value="${-r+p-visitor-interface-name}"/>
             <replacefilter token="T visit" value="void visit"/>
-        </replace>
-
-        <copy file="${base-visitor-abstract-class-file}" tofile="${-r+p-visitor-abstract-class-file}"/>
-        <replace file="${-r+p-visitor-abstract-class-file}">
-            <replacefilter token="${base-visitor-interface-name}" value="${-r+p-visitor-interface-name}"/>
-            <replacefilter token="T visit" value="void visit"/>
-            <replacefilter token="T defaultVisit" value="void defaultVisit"/>
             <replacefilter token="return data;" value=""/>
-            <replacefilter token="return " value=""/>
-            <replacefilter token="implements ${base-visitor-interface-name}" value="implements ${-r+p-visitor-interface-name}"/>
+            <replacefilter token="return " value="" />
         </replace>
-
 
         <!-- Parameterless side-effecting visitor -->
         <copy file="${-r+p-visitor-interface-file}" tofile="${-r-p-visitor-interface-file}"/>
-        <copy file="${-r+p-visitor-abstract-class-file}" tofile="${-r-p-visitor-abstract-class-file}"/>
         <replace dir="${target}/${ast-package}">
             <include name="*Parameterless*"/>
 
@@ -166,6 +153,8 @@ public class]]></replacevalue>
             <replacefilter token=", T data" value=""/>
             <replacefilter token=", data" value=""/>
             <replacefilter token="&lt;T>" value=""/>
+            <replacefilter token="return data;" value=""/>
+            <replacefilter token="return " value=""/>
         </replace>
 
 

@@ -81,7 +81,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
      * @author Clément Fournier
      * @since 6.7.0
      */
-    private static class FreeVarsResolver extends AbstractParameterlessSideEffectingVisitor {
+    private static class FreeVarsResolver implements ParameterlessSideEffectingVisitor {
 
 
         private Deque<ASTVarBinding> bindings = new ArrayDeque<>();
@@ -101,7 +101,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
         public void visit(ASTXPathRoot node) {
             bindings.clear();
             freeVars = new HashSet<>();
-            super.visit(node);
+            visitChildren(node);
         }
 
 
@@ -142,7 +142,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
         @Override
         public void visit(ASTVarBinding node) {
             bindings.push(node);
-            super.visit(node);
+            visitChildren(node);
         }
 
 

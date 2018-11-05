@@ -11,9 +11,9 @@ import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.AbstractRuleChainVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
-import net.sourceforge.pmd.lang.xpath.ast.AbstractXPathGenericVisitor;
-import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
+import net.sourceforge.pmd.lang.xpath.ast.ParameterlessSideEffectingVisitor;
 import net.sourceforge.pmd.lang.xpath.ast.XPathGenericVisitor;
+import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
 
 
 /**
@@ -25,20 +25,20 @@ public class XPathRuleChainVisitor extends AbstractRuleChainVisitor {
 
     @Override
     protected void indexNodes(List<Node> nodes, RuleContext ctx) {
-        XPathGenericVisitor<?> javaParserVistor = new AbstractXPathGenericVisitor<Object>() {
+        ParameterlessSideEffectingVisitor javaParserVistor = new ParameterlessSideEffectingVisitor() {
             // Perform a visitation of the AST to index nodes which need
             // visiting by type
 
 
             @Override
-            public Object visit(XPathNode node, Object data) {
+            public void visit(XPathNode node) {
                 indexNode(node);
-                return super.visit(node, data);
+                visitChildren(node);
             }
         };
 
         for (final Node node : nodes) {
-            javaParserVistor.visit((ASTXPathRoot) node, null);
+            javaParserVistor.visit((ASTXPathRoot) node);
         }
     }
 

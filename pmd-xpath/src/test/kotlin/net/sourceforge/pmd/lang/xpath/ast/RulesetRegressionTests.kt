@@ -52,9 +52,9 @@ class RulesetRegressionTests : FunSpec() {
                 }
 
                 var numNodes = 0
-                root.jjtAccept(object : AbstractXPathGenericVisitor<Any?>() {
+                root.jjtAccept(object : XPathGenericVisitor<Any?>() {
 
-                    override fun defaultVisit(node: XPathNode?, data: Any?): Any? {
+                    override fun visit(node: XPathNode, data: Any?): Any? {
                         numNodes += 1
                         return super.defaultVisit(node, data)
                     }
