@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration.TypeKind;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
 import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEqualityExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
@@ -33,19 +34,26 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
  */
 public class ArrayIsStoredDirectlyRule extends AbstractSunSecureRule {
 
-    @Override
-    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-        if (node.isInterface()) {
-            return data;
-        }
-        return super.visit(node, data);
+
+    public ArrayIsStoredDirectlyRule() {
+        addRuleChainVisit(ASTConstructorDeclaration.class);
+        addRuleChainVisit(ASTMethodDeclaration.class);
+
     }
 
     @Override
     public Object visit(ASTConstructorDeclaration node, Object data) {
-        ASTFormalParameter[] arrs = getArrays(node.getParameters());
+        List<ASTFormalParameter> arrs = getArraysParams(node.getParameters());
         // TODO check if one of these arrays is stored in a non local
         // variable
+
+        if (node.getFirstParentOfAnyType(ASTAnyTypeDeclaration.class).getTypeKind().equals(TypeKind.ENUM)) {
+            // #1413 we whitelist constructors of enums
+            // Most of the time they're known at compile-time and so this isn't a violation.
+            // Enum constants *may* use an array that comes from somewhere else, should we flag them?
+            return data;
+        }
+
         List<ASTBlockStatement> bs = node.findDescendantsOfType(ASTBlockStatement.class);
         checkAll(data, arrs, bs);
         return data;
@@ -54,12 +62,12 @@ public class ArrayIsStoredDirectlyRule extends AbstractSunSecureRule {
     @Override
     public Object visit(ASTMethodDeclaration node, Object data) {
         final ASTFormalParameters params = node.getFirstDescendantOfType(ASTFormalParameters.class);
-        ASTFormalParameter[] arrs = getArrays(params);
+        List<ASTFormalParameter> arrs = getArraysParams(params);
         checkAll(data, arrs, node.findDescendantsOfType(ASTBlockStatement.class));
         return data;
     }
 
-    private void checkAll(Object context, ASTFormalParameter[] arrs, List<ASTBlockStatement> bs) {
+    private void checkAll(Object context, List<ASTFormalParameter> arrs, List<ASTBlockStatement> bs) {
         for (ASTFormalParameter element : arrs) {
             checkForDirectAssignment(context, element, bs);
         }
@@ -88,8 +96,8 @@ public class ArrayIsStoredDirectlyRule extends AbstractSunSecureRule {
      * Checks if the variable designed in parameter is written to a field (not
      * local variable) in the statements.
      */
-    private boolean checkForDirectAssignment(Object ctx, final ASTFormalParameter parameter,
-            final List<ASTBlockStatement> bs) {
+    private void checkForDirectAssignment(Object ctx, final ASTFormalParameter parameter,
+                                          final List<ASTBlockStatement> bs) {
         final ASTVariableDeclaratorId vid = parameter.getFirstDescendantOfType(ASTVariableDeclaratorId.class);
         final String varName = vid.getImage();
         for (ASTBlockStatement b : bs) {
@@ -144,21 +152,16 @@ public class ArrayIsStoredDirectlyRule extends AbstractSunSecureRule {
                 }
             }
         }
-        return false;
     }
 
-    private ASTFormalParameter[] getArrays(ASTFormalParameters params) {
-        final List<ASTFormalParameter> l = params.findChildrenOfType(ASTFormalParameter.class);
-        if (l != null && !l.isEmpty()) {
-            List<ASTFormalParameter> l2 = new ArrayList<>();
-            for (ASTFormalParameter fp : l) {
-                if (fp.isArray() || fp.isVarargs()) {
-                    l2.add(fp);
-                }
+    private List<ASTFormalParameter> getArraysParams(ASTFormalParameters params) {
+        List<ASTFormalParameter> arrayParams = new ArrayList<>(1);
+        for (ASTFormalParameter param : params) {
+            if (param.isArray()) {
+                arrayParams.add(param);
             }
-            return l2.toArray(new ASTFormalParameter[0]);
         }
-        return new ASTFormalParameter[0];
+        return arrayParams;
     }
 
 }
