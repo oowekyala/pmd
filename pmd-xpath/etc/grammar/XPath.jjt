@@ -108,6 +108,18 @@ TOKEN :
 | < DOLLAR: "$" >
 }
 
+//<FOO>
+TOKEN:
+{
+  <("*")?>
+}
+
+// must be error
+/*
+ string literals
+*/
+// not error
+// other things than string literals
 
 
 /* NON-DELIMITING TERMINALS */
