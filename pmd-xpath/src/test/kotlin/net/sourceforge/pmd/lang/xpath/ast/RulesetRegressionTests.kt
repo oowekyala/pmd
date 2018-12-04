@@ -9,6 +9,7 @@ import net.sf.saxon.sxpath.XPathEvaluator
 import net.sourceforge.pmd.Rule
 import net.sourceforge.pmd.lang.java.xpath.JavaFunctions
 import net.sourceforge.pmd.lang.xpath.Initializer
+import java.lang.StringBuilder
 import java.time.Duration
 import kotlin.system.measureNanoTime
 
@@ -52,19 +53,20 @@ class RulesetRegressionTests : FunSpec() {
                 }
 
                 var numNodes = 0
-                root.jjtAccept(object : XPathGenericVisitor<Any?>() {
-
-                    override fun visit(node: XPathNode, data: Any?): Any? {
+                // counts nodes
+                object : ParameterlessSideEffectingVisitor {
+                    override fun visit(node: XPathNode) {
                         numNodes += 1
-                        return super.defaultVisit(node, data)
+                        return super.visit(node)
                     }
-                }, null)
+                }.let {
+                    root.jjtAccept(it)
+                }
 
                 addTimingResult(TimingResult(time, saxonTime, numNodes, xpath.length, rule))
             }
 
         }
-
     }
 
     override fun listeners(): List<TestListener> = listOf(TimerListener)
@@ -75,21 +77,16 @@ class RulesetRegressionTests : FunSpec() {
 
             override fun toString(): String {
                 return "$timeNano\t$saxonTimeNano\t$numNodes\t$sourceLength\t${rule.name}"
-
             }
-
         }
 
         private val results = mutableListOf<TimingResult>()
 
-
         fun addTimingResult(result: TimingResult) {
             results += result
-
         }
 
         fun toMillis(nanos: Long) = Duration.ofNanos(nanos).toMillis()
-
 
         object TimerListener : TestListener {
 
@@ -119,10 +116,6 @@ class RulesetRegressionTests : FunSpec() {
 
                 results.sortedBy { it.rule.name }.forEach { println(it) }
             }
-
         }
-
-
     }
-
 }

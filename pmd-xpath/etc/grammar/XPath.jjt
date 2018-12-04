@@ -451,10 +451,13 @@ void CastExpr() #CastExpr(>1):
   UnaryExpr() ( <CAST> <AS> SingleType() )?
 }
 
-void UnaryExpr() #UnaryExpr(push):
-{ boolean push = false; }
+void UnaryExpr() #UnaryExpr(sb.length() > 0):
 {
-      [ < PMCHAIN: ([ "+" , "-" ])+ > { push = true; } ] MapExpr()
+  StringBuilder sb = new StringBuilder();
+}
+{
+      [ (("+" | "-") { sb.append(getToken(0).getImage()); } )+ ] MapExpr()
+      { jjtThis.setOperator(sb.toString()); }
 }
 
 void MapExpr() #MapExpr(>1) :
