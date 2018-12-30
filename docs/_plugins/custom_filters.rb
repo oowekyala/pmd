@@ -81,17 +81,6 @@ module CustomFilters
     append_if(str, !condition, suffix)
   end
 
-  def render_markdown(input)
-    if input
-      res = input
-      res = res.gsub(/`(.*?)`/, '<code>\1</code>')
-      res = res.gsub(/\*\*(.*?)\*\*/, '<b>\1</b>')
-      res = res.gsub(/\*(.*?)\*/, '<i>\1</i>')
-      res.gsub(/\[(.*?)\]\((.*?)\)/, '<a href="\2">\1</a>')
-    end
-  end
-
-
   private
 
   def flatten_rec(seq)

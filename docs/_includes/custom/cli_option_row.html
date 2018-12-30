@@ -15,7 +15,7 @@
 
 <tr>
     <td><a style="pointer-events: none; cursor: default;" name="{{ option_id }}"><code>{{ include.options | split: ',' | mappend: arg | join: "</code><br/><code>" }}</code></a></td>
-    <td>{{ required_label }}{{ include.description | render_markdown }}</td>
+    <td>{{ required_label }}{{ include.description | markdownify }}</td>
     <td><code>{{ include.default }}</code></td>
     <td>{{ include.languages }}</td>
 </tr>
