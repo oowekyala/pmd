@@ -405,10 +405,14 @@ public class RuleDocGenerator {
                     lines.add("");
 
                     if (rule instanceof XPathRule || rule instanceof RuleReference && ((RuleReference) rule).getRule() instanceof XPathRule) {
-                        lines.add("**This rule is defined by the following XPath expression:**");
+                        lines.add("<p><details>");
+                        lines.add("<summary><strong>This rule is defined by an XPath expression (click to display)</strong></summary>");
+                        lines.add("<div markdown=\"1\">");
                         lines.add("``` xpath");
                         lines.addAll(toLines(StringUtils.stripToEmpty(rule.getProperty(XPathRule.XPATH_DESCRIPTOR))));
                         lines.add("```");
+                        lines.add("</div>");
+                        lines.add("</details></p>");
                     } else {
                         lines.add("**This rule is defined by the following Java class:** "
                                 + "[" + rule.getRuleClass() + "]("
@@ -552,12 +556,7 @@ public class RuleDocGenerator {
 
     private List<Rule> getSortedRules(RuleSet ruleset) {
         List<Rule> sortedRules = new ArrayList<>(ruleset.getRules());
-        Collections.sort(sortedRules, new Comparator<Rule>() {
-            @Override
-            public int compare(Rule o1, Rule o2) {
-                return o1.getName().compareToIgnoreCase(o2.getName());
-            }
-        });
+        sortedRules.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
         return sortedRules;
     }
 
