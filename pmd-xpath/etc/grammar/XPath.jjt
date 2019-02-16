@@ -708,10 +708,10 @@ void KindTest() #void:
     | SchemaElementTest()
     | SchemaAttributeTest()
     | ProcessingInstructionTest()
-    | <COMMENT> "(" ")"             #CommentTest
-    | <TEXT> "(" ")"                #TextTest
-    | <NAMESPACE_NODE> "(" ")"      #NamespaceNodeTest
-    | <NODE> "(" ")"                #AnyKindTest
+    | (<COMMENT> "(" ")")             #CommentTest
+    | (<TEXT> "(" ")")                #TextTest
+    | (<NAMESPACE_NODE> "(" ")")      #NamespaceNodeTest
+    | (<NODE> "(" ")")                #AnyKindTest
 }
 
 
