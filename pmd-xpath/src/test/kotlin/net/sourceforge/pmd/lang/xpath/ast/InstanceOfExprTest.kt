@@ -1,31 +1,31 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.ast.test.shouldBeEmpty
 import java.util.*
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class InstanceOfExprTest : FunSpec({
+class InstanceOfExprTest : XPathParserTestSpec({
 
-    testGroup("Test instance of expr") {
+    parserTest("Test instance of expr") {
 
 
         "5 instance of xs:integer" should matchExpr<ASTInstanceofExpr> {
             child<ASTNumericLiteral> {
-                it.intValue shouldBe 5
+                it::getIntValue shouldBe 5
             }
 
             child<ASTSequenceType> {
-                it.itemType shouldBe child<ASTAtomicOrUnionType> {
-                    it.typeNameNode shouldBe child {
-                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                        it.localName shouldBe "integer"
+                it::getItemType shouldBe child<ASTAtomicOrUnionType> {
+                    it::getTypeNameNode shouldBe child {
+                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getLocalName shouldBe "integer"
                     }
                 }
-                it.cardinality shouldBe Cardinality.EXACTLY_ONE
+                it::getCardinality shouldBe Cardinality.EXACTLY_ONE
             }
         }
 
@@ -35,13 +35,13 @@ class InstanceOfExprTest : FunSpec({
             }
 
             child<ASTSequenceType> {
-                it.itemType shouldBe child<ASTAtomicOrUnionType> {
-                    it.typeNameNode shouldBe child {
-                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                        it.localName shouldBe "integer"
+                it::getItemType shouldBe child<ASTAtomicOrUnionType> {
+                    it::getTypeNameNode shouldBe child {
+                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getLocalName shouldBe "integer"
                     }
                 }
-                it.cardinality shouldBe Cardinality.ONE_OR_MORE
+                it::getCardinality shouldBe Cardinality.ONE_OR_MORE
             }
         }
 
@@ -49,13 +49,13 @@ class InstanceOfExprTest : FunSpec({
             child<ASTContextItemExpr> {}
 
             child<ASTSequenceType> {
-                it.itemType shouldBe child<ASTElementTest> {
-                    it.isEmptyParen shouldBe true
-                    it.isOptionalType shouldBe false
-                    it.typeName shouldBe Optional.empty()
-                    it.elementName shouldBe Optional.empty()
+                it::getItemType shouldBe child<ASTElementTest> {
+                    it::isEmptyParen shouldBe true
+                    it::isOptionalType shouldBe false
+                    it::getTypeName.shouldBeEmpty()
+                    it::getElementName.shouldBeEmpty()
                 }
-                it.cardinality shouldBe Cardinality.EXACTLY_ONE
+                it::getCardinality shouldBe Cardinality.EXACTLY_ONE
             }
         }
 

@@ -7,8 +7,8 @@ import io.kotlintest.specs.FunSpec
  * @author Clément Fournier
  * @since 7.0.0
  */
-class UnaryExprTest : FunSpec({
-    testGroup("Test UnaryExpr") {
+class UnaryExprTest : XPathParserTestSpec({
+    parserTest("Test UnaryExpr") {
 
         "+1" should matchExpr<ASTUnaryExpr> {
             it.operator shouldBe "+"

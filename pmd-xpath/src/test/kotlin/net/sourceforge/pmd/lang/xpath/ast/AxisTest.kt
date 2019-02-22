@@ -1,29 +1,27 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 import java.util.*
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class AxisTest : FunSpec({
+class AxisTest : XPathParserTestSpec({
 
 
     parserTest("Attribute may start a KindTest") {
         "/attribute(*)" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
+            it::getPathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
             child<ASTAxisStep> {
                 // This is an exception
                 // The default axis is attribute when there's an attribute test
-                it.axis shouldBe Axis.ATTRIBUTE
+                it::getAxis shouldBe Axis.ATTRIBUTE
 
                 child<ASTAttributeTest> {
-                    it.attributeName shouldBe Optional.empty()
-                    it.typeName shouldBe Optional.empty()
+                    it::getAttributeName shouldBe Optional.empty()
+                    it::getTypeName shouldBe Optional.empty()
                 }
             }
         }
@@ -42,14 +40,14 @@ class AxisTest : FunSpec({
 
         parserTest("Test explicit ${axis.axisName} axis use") {
             "/${axis.axisName}::Node" should matchExpr<ASTPathExpr> {
-                it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
+                it::getPathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
                 child<ASTAxisStep> {
-                    it.axis shouldBe axis
+                    it::getAxis shouldBe axis
 
                     child<ASTExactNameTest> {
-                        it.nameNode shouldBe child {
-                            it.localName shouldBe "Node"
+                        it::getNameNode shouldBe child {
+                            it::getLocalName shouldBe "Node"
                         }
                     }
                 }
@@ -60,14 +58,14 @@ class AxisTest : FunSpec({
         parserTest("Test explicit ${axis.axisName} axis use with conflicting name") {
             // The use after the :: is supposed to be interpreted as an element name
             "/${axis.axisName}::${axis.axisName}" should matchExpr<ASTPathExpr> {
-                it.pathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
+                it::getPathAnchor shouldBe ASTPathExpr.PathAnchor.ROOT
 
                 child<ASTAxisStep> {
-                    it.axis shouldBe axis
+                    it::getAxis shouldBe axis
 
                     child<ASTExactNameTest> {
-                        it.nameNode shouldBe child {
-                            it.localName shouldBe axis.axisName
+                        it::getNameNode shouldBe child {
+                            it::getLocalName shouldBe axis.axisName
                         }
                     }
                 }

@@ -1,8 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.DESCENDANT_OR_ROOT
 import java.util.*
 
@@ -10,7 +8,7 @@ import java.util.*
  * @author Clément Fournier
  * @since 6.7.0
  */
-class ExprTest : FunSpec({
+class ExprTest : XPathParserTestSpec({
 
 
 
@@ -20,19 +18,19 @@ class ExprTest : FunSpec({
 
         "for ${'$'}i in //i return ${'$'}i" should matchExpr<ASTForExpr> {
             val iBinding = child<ASTVarBinding> {
-                it.varName shouldBe "i"
+                it::getVarName shouldBe "i"
 
                 child<ASTName> {
-                    it.image shouldBe "i"
+                    it::getImage shouldBe "i"
                 }
 
                 child<ASTPathExpr> {
 
-                    it.pathAnchor shouldBe DESCENDANT_OR_ROOT
+                    it::getPathAnchor shouldBe DESCENDANT_OR_ROOT
 
                     child<ASTAxisStep> {
                         child<ASTExactNameTest>(ignoreChildren = true) {
-                            it.nameImage shouldBe "i"
+                            it::getNameImage shouldBe "i"
                         }
                     }
                 }
@@ -40,10 +38,10 @@ class ExprTest : FunSpec({
 
 
             child<ASTVarRef> {
-                it.binding shouldBe Optional.of(iBinding)
+                it::getBinding shouldBe Optional.of(iBinding)
 
-                it.varNameNode shouldBe child {
-                    it.localName shouldBe "i"
+                it::getVarNameNode shouldBe child {
+                    it::getLocalName shouldBe "i"
                 }
             }
         }

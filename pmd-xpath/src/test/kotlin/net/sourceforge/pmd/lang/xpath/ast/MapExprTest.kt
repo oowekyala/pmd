@@ -1,98 +1,97 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.ast.test.shouldBePresent
 import java.util.*
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class MapExprTest : FunSpec({
+class MapExprTest : XPathParserTestSpec({
 
-
-    testGroup("Test MapExpr") {
+    parserTest("Test MapExpr") {
 
         "child::div1 / child::para / string() ! concat(\"id-\", .)" should matchExpr<ASTMapExpr> {
-            //it.operands
+            //it::getOperands
 
             child<ASTPathExpr> {
-                //it.pathAnchor
+                //it::getPathAnchor
 
                 child<ASTAxisStep> {
-                    it.isAbbrevAttributeAxis shouldBe false
-                    it.isAbbrevDescendantOrSelf shouldBe false
-                    it.isAbbrevNoAxis shouldBe false
-                    it.isAbbrevParentNodeTest shouldBe false
-                    //it.axis
-                    //it.predicates
+                    it::isAbbrevAttributeAxis shouldBe false
+                    it::isAbbrevDescendantOrSelf shouldBe false
+                    it::isAbbrevNoAxis shouldBe false
+                    it::isAbbrevParentNodeTest shouldBe false
+                    //it::getAxis
+                    //it::getPredicates
 
-                    it.nodeTest shouldBe child<ASTExactNameTest> {
-                        it.nameImage shouldBe "div1"
+                    it::getNodeTest shouldBe child<ASTExactNameTest> {
+                        it::getNameImage shouldBe "div1"
 
-                        it.nameNode shouldBe child {
-                            it.image shouldBe "div1"
-                            it.localName shouldBe "div1"
-                            it.explicitNamespacePrefix shouldBe Optional.empty()
-                            it.isUriLiteral shouldBe false
+                        it::getNameNode shouldBe child {
+                            it::getImage shouldBe "div1"
+                            it::getLocalName shouldBe "div1"
+                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::isUriLiteral shouldBe false
                         }
                     }
                 }
                 child<ASTAxisStep> {
-                    it.isAbbrevAttributeAxis shouldBe false
-                    it.isAbbrevDescendantOrSelf shouldBe false
-                    it.isAbbrevNoAxis shouldBe false
-                    it.isAbbrevParentNodeTest shouldBe false
-                    //it.axis
-                    //it.predicates
+                    it::isAbbrevAttributeAxis shouldBe false
+                    it::isAbbrevDescendantOrSelf shouldBe false
+                    it::isAbbrevNoAxis shouldBe false
+                    it::isAbbrevParentNodeTest shouldBe false
+                    //it::getAxis
+                    //it::getPredicates
 
-                    it.nodeTest shouldBe child<ASTExactNameTest> {
-                        it.nameImage shouldBe "para"
+                    it::getNodeTest shouldBe child<ASTExactNameTest> {
+                        it::getNameImage shouldBe "para"
 
-                        it.nameNode shouldBe child {
-                            it.image shouldBe "para"
-                            it.localName shouldBe "para"
-                            it.explicitNamespacePrefix shouldBe Optional.empty()
-                            it.isUriLiteral shouldBe false
+                        it::getNameNode shouldBe child {
+                            it::getImage shouldBe "para"
+                            it::getLocalName shouldBe "para"
+                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::isUriLiteral shouldBe false
                         }
                     }
                 }
                 child<ASTFunctionCall> {
 
-                    it.functionNameNode shouldBe child {
-                        it.image shouldBe "string"
-                        it.localName shouldBe "string"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getFunctionNameNode shouldBe child {
+                        it::getImage shouldBe "string"
+                        it::getLocalName shouldBe "string"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
                     }
-                    it.arguments shouldBe child {
+                    it::getArguments shouldBe child {
                     }
                 }
             }
             child<ASTFunctionCall> {
 
-                it.functionNameNode shouldBe child {
-                    it.image shouldBe "concat"
-                    it.localName shouldBe "concat"
-                    it.explicitNamespacePrefix shouldBe Optional.empty()
-                    it.isUriLiteral shouldBe false
+                it::getFunctionNameNode shouldBe child {
+                    it::getImage shouldBe "concat"
+                    it::getLocalName shouldBe "concat"
+                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::isUriLiteral shouldBe false
                 }
-                it.arguments shouldBe child {
+                it::getArguments shouldBe child {
 
                     child<ASTArgument> {
-                        it.isPlaceholder shouldBe false
+                        it::isPlaceholder shouldBe false
 
-                        it.expression shouldBe childOpt<ASTStringLiteral> {
-                            //it.delimiter
-                            it.image shouldBe "\"id-\""
-                            it.unescapedValue shouldBe "id-"
-                            it.xmlUnescapedValue shouldBe "id-"
+                        it::getExpression shouldBePresent child<ASTStringLiteral> {
+                            //it::getDelimiter
+                            it::getImage shouldBe "\"id-\""
+                            it::getUnescapedValue shouldBe "id-"
+                            it::getXmlUnescapedValue shouldBe "id-"
                         }
                     }
                     child<ASTArgument> {
-                        it.isPlaceholder shouldBe false
+                        it::isPlaceholder shouldBe false
 
-                        it.expression shouldBe childOpt<ASTContextItemExpr> {
+                        it::getExpression shouldBePresent child<ASTContextItemExpr> {
                         }
                     }
                 }
@@ -102,114 +101,114 @@ class MapExprTest : FunSpec({
 
         "avg( //employee / salary ! translate(., '\$a', '') ! number(.))" should matchExpr<ASTFunctionCall> {
 
-            it.functionNameNode shouldBe child {
-                it.image shouldBe "avg"
-                it.localName shouldBe "avg"
-                it.explicitNamespacePrefix shouldBe Optional.empty()
-                it.isUriLiteral shouldBe false
+            it::getFunctionNameNode shouldBe child {
+                it::getImage shouldBe "avg"
+                it::getLocalName shouldBe "avg"
+                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                it::isUriLiteral shouldBe false
             }
-            it.arguments shouldBe child {
+            it::getArguments shouldBe child {
 
                 child<ASTArgument> {
-                    it.isPlaceholder shouldBe false
+                    it::isPlaceholder shouldBe false
 
-                    it.expression shouldBe childOpt<ASTMapExpr> {
-                        // it.operands shouldBe it.children
+                    it::getExpression shouldBePresent child<ASTMapExpr> {
+                        // it::getOperands shouldBe it::getChildren
 
                         child<ASTPathExpr> {
-                            it.pathAnchor shouldBe net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.DESCENDANT_OR_ROOT
+                            it::getPathAnchor shouldBe net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.DESCENDANT_OR_ROOT
 
                             child<ASTAxisStep> {
-                                it.isAbbrevAttributeAxis shouldBe false
-                                it.isAbbrevDescendantOrSelf shouldBe false
-                                it.isAbbrevNoAxis shouldBe true
-                                it.isAbbrevParentNodeTest shouldBe false
-                                it.axis shouldBe net.sourceforge.pmd.lang.xpath.ast.Axis.CHILD
-                                //it.predicates
+                                it::isAbbrevAttributeAxis shouldBe false
+                                it::isAbbrevDescendantOrSelf shouldBe false
+                                it::isAbbrevNoAxis shouldBe true
+                                it::isAbbrevParentNodeTest shouldBe false
+                                it::getAxis shouldBe net.sourceforge.pmd.lang.xpath.ast.Axis.CHILD
+                                //it::getPredicates
 
-                                it.nodeTest shouldBe child<ASTExactNameTest> {
-                                    it.nameImage shouldBe "employee"
+                                it::getNodeTest shouldBe child<ASTExactNameTest> {
+                                    it::getNameImage shouldBe "employee"
 
-                                    it.nameNode shouldBe child {
-                                        it.image shouldBe "employee"
-                                        it.localName shouldBe "employee"
-                                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                                        it.isUriLiteral shouldBe false
+                                    it::getNameNode shouldBe child {
+                                        it::getImage shouldBe "employee"
+                                        it::getLocalName shouldBe "employee"
+                                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                        it::isUriLiteral shouldBe false
                                     }
                                 }
                             }
                             child<ASTAxisStep> {
-                                it.isAbbrevAttributeAxis shouldBe false
-                                it.isAbbrevDescendantOrSelf shouldBe false
-                                it.isAbbrevNoAxis shouldBe true
-                                it.isAbbrevParentNodeTest shouldBe false
-                                it.axis shouldBe net.sourceforge.pmd.lang.xpath.ast.Axis.CHILD
-                                //it.predicates
+                                it::isAbbrevAttributeAxis shouldBe false
+                                it::isAbbrevDescendantOrSelf shouldBe false
+                                it::isAbbrevNoAxis shouldBe true
+                                it::isAbbrevParentNodeTest shouldBe false
+                                it::getAxis shouldBe net.sourceforge.pmd.lang.xpath.ast.Axis.CHILD
+                                //it::getPredicates
 
-                                it.nodeTest shouldBe child<ASTExactNameTest> {
-                                    it.nameImage shouldBe "salary"
+                                it::getNodeTest shouldBe child<ASTExactNameTest> {
+                                    it::getNameImage shouldBe "salary"
 
-                                    it.nameNode shouldBe child {
-                                        it.image shouldBe "salary"
-                                        it.localName shouldBe "salary"
-                                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                                        it.isUriLiteral shouldBe false
+                                    it::getNameNode shouldBe child {
+                                        it::getImage shouldBe "salary"
+                                        it::getLocalName shouldBe "salary"
+                                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                        it::isUriLiteral shouldBe false
                                     }
                                 }
                             }
                         }
                         child<ASTFunctionCall> {
 
-                            it.functionNameNode shouldBe child {
-                                it.image shouldBe "translate"
-                                it.localName shouldBe "translate"
-                                it.explicitNamespacePrefix shouldBe Optional.empty()
-                                it.isUriLiteral shouldBe false
+                            it::getFunctionNameNode shouldBe child {
+                                it::getImage shouldBe "translate"
+                                it::getLocalName shouldBe "translate"
+                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::isUriLiteral shouldBe false
                             }
-                            it.arguments shouldBe child {
+                            it::getArguments shouldBe child {
 
                                 child<ASTArgument> {
-                                    it.isPlaceholder shouldBe false
+                                    it::isPlaceholder shouldBe false
 
-                                    it.expression shouldBe childOpt<ASTContextItemExpr> {
+                                    it::getExpression shouldBePresent child<ASTContextItemExpr> {
                                     }
                                 }
                                 child<ASTArgument> {
-                                    it.isPlaceholder shouldBe false
+                                    it::isPlaceholder shouldBe false
 
-                                    it.expression shouldBe childOpt<ASTStringLiteral> {
-                                        //it.delimiter
-                                        it.image shouldBe "'${'$'}a'"
-                                        it.unescapedValue shouldBe "${'$'}a"
-                                        it.xmlUnescapedValue shouldBe "${'$'}a"
+                                    it::getExpression shouldBePresent child<ASTStringLiteral> {
+                                        //it::getDelimiter
+                                        it::getImage shouldBe "'${'$'}a'"
+                                        it::getUnescapedValue shouldBe "${'$'}a"
+                                        it::getXmlUnescapedValue shouldBe "${'$'}a"
                                     }
                                 }
                                 child<ASTArgument> {
-                                    it.isPlaceholder shouldBe false
+                                    it::isPlaceholder shouldBe false
 
-                                    it.expression shouldBe childOpt<ASTStringLiteral> {
-                                        //it.delimiter
-                                        it.image shouldBe "''"
-                                        it.unescapedValue shouldBe ""
-                                        it.xmlUnescapedValue shouldBe ""
+                                    it::getExpression shouldBePresent child<ASTStringLiteral> {
+                                        //it::getDelimiter
+                                        it::getImage shouldBe "''"
+                                        it::getUnescapedValue shouldBe ""
+                                        it::getXmlUnescapedValue shouldBe ""
                                     }
                                 }
                             }
                         }
                         child<ASTFunctionCall> {
 
-                            it.functionNameNode shouldBe child {
-                                it.image shouldBe "number"
-                                it.localName shouldBe "number"
-                                it.explicitNamespacePrefix shouldBe Optional.empty()
-                                it.isUriLiteral shouldBe false
+                            it::getFunctionNameNode shouldBe child {
+                                it::getImage shouldBe "number"
+                                it::getLocalName shouldBe "number"
+                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::isUriLiteral shouldBe false
                             }
-                            it.arguments shouldBe child {
+                            it::getArguments shouldBe child {
 
                                 child<ASTArgument> {
-                                    it.isPlaceholder shouldBe false
+                                    it::isPlaceholder shouldBe false
 
-                                    it.expression shouldBe childOpt<ASTContextItemExpr> {
+                                    it::getExpression shouldBePresent child<ASTContextItemExpr> {
                                     }
                                 }
                             }

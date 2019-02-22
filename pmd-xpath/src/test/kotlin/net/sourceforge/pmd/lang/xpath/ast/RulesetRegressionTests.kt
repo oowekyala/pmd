@@ -18,7 +18,7 @@ import kotlin.system.measureNanoTime
  * @author Clément Fournier
  * @since 6.7.0
  */
-class RulesetRegressionTests : FunSpec() {
+class RulesetRegressionTests : XPathParserTestSpec(){
     init {
         foreachXPathRule { rule, xpath ->
 

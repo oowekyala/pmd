@@ -1,11 +1,10 @@
 package net.sourceforge.pmd.lang.xpath.opti
 
-import io.kotlintest.Matcher
 import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.test.NWrapper
+import net.sourceforge.pmd.lang.ast.test.Assertions
+import net.sourceforge.pmd.lang.ast.test.NodeSpec
 import net.sourceforge.pmd.lang.ast.test.matchNode
 import net.sourceforge.pmd.lang.xpath.ast.*
 import net.sourceforge.pmd.properties.IntegerProperty
@@ -15,12 +14,12 @@ import net.sourceforge.pmd.properties.PropertyDescriptor
  * @author Clément Fournier
  * @since 6.7.0
  */
-class PropertyInliningTest : FunSpec({
+class PropertyInliningTest : XPathParserTestSpec({
 
 
     parserTest("Test IntProperty") {
 
-        fun matcherWithHole(hole: NWrapper<ASTComparisonExpr>.() -> Unit): Matcher<Node?> = matchNode<ASTXPathRoot> {
+        fun matcherWithHole(hole: NodeSpec<ASTComparisonExpr>): Assertions<Node?> = matchNode<ASTXPathRoot> {
             child<ASTPathExpr> {
 
                 child<ASTAxisStep> {

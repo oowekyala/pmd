@@ -1,15 +1,13 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class StringLiteralTests : FunSpec({
+class StringLiteralTests : XPathParserTestSpec({
 
 
     parserTest("Test double quoted string literal") {

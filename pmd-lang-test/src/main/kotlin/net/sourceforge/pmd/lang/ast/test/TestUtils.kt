@@ -8,6 +8,7 @@ import io.kotlintest.Matcher
 import io.kotlintest.equalityMatcher
 import io.kotlintest.matchers.haveSize
 import io.kotlintest.should
+import java.util.*
 import java.util.stream.Stream
 import kotlin.reflect.KCallable
 import kotlin.reflect.jvm.isAccessible
@@ -63,6 +64,24 @@ private fun <N, V> assertWrapper(callable: KCallable<N>, right: V, asserter: (N,
 infix fun <N, V : N> KCallable<N>.shouldBe(expected: V?) = this.shouldEqual(expected)
 
 infix fun <T> KCallable<T>.shouldMatch(expected: T.() -> Unit) = assertWrapper(this, expected) { n, v -> n should v }
+
+infix fun <T, U : T> Optional<T>.shouldBePresent(any: U) {
+    ::isPresent shouldBe true
+    ::get shouldBe any
+}
+
+fun Optional<*>.shouldBeEmpty() {
+    ::isPresent shouldBe false
+}
+
+fun KCallable<Optional<*>>.shouldBeEmpty() = this shouldMatch {
+    ::isPresent shouldBe false
+}
+
+infix fun <T, U : T> KCallable<Optional<T>>.shouldBePresent(any: U) = this shouldMatch {
+    ::isPresent shouldBe true
+    ::get shouldBe any
+}
 
 
 inline  fun <reified T> Any?.shouldBeA(f: (T) -> Unit = {}): T {

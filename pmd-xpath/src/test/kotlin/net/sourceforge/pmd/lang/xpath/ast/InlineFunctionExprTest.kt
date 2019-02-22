@@ -1,138 +1,138 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainAll
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.ast.test.shouldBePresent
 import java.util.*
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class InlineFunctionExprTest : FunSpec({
+class InlineFunctionExprTest : XPathParserTestSpec({
 
-    testGroup("Test inline function expr") {
+    parserTest("Test inline function expr") {
 
         "function() as xs:integer+ { 2, 3, 5, 7, 11, 13 }" should matchExpr<ASTInlineFunctionExpr> {
-            it.isDefaultReturnType shouldBe false
+            it::isDefaultReturnType shouldBe false
 
-            it.paramList shouldBe child {
+            it::getParamList shouldBe child {
 
             }
-            it.declaredReturnType shouldBe childOpt<ASTSequenceType> {
-                it.cardinality shouldBe Cardinality.ONE_OR_MORE
-                it.isEmptySequence shouldBe false
+            it::getDeclaredReturnType shouldBePresent child<ASTSequenceType> {
+                it::getCardinality shouldBe Cardinality.ONE_OR_MORE
+                it::isEmptySequence shouldBe false
 
-                it.itemType shouldBe child<ASTAtomicOrUnionType> {
+                it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                    it.typeNameNode shouldBe child {
-                        it.image shouldBe "xs:integer"
-                        it.localName shouldBe "integer"
-                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                        it.isUriLiteral shouldBe false
+                    it::getTypeNameNode shouldBe child {
+                        it::getImage shouldBe "xs:integer"
+                        it::getLocalName shouldBe "integer"
+                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::isUriLiteral shouldBe false
 
                     }
                 }
             }
-            it.bodyExpr shouldBe child<ASTSequenceExpr>(ignoreChildren = true) {}
+            it::getBodyExpr shouldBe child<ASTSequenceExpr>(ignoreChildren = true) {}
         }
 
 
         "function(${'$'}a as xs:double, ${'$'}b as xs:double) as xs:double { ${'$'}a * ${'$'}b }" should matchExpr<ASTInlineFunctionExpr> {
-            it.isDefaultReturnType shouldBe false
+            it::isDefaultReturnType shouldBe false
 
-            it.paramList shouldBe child {
+            it::getParamList shouldBe child {
 
                 child<ASTParam> {
-                    it.isDefaultType shouldBe false
+                    it::isDefaultType shouldBe false
 
-                    it.nameNode shouldBe child {
-                        it.image shouldBe "a"
-                        it.localName shouldBe "a"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getNameNode shouldBe child {
+                        it::getImage shouldBe "a"
+                        it::getLocalName shouldBe "a"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
 
                     }
-                    it.declaredType shouldBe childOpt<ASTSequenceType> {
-                        it.cardinality shouldBe Cardinality.EXACTLY_ONE
-                        it.isEmptySequence shouldBe false
+                    it::getDeclaredType shouldBePresent child<ASTSequenceType> {
+                        it::getCardinality shouldBe Cardinality.EXACTLY_ONE
+                        it::isEmptySequence shouldBe false
 
-                        it.itemType shouldBe child<ASTAtomicOrUnionType> {
+                        it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                            it.typeNameNode shouldBe child {
-                                it.image shouldBe "xs:double"
-                                it.localName shouldBe "double"
-                                it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                                it.isUriLiteral shouldBe false
+                            it::getTypeNameNode shouldBe child {
+                                it::getImage shouldBe "xs:double"
+                                it::getLocalName shouldBe "double"
+                                it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                                it::isUriLiteral shouldBe false
 
                             }
                         }
                     }
                 }
                 child<ASTParam> {
-                    it.isDefaultType shouldBe false
+                    it::isDefaultType shouldBe false
 
-                    it.nameNode shouldBe child {
-                        it.image shouldBe "b"
-                        it.localName shouldBe "b"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getNameNode shouldBe child {
+                        it::getImage shouldBe "b"
+                        it::getLocalName shouldBe "b"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
 
                     }
-                    it.declaredType shouldBe childOpt<ASTSequenceType> {
-                        it.cardinality shouldBe Cardinality.EXACTLY_ONE
-                        it.isEmptySequence shouldBe false
+                    it::getDeclaredType shouldBePresent child<ASTSequenceType> {
+                        it::getCardinality shouldBe Cardinality.EXACTLY_ONE
+                        it::isEmptySequence shouldBe false
 
-                        it.itemType shouldBe child<ASTAtomicOrUnionType> {
+                        it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                            it.typeNameNode shouldBe child {
-                                it.image shouldBe "xs:double"
-                                it.localName shouldBe "double"
-                                it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                                it.isUriLiteral shouldBe false
+                            it::getTypeNameNode shouldBe child {
+                                it::getImage shouldBe "xs:double"
+                                it::getLocalName shouldBe "double"
+                                it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                                it::isUriLiteral shouldBe false
 
                             }
                         }
                     }
                 }
             }
-            it.declaredReturnType shouldBe childOpt<ASTSequenceType> {
-                it.cardinality shouldBe Cardinality.EXACTLY_ONE
-                it.isEmptySequence shouldBe false
+            it::getDeclaredReturnType shouldBePresent child<ASTSequenceType> {
+                it::getCardinality shouldBe Cardinality.EXACTLY_ONE
+                it::isEmptySequence shouldBe false
 
-                it.itemType shouldBe child<ASTAtomicOrUnionType> {
+                it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                    it.typeNameNode shouldBe child {
-                        it.image shouldBe "xs:double"
-                        it.localName shouldBe "double"
-                        it.explicitNamespacePrefix shouldBe Optional.of("xs")
-                        it.isUriLiteral shouldBe false
+                    it::getTypeNameNode shouldBe child {
+                        it::getImage shouldBe "xs:double"
+                        it::getLocalName shouldBe "double"
+                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::isUriLiteral shouldBe false
 
                     }
                 }
             }
-            it.bodyExpr shouldBe child<ASTMultiplicativeExpr> {
+            it::getBodyExpr shouldBe child<ASTMultiplicativeExpr> {
 
                 child<ASTVarRef> {
 
-                    it.varNameNode shouldBe child {
-                        it.image shouldBe "a"
-                        it.localName shouldBe "a"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getVarNameNode shouldBe child {
+                        it::getImage shouldBe "a"
+                        it::getLocalName shouldBe "a"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
 
                     }
                 }
                 child<ASTMultiplicativeOperator> {
-                    it.image shouldBe "*"
+                    it::getImage shouldBe "*"
                 }
                 child<ASTVarRef> {
 
-                    it.varNameNode shouldBe child {
-                        it.image shouldBe "b"
-                        it.localName shouldBe "b"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getVarNameNode shouldBe child {
+                        it::getImage shouldBe "b"
+                        it::getLocalName shouldBe "b"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
 
                     }
                 }
@@ -140,66 +140,66 @@ class InlineFunctionExprTest : FunSpec({
         }
 
         "function(${'$'}a) { ${'$'}a }" should matchExpr<ASTInlineFunctionExpr> {
-            it.declaredReturnType shouldBe Optional.empty()
-            it.isDefaultReturnType shouldBe true
+            it::getDeclaredReturnType shouldBe Optional.empty()
+            it::isDefaultReturnType shouldBe true
 
-            it.paramList shouldBe child {
+            it::getParamList shouldBe child {
 
                 child<ASTParam> {
-                    it.declaredType shouldBe Optional.empty()
-                    it.isDefaultType shouldBe true
+                    it::getDeclaredType shouldBe Optional.empty()
+                    it::isDefaultType shouldBe true
 
-                    it.nameNode shouldBe child {
-                        it.image shouldBe "a"
-                        it.localName shouldBe "a"
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.isUriLiteral shouldBe false
+                    it::getNameNode shouldBe child {
+                        it::getImage shouldBe "a"
+                        it::getLocalName shouldBe "a"
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::isUriLiteral shouldBe false
 
                     }
                 }
             }
-            it.bodyExpr shouldBe child<ASTVarRef> {
+            it::getBodyExpr shouldBe child<ASTVarRef> {
 
-                it.varNameNode shouldBe child {
-                    it.image shouldBe "a"
-                    it.localName shouldBe "a"
-                    it.explicitNamespacePrefix shouldBe Optional.empty()
-                    it.isUriLiteral shouldBe false
+                it::getVarNameNode shouldBe child {
+                    it::getImage shouldBe "a"
+                    it::getLocalName shouldBe "a"
+                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::isUriLiteral shouldBe false
 
                 }
             }
         }
 
         "collection()/(let ${'$'}a := . return function() { ${'$'}a })" should matchExpr<ASTPathExpr> {
-            //it.pathAnchor
+            //it::getPathAnchor
 
             child<ASTFunctionCall> {
 
-                it.functionNameNode shouldBe child {
-                    it.image shouldBe "collection"
-                    it.localName shouldBe "collection"
-                    it.explicitNamespacePrefix shouldBe Optional.empty()
-                    it.isUriLiteral shouldBe false
+                it::getFunctionNameNode shouldBe child {
+                    it::getImage shouldBe "collection"
+                    it::getLocalName shouldBe "collection"
+                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::isUriLiteral shouldBe false
 
                 }
-                it.arguments shouldBe child {}
+                it::getArguments shouldBe child {}
             }
             child<ASTParenthesizedExpr> {
 
-                it.wrappedNode shouldBe child<ASTLetExpr> {
+                it::getWrappedNode shouldBe child<ASTLetExpr> {
 
                     val binding = child<ASTVarBinding> {
-                        it.isLetStyle shouldBe true
-                        it.varName shouldBe "a"
+                        it::isLetStyle shouldBe true
+                        it::getVarName shouldBe "a"
 
-                        it.varNameNode shouldBe child {
-                            it.image shouldBe "a"
-                            it.localName shouldBe "a"
-                            it.explicitNamespacePrefix shouldBe Optional.empty()
-                            it.isUriLiteral shouldBe false
+                        it::getVarNameNode shouldBe child {
+                            it::getImage shouldBe "a"
+                            it::getLocalName shouldBe "a"
+                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::isUriLiteral shouldBe false
 
                         }
-                        it.initializerExpr shouldBe child<ASTContextItemExpr> {
+                        it::getInitializerExpr shouldBe child<ASTContextItemExpr> {
 
                         }
                     }
@@ -207,19 +207,19 @@ class InlineFunctionExprTest : FunSpec({
                     it.bindings.shouldContainAll(binding)
 
 
-                    it.bodyExpr shouldBe child<ASTInlineFunctionExpr> {
-                        it.declaredReturnType shouldBe Optional.empty()
-                        it.isDefaultReturnType shouldBe true
+                    it::getBodyExpr shouldBe child<ASTInlineFunctionExpr> {
+                        it::getDeclaredReturnType shouldBe Optional.empty()
+                        it::isDefaultReturnType shouldBe true
 
-                        it.paramList shouldBe child {}
+                        it::getParamList shouldBe child {}
 
-                        it.bodyExpr shouldBe child<ASTVarRef> {
+                        it::getBodyExpr shouldBe child<ASTVarRef> {
 
-                            it.varNameNode shouldBe child {
-                                it.image shouldBe "a"
-                                it.localName shouldBe "a"
-                                it.explicitNamespacePrefix shouldBe Optional.empty()
-                                it.isUriLiteral shouldBe false
+                            it::getVarNameNode shouldBe child {
+                                it::getImage shouldBe "a"
+                                it::getLocalName shouldBe "a"
+                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::isUriLiteral shouldBe false
 
                             }
                         }

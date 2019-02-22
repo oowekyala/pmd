@@ -1,35 +1,34 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.ast.test.shouldBePresent
 import java.util.*
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class RangeExprTest : FunSpec({
+class RangeExprTest : XPathParserTestSpec({
 
-
-    testGroup("Test RangeExpr") {
+    parserTest("Test RangeExpr") {
 
 
         "fn:reverse(10 to 15)" should matchExpr<ASTFunctionCall> {
 
-            it.functionNameNode shouldBe child {
-                it.image shouldBe "fn:reverse"
-                it.localName shouldBe "reverse"
-                it.explicitNamespacePrefix shouldBe Optional.of("fn")
-                it.isUriLiteral shouldBe false
+            it::getFunctionNameNode shouldBe child {
+                it::getImage shouldBe "fn:reverse"
+                it::getLocalName shouldBe "reverse"
+                it::getExplicitNamespacePrefix shouldBe Optional.of("fn")
+                it::isUriLiteral shouldBe false
             }
-            it.arguments shouldBe child {
+            it::getArguments shouldBe child {
 
                 child<ASTArgument> {
-                    it.isPlaceholder shouldBe false
+                    it::isPlaceholder shouldBe false
 
-                    it.expression shouldBe childOpt<ASTRangeExpr> {
-                        it.lowerBound shouldBe child<ASTNumericLiteral> {}
-                        it.upperBound shouldBe child<ASTNumericLiteral> {}
+                    it::getExpression shouldBePresent child<ASTRangeExpr> {
+                        it::getLowerBound shouldBe child<ASTNumericLiteral> {}
+                        it::getUpperBound shouldBe child<ASTNumericLiteral> {}
                     }
                 }
             }
@@ -38,18 +37,18 @@ class RangeExprTest : FunSpec({
 
         "(10, 1 to 4)" should matchExpr<ASTParenthesizedExpr> {
 
-            it.wrappedNode shouldBe child<ASTSequenceExpr> {
+            it::getWrappedNode shouldBe child<ASTSequenceExpr> {
 
                 child<ASTNumericLiteral> {
-                    it.intValue shouldBe 10
+                    it::getIntValue shouldBe 10
                 }
 
                 child<ASTRangeExpr> {
-                    it.lowerBound shouldBe child<ASTNumericLiteral> {
-                        it.intValue shouldBe 1
+                    it::getLowerBound shouldBe child<ASTNumericLiteral> {
+                        it::getIntValue shouldBe 1
                     }
-                    it.upperBound shouldBe child<ASTNumericLiteral> {
-                        it.intValue shouldBe 4
+                    it::getUpperBound shouldBe child<ASTNumericLiteral> {
+                        it::getIntValue shouldBe 4
                     }
                 }
             }

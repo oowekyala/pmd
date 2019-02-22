@@ -1,9 +1,7 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainExactly
-import io.kotlintest.should
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 import java.util.*
 
 /**
@@ -12,17 +10,17 @@ import java.util.*
  * @author Clément Fournier
  * @since 6.7.0
  */
-class BinderExprTest : FunSpec({
+class BinderExprTest : XPathParserTestSpec({
 
     parserTest("Test simple let expression") {
 
         "let \$i := 1 + 2 return \$i * 3" should matchExpr<ASTLetExpr> {
 
             val iBinding = child<ASTVarBinding> {
-                it.varName shouldBe "i"
+                it::getVarName shouldBe "i"
 
                 child<ASTName> {
-                    it.image shouldBe "i"
+                    it::getImage shouldBe "i"
                 }
 
                 child<ASTAdditiveExpr>(ignoreChildren = true) {
@@ -33,39 +31,39 @@ class BinderExprTest : FunSpec({
 
             child<ASTMultiplicativeExpr> {
                 child<ASTVarRef> {
-                    it.binding shouldBe Optional.of(iBinding)
+                    it::getBinding shouldBe Optional.of(iBinding)
 
-                    it.varNameNode shouldBe child {
-                        it.localName shouldBe "i"
+                    it::getVarNameNode shouldBe child {
+                        it::getLocalName shouldBe "i"
                     }
                 }
 
                 child<ASTMultiplicativeOperator> { }
 
                 child<ASTNumericLiteral> {
-                    it.image shouldBe "3"
+                    it::getImage shouldBe "3"
                 }
             }
         }
     }
 
 
-    testGroup("A variable's scope should not include its own initialiser") {
+    parserTest("A variable's scope should not include its own initialiser") {
         "let \$a := \$a + 2 return \$a" should matchExpr<ASTLetExpr> {
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it.initializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.binding shouldBe Optional.empty()
+                        it::getBinding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
                 }
             }
 
-            it.bodyExpr shouldBe child<ASTVarRef> {
-                it.binding shouldBe Optional.of(aBinding)
+            it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBinding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
@@ -74,17 +72,17 @@ class BinderExprTest : FunSpec({
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it.initializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.binding shouldBe Optional.empty()
+                        it::getBinding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
                 }
             }
 
-            it.bodyExpr shouldBe child<ASTVarRef> {
-                it.binding shouldBe Optional.of(aBinding)
+            it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBinding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
@@ -93,41 +91,41 @@ class BinderExprTest : FunSpec({
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it.initializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it.binding shouldBe Optional.empty()
+                        it::getBinding shouldBe Optional.empty()
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
                 }
             }
 
-            it.bodyExpr shouldBe child<ASTVarRef> {
-                it.binding shouldBe Optional.of(aBinding)
+            it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBinding shouldBe Optional.of(aBinding)
                 child<ASTName> { }
             }
         }
     }
 
 
-    testGroup("A variable's scope should include the initialisers of the next variables") {
+    parserTest("A variable's scope should include the initialisers of the next variables") {
         "let \$a := 2, \$b := \$a return \$b" should matchExpr<ASTLetExpr> {
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
-                it.initializerExpr shouldBe child<ASTNumericLiteral> {}
+                it::getInitializerExpr shouldBe child<ASTNumericLiteral> {}
             }
 
             val bBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it.initializerExpr shouldBe child<ASTVarRef> {
-                    it.binding shouldBe Optional.of(aBinding)
+                it::getInitializerExpr shouldBe child<ASTVarRef> {
+                    it::getBinding shouldBe Optional.of(aBinding)
                     child<ASTName> { }
                 }
             }
 
-            it.bodyExpr shouldBe child<ASTVarRef> {
-                it.binding shouldBe Optional.of(bBinding)
+            it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBinding shouldBe Optional.of(bBinding)
                 child<ASTName> { }
             }
 
@@ -143,12 +141,12 @@ class BinderExprTest : FunSpec({
             val bBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it.initializerExpr shouldBe child<ASTFunctionCall> {
+                it::getInitializerExpr shouldBe child<ASTFunctionCall> {
                     child<ASTName> { }
                     child<ASTArgumentList> {
                         child<ASTArgument> {
                             child<ASTVarRef> {
-                                it.binding shouldBe Optional.of(aBinding)
+                                it::getBinding shouldBe Optional.of(aBinding)
                                 child<ASTName> { }
                             }
                         }
@@ -156,8 +154,8 @@ class BinderExprTest : FunSpec({
                 }
             }
 
-            it.bodyExpr shouldBe child<ASTVarRef> {
-                it.binding shouldBe Optional.of(bBinding)
+            it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBinding shouldBe Optional.of(bBinding)
                 child<ASTName> { }
             }
 
@@ -165,26 +163,26 @@ class BinderExprTest : FunSpec({
         }
     }
 
-    testGroup("A variable binding should shadow other lexically enclosing bindings") {
+    parserTest("A variable binding should shadow other lexically enclosing bindings") {
 
         "let \$a := 2 return let \$a := 1 return \$a" should matchExpr<ASTLetExpr> {
             val fstABinding = child<ASTVarBinding> {
-                it.varName shouldBe "a"
+                it::getVarName shouldBe "a"
 
                 child<ASTName> { }
-                it.initializerExpr shouldBe child<ASTNumericLiteral> {}
+                it::getInitializerExpr shouldBe child<ASTNumericLiteral> {}
             }
 
-            it.bodyExpr shouldBe child<ASTLetExpr> {
+            it::getBodyExpr shouldBe child<ASTLetExpr> {
                 val sndABinding = child<ASTVarBinding> {
-                    it.varName shouldBe "a"
+                    it::getVarName shouldBe "a"
 
                     child<ASTName> { }
-                    it.initializerExpr shouldBe child<ASTNumericLiteral> { }
+                    it::getInitializerExpr shouldBe child<ASTNumericLiteral> { }
                 }
 
-                it.bodyExpr shouldBe child<ASTVarRef> {
-                    it.binding shouldBe Optional.of(sndABinding) // ref to the second var
+                it::getBodyExpr shouldBe child<ASTVarRef> {
+                    it::getBinding shouldBe Optional.of(sndABinding) // ref to the second var
                     child<ASTName> { }
                 }
 

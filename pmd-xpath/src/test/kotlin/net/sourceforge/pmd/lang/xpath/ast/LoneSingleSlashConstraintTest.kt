@@ -1,8 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
 
 /**
@@ -11,7 +9,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
  * @author Clément Fournier
  * @since 6.7.0
  */
-class LoneSingleSlashConstraintTest : FunSpec({
+class LoneSingleSlashConstraintTest : XPathParserTestSpec({
 
     /*
 
@@ -47,13 +45,13 @@ class LoneSingleSlashConstraintTest : FunSpec({
         "5*/" should matchExpr<ASTMultiplicativeExpr> {
 
             child<ASTNumericLiteral> {
-                it.image shouldBe "5"
+                it::getImage shouldBe "5"
             }
 
             child<ASTMultiplicativeOperator> { }
 
             child<ASTPathExpr> {
-                it.pathAnchor shouldBe ROOT
+                it::getPathAnchor shouldBe ROOT
             }
         }
     }
@@ -62,14 +60,14 @@ class LoneSingleSlashConstraintTest : FunSpec({
         "(/)*5" should matchExpr<ASTMultiplicativeExpr> {
             child<ASTParenthesizedExpr> {
                 child<ASTPathExpr> {
-                    it.pathAnchor shouldBe ROOT
+                    it::getPathAnchor shouldBe ROOT
                 }
             }
 
             child<ASTMultiplicativeOperator> { }
 
             child<ASTNumericLiteral> {
-                it.image shouldBe "5"
+                it::getImage shouldBe "5"
             }
         }
     }
@@ -78,11 +76,11 @@ class LoneSingleSlashConstraintTest : FunSpec({
 
         parserTest("The keyword '$op' occuring after a slash should be treated as a name test") {
             "/ $op /*" should matchExpr<ASTPathExpr> {
-                it.pathAnchor shouldBe ROOT
+                it::getPathAnchor shouldBe ROOT
 
                 child<ASTAxisStep> {
                     child<ASTExactNameTest> {
-                        it.nameNode shouldBe child { it.localName shouldBe op }
+                        it::getNameNode shouldBe child { it::getLocalName shouldBe op }
                     }
                 }
 
@@ -97,7 +95,7 @@ class LoneSingleSlashConstraintTest : FunSpec({
 
     parserTest("Test ambiguity with wildcard: /*") {
         "/*" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe ROOT
+            it::getPathAnchor shouldBe ROOT
 
             child<ASTAxisStep> {
                 child<ASTWildcardNameTest> {

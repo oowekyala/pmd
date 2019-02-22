@@ -12,7 +12,7 @@ import java.util.*
  * @author Clément Fournier
  * @since 6.7.0
  */
-class PathExprTest : FunSpec({
+class PathExprTest : XPathParserTestSpec({
 
 
     parserTest("Test path anchor") {

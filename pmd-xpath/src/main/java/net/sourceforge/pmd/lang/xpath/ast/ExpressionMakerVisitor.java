@@ -240,6 +240,8 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
         appendToken(builder, node.getPathAnchor().getPrefix());
 
         Iterator<StepExpr> steps = node.iterator();
+        if (!steps.hasNext()) return; // just a root selector "/"
+
         StepExpr prev = steps.next();
 
         visit(prev, builder);

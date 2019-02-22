@@ -2,15 +2,14 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldBeEmpty
 import io.kotlintest.matchers.collections.shouldContainExactly
-import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class SequenceExprTest : FunSpec({
+class SequenceExprTest : XPathParserTestSpec({
 
 
     parserTest("Test unparenthesized sequence") {
@@ -45,7 +44,7 @@ class SequenceExprTest : FunSpec({
     parserTest("Test empty sequence") {
 
         "()" should matchExpr<ASTEmptySequenceExpr> {
-            it.isEmpty shouldBe true
+            it::isEmpty shouldBe true
             it.toList().shouldBeEmpty()
         }
     }
@@ -56,7 +55,7 @@ class SequenceExprTest : FunSpec({
 
         "(1, (2, 3), ())" should matchExpr<ASTParenthesizedExpr> {
             child<ASTSequenceExpr> {
-                it.isEmpty shouldBe false
+                it::isEmpty shouldBe false
 
                 val fst = child<ASTNumericLiteral> { }
                 val snd = child<ASTParenthesizedExpr> {
@@ -66,7 +65,7 @@ class SequenceExprTest : FunSpec({
                     }
                 }
                 val thrd = child<ASTEmptySequenceExpr> {
-                    it.isEmpty shouldBe true
+                    it::isEmpty shouldBe true
                     it.size shouldBe 0
                 }
 

@@ -1,12 +1,10 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.RELATIVE
 import java.util.*
 
-class NameTest : FunSpec({
+class NameTest : XPathParserTestSpec({
 
 
     parserTest("Test braced URI name") {
@@ -15,16 +13,16 @@ class NameTest : FunSpec({
         val name = "Q{$uri}hendeck"
 
         name should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe RELATIVE
+            it::getPathAnchor shouldBe RELATIVE
 
             child<ASTAxisStep> {
 
                 child<ASTExactNameTest> {
                     child<ASTName> {
-                        it.isUriLiteral shouldBe true
-                        it.explicitNamespacePrefix shouldBe Optional.of(uri)
-                        it.localName shouldBe "hendeck"
-                        it.image shouldBe name
+                        it::isUriLiteral shouldBe true
+                        it::getExplicitNamespacePrefix shouldBe Optional.of(uri)
+                        it::getLocalName shouldBe "hendeck"
+                        it::getImage shouldBe name
                     }
                 }
             }
@@ -35,27 +33,27 @@ class NameTest : FunSpec({
 
         "pmd-java:typeIs(\"LolWhat\", ?)" should matchExpr<ASTFunctionCall> {
 
-            it.functionNameNode shouldBe child {
-                it.isUriLiteral shouldBe false
-                it.explicitNamespacePrefix shouldBe Optional.of("pmd-java")
-                it.localName shouldBe "typeIs"
-                it.image shouldBe "pmd-java:typeIs"
+            it::getFunctionNameNode shouldBe child {
+                it::isUriLiteral shouldBe false
+                it::getExplicitNamespacePrefix shouldBe Optional.of("pmd-java")
+                it::getLocalName shouldBe "typeIs"
+                it::getImage shouldBe "pmd-java:typeIs"
             }
 
-            it.arguments shouldBe child {
+            it::getArguments shouldBe child {
 
                 child<ASTArgument> {
 
-                    it.isPlaceholder shouldBe false
+                    it::isPlaceholder shouldBe false
 
                     child<ASTStringLiteral> {
-                        it.image shouldBe "\"LolWhat\""
-                        it.unescapedValue shouldBe "LolWhat"
+                        it::getImage shouldBe "\"LolWhat\""
+                        it::getUnescapedValue shouldBe "LolWhat"
                     }
                 }
 
                 child<ASTArgument> {
-                    it.isPlaceholder shouldBe true
+                    it::isPlaceholder shouldBe true
                 }
             }
         }
@@ -64,16 +62,16 @@ class NameTest : FunSpec({
     parserTest("Test name without namespace") {
 
         "pmd-java" should matchExpr<ASTPathExpr> {
-            it.pathAnchor shouldBe RELATIVE
+            it::getPathAnchor shouldBe RELATIVE
 
             child<ASTAxisStep> {
 
                 child<ASTExactNameTest> {
                     child<ASTName> {
-                        it.isUriLiteral shouldBe false
-                        it.explicitNamespacePrefix shouldBe Optional.empty()
-                        it.localName shouldBe "pmd-java"
-                        it.image shouldBe "pmd-java"
+                        it::isUriLiteral shouldBe false
+                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getLocalName shouldBe "pmd-java"
+                        it::getImage shouldBe "pmd-java"
                     }
                 }
             }

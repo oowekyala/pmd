@@ -11,14 +11,14 @@ import io.kotlintest.specs.FunSpec
  * @author Clément Fournier
  * @since 6.7.0
  */
-class ExpressionMakerVisitorTest : FunSpec({
+class ExpressionMakerVisitorTest : XPathParserTestSpec({
 
 
     parserTest("Test predicate with abbrev descendant or self") {
         "../A//N[@Image = 'Override']" should dumpAnEquivalentParsableString()
     }
 
-    testGroup("Test inline function expr") {
+    parserTest("Test inline function expr") {
 
         listOf("function() as xs:integer { 2, 3, 5, 7, 11, 13 }",
                 "function(${'$'}a as xs:double, ${'$'}b as xs:double) as xs:double { ${'$'}a * ${'$'}b }",
@@ -34,7 +34,7 @@ class ExpressionMakerVisitorTest : FunSpec({
     }
 })
 
-class ExpressionMakerVisitorRuleRegressionTest : FunSpec({
+class ExpressionMakerVisitorRuleRegressionTest : XPathParserTestSpec({
     foreachXPathRule { rule, xpath ->
         parserTest("Test read/write cycle on ${rule.name} (${rule.ruleSetName})") {
             xpath should dumpAnEquivalentParsableString()

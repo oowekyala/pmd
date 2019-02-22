@@ -1,13 +1,12 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.should
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**
  * @author Clément Fournier
  * @since 6.7.0
  */
-class NumericLiteralTest : FunSpec({
+class NumericLiteralTest : XPathParserTestSpec({
 
 
     parserTest("Test integer literal") {

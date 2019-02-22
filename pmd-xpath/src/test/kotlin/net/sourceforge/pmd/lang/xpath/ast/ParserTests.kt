@@ -7,7 +7,7 @@ import io.kotlintest.specs.FunSpec
  * @author Clément Fournier
  * @since 6.7.0
  */
-class ParserTests : FunSpec({
+class ParserTests : XPathParserTestSpec({
 
 
     parserTest("Test nested comments") {
@@ -15,7 +15,7 @@ class ParserTests : FunSpec({
     }
 
 
-    testGroup("Whitespace rules") {
+    parserTest("Whitespace rules") {
 
 
         listOf("10 div3", "10div3", "foo- foo").forEach {
