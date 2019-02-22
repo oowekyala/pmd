@@ -70,30 +70,12 @@
         <move file="${target}/${ast-package}/XPathParserVisitor.java"
               tofile="${base-visitor-interface-file}"/>
 
-
-        <replace token="import .*;"
-                 value="">
-            <fileset dir="${target}/${ast-package}">
-                <include name="*.java"/>
-            </fileset>
-        </replace>
         <replace token="extends SimpleNode"
                  value="extends AbstractXPathNode">
             <fileset dir="${target}/${ast-package}">
                 <include name="AST*.java"/>
             </fileset>
         </replace>
-        <replace token="import net.sourceforge.pmd.lang.xpath.ast.*;"
-                 value="package net.sourceforge.pmd.lang.xpath.ast;">
-            <fileset dir="${target}/${ast-package}">
-                <include name="*.java"/>
-            </fileset>
-        </replace>
-        <replaceregexp file="${target}/${ast-package}/XPathParserConstants.java"
-                       match="XPathParserConstants.java ./"
-                       replace="\0package net.sourceforge.pmd.lang.xpath.ast;">
-        </replaceregexp>
-
 
         <replace file="${target}/${ast-package}/JJTXPathParserState.java">
             <replacetoken>public class</replacetoken>

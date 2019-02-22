@@ -6,10 +6,11 @@ import io.kotlintest.extensions.TestListener
 import io.kotlintest.specs.FunSpec
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.sxpath.XPathEvaluator
+import net.sf.saxon.trans.XPathException
 import net.sourceforge.pmd.Rule
 import net.sourceforge.pmd.lang.java.xpath.JavaFunctions
 import net.sourceforge.pmd.lang.xpath.Initializer
-import java.lang.StringBuilder
+import org.apache.commons.lang3.StringUtils.center
 import java.time.Duration
 import kotlin.system.measureNanoTime
 
@@ -31,20 +32,23 @@ class RulesetRegressionTests : FunSpec() {
                         root = parseXPathRoot(xpath)
                     }
 
-                    val saxonTime = measureNanoTime {
-                        val xpathEvaluator = XPathEvaluator()
-                        val xpathStaticContext = xpathEvaluator.staticContext
+                    val xpathEvaluator = XPathEvaluator()
+                    val xpathStaticContext = xpathEvaluator.staticContext
 
-                        rule.propertyDescriptors.forEach {
-                            xpathStaticContext.declareVariable(null, it.name())
-                        }
+                    rule.propertyDescriptors.forEach {
+                        xpathStaticContext.declareVariable(null, it.name())
+                    }
 
-                        // Register PMD functions
-                        Initializer.initialize(xpathStaticContext as IndependentContext)
+                    // Register PMD functions
+                    Initializer.initialize(xpathStaticContext as IndependentContext)
 
-                        xpathStaticContext.declareNamespace("pmd-java", "java:" + JavaFunctions::class.java.name)
+                    xpathStaticContext.declareNamespace("pmd-java", "java:" + JavaFunctions::class.java.name)
 
-                        xpathEvaluator.createExpression(xpath)
+                    val saxonTime: Long = try {
+                        measureNanoTime { xpathEvaluator.createExpression(xpath) }
+                    } catch (e: XPathException) {
+                        // Saxon failed, probably incompatibility with 1.0
+                        -1
                     }
 
                     Triple(root!!, time, saxonTime)
@@ -71,12 +75,61 @@ class RulesetRegressionTests : FunSpec() {
 
     override fun listeners(): List<TestListener> = listOf(TimerListener)
 
+    // Timing data is not very reliable
+    // Though PMD's parser is consistently faster than Saxon's,
+    // excluding a few outliers that change on each execution.
+
     internal companion object {
 
         data class TimingResult(val timeNano: Long, val saxonTimeNano: Long, val numNodes: Int, val sourceLength: Int, val rule: Rule) {
 
             override fun toString(): String {
-                return "$timeNano\t$saxonTimeNano\t$numNodes\t$sourceLength\t${rule.name}"
+
+                val diff = timeNano - saxonTimeNano
+                val percent = (diff * 100 / saxonTimeNano)
+
+                val saxonTimeFormatted = saxonTimeNano.takeIf { it >= 0 } ?: "---"
+
+                val formatted = when {
+                    saxonTimeNano < 0 -> "$ANSI_YELLOW---$ANSI_RESET" // saxon failed
+                    percent > 0       -> "$ANSI_RED+$percent$ANSI_RESET"
+                    else              -> "$ANSI_GREEN$percent$ANSI_RESET"
+                }
+
+                return String.format(ColFormat, saxonTimeFormatted, timeNano, formatted, numNodes, sourceLength, rule.name)
+            }
+
+            companion object {
+
+                val ANSI_RED = "\u001B[31m"
+                val ANSI_GREEN = "\u001B[32m"
+                val ANSI_RESET = "\u001B[0m"
+                val ANSI_YELLOW = "\u001B[33m"
+
+                private val ColFormat = "%9s | %9s | %17s | %10s | %10s | %s"
+
+                val HeaderLine = buildString {
+
+                    appendln(String.format("%32s |",
+                            center("Parse time (ms)", 32),
+                            "",
+                            "",
+                            "",
+                            "",
+                            ""
+                    ))
+
+                    appendln(String.format("%9s | %9s | %5s | %10s | %10s | %s",
+                            "Saxon",
+                            "PMD",
+                            "Diff (%)",
+                            "AST size",
+                            "Source len.",
+                            "Rule name"
+                    ))
+
+                    appendln("-".repeat(70))
+                }
             }
         }
 
@@ -114,6 +167,7 @@ class RulesetRegressionTests : FunSpec() {
                 println("Median time: $medianTime ms")
                 println()
 
+                println(TimingResult.HeaderLine)
                 results.sortedBy { it.rule.name }.forEach { println(it) }
             }
         }

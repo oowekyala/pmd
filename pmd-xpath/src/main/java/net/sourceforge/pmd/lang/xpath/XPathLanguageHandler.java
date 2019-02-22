@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.xpath;
 import java.io.Writer;
 
 import net.sourceforge.pmd.lang.AbstractLanguageVersionHandler;
+import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.VisitorStarter;
@@ -16,7 +17,7 @@ import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
 import net.sourceforge.pmd.lang.xpath.rule.XPathRuleViolationFactory;
 
 
-public class XPathLanguageHandler extends AbstractLanguageVersionHandler {
+public class XPathLanguageHandler extends AbstractPmdLanguageVersionHandler {
 
     @Override
     public XPathHandler getXPathHandler() {
