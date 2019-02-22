@@ -19,6 +19,8 @@ options {
 
 PARSER_BEGIN(XPathParser)
 
+package net.sourceforge.pmd.lang.xpath.ast;
+
 import net.sourceforge.pmd.lang.ast.CharStream;
 
 public class XPathParser {
