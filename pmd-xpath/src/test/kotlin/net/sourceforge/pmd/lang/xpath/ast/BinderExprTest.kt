@@ -29,6 +29,9 @@ class BinderExprTest : XPathParserTestSpec({
             }
 
             child<ASTMultiplicativeExpr> {
+
+                it::getOperator shouldBe "*"
+
                 child<ASTVarRef> {
                     it::getBinding shouldBe iBinding
 
@@ -37,7 +40,6 @@ class BinderExprTest : XPathParserTestSpec({
                     }
                 }
 
-                child<ASTMultiplicativeOperator> { }
 
                 child<ASTNumericLiteral> {
                     it::getImage shouldBe "3"
@@ -57,7 +59,7 @@ class BinderExprTest : XPathParserTestSpec({
                         it::getBinding shouldBe null
                         child<ASTName> { }
                     }
-                    unspecifiedChildren(2)
+                    unspecifiedChild()
                 }
             }
 
@@ -76,7 +78,7 @@ class BinderExprTest : XPathParserTestSpec({
                         it::getBinding shouldBe null
                         child<ASTName> { }
                     }
-                    unspecifiedChildren(2)
+                    unspecifiedChild()
                 }
             }
 
@@ -95,7 +97,7 @@ class BinderExprTest : XPathParserTestSpec({
                         it::getBinding shouldBe null
                         child<ASTName> { }
                     }
-                    unspecifiedChildren(2)
+                    unspecifiedChild()
                 }
             }
 

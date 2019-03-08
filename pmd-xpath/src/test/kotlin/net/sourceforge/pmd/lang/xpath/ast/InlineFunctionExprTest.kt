@@ -112,6 +112,8 @@ class InlineFunctionExprTest : XPathParserTestSpec({
             }
             it::getBodyExpr shouldBe child<ASTMultiplicativeExpr> {
 
+                it::getOperator shouldBe "*"
+
                 child<ASTVarRef> {
 
                     it::getVarNameNode shouldBe child {
@@ -122,9 +124,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
 
                     }
                 }
-                child<ASTMultiplicativeOperator> {
-                    it::getImage shouldBe "*"
-                }
+
                 child<ASTVarRef> {
 
                     it::getVarNameNode shouldBe child {

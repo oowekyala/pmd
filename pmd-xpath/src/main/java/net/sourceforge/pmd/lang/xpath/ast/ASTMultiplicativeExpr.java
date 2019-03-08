@@ -11,7 +11,9 @@ import javax.annotation.Nullable;
  *
  * <pre>
  *
- * MultiplicativeExpr ::= {@linkplain ASTUnionExpr UnionExpr} ({@linkplain ASTMultiplicativeOperator MultiplicativeOperator} {@linkplain ASTUnionExpr UnionExpr})+
+ * MultiplicativeExpr     ::= {@linkplain ASTUnionExpr UnionExpr} (MultiplicativeOperator {@linkplain ASTUnionExpr UnionExpr})+
+ *
+ * MultiplicativeOperator ::= "*" | "div" | "idiv" | "mod"
  *
  * </pre>
  */
@@ -27,6 +29,13 @@ public final class ASTMultiplicativeExpr extends AbstractXPathNode implements Ex
         super(p, id);
     }
 
+
+    /**
+     * Returns the image of the operator of this node, ie "+" or "-".
+     */
+    public String getOperator() {
+        return getImage();
+    }
 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {

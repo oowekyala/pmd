@@ -35,14 +35,14 @@ class ParserTests : XPathParserTestSpec({
         }
 
         "foo -foo" should matchExpr<ASTAdditiveExpr> {
+            it.operator shouldBe "-"
             unspecifiedChild()
-            child<ASTAdditiveOperator> { it.image shouldBe "-" }
             unspecifiedChild()
         }
 
         "foo(: This is a comment :)- foo" should matchExpr<ASTAdditiveExpr> {
+            it.operator shouldBe "-"
             unspecifiedChild()
-            child<ASTAdditiveOperator> { it.image shouldBe "-" }
             unspecifiedChild()
         }
 

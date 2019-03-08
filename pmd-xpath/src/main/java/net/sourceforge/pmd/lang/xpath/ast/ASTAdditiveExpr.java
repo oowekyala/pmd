@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
  *
  * <pre>
  *
- * AdditiveExpr ::= {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} ( {@linkplain ASTAdditiveOperator AdditiveOperator} {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} )*
+ * AdditiveExpr ::= {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} ( ("+" | "-") {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} )*
  *
  * </pre>
  */
@@ -25,6 +25,14 @@ public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSing
 
     ASTAdditiveExpr(XPathParser p, int id) {
         super(p, id);
+    }
+
+
+    /**
+     * Returns the image of the operator of this node, ie "+" or "-".
+     */
+    public String getOperator() {
+        return getImage();
     }
 
 

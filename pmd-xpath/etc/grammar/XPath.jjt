@@ -365,40 +365,39 @@ void StringConcatExpr() #StringConcatExpr(>1):
 void RangeExpr() #RangeExpr(>1):
 {}
 {
-  AdditiveExpr() ( <TO> AdditiveExpr() )?
+  AdditiveExpr(null) ( <TO> AdditiveExpr(null) )?
 }
 
 // In the following, we use nodes to represent the operators because there may be several expressions chained.
 // e.g. E1 + E2 - E3 ~> E1 PlusOperator E2 MinusOperator E3
 
-void AdditiveExpr() #AdditiveExpr(>1):
+void AdditiveExpr(String enclosingOp)
+#AdditiveExpr(jjtree.nodeArity() > 1 && (enclosingOp == null || !enclosingOp.equals(jjtn000.getImage()))):
 {}
 {
-  MultiplicativeExpr() (AdditiveOperator() MultiplicativeExpr() )*
+  MultiplicativeExpr(null)
+  (
+    ("+" | "-") { jjtThis.setImage(getToken(0).getImage()); }
+    AdditiveExpr(jjtThis.getImage())
+  )*
 }
 
-void AdditiveOperator():
+void MultiplicativeExpr(String enclosingOp)
+#MultiplicativeExpr(jjtree.nodeArity() > 1 && (enclosingOp == null || !enclosingOp.equals(jjtn000.getImage()))):
 {}
 {
-    ( "+" | "-" ) { jjtThis.setImage(getToken(0).getImage()); }
-}
-
-
-void MultiplicativeExpr() #MultiplicativeExpr(>1):
-{}
-{
-  UnionExpr() (MultiplicativeOperator() UnionExpr())*
-}
-
-void MultiplicativeOperator():
-{}
-{
-    (   <STAR>
-      | <DIV>
-      | <IDIV>
-      | <MOD>
+  UnionExpr()
+  (
+    ( <STAR>
+    | <DIV>
+    | <IDIV>
+    | <MOD>
     ) { jjtThis.setImage(getToken(0).getImage()); }
+
+    MultiplicativeExpr(jjtThis.getImage())
+  )*
 }
+
 
 void UnionExpr() #UnionExpr(>1):
 {}

@@ -146,27 +146,14 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
 
     @Override
     public void visit(ASTAdditiveExpr node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, childrenOf(node), "");
-    }
-
-
-    @Override
-    public void visit(ASTAdditiveOperator node, StringBuilder builder) {
-        appendToken(builder, node.getImage());
+        joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator() + " ");
     }
 
 
     @Override
     public void visit(ASTMultiplicativeExpr node, StringBuilder builder) {
-        justAppendChildren(builder, node);
+        joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator() + " ");
     }
-
-
-    @Override
-    public void visit(ASTMultiplicativeOperator node, StringBuilder builder) {
-        appendToken(builder, node.getImage());
-    }
-
 
     @Override
     public void visit(ASTUnionExpr node, StringBuilder builder) {

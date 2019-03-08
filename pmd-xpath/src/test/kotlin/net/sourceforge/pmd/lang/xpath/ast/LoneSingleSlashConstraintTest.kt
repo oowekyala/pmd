@@ -44,11 +44,11 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
     parserTest("Test ambiguity with single slash path: 5*/") {
         "5*/" should matchExpr<ASTMultiplicativeExpr> {
 
+            it::getOperator shouldBe "*"
+
             child<ASTNumericLiteral> {
                 it::getImage shouldBe "5"
             }
-
-            child<ASTMultiplicativeOperator> { }
 
             child<ASTPathExpr> {
                 it::getPathAnchor shouldBe ROOT
@@ -58,13 +58,15 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
 
     parserTest("Test ambiguity with single slash path: (/)*5") {
         "(/)*5" should matchExpr<ASTMultiplicativeExpr> {
+
+
+            it::getOperator shouldBe "*"
+
             child<ASTParenthesizedExpr> {
                 child<ASTPathExpr> {
                     it::getPathAnchor shouldBe ROOT
                 }
             }
-
-            child<ASTMultiplicativeOperator> { }
 
             child<ASTNumericLiteral> {
                 it::getImage shouldBe "5"

@@ -39,7 +39,7 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
 
     @Nullable
     @Override
-    @Nullablepublic <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 
