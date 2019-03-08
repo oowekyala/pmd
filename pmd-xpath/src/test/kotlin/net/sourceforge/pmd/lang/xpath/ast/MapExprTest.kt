@@ -1,8 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBePresent
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -32,7 +30,7 @@ class MapExprTest : XPathParserTestSpec({
                         it::getNameNode shouldBe child {
                             it::getImage shouldBe "div1"
                             it::getLocalName shouldBe "div1"
-                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::getExplicitNamespacePrefix shouldBe null
                             it::isUriLiteral shouldBe false
                         }
                     }
@@ -51,7 +49,7 @@ class MapExprTest : XPathParserTestSpec({
                         it::getNameNode shouldBe child {
                             it::getImage shouldBe "para"
                             it::getLocalName shouldBe "para"
-                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::getExplicitNamespacePrefix shouldBe null
                             it::isUriLiteral shouldBe false
                         }
                     }
@@ -61,7 +59,7 @@ class MapExprTest : XPathParserTestSpec({
                     it::getFunctionNameNode shouldBe child {
                         it::getImage shouldBe "string"
                         it::getLocalName shouldBe "string"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
                     }
                     it::getArguments shouldBe child {
@@ -73,7 +71,7 @@ class MapExprTest : XPathParserTestSpec({
                 it::getFunctionNameNode shouldBe child {
                     it::getImage shouldBe "concat"
                     it::getLocalName shouldBe "concat"
-                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::getExplicitNamespacePrefix shouldBe null
                     it::isUriLiteral shouldBe false
                 }
                 it::getArguments shouldBe child {
@@ -81,7 +79,7 @@ class MapExprTest : XPathParserTestSpec({
                     child<ASTArgument> {
                         it::isPlaceholder shouldBe false
 
-                        it::getExpression shouldBePresent child<ASTStringLiteral> {
+                        it::getExpression shouldBe child<ASTStringLiteral> {
                             //it::getDelimiter
                             it::getImage shouldBe "\"id-\""
                             it::getUnescapedValue shouldBe "id-"
@@ -91,7 +89,7 @@ class MapExprTest : XPathParserTestSpec({
                     child<ASTArgument> {
                         it::isPlaceholder shouldBe false
 
-                        it::getExpression shouldBePresent child<ASTContextItemExpr> {
+                        it::getExpression shouldBe child<ASTContextItemExpr> {
                         }
                     }
                 }
@@ -104,7 +102,7 @@ class MapExprTest : XPathParserTestSpec({
             it::getFunctionNameNode shouldBe child {
                 it::getImage shouldBe "avg"
                 it::getLocalName shouldBe "avg"
-                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                it::getExplicitNamespacePrefix shouldBe null
                 it::isUriLiteral shouldBe false
             }
             it::getArguments shouldBe child {
@@ -112,7 +110,7 @@ class MapExprTest : XPathParserTestSpec({
                 child<ASTArgument> {
                     it::isPlaceholder shouldBe false
 
-                    it::getExpression shouldBePresent child<ASTMapExpr> {
+                    it::getExpression shouldBe child<ASTMapExpr> {
                         // it::getOperands shouldBe it::getChildren
 
                         child<ASTPathExpr> {
@@ -132,7 +130,7 @@ class MapExprTest : XPathParserTestSpec({
                                     it::getNameNode shouldBe child {
                                         it::getImage shouldBe "employee"
                                         it::getLocalName shouldBe "employee"
-                                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                        it::getExplicitNamespacePrefix shouldBe null
                                         it::isUriLiteral shouldBe false
                                     }
                                 }
@@ -151,7 +149,7 @@ class MapExprTest : XPathParserTestSpec({
                                     it::getNameNode shouldBe child {
                                         it::getImage shouldBe "salary"
                                         it::getLocalName shouldBe "salary"
-                                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                        it::getExplicitNamespacePrefix shouldBe null
                                         it::isUriLiteral shouldBe false
                                     }
                                 }
@@ -162,7 +160,7 @@ class MapExprTest : XPathParserTestSpec({
                             it::getFunctionNameNode shouldBe child {
                                 it::getImage shouldBe "translate"
                                 it::getLocalName shouldBe "translate"
-                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::getExplicitNamespacePrefix shouldBe null
                                 it::isUriLiteral shouldBe false
                             }
                             it::getArguments shouldBe child {
@@ -170,13 +168,13 @@ class MapExprTest : XPathParserTestSpec({
                                 child<ASTArgument> {
                                     it::isPlaceholder shouldBe false
 
-                                    it::getExpression shouldBePresent child<ASTContextItemExpr> {
+                                    it::getExpression shouldBe child<ASTContextItemExpr> {
                                     }
                                 }
                                 child<ASTArgument> {
                                     it::isPlaceholder shouldBe false
 
-                                    it::getExpression shouldBePresent child<ASTStringLiteral> {
+                                    it::getExpression shouldBe child<ASTStringLiteral> {
                                         //it::getDelimiter
                                         it::getImage shouldBe "'${'$'}a'"
                                         it::getUnescapedValue shouldBe "${'$'}a"
@@ -186,7 +184,7 @@ class MapExprTest : XPathParserTestSpec({
                                 child<ASTArgument> {
                                     it::isPlaceholder shouldBe false
 
-                                    it::getExpression shouldBePresent child<ASTStringLiteral> {
+                                    it::getExpression shouldBe child<ASTStringLiteral> {
                                         //it::getDelimiter
                                         it::getImage shouldBe "''"
                                         it::getUnescapedValue shouldBe ""
@@ -200,7 +198,7 @@ class MapExprTest : XPathParserTestSpec({
                             it::getFunctionNameNode shouldBe child {
                                 it::getImage shouldBe "number"
                                 it::getLocalName shouldBe "number"
-                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::getExplicitNamespacePrefix shouldBe null
                                 it::isUriLiteral shouldBe false
                             }
                             it::getArguments shouldBe child {
@@ -208,7 +206,7 @@ class MapExprTest : XPathParserTestSpec({
                                 child<ASTArgument> {
                                     it::isPlaceholder shouldBe false
 
-                                    it::getExpression shouldBePresent child<ASTContextItemExpr> {
+                                    it::getExpression shouldBe child<ASTContextItemExpr> {
                                     }
                                 }
                             }

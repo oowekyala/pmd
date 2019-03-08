@@ -2,7 +2,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.ast.test.matchNode
 
 /**

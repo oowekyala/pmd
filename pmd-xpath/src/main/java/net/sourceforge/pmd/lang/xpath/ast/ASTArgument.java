@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 
 /**
@@ -44,8 +44,9 @@ public final class ASTArgument extends AbstractXPathNode {
     /**
      * Return the child, or an empty optional if this is a placeholder argument.
      */
-    public Optional<ExprSingle> getExpression() {
-        return isPlaceholder ? Optional.empty() : Optional.of((ExprSingle) jjtGetChild(0));
+    @Nullable
+    public ExprSingle getExpression() {
+        return isPlaceholder ? null : (ExprSingle) jjtGetChild(0);
     }
 
 
@@ -55,7 +56,7 @@ public final class ASTArgument extends AbstractXPathNode {
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -67,7 +68,8 @@ public final class ASTArgument extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

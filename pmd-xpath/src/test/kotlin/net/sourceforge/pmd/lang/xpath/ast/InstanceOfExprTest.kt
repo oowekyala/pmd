@@ -21,7 +21,7 @@ class InstanceOfExprTest : XPathParserTestSpec({
             child<ASTSequenceType> {
                 it::getItemType shouldBe child<ASTAtomicOrUnionType> {
                     it::getTypeNameNode shouldBe child {
-                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getExplicitNamespacePrefix shouldBe "xs"
                         it::getLocalName shouldBe "integer"
                     }
                 }
@@ -37,7 +37,7 @@ class InstanceOfExprTest : XPathParserTestSpec({
             child<ASTSequenceType> {
                 it::getItemType shouldBe child<ASTAtomicOrUnionType> {
                     it::getTypeNameNode shouldBe child {
-                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getExplicitNamespacePrefix shouldBe "xs"
                         it::getLocalName shouldBe "integer"
                     }
                 }
@@ -52,8 +52,8 @@ class InstanceOfExprTest : XPathParserTestSpec({
                 it::getItemType shouldBe child<ASTElementTest> {
                     it::isEmptyParen shouldBe true
                     it::isOptionalType shouldBe false
-                    it::getTypeName.shouldBeEmpty()
-                    it::getElementName.shouldBeEmpty()
+                    it::getTypeName shouldBe null
+                    it::getElementName shouldBe null
                 }
                 it::getCardinality shouldBe Cardinality.EXACTLY_ONE
             }

@@ -1,7 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBePresent
 import java.util.*
 
 /**
@@ -18,7 +17,7 @@ class RangeExprTest : XPathParserTestSpec({
             it::getFunctionNameNode shouldBe child {
                 it::getImage shouldBe "fn:reverse"
                 it::getLocalName shouldBe "reverse"
-                it::getExplicitNamespacePrefix shouldBe Optional.of("fn")
+                it::getExplicitNamespacePrefix shouldBe "fn"
                 it::isUriLiteral shouldBe false
             }
             it::getArguments shouldBe child {
@@ -26,7 +25,7 @@ class RangeExprTest : XPathParserTestSpec({
                 child<ASTArgument> {
                     it::isPlaceholder shouldBe false
 
-                    it::getExpression shouldBePresent child<ASTRangeExpr> {
+                    it::getExpression shouldBe child<ASTRangeExpr> {
                         it::getLowerBound shouldBe child<ASTNumericLiteral> {}
                         it::getUpperBound shouldBe child<ASTNumericLiteral> {}
                     }

@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.Optional;
 
 
 /**
@@ -324,7 +326,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
         if (node.isPlaceholder()) {
             appendToken(builder, "?");
         } else {
-            visit(node.getExpression().get(), builder);
+            visit(node.getExpression(), builder);
         }
     }
 
@@ -388,7 +390,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     public void visit(ASTInlineFunctionExpr node, StringBuilder builder) {
         appendToken(builder, "function");
         visit(node.getParamList(), builder);
-        node.getDeclaredReturnType().ifPresent(rt -> {
+        Optional.ofNullable(node.getDeclaredReturnType()).ifPresent(rt -> {
             appendToken(builder, " as ");
             visit(rt, builder);
         });
@@ -413,7 +415,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
         visit(node.getNameNode(), builder);
         if (!node.isDefaultType()) {
             appendToken(builder, " as ");
-            visit(node.getDeclaredType().get(), builder);
+            visit(Objects.requireNonNull(node.getDeclaredType()), builder);
         }
     }
 
@@ -445,7 +447,7 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     @Override
     public void visit(ASTDocumentTest node, StringBuilder builder) {
         appendToken(builder, "document(");
-        node.getArgumentTest().ifPresent(t -> visit(t, builder));
+        Optional.ofNullable(node.getArgumentTest()).ifPresent(t -> visit(t, builder));
         appendToken(builder, ")");
     }
 
@@ -454,15 +456,15 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     public void visit(ASTElementTest node, StringBuilder builder) {
         appendToken(builder, "element(");
         if (!node.isEmptyParen()) {
-            if (node.getElementName().isPresent()) {
-                visit(node.getElementName().get(), builder);
+            if (node.getElementName() != null) {
+                visit(node.getElementName(), builder);
             } else {
                 appendToken(builder, "*");
             }
 
-            if (node.getTypeName().isPresent()) {
+            if (node.getTypeName() != null) {
                 appendToken(builder, ",");
-                visit(node.getTypeName().get(), builder);
+                visit(node.getTypeName(), builder);
                 if (node.isOptionalType()) {
                     appendToken(builder, "?");
                 }
@@ -476,15 +478,15 @@ final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder
     public void visit(ASTAttributeTest node, StringBuilder builder) {
         appendToken(builder, "element(");
         if (!node.isEmptyParen()) {
-            if (node.getAttributeName().isPresent()) {
-                visit(node.getAttributeName().get(), builder);
+            if (node.getAttributeName() != null) {
+                visit(node.getAttributeName(), builder);
             } else {
                 appendToken(builder, "*");
             }
 
-            if (node.getTypeName().isPresent()) {
+            if (node.getTypeName() != null) {
                 appendToken(builder, ",");
-                visit(node.getTypeName().get(), builder);
+                visit(node.getTypeName(), builder);
             }
         }
         appendToken(builder, ")");

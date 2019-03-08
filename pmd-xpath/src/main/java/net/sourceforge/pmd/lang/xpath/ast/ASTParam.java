@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 
 /**
@@ -57,13 +57,14 @@ public final class ASTParam extends AbstractXPathNode {
      * Returns the declared type of the parameter,
      * or empty if the default is used.
      */
-    public Optional<ASTSequenceType> getDeclaredType() {
-        return isDefaultType() ? Optional.empty() : Optional.of((ASTSequenceType) jjtGetChild(1));
+    @Nullable
+    public ASTSequenceType getDeclaredType() {
+        return isDefaultType() ? null : (ASTSequenceType) jjtGetChild(1);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -75,7 +76,8 @@ public final class ASTParam extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

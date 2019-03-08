@@ -14,4 +14,7 @@
  *
  */
 
+@NonnullApi
 package net.sourceforge.pmd.lang.xpath.ast;
+
+import net.sourceforge.pmd.lang.xpath.annotation.NonnullApi;

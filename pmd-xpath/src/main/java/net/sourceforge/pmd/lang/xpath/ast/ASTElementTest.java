@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaElementTest;
@@ -95,10 +95,11 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
      *
      * Otherwise returns the element name.
      */
-    public Optional<ASTName> getElementName() {
+    @Nullable
+    public ASTName getElementName() {
         return isWildcard == null || isWildcard
-               ? Optional.empty()
-               : Optional.of((ASTName) jjtGetChild(0));
+               ? null
+               : (ASTName) jjtGetChild(0);
     }
 
 
@@ -114,19 +115,20 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
      *
      * Otherwise returns an empty optional.
      */
-    public Optional<ASTName> getTypeName() {
-        if (!getElementName().isPresent() && jjtGetNumChildren() == 1) {
-            return Optional.of((ASTName) jjtGetChild(0));
+    @Nullable
+    public ASTName getTypeName() {
+        if (getElementName() == null && jjtGetNumChildren() == 1) {
+            return (ASTName) jjtGetChild(0);
         } else if (getElementName() != null && jjtGetNumChildren() == 2) {
-            return Optional.of((ASTName) jjtGetChild(1));
+            return (ASTName) jjtGetChild(1);
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -138,7 +140,8 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

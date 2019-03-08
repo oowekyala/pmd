@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import javax.annotation.Nullable;
+
 /**
  * Sequence type. Sequence types are used whenever it is necessary to
  * refer to a type in an XPath 3.0 expression. The term sequence type
@@ -73,7 +75,7 @@ public final class ASTSequenceType extends AbstractXPathNode {
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -85,7 +87,8 @@ public final class ASTSequenceType extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

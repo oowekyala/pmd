@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.Node;
@@ -21,18 +22,13 @@ import net.sourceforge.pmd.lang.ast.Node;
 abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
     /** May be null if the node is synthetic. */
+    @Nullable
     protected final XPathParser parser;
 
 
-    protected AbstractXPathNode(XPathParser parser, int id) {
+    protected AbstractXPathNode(@Nullable XPathParser parser, int id) {
         super(id);
         this.parser = parser;
-    }
-
-
-    @Override
-    public XPathNode getLastChild() {
-        return jjtGetNumChildren() > 0 ? (XPathNode) jjtGetChild(jjtGetNumChildren() - 1) : null;
     }
 
 
@@ -43,7 +39,8 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
 
     @Override
-    public final <T> T childrenAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public final <T> T childrenAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         if (children != null) {
             for (Node child : children) {
                 ((XPathNode) child).jjtAccept(visitor, data);
@@ -54,7 +51,7 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
 
 
     @Override
-    public final <T> void childrenAccept(SideEffectingVisitor<T> visitor, T data) {
+    public final <T> void childrenAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         if (children != null) {
             for (Node child : children) {
                 ((XPathNode) child).jjtAccept(visitor, data);
@@ -115,6 +112,14 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
         // remove reference to the parent to avoid memory leak
         this.jjtSetParent(null);
         this.jjtSetChildIndex(-1);
+
+        AbstractXPathNode childImpl = (AbstractXPathNode) node;
+
+        // Line numbers
+        childImpl.beginLine = this.getBeginLine();
+        childImpl.endLine = this.getEndLine();
+        childImpl.beginColumn = this.getBeginColumn();
+        childImpl.endColumn = this.getEndColumn();
 
         // and hope this node can be garbage collected
     }

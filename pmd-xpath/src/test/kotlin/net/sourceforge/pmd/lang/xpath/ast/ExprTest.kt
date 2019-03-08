@@ -38,7 +38,7 @@ class ExprTest : XPathParserTestSpec({
 
 
             child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(iBinding)
+                it::getBinding shouldBe iBinding
 
                 it::getVarNameNode shouldBe child {
                     it::getLocalName shouldBe "i"

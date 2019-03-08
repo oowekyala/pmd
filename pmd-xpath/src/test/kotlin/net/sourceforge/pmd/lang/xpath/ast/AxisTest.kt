@@ -1,7 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -20,8 +19,8 @@ class AxisTest : XPathParserTestSpec({
                 it::getAxis shouldBe Axis.ATTRIBUTE
 
                 child<ASTAttributeTest> {
-                    it::getAttributeName shouldBe Optional.empty()
-                    it::getTypeName shouldBe Optional.empty()
+                    it::getAttributeName shouldBe null
+                    it::getTypeName shouldBe null
                 }
             }
         }

@@ -4,8 +4,9 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Objects;
+
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
@@ -24,10 +25,10 @@ public interface BinderExpr extends ExprSingle {
 
 
     /**
-     * Returns an unmodifiable list of the bindings declared in this expression.
+     * Returns a node stream of the bindings declared in this expression.
      */
-    default List<ASTVarBinding> getBindings() {
-        return Collections.unmodifiableList(findChildrenOfType(ASTVarBinding.class));
+    default NodeStream<ASTVarBinding> getBindings() {
+        return children(ASTVarBinding.class);
     }
 
 
@@ -37,7 +38,7 @@ public interface BinderExpr extends ExprSingle {
      * of variables declared after themselves.
      */
     default ExprSingle getBodyExpr() {
-        return (ExprSingle) getLastChild();
+        return (ExprSingle) Objects.requireNonNull(getLastChild());
     }
 
 }

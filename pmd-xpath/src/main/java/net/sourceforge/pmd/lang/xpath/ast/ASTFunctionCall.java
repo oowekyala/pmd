@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -42,7 +43,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      */
     public boolean isBooleanTrueLiteral() {
         return getFunctionNameNode().getLocalName().equals("true")
-                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
+                && getFunctionNameNode().getExplicitNamespacePrefix() == null
                 && getArguments().getArgumentNumber() == 0;
     }
 
@@ -53,7 +54,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      */
     public boolean isBooleanFalseLiteral() {
         return getFunctionNameNode().getLocalName().equals("false")
-                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
+                && getFunctionNameNode().getExplicitNamespacePrefix() == null
                 && getArguments().getArgumentNumber() == 0;
     }
 
@@ -66,7 +67,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
         String localName = getFunctionNameNode().getLocalName();
 
         return getArguments().getArgumentNumber() == 0
-                && !getFunctionNameNode().getExplicitNamespacePrefix().isPresent()
+                && getFunctionNameNode().getExplicitNamespacePrefix() == null
                 && "true".equals(localName) || "false".equals(localName);
     }
 
@@ -88,7 +89,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -100,7 +101,8 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

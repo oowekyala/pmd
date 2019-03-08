@@ -4,9 +4,9 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 
 /**
@@ -59,23 +59,23 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
      * <p>It's computed dynamically to make it resilient to AST
      * rewrites.
      */
-    public Optional<ASTVarBinding> getBinding() {
+    @Nullable
+    public ASTVarBinding getBinding() {
         // these are excluded, since the scope of a variable binding should not include its initializer
         Set<ASTVarBinding> bindingParents = getParentStream().filter(x -> x instanceof ASTVarBinding)
                                                              .map(x -> (ASTVarBinding) x)
                                                              .collect(Collectors.toSet());
 
-        return getParentStream().filter(x -> x instanceof BinderExpr)
-                                .map(x -> (BinderExpr) x)
-                                .flatMap(b -> b.getBindings().stream())
-                                .filter(b -> !bindingParents.contains(b))
-                                .filter(b -> b.getVarName().equals(getVarName()))
-                                .findFirst();
+        return ancestors(BinderExpr.class).flatMap(BinderExpr::getBindings)
+                                          .filterNot(bindingParents::contains)
+                                          .filterMatching(ASTVarBinding::getVarName, this.getVarName())
+                                          .first()
+                                          .orElse(null);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -87,7 +87,8 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 

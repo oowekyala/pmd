@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
@@ -35,19 +35,21 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
     /**
      * Returns the argument kind test, or null if there is none.
      */
-    public Optional<ElementTestOrSchemaElementTest> getArgumentTest() {
-        return jjtGetNumChildren() == 0 ? Optional.empty() : Optional.of((ElementTestOrSchemaElementTest) jjtGetChild(0));
+    @Nullable
+    public ElementTestOrSchemaElementTest getArgumentTest() {
+        return jjtGetNumChildren() == 0 ? null : (ElementTestOrSchemaElementTest) jjtGetChild(0);
     }
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 

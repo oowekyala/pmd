@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 
 /**
@@ -64,8 +64,9 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
      * Returns the declared return type of the function,
      * or an empty optional if the default is used.
      */
-    public Optional<ASTSequenceType> getDeclaredReturnType() {
-        return isDefaultReturnType() ? Optional.empty() : Optional.of((ASTSequenceType) jjtGetChild(1));
+    @Nullable
+    public ASTSequenceType getDeclaredReturnType() {
+        return isDefaultReturnType() ? null : (ASTSequenceType) jjtGetChild(1);
     }
 
 
@@ -78,7 +79,7 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -90,7 +91,8 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

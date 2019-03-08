@@ -3,7 +3,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.Matcher
 import io.kotlintest.Result
 import io.kotlintest.should
-import io.kotlintest.specs.FunSpec
 
 /**
  * Tests the xpath expression dumping.

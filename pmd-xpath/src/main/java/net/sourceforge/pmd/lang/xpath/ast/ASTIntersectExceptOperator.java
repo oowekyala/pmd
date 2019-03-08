@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import javax.annotation.Nullable;
+
 /**
  * Operator occurring in a {@linkplain ASTIntersectExceptExpr IntersectExceptExpr}.
  *
@@ -39,7 +41,7 @@ public final class ASTIntersectExceptOperator extends AbstractXPathNode implemen
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -51,7 +53,8 @@ public final class ASTIntersectExceptOperator extends AbstractXPathNode implemen
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

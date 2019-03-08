@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Union operator occurring in an {@linkplain ASTUnionExpr UnionExpr}.
  * <pre>
@@ -27,9 +30,14 @@ public final class ASTUnionOperator extends AbstractXPathNode implements BinaryO
         super(p, id);
     }
 
+    @Override
+    @Nonnull
+    public String getImage() {
+        return super.getImage();
+    }
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -41,7 +49,8 @@ public final class ASTUnionOperator extends AbstractXPathNode implements BinaryO
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 

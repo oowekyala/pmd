@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import javax.annotation.Nullable;
+
 /**
  * A predicate occurring in a {@linkplain StepExpr StepExpr}.
  *
@@ -36,13 +38,14 @@ public final class ASTPredicate extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 

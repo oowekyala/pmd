@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
@@ -71,10 +71,11 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
      * <li>attribute(*, currency)
      * </ul>
      */
-    public Optional<ASTName> getAttributeName() {
+    @Nullable
+    public ASTName getAttributeName() {
         return isWildcard == null || isWildcard
-               ? Optional.empty()
-               : Optional.of((ASTName) jjtGetChild(0));
+               ? null
+               : (ASTName) jjtGetChild(0);
     }
 
 
@@ -88,19 +89,20 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
      *
      * Otherwise returns null.
      */
-    public Optional<ASTName> getTypeName() {
-        if (!getAttributeName().isPresent() && jjtGetNumChildren() == 1) {
-            return Optional.of((ASTName) jjtGetChild(0));
-        } else if (getAttributeName().isPresent() && jjtGetNumChildren() == 2) {
-            return Optional.of((ASTName) jjtGetChild(1));
+    @Nullable
+    public ASTName getTypeName() {
+        if (getAttributeName() == null && jjtGetNumChildren() == 1) {
+            return (ASTName) jjtGetChild(0);
+        } else if (getAttributeName() != null && jjtGetNumChildren() == 2) {
+            return (ASTName) jjtGetChild(1);
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -112,7 +114,8 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

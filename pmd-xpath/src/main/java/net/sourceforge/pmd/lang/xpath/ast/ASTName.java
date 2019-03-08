@@ -7,9 +7,9 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 // @formatter:off
 /**
@@ -104,8 +104,9 @@ public final class ASTName extends AbstractXPathNode {
      * e.g. with the syntax "prefix:local". If this is {@linkplain #isUriLiteral() a URI literal},
      * then returns the full URI.
      */
-    public Optional<String> getExplicitNamespacePrefix() {
-        return Optional.ofNullable(namespace);
+    @Nullable
+    public String getExplicitNamespacePrefix() {
+        return namespace;
     }
 
 
@@ -138,7 +139,7 @@ public final class ASTName extends AbstractXPathNode {
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -150,7 +151,8 @@ public final class ASTName extends AbstractXPathNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

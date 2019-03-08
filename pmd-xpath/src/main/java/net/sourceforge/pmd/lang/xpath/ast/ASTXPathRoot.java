@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.RootNode;
 
@@ -57,7 +58,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -69,7 +70,8 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 
@@ -115,7 +117,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
             node.getBodyExpr().jjtAccept(this);
 
-            for (int i = 0; i < node.getBindings().size(); i++) {
+            for (int i = 0; i < node.getBindings().count(); i++) {
                 bindings.pop();
             }
         }

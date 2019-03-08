@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
+import javax.annotation.Nullable;
+
 /**
  * Treat as expression.
  *
@@ -44,7 +46,7 @@ public final class ASTTreatExpr extends AbstractXPathNode implements ExprSingle 
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
+    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
         visitor.visit(this, data);
     }
 
@@ -56,7 +58,8 @@ public final class ASTTreatExpr extends AbstractXPathNode implements ExprSingle 
 
 
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, T data) {
+    @Nullable
+    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
         return visitor.visit(this, data);
     }
 }

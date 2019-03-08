@@ -105,15 +105,21 @@ public class]]></replacevalue>
         <!-- Generic visitor -->
         <replace dir="${target}/${ast-package}">
             <include name="${base-visitor-interface-name}.java"/>
+            <replacefilter token="public interface"
+                           value="
+import javax.annotation.Nonnull;
+
+@net.sourceforge.pmd.lang.xpath.annotation.UnknownNullabilityApi
+public interface" />
             <replacefilter token="Visitor" value="Visitor&lt;T&gt;"/>
             <replacefilter token="Object" value="T"/>
             <replacefilter token="XPathParserVisitor" value="${base-visitor-interface-name}"/>
             <replacefilter token="SimpleNode" value="XPathNode"/>
             <replacefilter token="class XPathParserDefaultVisitor" value="abstract class AbstractXPathGenericVisitor"/>
-            <replacefilter token="public T" value="default T"/>
+            <replacefilter token="public T visit(" value="default T visit(@Nonnull "/>
             <replacefilter token=");" value=") { return visit((XPathNode) node, data); }"/>
-            <replacefilter token="default T visit(XPathNode node, T data) { return visit((XPathNode) node, data); }"
-                           value="default T visit(XPathNode node, T data) { return visitChildren(node, data); } default T visitChildren(XPathNode node, T data){ node.childrenAccept(this, data); return data;}"/>
+            <replacefilter token="default T visit(@Nonnull XPathNode node, T data) { return visit((XPathNode) node, data); }"
+                           value="default T visit(XPathNode node, T data) { return visitChildren(node, data); } default T visitChildren(@Nonnull XPathNode node, T data){ node.childrenAccept(this, data); return data;}"/>
         </replace>
 
 

@@ -20,7 +20,7 @@ class NameTest : XPathParserTestSpec({
                 child<ASTExactNameTest> {
                     child<ASTName> {
                         it::isUriLiteral shouldBe true
-                        it::getExplicitNamespacePrefix shouldBe Optional.of(uri)
+                        it::getExplicitNamespacePrefix shouldBe uri
                         it::getLocalName shouldBe "hendeck"
                         it::getImage shouldBe name
                     }
@@ -35,7 +35,7 @@ class NameTest : XPathParserTestSpec({
 
             it::getFunctionNameNode shouldBe child {
                 it::isUriLiteral shouldBe false
-                it::getExplicitNamespacePrefix shouldBe Optional.of("pmd-java")
+                it::getExplicitNamespacePrefix shouldBe "pmd-java"
                 it::getLocalName shouldBe "typeIs"
                 it::getImage shouldBe "pmd-java:typeIs"
             }
@@ -69,7 +69,7 @@ class NameTest : XPathParserTestSpec({
                 child<ASTExactNameTest> {
                     child<ASTName> {
                         it::isUriLiteral shouldBe false
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::getLocalName shouldBe "pmd-java"
                         it::getImage shouldBe "pmd-java"
                     }

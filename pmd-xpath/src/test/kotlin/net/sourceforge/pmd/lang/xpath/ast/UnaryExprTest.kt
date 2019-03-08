@@ -1,7 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
 
 /**
  * @author Clément Fournier

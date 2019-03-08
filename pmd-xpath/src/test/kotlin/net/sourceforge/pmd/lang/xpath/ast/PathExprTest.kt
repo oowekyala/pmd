@@ -1,9 +1,7 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainExactly
-import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.xpath.ast.ASTComparisonExpr.ComparisonOperator.G_EQUALS
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
 import java.util.*
@@ -166,7 +164,7 @@ class PathExprTest : XPathParserTestSpec({
                         child<ASTFunctionCall> {
                             it.functionNameNode shouldBe child {
                                 it.localName shouldBe "position"
-                                it.explicitNamespacePrefix shouldBe Optional.of("fn")
+                                it.explicitNamespacePrefix shouldBe "fn"
                             }
 
                             child<ASTArgumentList> { }

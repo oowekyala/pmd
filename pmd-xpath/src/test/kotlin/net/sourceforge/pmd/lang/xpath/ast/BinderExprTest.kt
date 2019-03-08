@@ -2,7 +2,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainExactly
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import java.util.*
 
 /**
  * Tests about BinderExpr and scope/VarRef resolution
@@ -31,7 +30,7 @@ class BinderExprTest : XPathParserTestSpec({
 
             child<ASTMultiplicativeExpr> {
                 child<ASTVarRef> {
-                    it::getBinding shouldBe Optional.of(iBinding)
+                    it::getBinding shouldBe iBinding
 
                     it::getVarNameNode shouldBe child {
                         it::getLocalName shouldBe "i"
@@ -55,7 +54,7 @@ class BinderExprTest : XPathParserTestSpec({
 
                 it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it::getBinding shouldBe Optional.empty()
+                        it::getBinding shouldBe null
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -63,7 +62,7 @@ class BinderExprTest : XPathParserTestSpec({
             }
 
             it::getBodyExpr shouldBe child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(aBinding)
+                it::getBinding shouldBe aBinding
                 child<ASTName> { }
             }
         }
@@ -74,7 +73,7 @@ class BinderExprTest : XPathParserTestSpec({
 
                 it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it::getBinding shouldBe Optional.empty()
+                        it::getBinding shouldBe null
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -82,7 +81,7 @@ class BinderExprTest : XPathParserTestSpec({
             }
 
             it::getBodyExpr shouldBe child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(aBinding)
+                it::getBinding shouldBe aBinding
                 child<ASTName> { }
             }
         }
@@ -93,7 +92,7 @@ class BinderExprTest : XPathParserTestSpec({
 
                 it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
                     child<ASTVarRef> {
-                        it::getBinding shouldBe Optional.empty()
+                        it::getBinding shouldBe null
                         child<ASTName> { }
                     }
                     unspecifiedChildren(2)
@@ -101,7 +100,7 @@ class BinderExprTest : XPathParserTestSpec({
             }
 
             it::getBodyExpr shouldBe child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(aBinding)
+                it::getBinding shouldBe aBinding
                 child<ASTName> { }
             }
         }
@@ -119,17 +118,17 @@ class BinderExprTest : XPathParserTestSpec({
                 child<ASTName> { }
 
                 it::getInitializerExpr shouldBe child<ASTVarRef> {
-                    it::getBinding shouldBe Optional.of(aBinding)
+                    it::getBinding shouldBe aBinding
                     child<ASTName> { }
                 }
             }
 
             it::getBodyExpr shouldBe child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(bBinding)
+                it::getBinding shouldBe bBinding
                 child<ASTName> { }
             }
 
-            it.bindings.shouldContainExactly(aBinding, bBinding)
+            it.bindings.toList().shouldContainExactly(aBinding, bBinding)
         }
 
         "for \$a in (1,2), \$b in f(\$a) return \$b" should matchExpr<ASTForExpr> {
@@ -146,7 +145,7 @@ class BinderExprTest : XPathParserTestSpec({
                     child<ASTArgumentList> {
                         child<ASTArgument> {
                             child<ASTVarRef> {
-                                it::getBinding shouldBe Optional.of(aBinding)
+                                it::getBinding shouldBe aBinding
                                 child<ASTName> { }
                             }
                         }
@@ -155,11 +154,11 @@ class BinderExprTest : XPathParserTestSpec({
             }
 
             it::getBodyExpr shouldBe child<ASTVarRef> {
-                it::getBinding shouldBe Optional.of(bBinding)
+                it::getBinding shouldBe bBinding
                 child<ASTName> { }
             }
 
-            it.bindings.shouldContainExactly(aBinding, bBinding)
+            it.bindings.toList().shouldContainExactly(aBinding, bBinding)
         }
     }
 
@@ -182,14 +181,14 @@ class BinderExprTest : XPathParserTestSpec({
                 }
 
                 it::getBodyExpr shouldBe child<ASTVarRef> {
-                    it::getBinding shouldBe Optional.of(sndABinding) // ref to the second var
+                    it::getBinding shouldBe sndABinding // ref to the second var
                     child<ASTName> { }
                 }
 
-                it.bindings.shouldContainExactly(sndABinding)
+                it.bindings.toList().shouldContainExactly(sndABinding)
             }
 
-            it.bindings.shouldContainExactly(fstABinding)
+            it.bindings.toList().shouldContainExactly(fstABinding)
         }
     }
 

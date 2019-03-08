@@ -2,7 +2,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainAll
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBePresent
 import java.util.*
 
 /**
@@ -19,7 +18,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
             it::getParamList shouldBe child {
 
             }
-            it::getDeclaredReturnType shouldBePresent child<ASTSequenceType> {
+            it::getDeclaredReturnType shouldBe child {
                 it::getCardinality shouldBe Cardinality.ONE_OR_MORE
                 it::isEmptySequence shouldBe false
 
@@ -28,7 +27,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getTypeNameNode shouldBe child {
                         it::getImage shouldBe "xs:integer"
                         it::getLocalName shouldBe "integer"
-                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getExplicitNamespacePrefix shouldBe "xs"
                         it::isUriLiteral shouldBe false
 
                     }
@@ -49,11 +48,11 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getNameNode shouldBe child {
                         it::getImage shouldBe "a"
                         it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
 
                     }
-                    it::getDeclaredType shouldBePresent child<ASTSequenceType> {
+                    it::getDeclaredType shouldBe child<ASTSequenceType> {
                         it::getCardinality shouldBe Cardinality.EXACTLY_ONE
                         it::isEmptySequence shouldBe false
 
@@ -62,7 +61,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                             it::getTypeNameNode shouldBe child {
                                 it::getImage shouldBe "xs:double"
                                 it::getLocalName shouldBe "double"
-                                it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                                it::getExplicitNamespacePrefix shouldBe "xs"
                                 it::isUriLiteral shouldBe false
 
                             }
@@ -75,11 +74,11 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getNameNode shouldBe child {
                         it::getImage shouldBe "b"
                         it::getLocalName shouldBe "b"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
 
                     }
-                    it::getDeclaredType shouldBePresent child<ASTSequenceType> {
+                    it::getDeclaredType shouldBe child<ASTSequenceType> {
                         it::getCardinality shouldBe Cardinality.EXACTLY_ONE
                         it::isEmptySequence shouldBe false
 
@@ -88,7 +87,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                             it::getTypeNameNode shouldBe child {
                                 it::getImage shouldBe "xs:double"
                                 it::getLocalName shouldBe "double"
-                                it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                                it::getExplicitNamespacePrefix shouldBe "xs"
                                 it::isUriLiteral shouldBe false
 
                             }
@@ -96,7 +95,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     }
                 }
             }
-            it::getDeclaredReturnType shouldBePresent child<ASTSequenceType> {
+            it::getDeclaredReturnType shouldBe child<ASTSequenceType> {
                 it::getCardinality shouldBe Cardinality.EXACTLY_ONE
                 it::isEmptySequence shouldBe false
 
@@ -105,7 +104,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getTypeNameNode shouldBe child {
                         it::getImage shouldBe "xs:double"
                         it::getLocalName shouldBe "double"
-                        it::getExplicitNamespacePrefix shouldBe Optional.of("xs")
+                        it::getExplicitNamespacePrefix shouldBe "xs"
                         it::isUriLiteral shouldBe false
 
                     }
@@ -118,7 +117,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getVarNameNode shouldBe child {
                         it::getImage shouldBe "a"
                         it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
 
                     }
@@ -131,7 +130,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getVarNameNode shouldBe child {
                         it::getImage shouldBe "b"
                         it::getLocalName shouldBe "b"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
 
                     }
@@ -140,19 +139,19 @@ class InlineFunctionExprTest : XPathParserTestSpec({
         }
 
         "function(${'$'}a) { ${'$'}a }" should matchExpr<ASTInlineFunctionExpr> {
-            it::getDeclaredReturnType shouldBe Optional.empty()
+            it::getDeclaredReturnType shouldBe null
             it::isDefaultReturnType shouldBe true
 
             it::getParamList shouldBe child {
 
                 child<ASTParam> {
-                    it::getDeclaredType shouldBe Optional.empty()
+                    it::getDeclaredType shouldBe null
                     it::isDefaultType shouldBe true
 
                     it::getNameNode shouldBe child {
                         it::getImage shouldBe "a"
                         it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                        it::getExplicitNamespacePrefix shouldBe null
                         it::isUriLiteral shouldBe false
 
                     }
@@ -163,7 +162,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                 it::getVarNameNode shouldBe child {
                     it::getImage shouldBe "a"
                     it::getLocalName shouldBe "a"
-                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::getExplicitNamespacePrefix shouldBe null
                     it::isUriLiteral shouldBe false
 
                 }
@@ -178,7 +177,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                 it::getFunctionNameNode shouldBe child {
                     it::getImage shouldBe "collection"
                     it::getLocalName shouldBe "collection"
-                    it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                    it::getExplicitNamespacePrefix shouldBe null
                     it::isUriLiteral shouldBe false
 
                 }
@@ -195,7 +194,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                         it::getVarNameNode shouldBe child {
                             it::getImage shouldBe "a"
                             it::getLocalName shouldBe "a"
-                            it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                            it::getExplicitNamespacePrefix shouldBe null
                             it::isUriLiteral shouldBe false
 
                         }
@@ -204,11 +203,11 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                         }
                     }
 
-                    it.bindings.shouldContainAll(binding)
+                    it.bindings.toList().shouldContainAll(binding)
 
 
                     it::getBodyExpr shouldBe child<ASTInlineFunctionExpr> {
-                        it::getDeclaredReturnType shouldBe Optional.empty()
+                        it::getDeclaredReturnType shouldBe null
                         it::isDefaultReturnType shouldBe true
 
                         it::getParamList shouldBe child {}
@@ -218,7 +217,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                             it::getVarNameNode shouldBe child {
                                 it::getImage shouldBe "a"
                                 it::getLocalName shouldBe "a"
-                                it::getExplicitNamespacePrefix shouldBe Optional.empty()
+                                it::getExplicitNamespacePrefix shouldBe null
                                 it::isUriLiteral shouldBe false
 
                             }
