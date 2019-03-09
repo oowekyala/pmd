@@ -49,12 +49,15 @@ class AdditiveExprTest : XPathParserTestSpec({
 
 
     parserTest("Additive expr should have greater precedence than multiplicative") {
+        // 1+(2-(3*4))
         "1 + 2 - 3 * 4" should matchExpr<ASTAdditiveExpr> {
             it.operator shouldBe "+"
+
 
             child<ASTNumericLiteral> {
                 it.image shouldBe "1"
             }
+
             child<ASTAdditiveExpr> {
                 it.operator shouldBe "-"
 
@@ -63,7 +66,7 @@ class AdditiveExprTest : XPathParserTestSpec({
                 }
 
                 child<ASTMultiplicativeExpr> {
-                    it
+                    it.operator shouldBe "*"
 
                     child<ASTNumericLiteral> {
                         it.image shouldBe "3"
@@ -73,6 +76,43 @@ class AdditiveExprTest : XPathParserTestSpec({
                         it.image shouldBe "4"
                     }
                 }
+            }
+        }
+
+
+        // 1+(2-(3*4))+5
+        "1 + 2 - 3 * 4 + 5" should matchExpr<ASTAdditiveExpr> {
+            it.operator shouldBe "+"
+
+
+            child<ASTNumericLiteral> {
+                it.image shouldBe "1"
+            }
+
+            child<ASTAdditiveExpr> {
+                it.operator shouldBe "-"
+
+                child<ASTNumericLiteral> {
+                    it.image shouldBe "2"
+                }
+
+                child<ASTMultiplicativeExpr> {
+                    it.operator shouldBe "*"
+
+                    child<ASTNumericLiteral> {
+                        it.image shouldBe "3"
+                    }
+
+                    child<ASTNumericLiteral> {
+                        it.image shouldBe "4"
+                    }
+                }
+            }
+
+
+
+            child<ASTNumericLiteral> {
+                it.image shouldBe "5"
             }
         }
     }

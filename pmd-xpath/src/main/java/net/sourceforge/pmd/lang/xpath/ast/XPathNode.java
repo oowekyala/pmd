@@ -4,7 +4,9 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.meta.When;
 
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -36,6 +38,7 @@ public interface XPathNode extends Node {
 
 
     @Override
+    @Nonnull(when = When.UNKNOWN)
     XPathNode jjtGetParent();
 
 
