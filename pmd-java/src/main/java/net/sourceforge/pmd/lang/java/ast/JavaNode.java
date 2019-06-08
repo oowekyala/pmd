@@ -84,10 +84,23 @@ public interface JavaNode extends ScopedNode {
     JavaNode jjtGetParent();
 
 
+    ASTCompilationUnit getRoot();
+
+
     GenericToken jjtGetFirstToken();
 
 
     GenericToken jjtGetLastToken();
+
+
+    int getStartOffset();
+
+
+    int getEndOffset();
+
+
+    CharSequence getText();
+
 
     /**
      * FIXME figure that out

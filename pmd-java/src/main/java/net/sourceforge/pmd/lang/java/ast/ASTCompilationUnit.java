@@ -18,6 +18,7 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
 
     private ClassTypeResolver classTypeResolver;
     private List<Comment> comments;
+    private CharSequence fileText;
 
     ASTCompilationUnit(int id) {
         super(id);
@@ -33,6 +34,22 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
 
     void setComments(List<Comment> comments) {
         this.comments = comments;
+    }
+
+
+    @Override
+    public ASTCompilationUnit getRoot() {
+        return this;
+    }
+
+    @Override
+    public CharSequence getText() {
+        return fileText;
+    }
+
+
+    void setFileText(CharSequence fileText) {
+        this.fileText = fileText;
     }
 
     @Override

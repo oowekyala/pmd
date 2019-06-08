@@ -17,6 +17,7 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
     private Scope scope;
     private Comment comment;
     private ASTCompilationUnit root;
+    private CharSequence text;
 
     AbstractJavaNode(int id) {
         super(id);
@@ -98,10 +99,30 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
     @Override
     public Scope getScope() {
         if (scope == null) {
-            return ((JavaNode) parent).getScope();
+            return jjtGetParent().getScope();
         }
         return scope;
     }
+
+
+    @Override
+    public CharSequence getText() {
+        if (text == null) {
+            text = getRoot().getText().subSequence(getStartOffset(), getEndOffset());
+        }
+        return text;
+    }
+
+    @Override
+    public int getStartOffset() {
+        return jjtGetFirstToken().getStartDocumentOffset();
+    }
+
+    @Override
+    public int getEndOffset() {
+        return jjtGetLastToken().getEndDocumentOffset();
+    }
+
 
     void setScope(Scope scope) {
         this.scope = scope;
