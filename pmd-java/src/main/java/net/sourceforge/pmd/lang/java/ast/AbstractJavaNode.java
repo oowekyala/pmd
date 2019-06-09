@@ -128,12 +128,12 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
 
     @Override
     public int getStartOffset() {
-        return ((JavaccToken) jjtGetFirstToken()).getStartInDocument();
+        return jjtGetFirstToken().getStartInDocument();
     }
 
     @Override
     public int getEndOffset() {
-        return ((JavaccToken) jjtGetLastToken()).getEndInDocument();
+        return jjtGetLastToken().getEndInDocument();
     }
 
 
@@ -145,6 +145,10 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
         comment = theComment;
     }
 
+    @Override
+    public GenericToken jjtGetFirstToken() {
+        return super.jjtGetFirstToken();
+    }
 
     @Override
     public Comment comment() {
