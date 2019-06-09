@@ -8,6 +8,7 @@ package net.sourceforge.pmd.lang.java.ast;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.GenericToken;
+import net.sourceforge.pmd.lang.ast.impl.RichCharSequence;
 import net.sourceforge.pmd.lang.symboltable.ScopedNode;
 
 
@@ -99,7 +100,7 @@ public interface JavaNode extends ScopedNode {
     int getEndOffset();
 
 
-    CharSequence getText();
+    RichCharSequence getText();
 
 
     /**
