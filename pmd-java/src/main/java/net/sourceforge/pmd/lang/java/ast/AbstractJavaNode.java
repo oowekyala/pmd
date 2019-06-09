@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.ast.impl.RichCharSequence;
 import net.sourceforge.pmd.lang.symboltable.Scope;
 
@@ -116,12 +117,12 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
 
     @Override
     public int getStartOffset() {
-        return jjtGetFirstToken().getStartDocumentOffset();
+        return ((JavaccToken) jjtGetFirstToken()).getStartDocumentOffset();
     }
 
     @Override
     public int getEndOffset() {
-        return jjtGetLastToken().getEndDocumentOffset();
+        return ((JavaccToken) jjtGetLastToken()).getEndDocumentOffset();
     }
 
 

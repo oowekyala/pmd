@@ -13,7 +13,6 @@ import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.AbstractTokenManager;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.impl.JavaCharStream;
-import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.ast.ParseException;
 
@@ -41,7 +40,7 @@ public abstract class AbstractJavaParser extends AbstractParser {
      * Subclass should override this method to modify the JavaParser as needed.
      */
     protected JavaParser createJavaParser(Reader source) throws ParseException {
-        parser = new JavaParser(JavaCharStream.createStream(source));
+        parser = new JavaParser(new JavaCharStream(source));
         String suppressMarker = getParserOptions().getSuppressMarker();
         if (suppressMarker != null) {
             parser.setSuppressMarker(suppressMarker);
