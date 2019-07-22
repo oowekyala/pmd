@@ -8,8 +8,6 @@ package net.sourceforge.pmd.lang.java.ast;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.GenericToken;
-import net.sourceforge.pmd.lang.ast.impl.RichCharSequence;
-import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.symboltable.ScopedNode;
 
@@ -95,15 +93,12 @@ public interface JavaNode extends ScopedNode, TextAvailableNode {
     GenericToken jjtGetLastToken();
 
 
+    /** Gets the inclusive start offset of this node in the file text. */
     int getStartOffset();
 
 
+    /** Gets the exclusive end offset of this node in the file text. */
     int getEndOffset();
-
-
-    @Override
-    String getText();
-
 
     /**
      * FIXME figure that out
