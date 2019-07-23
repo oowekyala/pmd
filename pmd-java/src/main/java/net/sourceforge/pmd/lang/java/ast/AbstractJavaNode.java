@@ -124,18 +124,6 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
         return text;
     }
 
-
-    @Override
-    public int getStartOffset() {
-        return jjtGetFirstToken().getStartInDocument();
-    }
-
-    @Override
-    public int getEndOffset() {
-        return jjtGetLastToken().getEndInDocument();
-    }
-
-
     void setScope(Scope scope) {
         this.scope = scope;
     }
@@ -318,5 +306,14 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
     @Override
     public String toString() {
         return "|" + getXPathNodeName() + "|" + getStartOffset() + "," + getEndOffset() + "|" + getText();
+    }
+
+    private int getStartOffset() {
+        return jjtGetFirstToken().getStartInDocument();
+    }
+
+
+    private int getEndOffset() {
+        return jjtGetLastToken().getEndInDocument();
     }
 }
