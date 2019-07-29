@@ -11,7 +11,7 @@ package net.sourceforge.pmd.lang.java.ast;
  * TODO instanceof also is also kindof binary, we need to introduce a TypeAccess node to give an expression API to a type node
  *  (that's what spoon does)
  */
-public interface ASTBinaryExpression extends ASTExpression, JSingleChildNode<ASTExpression> {
+public interface ASTBinaryExpression extends ASTExpression, JSingleChildNode<ASTExpression>, LeftRecursiveNode {
 
 
     /** Returns the operator. */

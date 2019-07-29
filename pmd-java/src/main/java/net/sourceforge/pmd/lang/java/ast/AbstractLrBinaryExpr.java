@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * @author Clément Fournier
  */
-abstract class AbstractLrBinaryExpr extends AbstractJavaExpr implements LeftRecursiveNode, ASTBinaryExpression {
+abstract class AbstractLrBinaryExpr extends AbstractJavaExpr implements ASTBinaryExpression {
 
     private BinaryOp operator;
 
