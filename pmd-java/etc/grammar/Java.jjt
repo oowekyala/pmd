@@ -2342,22 +2342,22 @@ void ConditionalAndExpression() #ConditionalAndExpression(>1):
   InclusiveOrExpression() ( LOOKAHEAD(2) "&&" InclusiveOrExpression() )*
 }
 
-void InclusiveOrExpression() #InclusiveOrExpression(>1) :
+void InclusiveOrExpression() #void:
 {}
 {
-  ExclusiveOrExpression() ( LOOKAHEAD(2) "|" ExclusiveOrExpression() )*
+  ExclusiveOrExpression() (("|" ExclusiveOrExpression())  #InclusiveOrExpression(2))*
 }
 
-void ExclusiveOrExpression() #ExclusiveOrExpression(>1) :
+void ExclusiveOrExpression() #void:
 {}
 {
-  AndExpression()  ( LOOKAHEAD(2) "^" AndExpression() )*
+  AndExpression()  ( ("^" AndExpression()) #ExclusiveOrExpression(2))*
 }
 
-void AndExpression() #AndExpression(>1):
+void AndExpression() #void:
 {}
 {
-  EqualityExpression() ( LOOKAHEAD(2) "&" EqualityExpression() )*
+  EqualityExpression() (("&" EqualityExpression()) #AndExpression(2))*
 }
 
 // same as ShiftExpression

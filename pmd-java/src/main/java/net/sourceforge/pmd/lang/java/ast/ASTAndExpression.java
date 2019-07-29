@@ -15,11 +15,11 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * <pre class="grammar">
  *
- * AndExpression ::=  {@linkplain ASTEqualityExpression EqualityExpression} ( "&" {@linkplain ASTEqualityExpression EqualityExpression} )+
+ * AndExpression ::= {@link ASTAndExpression AndExpression} "&" {@linkplain ASTEqualityExpression EqualityExpression}
  *
  * </pre>
  */
-public final class ASTAndExpression extends AbstractJavaExpr implements ASTExpression {
+public final class ASTAndExpression extends AbstractJavaExpr implements ASTBinaryExpression {
 
     ASTAndExpression(int id) {
         super(id);
@@ -38,5 +38,15 @@ public final class ASTAndExpression extends AbstractJavaExpr implements ASTExpre
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
+    }
+
+    @Override
+    public ASTExpression jjtGetChild(int index) {
+        return (ASTExpression) super.jjtGetChild(index);
+    }
+
+    @Override
+    public BinaryOp getOperator() {
+        return BinaryOp.AND;
     }
 }

@@ -15,11 +15,11 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * <pre class="grammar">
  *
- * InclusiveOrExpression ::=  {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression} ( "|" {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression} )+
+ * InclusiveOrExpression ::= {@link ASTInclusiveOrExpression InclusiveOrExpression} "|" {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression}
  *
  * </pre>
  */
-public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements ASTExpression {
+public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements ASTBinaryExpression {
 
     ASTInclusiveOrExpression(int id) {
         super(id);
@@ -40,5 +40,15 @@ public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
+    }
+
+    @Override
+    public ASTExpression jjtGetChild(int index) {
+        return (ASTExpression) super.jjtGetChild(index);
+    }
+
+    @Override
+    public BinaryOp getOperator() {
+        return BinaryOp.OR;
     }
 }
