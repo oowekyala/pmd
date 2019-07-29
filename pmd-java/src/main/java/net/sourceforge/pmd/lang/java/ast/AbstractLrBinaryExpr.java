@@ -4,15 +4,13 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-import java.util.Iterator;
-
 /**
  * Base class for some expressions that are parsed left-recursively.
  *
  * @author Clément Fournier
  */
 abstract class AbstractLrBinaryExpr extends AbstractJavaExpr
-    implements ASTExpression, LeftRecursiveNode, Iterable<ASTExpression> {
+    implements ASTExpression, LeftRecursiveNode, JSingleChildNode<ASTExpression> {
 
     private BinaryOp operator;
 
@@ -26,26 +24,8 @@ abstract class AbstractLrBinaryExpr extends AbstractJavaExpr
 
 
     @Override
-    public void jjtClose() {
-        super.jjtClose();
-
-        // At this point the expression is fully left-recursive
-        // If any of its left children are also AdditiveExpressions with the same operator,
-        // we adopt their children to flatten the node
-
-        JavaNode first = (JavaNode) jjtGetChild(0);
-        // they could be of different types, but the getOp check ensures
-        // they are of the same type
-        if (first instanceof AbstractLrBinaryExpr
-            && ((AbstractLrBinaryExpr) first).getOperator() == getOperator()
-            && !((AbstractLrBinaryExpr) first).isParenthesized()) {
-            flatten(0);
-        }
-    }
-
-    @Override
-    public Iterator<ASTExpression> iterator() {
-        return new NodeChildrenIterator<>(this, ASTExpression.class);
+    public ASTExpression jjtGetChild(int index) {
+        return (ASTExpression) super.jjtGetChild(index);
     }
 
     @Override
@@ -59,5 +39,13 @@ abstract class AbstractLrBinaryExpr extends AbstractJavaExpr
      */
     public BinaryOp getOperator() {
         return operator;
+    }
+
+    public ASTExpression getLhs() {
+        return jjtGetChild(0);
+    }
+
+    public ASTExpression getRhs() {
+        return jjtGetChild(1);
     }
 }

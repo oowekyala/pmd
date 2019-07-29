@@ -14,7 +14,7 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * <pre class="grammar">
  *
- * RelationalExpression ::=  {@linkplain ASTShiftExpression ShiftExpression} ( ( "&lt;" | "&gt;" | "&lt;=" | "&gt;=" ) {@linkplain ASTShiftExpression ShiftExpression} )+
+ * RelationalExpression ::=  {@linkplain ASTShiftExpression ShiftExpression} ( "&lt;" | "&gt;" | "&lt;=" | "&gt;=" ) {@linkplain ASTShiftExpression ShiftExpression}
  *
  * </pre>
  */
