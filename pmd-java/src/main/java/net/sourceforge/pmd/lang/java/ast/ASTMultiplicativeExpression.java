@@ -15,8 +15,6 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * </pre>
  *
- * <p>Note that the children of this node are not necessarily {@link ASTUnaryExpression}s or {@link ASTMultiplicativeExpression MultiplicativeExpression},
- * rather, they are expressions with an operator precedence greater or equal to those.
  */
 public final class ASTMultiplicativeExpression extends AbstractLrBinaryExpr {
 

@@ -14,9 +14,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * EqualityExpression ::=  {@linkplain ASTEqualityExpression EqualityExpression} ( "==" | "!=" ) {@linkplain ASTInstanceOfExpression InstanceOfExpression}
  *
  * </pre>
- *
- * <p>Note that the children of this node are not necessarily {@link ASTInstanceOfExpression} or {@link ASTEqualityExpression},
- * rather, they are expressions with an operator precedence greater or equal to those.
  */
 public final class ASTEqualityExpression extends AbstractLrBinaryExpr implements ASTExpression {
     ASTEqualityExpression(int id) {

@@ -15,9 +15,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * AdditiveExpression ::= {@linkplain ASTAdditiveExpression AdditiveExpression} ( "+" | "-" ) {@linkplain ASTMultiplicativeExpression MultiplicativeExpression}
  *
  * </pre>
- *
- * <p>Note that the children of this node are not necessarily {@link ASTMultiplicativeExpression} or {@link ASTAdditiveExpression},
- * rather, they are expressions with an operator precedence greater or equal to those.
  */
 public final class ASTAdditiveExpression extends AbstractLrBinaryExpr {
 

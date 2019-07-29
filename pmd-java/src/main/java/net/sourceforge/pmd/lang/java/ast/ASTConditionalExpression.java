@@ -12,9 +12,6 @@ import net.sourceforge.pmd.lang.ast.Node;
  * a greater precedence as {@linkplain ASTExpression assignment expressions},
  * and lower as {@link ASTConditionalOrExpression}.
  *
- * <p>Note that the children of this node are not necessarily {@link ASTConditionalOrExpression},
- * rather, they are expressions with an operator precedence greater or equal to ConditionalOrExpression.
- *
  * <pre class="grammar">
  *
  * ConditionalExpression ::= {@linkplain ASTConditionalOrExpression ConditionalOrExpression} "?"  {@linkplain ASTExpression Expression} ":" {@linkplain ASTConditionalExpression ConditionalExpression}

@@ -12,6 +12,10 @@ package net.sourceforge.pmd.lang.java.ast;
  * <p>From 7.0.0 on, this is an interface which all expression nodes
  * implement.
  *
+ * <p>In the BNF snippets, mentions of an expression type can be replaced
+ * by any expression that has a precedence greater or equal to the mentioned
+ * expression.
+ *
  * <pre class="grammar">
  *
  * (: In increasing precedence order :)

@@ -9,10 +9,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * This has a precedence greater than {@link ASTExclusiveOrExpression},
  * and lower than {@link ASTEqualityExpression}.
  *
- * <p>Note that the children of this node are not necessarily {@link ASTEqualityExpression},
- * rather, they are expressions with an operator precedence greater or equal to EqualityExpression.
- *
- *
  * <pre class="grammar">
  *
  * AndExpression ::= {@link ASTAndExpression AndExpression} "&" {@linkplain ASTEqualityExpression EqualityExpression}

@@ -9,10 +9,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * greater than {@link ASTConditionalAndExpression}, and lower than
  * {@link ASTExclusiveOrExpression}.
  *
- * <p>Note that the children of this node are not necessarily {@link ASTExclusiveOrExpression},
- * rather, they are expressions with an operator precedence greater or equal to ExclusiveOrExpression.
- *
- *
  * <pre class="grammar">
  *
  * InclusiveOrExpression ::= {@link ASTInclusiveOrExpression InclusiveOrExpression} "|" {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression}

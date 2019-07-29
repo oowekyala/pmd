@@ -8,10 +8,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * Represents a boolean OR-expression. This has a precedence greater than {@link ASTConditionalExpression},
  * and lower than {@link ASTConditionalAndExpression}.
  *
- * <p>Note that the children of this node are not necessarily {@link ASTConditionalAndExpression},
- * rather, they are expressions with an operator precedence greater or equal to ConditionalAndExpression.
- *
- *
  * <pre class="grammar">
  *
  * ConditionalOrExpression ::=  {@linkplain ASTConditionalAndExpression ConditionalAndExpression} ( "||" {@linkplain ASTConditionalAndExpression ConditionalAndExpression} )+
