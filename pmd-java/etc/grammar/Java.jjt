@@ -2364,16 +2364,14 @@ void AndExpression() #void:
 void EqualityExpression() #void:
 {}
 {
-  InstanceOfExpression() (EqualityExprTail())*
-}
-
-
-void EqualityExprTail() #EqualityExpression(2):
-{}
-{
-    ( "==" | "!=" )
-    { setLastTokenImage(jjtThis); }
-    InstanceOfExpression()
+  InstanceOfExpression()
+  (
+    (
+        ( "==" | "!=" )
+        { setLastTokenImage(jjtThis); }
+        InstanceOfExpression()
+    ) #EqualityExpression(2)
+  )*
 }
 
 void InstanceOfExpression() #InstanceOfExpression(>1):
@@ -2391,15 +2389,14 @@ void RelationalExpression() #void:
   // For example, a<b<c parses as (a<b)<c, which is always a compile-time
   // error, because the type of a<b is always boolean and < is not an operator
   // on boolean values.
-  ShiftExpression() (RelationalExprTail())*
-}
-
-void RelationalExprTail() #RelationalExpression(2):
-{}
-{
-    ( "<" | ">" | "<=" | ">=" )
-    { setLastTokenImage(jjtThis); }
-    ShiftExpression()
+  ShiftExpression()
+  (
+    (
+      ( "<" | ">" | "<=" | ">=" )
+      { setLastTokenImage(jjtThis); }
+      ShiftExpression()
+    ) #RelationalExpression(2)
+  )*
 }
 
 /**
@@ -2411,48 +2408,44 @@ void RelationalExprTail() #RelationalExpression(2):
 void ShiftExpression() #void:
 {}
 {
-  AdditiveExpression() (ShiftExprTail())*
-}
-
-
-void ShiftExprTail() #ShiftExpression(2):
-{}
-{
-    ( "<<"                     { jjtThis.setImage("<<");}
-    | RSIGNEDSHIFT()           { jjtThis.setImage(">>"); }
-    | RUNSIGNEDSHIFT()         { jjtThis.setImage(">>>"); }
-    )
-    AdditiveExpression()
+  AdditiveExpression()
+  (
+    (
+      ( "<<"                     { jjtThis.setImage("<<");}
+      | RSIGNEDSHIFT()           { jjtThis.setImage(">>"); }
+      | RUNSIGNEDSHIFT()         { jjtThis.setImage(">>>"); }
+      )
+      AdditiveExpression()
+    ) #ShiftExpression(2)
+  )*
 }
 
 // this is exactly similar to ShiftExpression
 void AdditiveExpression() #void:
 {}
 {
-  MultiplicativeExpression() (AdditiveExprTail())*
-}
-
-void AdditiveExprTail() #AdditiveExpression(2):
-{}
-{
-    ( "+" | "-" )
-    { setLastTokenImage(jjtThis); }
-    MultiplicativeExpression()
+  MultiplicativeExpression()
+  (
+    (
+      ( "+" | "-" )
+      { setLastTokenImage(jjtThis); }
+      MultiplicativeExpression()
+    ) #AdditiveExpression(2)
+  )*
 }
 
 // this is exactly similar to ShiftExpression
 void MultiplicativeExpression() #void:
 {}
 {
-  UnaryExpression() (MultiplicativeExprTail())*
-}
-
-void MultiplicativeExprTail() #MultiplicativeExpression(2):
-{}
-{
-  ( "*" | "/" | "%" )
-  { setLastTokenImage(jjtThis); }
   UnaryExpression()
+  (
+    (
+      ( "*" | "/" | "%" )
+      { setLastTokenImage(jjtThis); }
+      UnaryExpression()
+    ) #MultiplicativeExpression(2)
+  )*
 }
 
 void UnaryExpression() #void:
