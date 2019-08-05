@@ -455,6 +455,14 @@ public interface Rule extends PropertySource {
      */
     void end(RuleContext ctx);
 
+    default void afterAnalysis(RuleContext ctx) {
+
+    }
+
+    default void beforeAnalysis(RuleContext ctx) {
+
+    }
+
     /**
      * Creates a new copy of this rule.
      * @return A new exact copy of this rule

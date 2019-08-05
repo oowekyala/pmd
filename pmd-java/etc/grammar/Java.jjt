@@ -232,6 +232,7 @@ options {
   NODE_USES_PARSER = true;
   TRACK_TOKENS = true;
   NODE_PACKAGE="net.sourceforge.pmd.lang.java.ast";
+  NODE_FACTORY = "net.sourceforge.pmd.lang.java.ast.NodeFactory";
 
   //DEBUG_PARSER = true;
   //DEBUG_LOOKAHEAD = true;

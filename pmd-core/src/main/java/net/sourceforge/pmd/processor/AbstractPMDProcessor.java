@@ -113,6 +113,7 @@ public abstract class AbstractPMDProcessor {
         
         // then add analysis results per file
         collectReports(renderers);
+        rs.getAllRules().forEach(r -> r.afterAnalysis(ctx));
     }
 
     protected abstract void runAnalysis(PmdRunnable runnable);

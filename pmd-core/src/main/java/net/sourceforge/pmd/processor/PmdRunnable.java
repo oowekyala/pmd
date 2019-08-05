@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import net.sourceforge.pmd.PMDException;
 import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleSets;
 import net.sourceforge.pmd.SourceCodeProcessor;
