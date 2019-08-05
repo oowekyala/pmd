@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.rule;
 
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -14,15 +15,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.mutable.MutableInt;
+
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTPackageDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.NodeFactory;
@@ -35,14 +42,30 @@ import net.sourceforge.pmd.properties.PropertyFactory;
 public class TreeDumperRule extends AbstractJavaRule {
 
     private static final byte END_MARKER = -2;
-    private static Map<String, DataOutputStream> outstreams = new ConcurrentHashMap<>();
+    private static Map<String, StubFile> outstreams = new ConcurrentHashMap<>();
     private final PropertyDescriptor<String> dumpRoot =
         PropertyFactory.stringProperty("dumpRoot")
                        .desc("make something")
                        .defaultValue("none")
                        .build();
 
+    private int numSaved;
+
     /*
+        TODO OK we don't need to save all the files of a project. Just
+        save in-memory the files that are being accessed through the project.
+        An index would serve as custom swap but is not necessary RN.
+        Incremental analysis completes this mechanism.
+        Overarching goals:
+        * parse all files lazily
+        * reuse ASTs as much as possible
+
+        Implementation goals:
+        * Reuse incremental analysis
+        * Be language-independent
+        * Don't save huge cache files to disk
+
+
         TODO by saving a whole directory into a package, the cache would
          be inconsistent if a file was added or removed in the dir.
 
@@ -59,10 +82,11 @@ public class TreeDumperRule extends AbstractJavaRule {
     public Object visit(ASTCompilationUnit node, Object data) {
 
         try {
-            DataOutputStream stream = getWriter(node, (RuleContext) data, Paths.get(getProperty(dumpRoot)));
-            synchronized (stream) {
-                dump(node, stream);
-                stream.flush();
+            StubFile stubFile = getWriter(node, (RuleContext) data, Paths.get(getProperty(dumpRoot)));
+            synchronized (stubFile) {
+                numSaved = 0;
+                dump(node, stubFile.outputStream);
+                stubFile.recordTreeEntry(numSaved);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -71,7 +95,7 @@ public class TreeDumperRule extends AbstractJavaRule {
         return data;
     }
 
-    private DataOutputStream openOrFetchStream(Path outPath, String packageName, String fileName) throws IOException {
+    private StubFile openOrFetchStream(Path outPath, String packageName, String fileName) throws IOException {
         Files.createDirectories(outPath.getParent());
 
         // this needs to be atomic so we use computeIfAbsent
@@ -82,11 +106,11 @@ public class TreeDumperRule extends AbstractJavaRule {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return new DataOutputStream(new BufferedOutputStream(os));
+            return new StubFile(new DataOutputStream(new BufferedOutputStream(os)));
         });
     }
 
-    private DataOutputStream getWriter(ASTCompilationUnit node, RuleContext data, Path dumpRoot) throws IOException {
+    private StubFile getWriter(ASTCompilationUnit node, RuleContext data, Path dumpRoot) throws IOException {
         ASTPackageDeclaration pack = node.getPackageDeclaration();
         String fname = data.getSourceCodeFile().getName();
         final String packageName = pack == null ? "" : pack.getPackageNameImage();
@@ -98,21 +122,60 @@ public class TreeDumperRule extends AbstractJavaRule {
         super.end(ctx);
         System.out.println("done!");
 
-        for (Entry<String, DataOutputStream> stream : outstreams.entrySet()) {
+        IntSummaryStatistics totalStats = new IntSummaryStatistics();
+        IntSummaryStatistics nodesByBlob = new IntSummaryStatistics();
+        IntSummaryStatistics acusByBlob = new IntSummaryStatistics();
+        Map<Long, MutableInt> numAcusByBlob = new HashMap<>();
+        for (Iterator<Entry<String, StubFile>> iterator = outstreams.entrySet().iterator(); iterator.hasNext(); ) {
+            Entry<String, StubFile> entry = iterator.next();
             try {
-                stream.getValue().close();
-                outstreams.remove(stream.getKey());
+                final StubFile stubFile = entry.getValue();
+                stubFile.close();
+                totalStats.combine(stubFile.getStats());
+                nodesByBlob.accept((int) stubFile.getStats().getSum());
+                final long numAcus = stubFile.getStats().getCount();
+                acusByBlob.accept((int) numAcus);
+                numAcusByBlob.computeIfAbsent(numAcus, l -> new MutableInt()).increment();
+                iterator.remove();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+        System.out.println(
+            "Saved " + totalStats.getSum() + " nodes from " + totalStats.getCount() + " compilation units into "
+                + nodesByBlob.getCount() + " stub files");
+        System.out.println(
+            "Averaging " + totalStats.getAverage() + "+-" + totalStats.getStdDev()
+                + " nodes per ACU, or " + nodesByBlob.getAverage() + " by blob");
+
+        numAcusByBlob.entrySet().stream()
+                     .sorted(Comparator.comparing(Entry::getKey))
+                     .forEach(it -> System.out.println(it.getKey() + "," + it.getValue()));
+
+
+        System.out.println("Averaging " + acusByBlob.getAverage() + "+-" + acusByBlob.getStdDev()
+                               + " ACUs per blob [" + acusByBlob.getMin() + ", "
+                               + acusByBlob.getMax() + "]");
+
     }
 
     static Path getFlatDumpPath(ASTCompilationUnit node, Path dumpRoot) {
+        /*
+            TODO this layout scheme is better than completely mirroring
+                package structure with directories, yet:
+                  10% of packages have           1 ACU
+                  30% of packages have less than 3 ACUs
+                  50%                            5
+                  80%                            23
+
+                So this hashing method is still too unfair.
+                Besides, the hash key 00 is reserved to the empty package.
+         */
+
+
         ASTPackageDeclaration pack = node.getPackageDeclaration();
         final String packageName = pack == null ? "<empty_package>" : pack.getPackageNameImage();
-        // TODO collisions! For now if they hash to the same value (+-) and have same simple name they collide
         int hash = Math.abs(packageName.hashCode());
 
         Path bucket = dumpRoot.resolve(String.format("%08x", Math.abs(hash)).substring(0, 2));
@@ -122,7 +185,7 @@ public class TreeDumperRule extends AbstractJavaRule {
     // TODO better to dump in post order, then we can use jjtOpen/jjtClose during construction
     // TODO save offsets of different trees in header?
 
-    private static void dump(JavaNode root, DataOutputStream out) throws IOException {
+    private void dump(JavaNode root, DataOutputStream out) throws IOException {
         // So here:
         /*
             A node's structural footprint is 1B type + 1B end marker = 2B
@@ -136,17 +199,34 @@ public class TreeDumperRule extends AbstractJavaRule {
             Using as few files as possible is important.
          */
 
+        numSaved++;
 
         out.writeByte(root.jjtGetId());
-        writeNullableStr(out, root.getImage());
+        if (root instanceof ASTImportDeclaration) {
+            writeNullableStr(out, ((ASTImportDeclaration) root).getImportedName());
+        } else {
+            writeNullableStr(out, root.getImage());
+        }
         out.writeInt(root.getBeginLine());
         out.writeInt(root.getEndLine());
 
         for (int i = 0; i < root.jjtGetNumChildren(); i++) {
-            dump(root.jjtGetChild(i), out);
+            final JavaNode child = root.jjtGetChild(i);
+            if (!isNotDumped(child)) {
+                dump(child, out);
+            }
         }
 
         out.writeByte(END_MARKER);
+    }
+
+    private static boolean isNotDumped(JavaNode node) {
+        // this writes the structure of the compilation unit that is
+        // visible to other declarations, without caring about the
+        // contents of methods (expressions take the most part of the trees).
+        return false;
+        //        return node instanceof ASTBlock || node instanceof ASTInitializer
+        //            || node instanceof ASTBlockStatement && node.jjtGetParent() instanceof ASTConstructorDeclaration;
     }
 
     static void writeNullableStr(DataOutputStream dos, String s) throws IOException {
@@ -211,6 +291,51 @@ public class TreeDumperRule extends AbstractJavaRule {
             }
         }
         return result;
+    }
+
+    private static class IntSummaryStatistics extends java.util.IntSummaryStatistics {
+
+        private final List<Integer> stats = new ArrayList<>();
+
+        @Override
+        public void accept(int value) {
+            super.accept(value);
+            stats.add(value);
+        }
+
+        private double getStdDev() {
+            double mean = getAverage();
+            double dev = stats.stream().parallel().reduce(0d, (acc, i) -> {
+                double diff = i - mean;
+                return acc + diff * diff;
+            }, Double::sum);
+
+            return Math.sqrt(dev / getCount() - 1); // todo div/0
+        }
+
+    }
+
+    private static class StubFile implements Closeable {
+
+        private final IntSummaryStatistics stats = new IntSummaryStatistics();
+        private final DataOutputStream outputStream;
+
+        StubFile(OutputStream outputStream) {
+            this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
+        }
+
+        void recordTreeEntry(int numNodes) {
+            stats.accept(numNodes);
+        }
+
+        public IntSummaryStatistics getStats() {
+            return stats;
+        }
+
+        @Override
+        public void close() throws IOException {
+            outputStream.close();
+        }
     }
 
 }
