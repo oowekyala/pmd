@@ -37,12 +37,6 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
         this.comments = comments;
     }
 
-
-    @Override
-    public ASTCompilationUnit getRoot() {
-        return this;
-    }
-
     @Override
     public String getText() {
         return tokenDocument.getFullText();
@@ -80,6 +74,12 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
 
     public ClassTypeResolver getClassTypeResolver() {
         return classTypeResolver;
+    }
+
+
+    @Override
+    public ASTCompilationUnit getRoot() {
+        return this;
     }
 
     @InternalApi
