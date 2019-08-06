@@ -84,9 +84,6 @@ public interface JavaNode extends ScopedNode, TextAvailableNode {
     JavaNode jjtGetParent();
 
 
-    ASTCompilationUnit getRoot();
-
-
     GenericToken jjtGetFirstToken();
 
 
