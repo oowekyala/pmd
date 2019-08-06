@@ -559,7 +559,7 @@ TOKEN_MGR_DECLS :
 
 SPECIAL_TOKEN :
 {
-  " " | "\t" | "\n" | "\r" | "\f"
+  <WHITESPACE: ([" " ,"\t" , "\n" , "\r" , "\f"])+>
 }
 
 SPECIAL_TOKEN :
