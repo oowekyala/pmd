@@ -20,8 +20,8 @@ import java.util.Map;
 public enum BinaryOp {
 
     // shortcut boolean ops
-    BOOL_OR("||"),
-    BOOL_AND("&&"),
+    CONDITIONAL_OR("||"),
+    CONDITIONAL_AND("&&"),
 
     // non-shortcut (also bitwise)
     OR("|"),

@@ -5,13 +5,14 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents a non-shortcut boolean AND-expression.
+ * Represents an AND-expression. Depending on the type of the operands,
+ * the operator is either bitwise (numeric) or logical (boolean).
  * This has a precedence greater than {@link ASTExclusiveOrExpression},
  * and lower than {@link ASTEqualityExpression}.
  *
  * <pre class="grammar">
  *
- * AndExpression ::= {@link ASTAndExpression AndExpression} "&" {@linkplain ASTEqualityExpression EqualityExpression}
+ * AndExpression ::= {@link ASTAndExpression AndExpression} "&" {@link ASTEqualityExpression EqualityExpression}
  *
  * </pre>
  */

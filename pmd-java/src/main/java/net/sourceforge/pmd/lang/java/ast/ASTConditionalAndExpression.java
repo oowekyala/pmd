@@ -10,11 +10,12 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * <pre class="grammar">
  *
- * ConditionalAndExpression ::=  {@linkplain ASTInclusiveOrExpression InclusiveOrExpression} ( "&amp;&amp;" {@linkplain ASTInclusiveOrExpression InclusiveOrExpression} )+
+ * ConditionalAndExpression ::= {@link ASTAndExpression ConditionalAndExpression} "&amp;&amp;" {@linkplain ASTInclusiveOrExpression InclusiveOrExpression}
  *
  * </pre>
  */
-public final class ASTConditionalAndExpression extends AbstractJavaExpr implements ASTExpression {
+public final class ASTConditionalAndExpression extends AbstractJavaExpr implements ASTExpression, ASTBinaryExpression {
+
     ASTConditionalAndExpression(int id) {
         super(id);
     }
@@ -34,5 +35,15 @@ public final class ASTConditionalAndExpression extends AbstractJavaExpr implemen
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
+    }
+
+    @Override
+    public ASTExpression jjtGetChild(int index) {
+        return (ASTExpression) super.jjtGetChild(index);
+    }
+
+    @Override
+    public BinaryOp getOperator() {
+        return BinaryOp.CONDITIONAL_AND;
     }
 }

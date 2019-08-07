@@ -5,9 +5,10 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents a non-shortcut boolean OR-expression. This has a precedence
- * greater than {@link ASTConditionalAndExpression}, and lower than
- * {@link ASTExclusiveOrExpression}.
+ * Represents an inclusive OR-expression. Depending on the type of the
+ * operands, the operator is either bitwise (numeric) or logical (boolean).
+ * This has a precedence greater than {@link ASTConditionalAndExpression},
+ * and lower than {@link ASTExclusiveOrExpression}.
  *
  * <pre class="grammar">
  *

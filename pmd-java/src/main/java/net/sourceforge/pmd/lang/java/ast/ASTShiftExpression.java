@@ -10,7 +10,7 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * <pre class="grammar">
  *
- * ShiftExpression ::=  {@linkplain ASTShiftExpression ShiftExpression} ( ( "&lt;&lt;"  | "&gt;&gt;" | "&gt;&gt;&gt;" ) {@linkplain ASTAdditiveExpression AdditiveExpression} )+
+ * ShiftExpression ::=  {@linkplain ASTShiftExpression ShiftExpression} ( "&lt;&lt;"  | "&gt;&gt;" | "&gt;&gt;&gt;" ) {@linkplain ASTAdditiveExpression AdditiveExpression}
  *
  * </pre>
  */

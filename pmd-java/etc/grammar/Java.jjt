@@ -2330,16 +2330,16 @@ void ConditionalExpression() #ConditionalExpression(>1) :
   ConditionalOrExpression() [ "?" Expression() ":" ConditionalExpression() ]
 }
 
-void ConditionalOrExpression() #ConditionalOrExpression(>1):
+void ConditionalOrExpression() #void:
 {}
 {
-  ConditionalAndExpression() ( LOOKAHEAD(2) "||" ConditionalAndExpression() )*
+  ConditionalAndExpression() (("||" ConditionalAndExpression()) #ConditionalOrExpression(2))*
 }
 
-void ConditionalAndExpression() #ConditionalAndExpression(>1):
+void ConditionalAndExpression() #void:
 {}
 {
-  InclusiveOrExpression() ( LOOKAHEAD(2) "&&" InclusiveOrExpression() )*
+  InclusiveOrExpression() (("|" InclusiveOrExpression())  #ConditionalAndExpression(2))*
 }
 
 void InclusiveOrExpression() #void:

@@ -5,7 +5,9 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents a boolean XOR-expression. This has a precedence greater than {@link ASTInclusiveOrExpression},
+ * Represents an exclusive OR-expression. Depending on the type of the
+ * operands, the operator is either bitwise (numeric) or logical (boolean).
+ * This has a precedence greater than {@link ASTInclusiveOrExpression},
  * and lower than {@link ASTAndExpression}.
  *
  * <pre class="grammar">
