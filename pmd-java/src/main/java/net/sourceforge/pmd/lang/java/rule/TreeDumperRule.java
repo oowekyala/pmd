@@ -29,7 +29,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
-import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTPackageDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.NodeFactory;
@@ -160,31 +159,6 @@ public class TreeDumperRule extends AbstractJavaRule {
 
     }
 
-    static Path getFlatDumpPath(ASTCompilationUnit node, Path dumpRoot) {
-        /*
-            TODO this layout scheme is better than completely mirroring
-                package structure with directories, yet:
-                  10% of packages have           1 ACU
-                  30% of packages have less than 3 ACUs
-                  50%                            5
-                  80%                            23
-
-                So this hashing method is still too unfair.
-                Besides, the hash key 00 is reserved to the empty package.
-         */
-
-
-        ASTPackageDeclaration pack = node.getPackageDeclaration();
-        final String packageName = pack == null ? "<empty_package>" : pack.getPackageNameImage();
-        int hash = Math.abs(packageName.hashCode());
-
-        Path bucket = dumpRoot.resolve(String.format("%08x", Math.abs(hash)).substring(0, 2));
-        return bucket.resolve(packageName);
-    }
-
-    // TODO better to dump in post order, then we can use jjtOpen/jjtClose during construction
-    // TODO save offsets of different trees in header?
-
     private void dump(JavaNode root, DataOutputStream out) throws IOException {
         // So here:
         /*
@@ -202,13 +176,7 @@ public class TreeDumperRule extends AbstractJavaRule {
         numSaved++;
 
         out.writeByte(root.jjtGetId());
-        if (root instanceof ASTImportDeclaration) {
-            writeNullableStr(out, ((ASTImportDeclaration) root).getImportedName());
-        } else {
-            writeNullableStr(out, root.getImage());
-        }
-        out.writeInt(root.getBeginLine());
-        out.writeInt(root.getEndLine());
+        root.metaModel().write(root, out);
 
         for (int i = 0; i < root.jjtGetNumChildren(); i++) {
             final JavaNode child = root.jjtGetChild(i);
@@ -220,6 +188,30 @@ public class TreeDumperRule extends AbstractJavaRule {
         out.writeByte(END_MARKER);
     }
 
+    // TODO better to dump in post order, then we can use jjtOpen/jjtClose during construction
+    // TODO save offsets of different trees in header?
+
+    static Path getFlatDumpPath(ASTCompilationUnit node, Path dumpRoot) {
+        /*
+            TODO this layout scheme is better than completely mirroring
+                package structure with directories, yet:
+                  10% of packages have           1 ACU
+                  30% of packages have less than 3 ACUs
+                  50%                            5
+                  80%                            23
+
+                So this hashing method is still too unfair.
+         */
+
+
+        ASTPackageDeclaration pack = node.getPackageDeclaration();
+        final String packageName = pack == null ? "<empty_package>" : pack.getPackageNameImage();
+        int hash = Math.abs(packageName.hashCode());
+
+        Path bucket = dumpRoot.resolve(String.format("%08x", Math.abs(hash)).substring(0, 2));
+        return bucket.resolve(packageName);
+    }
+
     private static boolean isNotDumped(JavaNode node) {
         // this writes the structure of the compilation unit that is
         // visible to other declarations, without caring about the
@@ -227,18 +219,6 @@ public class TreeDumperRule extends AbstractJavaRule {
         return false;
         //        return node instanceof ASTBlock || node instanceof ASTInitializer
         //            || node instanceof ASTBlockStatement && node.jjtGetParent() instanceof ASTConstructorDeclaration;
-    }
-
-    static void writeNullableStr(DataOutputStream dos, String s) throws IOException {
-        dos.writeBoolean(s == null);
-        if (s != null) {
-            dos.writeUTF(s);
-        }
-    }
-
-    static String readNullableStr(DataInputStream dos) throws IOException {
-        boolean isNull = dos.readBoolean();
-        return isNull ? null : dos.readUTF();
     }
 
 
@@ -268,9 +248,7 @@ public class TreeDumperRule extends AbstractJavaRule {
                 childIdx = 0;
             } else {
                 final JavaNode node = NodeFactory.jjtCreate(null, nextType);
-                node.setImage(readNullableStr(in));
-                in.readInt();
-                in.readInt();
+                node.metaModel().readInto(node, in);
 
                 stack.push(node);
 
