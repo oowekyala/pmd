@@ -2339,7 +2339,7 @@ void ConditionalOrExpression() #void:
 void ConditionalAndExpression() #void:
 {}
 {
-  InclusiveOrExpression() (("|" InclusiveOrExpression())  #ConditionalAndExpression(2))*
+  InclusiveOrExpression() (("&&" InclusiveOrExpression())  #ConditionalAndExpression(2))*
 }
 
 void InclusiveOrExpression() #void:

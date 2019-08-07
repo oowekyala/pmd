@@ -37,7 +37,8 @@ public enum BinaryOp {
     GE(">="),
     GT(">"),
     LT("<"),
-    INSTANCEOF("instanceof"),
+    // TODO
+    //    INSTANCEOF("instanceof"),
 
     // shift
     LEFT_SHIFT("<<"),

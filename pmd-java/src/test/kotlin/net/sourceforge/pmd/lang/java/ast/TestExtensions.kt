@@ -5,6 +5,7 @@ import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.*
 import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType.PrimitiveType.*
+import net.sourceforge.pmd.lang.java.ast.BinaryOp.*
 import java.util.*
 import kotlin.reflect.KCallable
 
@@ -239,6 +240,22 @@ fun TreeNodeWrapper<Node, *>.compExpr(op: BinaryOp, assertions: NodeSpec<ASTRela
             it::getOperator shouldBe op
             assertions()
         }
+
+fun TreeNodeWrapper<Node, *>.binaryExpr(op: BinaryOp, assertions: NodeSpec<out ASTBinaryExpression>) = when (op) {
+    // exhaustive switch
+    CONDITIONAL_OR -> child<ASTConditionalOrExpression> { it::getOperator shouldBe op; assertions() }
+    CONDITIONAL_AND -> child<ASTConditionalAndExpression> { it::getOperator shouldBe op; assertions() }
+    OR -> child<ASTInclusiveOrExpression> { it::getOperator shouldBe op; assertions() }
+    XOR -> child<ASTExclusiveOrExpression> { it::getOperator shouldBe op; assertions() }
+    AND -> child<ASTAndExpression> { it::getOperator shouldBe op; assertions() }
+    EQ, NE -> child<ASTEqualityExpression> { it::getOperator shouldBe op; assertions() }
+    LE, GE, GT, LT -> child<ASTRelationalExpression> { it::getOperator shouldBe op; assertions() }
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+    UNSIGNED_RIGHT_SHIFT -> shiftExpr(op, assertions)
+    ADD, SUB -> additiveExpr(op, assertions)
+    MUL, DIV, MOD -> multiplicativeExpr(op, assertions)
+}
 
 fun TreeNodeWrapper<Node, *>.instanceOfExpr(assertions: NodeSpec<ASTInstanceOfExpression>) =
         child<ASTInstanceOfExpression> {
