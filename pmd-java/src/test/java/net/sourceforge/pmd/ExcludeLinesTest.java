@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 
+import org.apache.tools.ant.filters.StringInputStream;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +42,7 @@ public class ExcludeLinesTest extends RuleTst {
         ctx.setSourceCodeFilename("n/a");
         ctx.setLanguageVersion(LanguageRegistry.getLanguage(JavaLanguageModule.NAME).getDefaultVersion());
         RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(rule);
-        p.getSourceCodeProcessor().processSourceCode(new StringReader(TEST3), new RuleSets(rules), ctx);
+        p.getSourceCodeProcessor().processSourceCode(new StringInputStream(TEST3), new RuleSets(rules), ctx);
         assertTrue(r.isEmpty());
         assertEquals(r.getSuppressedRuleViolations().size(), 1);
     }

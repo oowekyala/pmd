@@ -16,7 +16,7 @@ public class JavaLanguageModule extends BaseLanguageModule {
     public static final String TERSE_NAME = "java";
 
     public JavaLanguageModule() {
-        super(NAME, null, TERSE_NAME, JavaRuleChainVisitor.class, "java");
+        super(NAME, null, TERSE_NAME, JavaRuleChainVisitor.class, "java", "javast");
         addVersion("1.3", new JavaLanguageHandler(3), false);
         addVersion("1.4", new JavaLanguageHandler(4), false);
         addVersion("1.5", new JavaLanguageHandler(5), false);

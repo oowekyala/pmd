@@ -7,6 +7,8 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import java.util.Objects;
 
+import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType.PrimitiveType;
+
 /**
  * Represents a unary prefix operation on a value.
  * This has a precedence greater than {@link ASTMultiplicativeExpression}.
@@ -76,4 +78,8 @@ public final class ASTUnaryExpression extends AbstractJavaExpr implements ASTExp
         return operator;
     }
 
+    @Override
+    public NodeMetaModel<ASTUnaryExpression> metaModel() {
+        return NodeMetaModel.singleEnum(ASTUnaryExpression.class, UnaryOp.class, ASTUnaryExpression::getOp, (n, c) -> n.setImage(c.toString()));
+    }
 }

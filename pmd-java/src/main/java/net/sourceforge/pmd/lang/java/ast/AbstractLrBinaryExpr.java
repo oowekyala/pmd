@@ -40,4 +40,10 @@ abstract class AbstractLrBinaryExpr extends AbstractJavaExpr implements ASTBinar
     public BinaryOp getOperator() {
         return operator;
     }
+
+
+    @Override
+    public NodeMetaModel<? extends AbstractLrBinaryExpr> metaModel() {
+        return NodeMetaModel.singleEnum(AbstractLrBinaryExpr.class, BinaryOp.class, AbstractLrBinaryExpr::getOperator, (n, c) -> n.setImage(c.toString()));
+    }
 }

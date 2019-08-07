@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule;
 
+import static net.sourceforge.pmd.lang.java.AbstractJavaHandler.asList;
+
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,6 +24,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTPackage;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
@@ -54,15 +57,14 @@ public abstract class AbstractJavaRule extends AbstractRule implements JavaParse
     }
 
     protected void visitAll(List<? extends Node> nodes, RuleContext ctx) {
-        for (Object element : nodes) {
+        for (Node element : nodes) {
             /*
                 It is important to note that we are assuming that all nodes here are of type Compilation Unit,
                 but our caller method may be called with any type of node, and that's why we need to check the kind
                 of instance of each element
             */
-            if (element instanceof ASTCompilationUnit) {
-                ASTCompilationUnit node = (ASTCompilationUnit) element;
-                visit(node, ctx);
+            for (ASTCompilationUnit acu : asList(element)) {
+                visit(acu, ctx);
             }
         }
     }
@@ -111,6 +113,12 @@ public abstract class AbstractJavaRule extends AbstractRule implements JavaParse
 
     // FIXME those are not in sync with JavaParserVisitorAdapter
     // See #1786
+
+
+
+    public Object visit(ASTPackage node, Object data) {
+        return JavaParserVisitor.super.visit(node, data);
+    }
 
     public Object visit(ASTAnnotation node, Object data) {
         return JavaParserVisitor.super.visit(node, data);

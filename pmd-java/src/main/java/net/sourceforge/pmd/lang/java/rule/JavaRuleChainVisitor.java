@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule;
 
+import static net.sourceforge.pmd.lang.java.AbstractJavaHandler.asList;
+
 import java.util.List;
 
 import net.sourceforge.pmd.Rule;
@@ -31,7 +33,9 @@ public class JavaRuleChainVisitor extends AbstractRuleChainVisitor {
         };
 
         for (final Node node : nodes) {
-            javaParserVistor.visit((ASTCompilationUnit) node, ctx);
+            for (ASTCompilationUnit acu : asList(node)) {
+                javaParserVistor.visit(acu, ctx);
+            }
         }
     }
 

@@ -11,6 +11,13 @@ import static net.sourceforge.pmd.lang.java.ast.JavaParserTreeConstants.*;
  */
 public class NodeFactory {
 
+    /*
+        -1 and -2 are reserved
+        Pay attention to byte overflow
+     */
+
+    static final int PACKAGE = -5;
+    static final int TRUE_LITERAL = -6;
 
     public static JavaNode jjtCreate(JavaParser parser, int id) {
 
@@ -116,14 +123,10 @@ public class NodeFactory {
             return new ASTMultiplicativeExpression(parser, id);
         case JJTUNARYEXPRESSION:
             return new ASTUnaryExpression(parser, id);
-        case JJTPREINCREMENTEXPRESSION:
-            return new ASTPreIncrementExpression(parser, id);
-        case JJTPREDECREMENTEXPRESSION:
-            return new ASTPreDecrementExpression(parser, id);
+        case JJTINCREMENTEXPRESSION:
+            return new ASTIncrementExpression(parser, id);
         case JJTCASTEXPRESSION:
             return new ASTCastExpression(parser, id);
-        case JJTPOSTFIXEXPRESSION:
-            return new ASTPostfixExpression(parser, id);
         case JJTSWITCHEXPRESSION:
             return new ASTSwitchExpression(parser, id);
         case JJTTHISEXPRESSION:
@@ -218,10 +221,8 @@ public class NodeFactory {
             return new ASTSynchronizedStatement(parser, id);
         case JJTTRYSTATEMENT:
             return new ASTTryStatement(parser, id);
-        case JJTRESOURCESPECIFICATION:
-            return new ASTResourceSpecification(parser, id);
-        case JJTRESOURCES:
-            return new ASTResources(parser, id);
+        case JJTRESOURCELIST:
+            return new ASTResourceList(parser, id);
         case JJTRESOURCE:
             return new ASTResource(parser, id);
         case JJTCATCHSTATEMENT:
@@ -260,8 +261,14 @@ public class NodeFactory {
             return new ASTName(parser, id);
         case JJTAMBIGUOUSNAME:
             return new ASTAmbiguousName(parser, id);
-        case JJTVARIABLEREFERENCE:
-            return new ASTVariableReference(parser, id);
+        case JJTVARIABLEACCESS:
+            return new ASTVariableAccess(parser, id);
+        case PACKAGE:
+            return new ASTPackage("");
+        case TRUE_LITERAL:
+            ASTBooleanLiteral lit = new ASTBooleanLiteral(JJTBOOLEANLITERAL);
+            lit.setTrue();
+            return lit;
 
         default:
             throw new IllegalArgumentException("Unknown id " + id);

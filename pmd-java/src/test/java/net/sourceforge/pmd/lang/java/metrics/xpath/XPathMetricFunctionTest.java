@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.StringReader;
 import java.util.Iterator;
 
+import org.apache.tools.ant.filters.StringInputStream;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
@@ -55,7 +56,7 @@ public class XPathMetricFunctionTest {
         ctx.setSourceCodeFilename("n/a");
         ctx.setIgnoreExceptions(false); // for test, we want immediate exceptions thrown and not collect them
         RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(rule);
-        p.getSourceCodeProcessor().processSourceCode(new StringReader(code), new RuleSets(rules), ctx);
+        p.getSourceCodeProcessor().processSourceCode(new StringInputStream(code), new RuleSets(rules), ctx);
         return report.iterator();
     }
 

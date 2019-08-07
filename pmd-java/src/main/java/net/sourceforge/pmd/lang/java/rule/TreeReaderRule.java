@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.openjdk.jmh.infra.Blackhole;
-
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
@@ -38,7 +36,6 @@ public class TreeReaderRule extends AbstractJavaRule {
                        .desc("make something")
                        .defaultValue("none")
                        .build();
-    private final Blackhole blackhole = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
 
     public TreeReaderRule() {
         definePropertyDescriptor(dumpRoot);
@@ -58,7 +55,7 @@ public class TreeReaderRule extends AbstractJavaRule {
         try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new FileInputStream(packageDump.toFile())))) {
             READ_PACKAGES.put(packName, true);
             final List<RootNode> rootNodes = TreeDumperRule.readPackageFile(stream);
-            blackhole.consume(rootNodes);
+
         } catch (Exception e) {
             System.err.println("Exception while reading " + packName);
             e.printStackTrace();

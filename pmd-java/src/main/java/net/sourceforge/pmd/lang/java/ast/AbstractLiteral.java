@@ -16,4 +16,9 @@ class AbstractLiteral extends AbstractJavaExpr implements ASTLiteral {
     AbstractLiteral(JavaParser p, int i) {
         super(p, i);
     }
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.neverNullImage(getClass(), true);
+    }
 }

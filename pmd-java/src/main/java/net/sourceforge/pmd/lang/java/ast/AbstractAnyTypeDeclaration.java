@@ -83,5 +83,11 @@ abstract class AbstractAnyTypeDeclaration extends AbstractJavaAccessTypeNode imp
         this.qualifiedName = qualifiedName;
         this.typeDefinition = JavaTypeDefinition.forClass(qualifiedName.getType());
     }
+
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.neverNullImage(getClass());
+    }
 }
 

@@ -6,8 +6,7 @@ package net.sourceforge.pmd.lang.jsp.ast;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.StringReader;
-
+import org.apache.tools.ant.filters.StringInputStream;
 import org.junit.Test;
 
 import net.sourceforge.pmd.PMD;
@@ -45,7 +44,7 @@ public class XPathJspRuleTest extends RuleTst {
 
         PMD p = new PMD();
 
-        p.getSourceCodeProcessor().processSourceCode(new StringReader(MATCH), new RuleSets(rules), ctx);
+        p.getSourceCodeProcessor().processSourceCode(new StringInputStream(MATCH), new RuleSets(rules), ctx);
 
         assertEquals("One violation expected!", 1, report.size());
 

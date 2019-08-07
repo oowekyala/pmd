@@ -4,6 +4,10 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 
 
@@ -86,4 +90,24 @@ public final class ASTStringLiteral extends AbstractLiteral implements ASTLitera
         return StringEscapeUtils.unescapeJava(woDelims);
     }
 
+    private String escapedImage() {
+        return super.getImage();
+    }
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return new NodeMetaModel<ASTStringLiteral>(ASTStringLiteral.class, true) {
+            @Override
+            protected void writeAttributes(ASTStringLiteral node, DataOutputStream out) throws IOException {
+                super.writeAttributes(node, out);
+                out.writeUTF(node.escapedImage());
+            }
+
+            @Override
+            protected void readAttributes(ASTStringLiteral node, DataInputStream in) throws IOException {
+                super.readAttributes(node, in);
+                node.setImage(in.readUTF());
+            }
+        };
+    }
 }

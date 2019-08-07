@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.tools.ant.filters.StringInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -213,7 +214,7 @@ public class XPathRuleTest extends RuleTst {
         ctx.setReport(report);
         ctx.setSourceCodeFilename("n/a");
         RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(r);
-        p.getSourceCodeProcessor().processSourceCode(new StringReader(test), new RuleSets(rules), ctx);
+        p.getSourceCodeProcessor().processSourceCode(new StringInputStream(test), new RuleSets(rules), ctx);
         return report;
     }
 

@@ -148,4 +148,9 @@ public final class ASTClassOrInterfaceType extends AbstractJavaTypeNode implemen
         return jjtGetParent().getFirstChildOfType(ASTClassOrInterfaceBody.class) != null;
     }
 
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.neverNullImage(ASTClassOrInterfaceType.class);
+    }
 }

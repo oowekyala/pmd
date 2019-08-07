@@ -4,6 +4,10 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
  * Represents an import declaration in a Java file.
  *
@@ -120,5 +124,33 @@ public final class ASTImportDeclaration extends AbstractJavaNode {
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
+    }
+
+
+    private String escapedImage() {
+        return super.getImage();
+    }
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return new NodeMetaModel<ASTImportDeclaration>(ASTImportDeclaration.class) {
+            @Override
+            protected void writeAttributes(ASTImportDeclaration node, DataOutputStream out) throws IOException {
+                super.writeAttributes(node, out);
+                out.writeUTF(node.getImportedName());
+                out.writeBoolean(isImportOnDemand);
+                out.writeBoolean(isStatic);
+            }
+
+            @Override
+            protected void readAttributes(ASTImportDeclaration node, DataInputStream in) throws IOException {
+                super.readAttributes(node, in);
+                node.setImage(in.readUTF());
+                if (in.readBoolean())
+                node.setImportOnDemand();
+                if (in.readBoolean())
+                node.setStatic();
+            }
+        };
     }
 }

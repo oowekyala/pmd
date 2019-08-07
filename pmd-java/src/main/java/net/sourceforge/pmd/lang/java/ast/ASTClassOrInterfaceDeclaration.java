@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -144,6 +147,28 @@ public final class ASTClassOrInterfaceDeclaration extends AbstractAnyTypeDeclara
                                                : getFirstChildOfType(ASTImplementsList.class);
 
         return it == null ? Collections.<ASTClassOrInterfaceType>emptyList() : CollectionUtil.toList(it.iterator());
+    }
+
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return new NodeMetaModel<ASTClassOrInterfaceDeclaration>(ASTClassOrInterfaceDeclaration.class) {
+            @Override
+            protected void writeAttributes(ASTClassOrInterfaceDeclaration node, DataOutputStream out) throws IOException {
+                super.writeAttributes(node, out);
+                out.writeUTF(node.getImage());
+                out.writeBoolean(node.isInterface);
+            }
+
+            @Override
+            protected void readAttributes(ASTClassOrInterfaceDeclaration node, DataInputStream in) throws IOException {
+                super.readAttributes(node, in);
+                node.setImage(in.readUTF());
+                if (in.readBoolean()) {
+                    node.setInterface();
+                }
+            }
+        };
     }
 
 }

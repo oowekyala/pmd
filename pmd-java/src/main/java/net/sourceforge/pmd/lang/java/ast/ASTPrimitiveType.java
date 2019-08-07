@@ -78,6 +78,11 @@ public final class ASTPrimitiveType extends AbstractJavaTypeNode implements ASTT
     }
 
 
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.singleEnum(ASTPrimitiveType.class, PrimitiveType.class, ASTPrimitiveType::getModelConstant, (n, c) -> n.setImage(c.getToken()));
+    }
+
     /**
      * Constants to symbolise a primitive type when the tree context is
      * not important. I expect this may be fleshed out to be used by type
@@ -132,7 +137,7 @@ public final class ASTPrimitiveType extends AbstractJavaTypeNode implements ASTT
          * @param token String token
          *
          * @return A constant, or null if the string doesn't correspond
-         * to a primitive type
+         *     to a primitive type
          */
         @Nullable
         public static PrimitiveType fromToken(String token) {

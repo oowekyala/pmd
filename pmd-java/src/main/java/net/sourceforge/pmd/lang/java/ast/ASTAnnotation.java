@@ -67,5 +67,11 @@ public interface ASTAnnotation extends TypeNode, ASTMemberValue {
     default boolean suppresses(Rule rule) {
         return AstImplUtil.suppresses(this, rule);
     }
+
+
+    @Override
+    default NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.neverNullImage(getClass());
+    }
 }
 

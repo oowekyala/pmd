@@ -25,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.apache.tools.ant.filters.StringInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -279,7 +280,7 @@ public abstract class RuleTst {
             ctx.setLanguageVersion(languageVersion);
             ctx.setIgnoreExceptions(false);
             RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(rule);
-            p.getSourceCodeProcessor().processSourceCode(new StringReader(code), new RuleSets(rules), ctx);
+            p.getSourceCodeProcessor().processSourceCode(new StringInputStream(code), new RuleSets(rules), ctx);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

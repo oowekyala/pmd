@@ -4,7 +4,10 @@
 
 package net.sourceforge.pmd.lang.java;
 
+import static java.util.Collections.emptyList;
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
@@ -17,6 +20,7 @@ import net.sourceforge.pmd.lang.ast.xpath.DefaultASTXPathHandler;
 import net.sourceforge.pmd.lang.dfa.DFAGraphRule;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTPackage;
 import net.sourceforge.pmd.lang.java.ast.MethodLikeNode;
 import net.sourceforge.pmd.lang.java.dfa.DataFlowFacade;
 import net.sourceforge.pmd.lang.java.dfa.JavaDFAGraphRule;
@@ -49,12 +53,12 @@ import net.sf.saxon.sxpath.IndependentContext;
  */
 public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHandler {
 
+    private final LanguageMetricsProvider<ASTAnyTypeDeclaration, MethodLikeNode> myMetricsProvider = new JavaMetricsProvider();
+
+
     AbstractJavaHandler() {
         super(JavaProcessingStage.class);
     }
-
-
-    private final LanguageMetricsProvider<ASTAnyTypeDeclaration, MethodLikeNode> myMetricsProvider = new JavaMetricsProvider();
 
     @Override
     public DataFlowHandler getDataFlowHandler() {
@@ -90,7 +94,9 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new DataFlowFacade().initializeWith(getDataFlowHandler(), (ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new DataFlowFacade().initializeWith(getDataFlowHandler(), acu);
+                }
             }
         };
     }
@@ -100,7 +106,9 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new SymbolFacade().initializeWith(null, (ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new SymbolFacade().initializeWith(null, acu);
+                }
             }
         };
     }
@@ -110,7 +118,9 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new SymbolFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new SymbolFacade().initializeWith(classLoader, acu);
+                }
             }
         };
     }
@@ -120,7 +130,9 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new TypeResolutionFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new TypeResolutionFacade().initializeWith(classLoader, acu);
+                }
             }
         };
     }
@@ -131,7 +143,9 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new MultifileVisitorFacade().initializeWith((ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new MultifileVisitorFacade().initializeWith(acu);
+                }
             }
         };
     }
@@ -142,9 +156,21 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new VisitorStarter() {
             @Override
             public void start(Node rootNode) {
-                new QualifiedNameResolver().initializeWith(classLoader, (ASTCompilationUnit) rootNode);
+                for (ASTCompilationUnit acu : asList(rootNode)) {
+                    new QualifiedNameResolver().initializeWith(classLoader, acu);
+                }
             }
         };
+    }
+
+    public static Iterable<ASTCompilationUnit> asList(Node node) {
+        if (node instanceof ASTCompilationUnit) {
+            return Collections.singletonList((ASTCompilationUnit) node);
+        } else if (node instanceof ASTPackage) {
+            return (ASTPackage) node;
+        } else {
+            return emptyList();
+        }
     }
 
 

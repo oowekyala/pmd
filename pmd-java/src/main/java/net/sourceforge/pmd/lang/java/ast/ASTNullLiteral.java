@@ -33,4 +33,9 @@ public final class ASTNullLiteral extends AbstractLiteral implements ASTLiteral 
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return new NodeMetaModel<>(getClass(), true);
+    }
 }

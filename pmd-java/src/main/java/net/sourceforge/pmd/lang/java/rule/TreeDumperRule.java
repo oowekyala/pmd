@@ -209,7 +209,7 @@ public class TreeDumperRule extends AbstractJavaRule {
         int hash = Math.abs(packageName.hashCode());
 
         Path bucket = dumpRoot.resolve(String.format("%08x", Math.abs(hash)).substring(0, 2));
-        return bucket.resolve(packageName);
+        return bucket.resolve(pack == null ? ".javast" : packageName + ".javast");
     }
 
     private static boolean isNotDumped(JavaNode node) {
@@ -222,7 +222,7 @@ public class TreeDumperRule extends AbstractJavaRule {
     }
 
 
-    static List<RootNode> readPackageFile(DataInputStream in) throws IOException {
+    public static List<RootNode> readPackageFile(DataInputStream in) throws IOException {
         Stack<JavaNode> stack = new Stack<>();
         List<RootNode> result = new ArrayList<>();
         byte nextType;
@@ -235,31 +235,26 @@ public class TreeDumperRule extends AbstractJavaRule {
 
         // TODO lazy parsing, maybe we only need one of the trees
         // TODO let children rewrite themselves
-        // eg store ambiguous name (better, just whether node was ambiguous),
-        // and rebuild as ambiguous name
+        // eg store ambiguous name, parenthesized expression
 
-
-        int childIdx = 0;
         while (nextType != -1) {
 
             if (nextType == END_MARKER) {
                 //stop children
                 stack.pop();
-                childIdx = 0;
             } else {
                 final JavaNode node = NodeFactory.jjtCreate(null, nextType);
                 node.metaModel().readInto(node, in);
-
-                stack.push(node);
 
                 if (stack.isEmpty()) {
                     // new tree
                     stack.push(node);
                     result.add((RootNode) node);
+                } else {
+                    JavaNode top = stack.peek();
+                    stack.push(node);
+                    top.jjtAddChild(node, top.jjtGetNumChildren());
                 }
-
-                JavaNode top = stack.peek();
-                top.jjtAddChild(node, childIdx++);
             }
 
             try {

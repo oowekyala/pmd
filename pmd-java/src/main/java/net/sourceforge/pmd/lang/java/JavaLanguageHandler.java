@@ -8,6 +8,7 @@ import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
 
 public class JavaLanguageHandler extends AbstractJavaHandler {
+
     private final int jdkVersion;
 
     public JavaLanguageHandler(int jdkVersion) {
@@ -16,6 +17,6 @@ public class JavaLanguageHandler extends AbstractJavaHandler {
 
     @Override
     public Parser getParser(ParserOptions parserOptions) {
-        return new JavaLanguageParser(jdkVersion, parserOptions);
+        return new JavaBinaryParser(jdkVersion, parserOptions);
     }
 }

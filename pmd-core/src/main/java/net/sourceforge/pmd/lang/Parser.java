@@ -4,7 +4,11 @@
 
 package net.sourceforge.pmd.lang;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import net.sourceforge.pmd.lang.ast.Node;
@@ -50,6 +54,16 @@ public interface Parser {
      *             syntactical errors.
      */
     Node parse(String fileName, Reader source) throws ParseException;
+
+
+    default Node parse(String fileName, InputStream source, Charset encoding) throws ParseException {
+        try (Reader streamReader = new InputStreamReader(source, encoding)) {
+            return parse(fileName, streamReader);
+        } catch (IOException e) {
+            throw new ParseException("IO exception: " + e.getMessage(), e);
+        }
+    }
+
 
     // TODO Document
     Map<Integer, String> getSuppressMap();
