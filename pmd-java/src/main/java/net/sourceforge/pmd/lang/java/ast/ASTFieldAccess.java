@@ -69,6 +69,6 @@ public final class ASTFieldAccess extends AbstractJavaExpr implements ASTAssigna
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return NodeMetaModel.neverNullImage(getClass(), 1);
+        return NodeMetaModel.neverNullImage(getClass());
     }
 }

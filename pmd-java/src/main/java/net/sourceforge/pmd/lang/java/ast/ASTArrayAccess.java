@@ -14,7 +14,6 @@ package net.sourceforge.pmd.lang.java.ast;
  * </pre>
  */
 public final class ASTArrayAccess extends AbstractJavaExpr implements ASTAssignableExpr, LeftRecursiveNode {
-
     ASTArrayAccess(int id) {
         super(id);
     }
@@ -51,9 +50,4 @@ public final class ASTArrayAccess extends AbstractJavaExpr implements ASTAssigna
         visitor.visit(this, data);
     }
 
-
-    @Override
-    public NodeMetaModel<? extends JavaNode> metaModel() {
-        return new NodeMetaModel<>(getClass(), 2);
-    }
 }

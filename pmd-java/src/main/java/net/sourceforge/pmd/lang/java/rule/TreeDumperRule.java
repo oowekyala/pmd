@@ -32,7 +32,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTPackageDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.NodeFactory;
-import net.sourceforge.pmd.lang.java.ast.NodeMetaModel;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
 
@@ -160,7 +159,7 @@ public class TreeDumperRule extends AbstractJavaRule {
 
     }
 
-    private void dump(JavaNode node, DataOutputStream out) throws IOException {
+    private void dump(JavaNode root, DataOutputStream out) throws IOException {
         // So here:
         /*
             A node's structural footprint is 1B type + 1B end marker = 2B
@@ -176,20 +175,17 @@ public class TreeDumperRule extends AbstractJavaRule {
 
         numSaved++;
 
-        out.writeByte(node.jjtGetId());
-        NodeMetaModel meta = node.metaModel();
-        meta.write(node, out);
+        out.writeByte(root.jjtGetId());
+        root.metaModel().write(root, out);
 
-        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            final JavaNode child = node.jjtGetChild(i);
+        for (int i = 0; i < root.jjtGetNumChildren(); i++) {
+            final JavaNode child = root.jjtGetChild(i);
             if (!isNotDumped(child)) {
                 dump(child, out);
             }
         }
 
-        if (meta.constantArity() == NodeMetaModel.UNKNOWN_ARITY) {
-            out.writeByte(END_MARKER);
-        }
+        out.writeByte(END_MARKER);
     }
 
     // TODO better to dump in post order, then we can use jjtOpen/jjtClose during construction
@@ -228,8 +224,6 @@ public class TreeDumperRule extends AbstractJavaRule {
 
     public static List<RootNode> readPackageFile(DataInputStream in) throws IOException {
         Stack<JavaNode> stack = new Stack<>();
-        Stack<Integer> expectedArities = new Stack<>();
-
         List<RootNode> result = new ArrayList<>();
         byte nextType;
 
@@ -243,36 +237,24 @@ public class TreeDumperRule extends AbstractJavaRule {
         // TODO let children rewrite themselves
         // eg store ambiguous name, parenthesized expression
 
-        while (true) {
-            JavaNode top = null;
-
-            if (!stack.isEmpty()) {
-                top = stack.peek();
-
-                while (!stack.isEmpty() && expectedArities.peek() == top.jjtGetNumChildren()) {
-                    // unwind stack until the first node waiting for children
-                    top = stack.pop();
-                    expectedArities.pop();
-                }
-            }
+        while (nextType != -1) {
 
             if (nextType == END_MARKER) {
                 //stop children
                 stack.pop();
-                expectedArities.pop();
             } else {
                 final JavaNode node = NodeFactory.jjtCreate(null, nextType);
-                NodeMetaModel meta = node.metaModel();
-                meta.readInto(node, in);
+                node.metaModel().readInto(node, in);
 
-                if (top == null) {
+                if (stack.isEmpty()) {
+                    // new tree
+                    stack.push(node);
                     result.add((RootNode) node);
                 } else {
+                    JavaNode top = stack.peek();
+                    stack.push(node);
                     top.jjtAddChild(node, top.jjtGetNumChildren());
                 }
-
-                stack.push(node);
-                expectedArities.push(meta.constantArity());
             }
 
             try {

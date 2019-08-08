@@ -57,6 +57,6 @@ public final class ASTVariableAccess extends AbstractJavaExpr implements ASTAssi
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return NodeMetaModel.neverNullImage(getClass(), 0);
+        return NodeMetaModel.neverNullImage(getClass());
     }
 }

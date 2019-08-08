@@ -80,7 +80,7 @@ public final class ASTPrimitiveType extends AbstractJavaTypeNode implements ASTT
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return NodeMetaModel.singleEnum(0, ASTPrimitiveType.class, PrimitiveType.class, ASTPrimitiveType::getModelConstant, (n, c) -> n.setImage(c.getToken()));
+        return NodeMetaModel.singleEnum(ASTPrimitiveType.class, PrimitiveType.class, ASTPrimitiveType::getModelConstant, (n, c) -> n.setImage(c.getToken()));
     }
 
     /**
