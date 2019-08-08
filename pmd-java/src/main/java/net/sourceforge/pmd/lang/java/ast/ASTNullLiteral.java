@@ -36,6 +36,6 @@ public final class ASTNullLiteral extends AbstractLiteral implements ASTLiteral 
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return new NodeMetaModel<>(getClass(), true);
+        return new NodeMetaModel<>(getClass(), 0);
     }
 }

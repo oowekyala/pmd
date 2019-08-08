@@ -59,4 +59,10 @@ public interface ASTBinaryExpression extends ASTExpression, JSingleChildNode<AST
     default ASTExpression getRhs() {
         return jjtGetChild(1);
     }
+
+
+    @Override
+    default NodeMetaModel<? extends JavaNode> metaModel() {
+        return new NodeMetaModel<>(getClass(), 2);
+    }
 }

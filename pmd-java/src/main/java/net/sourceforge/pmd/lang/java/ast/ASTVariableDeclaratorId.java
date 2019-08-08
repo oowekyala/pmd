@@ -349,6 +349,6 @@ public final class ASTVariableDeclaratorId extends AbstractJavaTypeNode implemen
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return NodeMetaModel.neverNullImage(ASTVariableDeclaratorId.class);
+        return NodeMetaModel.neverNullImage(ASTVariableDeclaratorId.class, 0);
     }
 }

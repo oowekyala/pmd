@@ -96,7 +96,7 @@ public final class ASTStringLiteral extends AbstractLiteral implements ASTLitera
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return new NodeMetaModel<ASTStringLiteral>(ASTStringLiteral.class, true) {
+        return new NodeMetaModel<ASTStringLiteral>(ASTStringLiteral.class, 0) {
             @Override
             protected void writeAttributes(ASTStringLiteral node, DataOutputStream out) throws IOException {
                 super.writeAttributes(node, out);

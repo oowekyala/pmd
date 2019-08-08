@@ -221,6 +221,6 @@ public final class ASTAmbiguousName extends AbstractJavaExpr implements ASTRefer
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return NodeMetaModel.neverNullImage(getClass());
+        return NodeMetaModel.neverNullImage(getClass(), 0);
     }
 }

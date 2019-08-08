@@ -66,4 +66,9 @@ public final class ASTFieldAccess extends AbstractJavaExpr implements ASTAssigna
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
+
+    @Override
+    public NodeMetaModel<? extends JavaNode> metaModel() {
+        return NodeMetaModel.neverNullImage(getClass(), 1);
+    }
 }

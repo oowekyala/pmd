@@ -47,6 +47,6 @@ public final class ASTBooleanLiteral extends AbstractLiteral implements ASTLiter
 
     @Override
     public NodeMetaModel<? extends JavaNode> metaModel() {
-        return new NodeMetaModel<>(getClass(), true);
+        return new NodeMetaModel<>(getClass(), 0);
     }
 }

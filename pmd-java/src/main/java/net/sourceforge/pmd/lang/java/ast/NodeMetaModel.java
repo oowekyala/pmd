@@ -19,16 +19,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class NodeMetaModel<T extends JavaNode> {
 
+    public static final int UNKNOWN_ARITY = -1;
     private final Class<T> nodeClass;
-    private final boolean alwaysLeaf;
+    private final int arity;
 
     protected NodeMetaModel(Class<T> nodeClass) {
-        this(nodeClass, false);
+        this(nodeClass, UNKNOWN_ARITY);
     }
 
-    protected NodeMetaModel(Class<T> nodeClass, boolean alwaysLeaf) {
+    protected NodeMetaModel(Class<T> nodeClass, int arity) {
         this.nodeClass = nodeClass;
-        this.alwaysLeaf = alwaysLeaf;
+        this.arity = arity;
     }
 
     public T cast(JavaNode node) {
@@ -43,8 +44,8 @@ public class NodeMetaModel<T extends JavaNode> {
         readAttributes(nodeClass.cast(node), in);
     }
 
-    public boolean isAlwaysLeaf() {
-        return alwaysLeaf;
+    public int constantArity() {
+        return arity;
     }
 
     /**
@@ -97,11 +98,11 @@ public class NodeMetaModel<T extends JavaNode> {
     }
 
     public static <T extends JavaNode> NodeMetaModel<T> neverNullImage(Class<T> tClass) {
-        return neverNullImage(tClass, false);
+        return neverNullImage(tClass, UNKNOWN_ARITY);
     }
 
-    public static <T extends JavaNode> NodeMetaModel<T> neverNullImage(Class<T> tClass, boolean alwaysLeaf) {
-        return new NodeMetaModel<T>(tClass, alwaysLeaf) {
+    public static <T extends JavaNode> NodeMetaModel<T> neverNullImage(Class<T> tClass, int arity) {
+        return new NodeMetaModel<T>(tClass, arity) {
 
             @Override
             protected void writeAttributes(T node, DataOutputStream out) throws IOException {
@@ -119,7 +120,11 @@ public class NodeMetaModel<T extends JavaNode> {
     }
 
     public static <T extends JavaNode, E extends Enum<E>> NodeMetaModel<T> singleEnum(Class<T> tClass, Class<E> eClass, Function<T, E> getter, BiConsumer<T, E> setter) {
-        return new NodeMetaModel<T>(tClass) {
+        return singleEnum(UNKNOWN_ARITY, tClass, eClass, getter, setter);
+    }
+
+    public static <T extends JavaNode, E extends Enum<E>> NodeMetaModel<T> singleEnum(int arity, Class<T> tClass, Class<E> eClass, Function<T, E> getter, BiConsumer<T, E> setter) {
+        return new NodeMetaModel<T>(tClass, arity) {
 
             @Override
             protected void writeAttributes(T node, DataOutputStream out) throws IOException {
