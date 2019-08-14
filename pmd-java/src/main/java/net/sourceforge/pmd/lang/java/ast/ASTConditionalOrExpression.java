@@ -8,14 +8,20 @@ package net.sourceforge.pmd.lang.java.ast;
  * Represents a boolean OR-expression. This has a precedence greater than {@link ASTConditionalExpression},
  * and lower than {@link ASTConditionalAndExpression}.
  *
+ * <p>Note that the children of this node are not necessarily {@link ASTConditionalAndExpression},
+ * rather, they are expressions with an operator precedence greater or equal to ConditionalAndExpression.
+ *
+ *
  * <pre class="grammar">
  *
- * ConditionalOrExpression ::= {@link ASTConditionalOrExpression ConditionalOrExpression} "||" {@link ASTConditionalAndExpression ConditionalAndExpression}
+ * ConditionalOrExpression ::=  {@linkplain ASTConditionalAndExpression ConditionalAndExpression} ( "||" {@linkplain ASTConditionalAndExpression ConditionalAndExpression} )+
  *
  * </pre>
+ *
+ * @deprecated Replaced with {@link ASTInfixExpression}
  */
-public final class ASTConditionalOrExpression extends AbstractJavaExpr implements ASTExpression, ASTBinaryExpression {
-
+@Deprecated
+public final class ASTConditionalOrExpression extends AbstractJavaExpr implements ASTExpression {
     ASTConditionalOrExpression(int id) {
         super(id);
     }
@@ -33,15 +39,5 @@ public final class ASTConditionalOrExpression extends AbstractJavaExpr implement
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
-    }
-
-    @Override
-    public ASTExpression jjtGetChild(int index) {
-        return (ASTExpression) super.jjtGetChild(index);
-    }
-
-    @Override
-    public BinaryOp getOperator() {
-        return BinaryOp.CONDITIONAL_OR;
     }
 }

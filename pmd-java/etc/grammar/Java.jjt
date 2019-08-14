@@ -232,7 +232,6 @@ options {
   NODE_USES_PARSER = true;
   TRACK_TOKENS = true;
   NODE_PACKAGE="net.sourceforge.pmd.lang.java.ast";
-  NODE_FACTORY = "net.sourceforge.pmd.lang.java.ast.NodeFactory";
 
   //DEBUG_PARSER = true;
   //DEBUG_LOOKAHEAD = true;
@@ -2334,44 +2333,44 @@ void ConditionalExpression() #ConditionalExpression(>1) :
 void ConditionalOrExpression() #void:
 {}
 {
-  ConditionalAndExpression() (("||" ConditionalAndExpression()) #ConditionalOrExpression(2))*
+  ConditionalAndExpression() (("||" {jjtThis.setOp(BinaryOp.CONDITIONAL_OR);} ConditionalAndExpression()) #InfixExpression(2))*
 }
 
 void ConditionalAndExpression() #void:
 {}
 {
-  InclusiveOrExpression() (("&&" InclusiveOrExpression())  #ConditionalAndExpression(2))*
+  InclusiveOrExpression() (("&&" {jjtThis.setOp(BinaryOp.CONDITIONAL_AND);} InclusiveOrExpression())  #InfixExpression(2))*
 }
 
 void InclusiveOrExpression() #void:
 {}
 {
-  ExclusiveOrExpression() (("|" ExclusiveOrExpression())  #InclusiveOrExpression(2))*
+  ExclusiveOrExpression() (("|" {jjtThis.setOp(BinaryOp.OR);} ExclusiveOrExpression())  #InfixExpression(2))*
 }
 
 void ExclusiveOrExpression() #void:
 {}
 {
-  AndExpression()  ( ("^" AndExpression()) #ExclusiveOrExpression(2))*
+  AndExpression()  ( ("^" {jjtThis.setOp(BinaryOp.XOR);} AndExpression()) #InfixExpression(2))*
 }
 
 void AndExpression() #void:
 {}
 {
-  EqualityExpression() (("&" EqualityExpression()) #AndExpression(2))*
+  EqualityExpression() (("&" {jjtThis.setOp(BinaryOp.AND);} EqualityExpression()) #InfixExpression(2))*
 }
 
-// same as ShiftExpression
 void EqualityExpression() #void:
 {}
 {
   InstanceOfExpression()
   (
     (
-        ( "==" | "!=" )
-        { setLastTokenImage(jjtThis); }
+        ( "==" {jjtThis.setOp(BinaryOp.EQ);}
+        | "!=" {jjtThis.setOp(BinaryOp.NE);}
+        )
         InstanceOfExpression()
-    ) #EqualityExpression(2)
+    ) #InfixExpression(2)
   )*
 }
 
@@ -2393,61 +2392,62 @@ void RelationalExpression() #void:
   ShiftExpression()
   (
     (
-      ( "<" | ">" | "<=" | ">=" )
-      { setLastTokenImage(jjtThis); }
+      (
+          "<"  {jjtThis.setOp(BinaryOp.LT);}
+        | ">"  {jjtThis.setOp(BinaryOp.GT);}
+        | "<=" {jjtThis.setOp(BinaryOp.LE);}
+        | ">=" {jjtThis.setOp(BinaryOp.GE);}
+      )
       ShiftExpression()
-    ) #RelationalExpression(2)
+    ) #InfixExpression(2)
   )*
 }
 
-/**
- * The structure parsed by this production is entirely left-recursive,
- * but the jjtClose of AbstractLrBinaryExpr flattens the first child
- * if the operator is the same. This is the best compromise I've found,
- * it keeps the grammar readable and simple to parse in lookaheads.
- */
 void ShiftExpression() #void:
 {}
 {
   AdditiveExpression()
   (
     (
-      ( "<<"                     { jjtThis.setImage("<<");}
-      | RSIGNEDSHIFT()           { jjtThis.setImage(">>"); }
-      | RUNSIGNEDSHIFT()         { jjtThis.setImage(">>>"); }
+      ( "<<"                     {jjtThis.setOp(BinaryOp.LEFT_SHIFT);}
+      | RSIGNEDSHIFT()           {jjtThis.setOp(BinaryOp.RIGHT_SHIFT);}
+      | RUNSIGNEDSHIFT()         {jjtThis.setOp(BinaryOp.UNSIGNED_RIGHT_SHIFT);}
       )
       AdditiveExpression()
-    ) #ShiftExpression(2)
+    ) #InfixExpression(2)
   )*
 }
 
-// this is exactly similar to ShiftExpression
 void AdditiveExpression() #void:
 {}
 {
   MultiplicativeExpression()
   (
     (
-      ( "+" | "-" )
-      { setLastTokenImage(jjtThis); }
+      ( "+" {jjtThis.setOp(BinaryOp.ADD);}
+      | "-" {jjtThis.setOp(BinaryOp.SUB);}
+      )
       MultiplicativeExpression()
-    ) #AdditiveExpression(2)
+    ) #InfixExpression(2)
   )*
 }
 
-// this is exactly similar to ShiftExpression
 void MultiplicativeExpression() #void:
 {}
 {
   UnaryExpression()
   (
     (
-      ( "*" | "/" | "%" )
-      { setLastTokenImage(jjtThis); }
+      ( "*" {jjtThis.setOp(BinaryOp.MUL);}
+      | "/" {jjtThis.setOp(BinaryOp.DIV);}
+      | "%" {jjtThis.setOp(BinaryOp.MOD);}
+      )
       UnaryExpression()
-    ) #MultiplicativeExpression(2)
+    ) #InfixExpression(2)
   )*
 }
+
+// TODO update operator setting for those expressions
 
 void UnaryExpression() #void:
 {}

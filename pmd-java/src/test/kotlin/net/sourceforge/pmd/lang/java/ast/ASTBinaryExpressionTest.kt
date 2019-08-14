@@ -18,9 +18,9 @@ class ASTBinaryExpressionTest : ParserTestSpec({
 
         inContext(ExpressionParsingCtx) {
             "a && b && a || b" should parseAs {
-                binaryExpr(CONDITIONAL_OR) {
-                    binaryExpr(CONDITIONAL_AND) {
-                        binaryExpr(CONDITIONAL_AND) {
+                infixExpr(CONDITIONAL_OR) {
+                    infixExpr(CONDITIONAL_AND) {
+                        infixExpr(CONDITIONAL_AND) {
                             variableAccess("a")
                             variableAccess("b")
                         }
@@ -32,12 +32,12 @@ class ASTBinaryExpressionTest : ParserTestSpec({
             }
 
             "a && b && a | b" should parseAs {
-                binaryExpr(CONDITIONAL_AND) {
-                    binaryExpr(CONDITIONAL_AND) {
+                infixExpr(CONDITIONAL_AND) {
+                    infixExpr(CONDITIONAL_AND) {
                         variableAccess("a")
                         variableAccess("b")
                     }
-                    binaryExpr(OR) {
+                    infixExpr(OR) {
                         variableAccess("a")
                         variableAccess("b")
                     }
@@ -45,11 +45,11 @@ class ASTBinaryExpressionTest : ParserTestSpec({
             }
 
             "a | b ^ a & b" should parseAs {
-                binaryExpr(OR) {
+                infixExpr(OR) {
                     variableAccess("a")
-                    binaryExpr(XOR) {
+                    infixExpr(XOR) {
                         variableAccess("b")
-                        binaryExpr(AND) {
+                        infixExpr(AND) {
                             variableAccess("a")
                             variableAccess("b")
                         }

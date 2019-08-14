@@ -5,18 +5,24 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents an inclusive OR-expression. Depending on the type of the
- * operands, the operator is either bitwise (numeric) or logical (boolean).
- * This has a precedence greater than {@link ASTConditionalAndExpression},
- * and lower than {@link ASTExclusiveOrExpression}.
+ * Represents a non-shortcut boolean OR-expression. This has a precedence
+ * greater than {@link ASTConditionalAndExpression}, and lower than
+ * {@link ASTExclusiveOrExpression}.
+ *
+ * <p>Note that the children of this node are not necessarily {@link ASTExclusiveOrExpression},
+ * rather, they are expressions with an operator precedence greater or equal to ExclusiveOrExpression.
+ *
  *
  * <pre class="grammar">
  *
- * InclusiveOrExpression ::= {@link ASTInclusiveOrExpression InclusiveOrExpression} "|" {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression}
+ * InclusiveOrExpression ::=  {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression} ( "|" {@linkplain ASTExclusiveOrExpression ExclusiveOrExpression} )+
  *
  * </pre>
+ *
+ * @deprecated Replaced with {@link ASTInfixExpression}
  */
-public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements ASTBinaryExpression {
+@Deprecated
+public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements ASTExpression {
 
     ASTInclusiveOrExpression(int id) {
         super(id);
@@ -37,15 +43,5 @@ public final class ASTInclusiveOrExpression extends AbstractJavaExpr implements 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
-    }
-
-    @Override
-    public ASTExpression jjtGetChild(int index) {
-        return (ASTExpression) super.jjtGetChild(index);
-    }
-
-    @Override
-    public BinaryOp getOperator() {
-        return BinaryOp.OR;
     }
 }

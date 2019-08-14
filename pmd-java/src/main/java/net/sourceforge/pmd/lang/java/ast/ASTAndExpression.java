@@ -5,18 +5,24 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents an AND-expression. Depending on the type of the operands,
- * the operator is either bitwise (numeric) or logical (boolean).
+ * Represents a non-shortcut boolean AND-expression.
  * This has a precedence greater than {@link ASTExclusiveOrExpression},
  * and lower than {@link ASTEqualityExpression}.
  *
+ * <p>Note that the children of this node are not necessarily {@link ASTEqualityExpression},
+ * rather, they are expressions with an operator precedence greater or equal to EqualityExpression.
+ *
+ *
  * <pre class="grammar">
  *
- * AndExpression ::= {@link ASTAndExpression AndExpression} "&" {@link ASTEqualityExpression EqualityExpression}
+ * AndExpression ::=  {@linkplain ASTEqualityExpression EqualityExpression} ( "&" {@linkplain ASTEqualityExpression EqualityExpression} )+
  *
  * </pre>
+ *
+ * @deprecated Replaced with {@link ASTInfixExpression}
  */
-public final class ASTAndExpression extends AbstractJavaExpr implements ASTBinaryExpression {
+@Deprecated
+public final class ASTAndExpression extends AbstractJavaExpr implements ASTExpression {
 
     ASTAndExpression(int id) {
         super(id);
@@ -35,15 +41,5 @@ public final class ASTAndExpression extends AbstractJavaExpr implements ASTBinar
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
-    }
-
-    @Override
-    public ASTExpression jjtGetChild(int index) {
-        return (ASTExpression) super.jjtGetChild(index);
-    }
-
-    @Override
-    public BinaryOp getOperator() {
-        return BinaryOp.AND;
     }
 }

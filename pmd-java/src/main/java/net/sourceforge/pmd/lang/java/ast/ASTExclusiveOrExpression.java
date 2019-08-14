@@ -5,18 +5,23 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 /**
- * Represents an exclusive OR-expression. Depending on the type of the
- * operands, the operator is either bitwise (numeric) or logical (boolean).
- * This has a precedence greater than {@link ASTInclusiveOrExpression},
+ * Represents a boolean XOR-expression. This has a precedence greater than {@link ASTInclusiveOrExpression},
  * and lower than {@link ASTAndExpression}.
+ *
+ * <p>Note that the children of this node are not necessarily {@link ASTAndExpression},
+ * rather, they are expressions with an operator precedence greater or equal to AndExpression.
+ *
  *
  * <pre class="grammar">
  *
- * ExclusiveOrExpression ::= {@link ASTExclusiveOrExpression ExclusiveOrExpression} "^" {@linkplain ASTAndExpression AndExpression}
+ * ExclusiveOrExpression ::=  {@linkplain ASTAndExpression AndExpression} ( "^" {@linkplain ASTAndExpression AndExpression} )+
  *
  * </pre>
+ *
+ * @deprecated Replaced with {@link ASTInfixExpression}
  */
-public final class ASTExclusiveOrExpression extends AbstractJavaExpr implements ASTBinaryExpression {
+@Deprecated
+public final class ASTExclusiveOrExpression extends AbstractJavaExpr implements ASTExpression {
 
     ASTExclusiveOrExpression(int id) {
         super(id);
@@ -35,15 +40,5 @@ public final class ASTExclusiveOrExpression extends AbstractJavaExpr implements 
     @Override
     public <T> void jjtAccept(SideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
-    }
-
-    @Override
-    public ASTExpression jjtGetChild(int index) {
-        return (ASTExpression) super.jjtGetChild(index);
-    }
-
-    @Override
-    public BinaryOp getOperator() {
-        return BinaryOp.XOR;
     }
 }
