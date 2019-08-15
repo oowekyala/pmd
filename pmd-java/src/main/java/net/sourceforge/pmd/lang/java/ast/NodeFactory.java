@@ -99,28 +99,10 @@ public class NodeFactory {
             return new ASTNameList(parser, id);
         case JJTCONDITIONALEXPRESSION:
             return new ASTConditionalExpression(parser, id);
-        case JJTCONDITIONALOREXPRESSION:
-            return new ASTConditionalOrExpression(parser, id);
-        case JJTCONDITIONALANDEXPRESSION:
-            return new ASTConditionalAndExpression(parser, id);
-        case JJTINCLUSIVEOREXPRESSION:
-            return new ASTInclusiveOrExpression(parser, id);
-        case JJTEXCLUSIVEOREXPRESSION:
-            return new ASTExclusiveOrExpression(parser, id);
-        case JJTANDEXPRESSION:
-            return new ASTAndExpression(parser, id);
-        case JJTEQUALITYEXPRESSION:
-            return new ASTEqualityExpression(parser, id);
+        case JJTINFIXEXPRESSION:
+            return new ASTInfixExpression(parser, id);
         case JJTINSTANCEOFEXPRESSION:
             return new ASTInstanceOfExpression(parser, id);
-        case JJTRELATIONALEXPRESSION:
-            return new ASTRelationalExpression(parser, id);
-        case JJTSHIFTEXPRESSION:
-            return new ASTShiftExpression(parser, id);
-        case JJTADDITIVEEXPRESSION:
-            return new ASTAdditiveExpression(parser, id);
-        case JJTMULTIPLICATIVEEXPRESSION:
-            return new ASTMultiplicativeExpression(parser, id);
         case JJTUNARYEXPRESSION:
             return new ASTUnaryExpression(parser, id);
         case JJTINCREMENTEXPRESSION:

@@ -242,22 +242,6 @@ fun TreeNodeWrapper<Node, *>.infixExpr(op: BinaryOp, assertions: NodeSpec<ASTInf
         }
 
 
-fun TreeNodeWrapper<Node, *>.binaryExpr(op: BinaryOp, assertions: NodeSpec<out ASTBinaryExpression>) = when (op) {
-    // exhaustive switch
-    CONDITIONAL_OR -> child<ASTConditionalOrExpression> { it::getOperator shouldBe op; assertions() }
-    CONDITIONAL_AND -> child<ASTConditionalAndExpression> { it::getOperator shouldBe op; assertions() }
-    OR -> child<ASTInclusiveOrExpression> { it::getOperator shouldBe op; assertions() }
-    XOR -> child<ASTExclusiveOrExpression> { it::getOperator shouldBe op; assertions() }
-    AND -> child<ASTAndExpression> { it::getOperator shouldBe op; assertions() }
-    EQ, NE -> child<ASTEqualityExpression> { it::getOperator shouldBe op; assertions() }
-    LE, GE, GT, LT -> child<ASTRelationalExpression> { it::getOperator shouldBe op; assertions() }
-    LEFT_SHIFT,
-    RIGHT_SHIFT,
-    UNSIGNED_RIGHT_SHIFT -> shiftExpr(op, assertions)
-    ADD, SUB -> additiveExpr(op, assertions)
-    MUL, DIV, MOD -> multiplicativeExpr(op, assertions)
-}
-
 fun TreeNodeWrapper<Node, *>.instanceOfExpr(assertions: NodeSpec<ASTInstanceOfExpression>) =
         child<ASTInstanceOfExpression> {
             assertions()

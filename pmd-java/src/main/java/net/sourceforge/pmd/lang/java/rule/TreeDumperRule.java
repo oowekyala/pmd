@@ -41,13 +41,14 @@ import net.sourceforge.pmd.properties.PropertyFactory;
 public class TreeDumperRule extends AbstractJavaRule {
 
     private static final byte END_MARKER = -2;
+    private static final Map<String, LngSummaryStatistics> HISTOGRAM = new ConcurrentHashMap<>();
     private static Map<String, StubFile> outstreams = new ConcurrentHashMap<>();
+    private static Map<String, MutableInt> CPOOL = new ConcurrentHashMap<>();
     private final PropertyDescriptor<String> dumpRoot =
         PropertyFactory.stringProperty("dumpRoot")
                        .desc("make something")
                        .defaultValue("none")
                        .build();
-
     private int numSaved;
 
     /*
@@ -121,9 +122,9 @@ public class TreeDumperRule extends AbstractJavaRule {
         super.end(ctx);
         System.out.println("done!");
 
-        IntSummaryStatistics totalStats = new IntSummaryStatistics();
-        IntSummaryStatistics nodesByBlob = new IntSummaryStatistics();
-        IntSummaryStatistics acusByBlob = new IntSummaryStatistics();
+        LngSummaryStatistics totalStats = new LngSummaryStatistics();
+        LngSummaryStatistics nodesByBlob = new LngSummaryStatistics();
+        LngSummaryStatistics acusByBlob = new LngSummaryStatistics();
         Map<Long, MutableInt> numAcusByBlob = new HashMap<>();
         for (Iterator<Entry<String, StubFile>> iterator = outstreams.entrySet().iterator(); iterator.hasNext(); ) {
             Entry<String, StubFile> entry = iterator.next();
@@ -157,6 +158,10 @@ public class TreeDumperRule extends AbstractJavaRule {
                                + " ACUs per blob [" + acusByBlob.getMin() + ", "
                                + acusByBlob.getMax() + "]");
 
+
+        HISTOGRAM.entrySet().stream().sorted(Comparator.comparingLong(it -> it.getValue().getCount()))
+                 .forEachOrdered(stats -> System.out.format("%s\t%d\t%d\t%f%n", stats.getKey(), stats.getValue().getCount(), stats.getValue().getSum(), stats.getValue().getAverage()));
+
     }
 
     private void dump(JavaNode root, DataOutputStream out) throws IOException {
@@ -176,7 +181,15 @@ public class TreeDumperRule extends AbstractJavaRule {
         numSaved++;
 
         out.writeByte(root.jjtGetId());
+
+        int size = out.size();
+
         root.metaModel().write(root, out);
+
+        int metasize = out.size() - size;
+
+        HISTOGRAM.computeIfAbsent(root.getXPathNodeName(), k -> new LngSummaryStatistics())
+                 .accept(metasize);
 
         for (int i = 0; i < root.jjtGetNumChildren(); i++) {
             final JavaNode child = root.jjtGetChild(i);
@@ -266,12 +279,12 @@ public class TreeDumperRule extends AbstractJavaRule {
         return result;
     }
 
-    private static class IntSummaryStatistics extends java.util.IntSummaryStatistics {
+    private static class LngSummaryStatistics extends java.util.LongSummaryStatistics {
 
-        private final List<Integer> stats = new ArrayList<>();
+        private final List<Long> stats = new ArrayList<>();
 
         @Override
-        public void accept(int value) {
+        public void accept(long value) {
             super.accept(value);
             stats.add(value);
         }
@@ -290,7 +303,7 @@ public class TreeDumperRule extends AbstractJavaRule {
 
     private static class StubFile implements Closeable {
 
-        private final IntSummaryStatistics stats = new IntSummaryStatistics();
+        private final LngSummaryStatistics stats = new LngSummaryStatistics();
         private final DataOutputStream outputStream;
 
         StubFile(OutputStream outputStream) {
@@ -301,7 +314,7 @@ public class TreeDumperRule extends AbstractJavaRule {
             stats.accept(numNodes);
         }
 
-        public IntSummaryStatistics getStats() {
+        public LngSummaryStatistics getStats() {
             return stats;
         }
 
