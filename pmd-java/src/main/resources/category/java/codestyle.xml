@@ -1952,6 +1952,38 @@ public class Foo {
         </example>
     </rule>
 
+    <rule name="UnnecessaryJump"
+          since="1.3"
+          message="Unnecessary {0} statement"
+          class="net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryJumpRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_codestyle.html#unnecessaryreturn">
+        <description>
+            Detects `return`, `break` and `continue` statements that may as well be removed.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+public class Foo {
+    public void bar(int x) {
+        int x = 42;
+        if (x == foo()) {
+            a();
+            return; // no statements left anyway
+        } else {
+            foo();
+            for (int i = 0; i < x; i++) {
+                if (something(x)) {
+                    continue; // no statements left in loop
+                } else {
+                    println(x);
+                }
+            }
+        }
+    }
+}
+]]>
+        </example>
+    </rule>
+
     <rule name="UseDiamondOperator"
           language="java"
           since="6.11.0"

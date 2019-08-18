@@ -1,0 +1,127 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        VariableAccess:    nodes
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 0
++10
+    STATEMENTS
+    OUT
+        -> 10
+        -> 11 if (shouldContinue())
+        -> 13 if !(shouldContinue())
+    IN
+        -> 10
+        -> 5 if !(foo.isIt)
++11
+    STATEMENTS
+        ExpressionStatement:    foo();
+    OUT
+        -> 12
+    IN
+        -> 10 if (shouldContinue())
++12
+    STATEMENTS
+        ContinueStatement:    continue oha;
+    OUT
+        -> 13 if false
+        -> DANGLING_JUMPS
+    IN
+        -> 11
++13
+    STATEMENTS
+    OUT
+        -> 8
+    IN
+        -> 10 if !(shouldContinue())
+        -> 12 if false
++2
+    STATEMENTS
+    OUT
+        -> 3
+    IN
+        -> 1 if !nodes.hasNext()
+        -> 9 if !nodes.hasNext()
++3
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 2
++4
+    STATEMENTS
+        LocalVariableDeclaration:    Node foo
+    OUT
+        -> 5
+    IN
+        -> 1 if nodes.hasNext()
+        -> 9 if nodes.hasNext()
++5
+    STATEMENTS
+        ExpressionStatement:    inLoop(foo);
+    OUT
+        -> 10 if !(foo.isIt)
+        -> 5
+        -> 6 if (foo.isIt)
+    IN
+        -> 4
+        -> 5
++6
+    STATEMENTS
+        ExpressionStatement:    bar();
+    OUT
+        -> 7
+    IN
+        -> 5 if (foo.isIt)
++7
+    STATEMENTS
+        BreakStatement:    break oha;
+    OUT
+        -> 8 if false
+        -> DANGLING_JUMPS
+    IN
+        -> 6
++8
+    STATEMENTS
+    OUT
+        -> 9
+    IN
+        -> 13
+        -> 7 if false
++9
+    STATEMENTS
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 8
++DANGLING_JUMPS
+    STATEMENTS
+    OUT
+    IN
+        -> 12
+        -> 7
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 3
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

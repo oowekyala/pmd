@@ -1,0 +1,40 @@
++0
+    STATEMENTS
+        ExpressionStatement:    a();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        ThrowStatement:    throw new RuntimeException();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> END if false
+        -> ERROR
+    IN
+        -> 0
++END
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+    IN
+        -> 1 if false
++ERROR
+    STATEMENTS
+    ERROR_HANDLER
+        null
+    OUT
+    IN
+        -> 1
++START
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+    IN

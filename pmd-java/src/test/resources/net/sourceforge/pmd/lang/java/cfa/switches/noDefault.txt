@@ -1,0 +1,80 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1 if foo == 1
+        -> 2 if foo == 2
+        -> 5 if foo == 3
+    IN
+        -> START
++1
+    STATEMENTS
+        ExpressionStatement:    case1();
+    OUT
+        -> 2
+    IN
+        -> 0 if foo == 1
++2
+    STATEMENTS
+    OUT
+        -> 3
+    IN
+        -> 0 if foo == 2
+        -> 1
++3
+    STATEMENTS
+        ExpressionStatement:    case2();
+    OUT
+        -> 4
+    IN
+        -> 2
++4
+    STATEMENTS
+        BreakStatement:    break;
+    OUT
+        -> 5 if false
+        -> 7
+    IN
+        -> 3
++5
+    STATEMENTS
+    OUT
+        -> 6
+    IN
+        -> 0 if foo == 3
+        -> 4 if false
++6
+    STATEMENTS
+        ExpressionStatement:    case3();
+    OUT
+        -> 7
+    IN
+        -> 5
++7
+    STATEMENTS
+    OUT
+        -> 8
+    IN
+        -> 4
+        -> 6
++8
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 7
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 8
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

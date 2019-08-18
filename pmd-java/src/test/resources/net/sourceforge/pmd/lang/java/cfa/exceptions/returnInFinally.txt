@@ -1,0 +1,223 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+        -> 1 if (ifBody1())
+        -> 2 if !(ifBody1())
+    IN
+        -> 0
+        -> START
++1
+    STATEMENTS
+        ReturnStatement:    return body();
+    ERROR_HANDLER
+        CATCH 10
+    OUT
+        -> 12
+        -> 2 if false
+    IN
+        -> 0 if (ifBody1())
++11
+    STATEMENTS
+        ReturnStatement:    return catch1();
+    ERROR_HANDLER
+        14
+    OUT
+        -> 12
+        -> 5 if false
+    IN
+        -> CATCH 10 if catch(Foo e)
++12
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 6 if @returnPending
+    IN
+        -> 1
+        -> 11
++13
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 14 if !catch(Bar b)
+        -> 15 if catch(Bar b)
+    IN
+        -> CATCH 10 if !catch(Foo e)
++14
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 6 if @throwPending
+    IN
+        -> 13 if !catch(Bar b)
+        -> 16
++15
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 15
+        -> 16 if (ifCatch2())
+        -> 18 if !(ifCatch2())
+    IN
+        -> 13 if catch(Bar b)
+        -> 15
++16
+    STATEMENTS
+        ThrowStatement:    throw catch2();
+    ERROR_HANDLER
+        14
+    OUT
+        -> 14
+        -> 17 if false
+    IN
+        -> 15 if (ifCatch2())
++17
+    STATEMENTS
+    ERROR_HANDLER
+        14
+    OUT
+        -> 5
+    IN
+        -> 16 if false
+        -> 18
++18
+    STATEMENTS
+        ExpressionStatement:    doCatch2();
+    ERROR_HANDLER
+        14
+    OUT
+        -> 17
+    IN
+        -> 15 if !(ifCatch2())
++19
+    STATEMENTS
+        ExpressionStatement:    doBody();
+    ERROR_HANDLER
+        CATCH 10
+    OUT
+        -> 4
+    IN
+        -> 2 if !(ifBody2())
++2
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 10
+    OUT
+        -> 19 if !(ifBody2())
+        -> 2
+        -> 3 if (ifBody2())
+    IN
+        -> 0 if !(ifBody1())
+        -> 1 if false
+        -> 2
++3
+    STATEMENTS
+        ThrowStatement:    throw Body();
+    ERROR_HANDLER
+        CATCH 10
+    OUT
+        -> 4 if false
+        -> CATCH 10
+    IN
+        -> 2 if (ifBody2())
++4
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 10
+    OUT
+        -> 5
+    IN
+        -> 19
+        -> 3 if false
++5
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 6
+    IN
+        -> 11 if false
+        -> 17
+        -> 4
++6
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 6
+        -> 7 if (ifFin())
+        -> 8 if !(ifFin())
+    IN
+        -> 12 if @returnPending
+        -> 14 if @throwPending
+        -> 5
+        -> 6
++7
+    STATEMENTS
+        ReturnStatement:    return inFin();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 8 if false
+        -> END
+    IN
+        -> 6 if (ifFin())
++8
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 9 if !if(@throwPending) && !if(@returnPending)
+        -> END if if(@returnPending)
+        -> ERROR if if(@throwPending)
+    IN
+        -> 6 if !(ifFin())
+        -> 7 if false
++9
+    STATEMENTS
+        ExpressionStatement:    after();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> END
+    IN
+        -> 8 if !if(@throwPending) && !if(@returnPending)
++CATCH 10
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 11 if catch(Foo e)
+        -> 13 if !catch(Foo e)
+    IN
+        -> 3
++END
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+    IN
+        -> 7
+        -> 8 if if(@returnPending)
+        -> 9
++ERROR
+    STATEMENTS
+    ERROR_HANDLER
+        null
+    OUT
+    IN
+        -> 8 if if(@throwPending)
++START
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+    IN

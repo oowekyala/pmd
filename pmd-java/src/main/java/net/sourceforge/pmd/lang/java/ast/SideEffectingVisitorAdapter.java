@@ -44,4 +44,98 @@ public class SideEffectingVisitorAdapter<T> implements SideEffectingVisitor<T> {
     public void visit(ASTAnyTypeDeclaration node, T data) {
         visit((JavaNode) node, data);
     }
+
+
+    public void visit(ASTExpression node, T data) {
+        visit((JavaNode) node, data);
+    }
+
+    @Override
+    public void visit(ASTInfixExpression node, T data) {
+        visit((ASTExpression) node, data);
+    }
+
+    public void visit(ASTStatement node, T data) {
+        visit((JavaNode) node, data);
+    }
+
+    @Override
+    public void visit(ASTIfStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTAssertStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTExpressionStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTLabeledStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTLocalClassStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTEmptyStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTSwitchStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTWhileStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTDoStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTForStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTBreakStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTContinueStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTReturnStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTThrowStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTSynchronizedStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
+
+    @Override
+    public void visit(ASTTryStatement node, T data) {
+        visit((ASTStatement) node, data);
+    }
 }

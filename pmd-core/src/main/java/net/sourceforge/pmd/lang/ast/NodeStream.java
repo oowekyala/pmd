@@ -20,6 +20,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.internal.StreamImpl;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.internal.util.IteratorUtil;
 
 
 /**

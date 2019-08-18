@@ -1,0 +1,65 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        LocalVariableDeclaration:    int i = 0
+    OUT
+        -> 2 if !(i< 4)
+        -> 4 if (i< 4)
+    IN
+        -> 0
++2
+    STATEMENTS
+    OUT
+        -> 3
+    IN
+        -> 1 if !(i< 4)
+        -> 6 if !(i< 4)
++3
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 2
++4
+    STATEMENTS
+    OUT
+        -> 5
+    IN
+        -> 1 if (i< 4)
+        -> 6 if (i< 4)
++5
+    STATEMENTS
+        ExpressionStatement:    inLoop(foo);
+    OUT
+        -> 6
+    IN
+        -> 4
++6
+    STATEMENTS
+        StatementExpressionList:    i++
+    OUT
+        -> 2 if !(i< 4)
+        -> 4 if (i< 4)
+    IN
+        -> 5
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 3
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

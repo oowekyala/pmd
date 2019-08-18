@@ -1,0 +1,28 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 0
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 1
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

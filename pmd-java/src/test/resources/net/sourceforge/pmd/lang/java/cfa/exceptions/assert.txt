@@ -1,0 +1,58 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        AssertStatement:    assert foo() : "message";
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 2 if (foo())
+        -> 3 if !(foo())
+    IN
+        -> 0
++2
+    STATEMENTS
+        ExpressionStatement:    after();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> END
+    IN
+        -> 1 if (foo())
++3
+    STATEMENTS
+        StringLiteral:    "message"
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> ERROR
+    IN
+        -> 1 if !(foo())
++END
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+    IN
+        -> 2
++ERROR
+    STATEMENTS
+    ERROR_HANDLER
+        null
+    OUT
+    IN
+        -> 3
++START
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+    IN

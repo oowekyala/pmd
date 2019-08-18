@@ -1,0 +1,179 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        Resource:    Resource1 r1 = foo()
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 2
+    IN
+        -> 0
++10
+    STATEMENTS
+        ExpressionStatement:    after();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> END
+    IN
+        -> 9 if !if(@throwPending) && !if(@returnPending)
++12
+    STATEMENTS
+        ReturnStatement:    return 3;
+    ERROR_HANDLER
+        16
+    OUT
+        -> 13
+        -> 7 if false
+    IN
+        -> CATCH 11 if catch(Foo e)
++13
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 8 if @returnPending
+    IN
+        -> 12
+        -> 3
++14
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 15 if catch(Bar e)
+        -> 8 if @throwPending && !catch(Bar e)
+    IN
+        -> CATCH 11 if !catch(Foo e)
++15
+    STATEMENTS
+        ExpressionStatement:    cleanup();
+    ERROR_HANDLER
+        16
+    OUT
+        -> 7
+    IN
+        -> 14 if catch(Bar e)
++2
+    STATEMENTS
+        Resource:    Res2 r2 = bar()
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 2
+        -> 3 if (if1())
+        -> 4 if !(if1())
+    IN
+        -> 1
+        -> 2
++3
+    STATEMENTS
+        ReturnStatement:    return 2;
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 13
+        -> 4 if false
+    IN
+        -> 2 if (if1())
++4
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 4
+        -> 5 if (if2())
+        -> 6 if !(if2())
+    IN
+        -> 2 if !(if1())
+        -> 3 if false
+        -> 4
++5
+    STATEMENTS
+        ThrowStatement:    throw Foo();
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 6 if false
+        -> CATCH 11
+    IN
+        -> 4 if (if2())
++6
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 11
+    OUT
+        -> 7
+    IN
+        -> 4 if !(if2())
+        -> 5 if false
++7
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 8
+    IN
+        -> 12 if false
+        -> 15
+        -> 6
++8
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 9
+    IN
+        -> 13 if @returnPending
+        -> 14 if @throwPending && !catch(Bar e)
+        -> 7
++9
+    STATEMENTS
+        ExpressionStatement:    doSomething();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 10 if !if(@throwPending) && !if(@returnPending)
+        -> END if if(@returnPending)
+        -> ERROR if if(@throwPending)
+    IN
+        -> 8
++CATCH 11
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 12 if catch(Foo e)
+        -> 14 if !catch(Foo e)
+    IN
+        -> 5
++END
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+    IN
+        -> 10
+        -> 9 if if(@returnPending)
++ERROR
+    STATEMENTS
+    ERROR_HANDLER
+        null
+    OUT
+    IN
+        -> 9 if if(@throwPending)
++START
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+    IN

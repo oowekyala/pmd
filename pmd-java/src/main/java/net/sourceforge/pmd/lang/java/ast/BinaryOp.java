@@ -104,6 +104,20 @@ public enum BinaryOp implements InternalInterfaces.OperatorLike {
     }
 
     /**
+     * Returns true if this is an equality operator, ie one of
+     * {@link #EQ}, or {@link #NE}.
+     */
+    public boolean isConditional() {
+        switch (this) {
+        case CONDITIONAL_AND:
+        case CONDITIONAL_OR:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
      * Returns true if this is a relational operator, ie one of
      * {@link #LE}, {@link #GE}, {@link #GT}, {@link #LT}, or {@link #INSTANCEOF}.
      */

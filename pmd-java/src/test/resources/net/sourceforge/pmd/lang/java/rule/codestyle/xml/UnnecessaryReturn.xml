@@ -1,84 +1,201 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<test-data
-    xmlns="http://pmd.sourceforge.net/rule-tests"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
-    <test-code>
-        <description><![CDATA[
-bad
-     ]]></description>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+<test-data xmlns="http://pmd.sourceforge.net/rule-tests"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+   <test-code>
+      <description>pos - return as last statement</description>
+      <expected-problems>1</expected-problems>
+      <code><![CDATA[
 public class Foo {
  void bar() {
   int y = 3;
   return;
  }
 }
-     ]]></code>
-    </test-code>
-    <test-code>
-        <description><![CDATA[
-ok since method is not void
-     ]]></description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - method is not void</description>
+      <expected-problems>0</expected-problems>
+      <code><![CDATA[
 public class Foo {
  int bar() {
   return 2;
  }
 }
-     ]]></code>
-    </test-code>
-    <test-code>
-        <description><![CDATA[
-ok since return is in sub block
-     ]]></description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
-public class Foo {
- void bar() {
-  if (false) return;
- }
-}
-     ]]></code>
-    </test-code>
-    <test-code>
-        <description><![CDATA[
-interface methods don't have return statements
-     ]]></description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - interface methods don't have return statements</description>
+      <expected-problems>0</expected-problems>
+      <code><![CDATA[
 public interface Foo {
  void bar();
 }
-     ]]></code>
-    </test-code>
-    <test-code>
-        <description><![CDATA[
-abstract methods don't have return statements
-     ]]></description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - abstract methods don't have return statements</description>
+      <expected-problems>0</expected-problems>
+      <code><![CDATA[
 public class Foo {
  abstract void bar();
 }
-     ]]></code>
-    </test-code>
-    <test-code>
-        <description><![CDATA[
-return inside a catch - ok
-     ]]></description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - Last statement in an if</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>5</expected-linenumbers>
+      <code><![CDATA[
 public class Foo {
  void bar() {
-  try { 
+  if (something()) { 
+    foo();
+    return;
+  }
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - return inside a catch</description>
+      <expected-problems>1</expected-problems>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  try {
   } catch(Exception e){
      return;
   }
  }
 }
-     ]]></code>
-    </test-code>
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - last statement in an if, not of method</description>
+      <expected-problems>0</expected-problems>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  if (something()) { 
+    foo();
+    return;
+  }
+  last();
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - last statement in an if, with an else</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>5</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  if (something()) { 
+    foo();
+    return;
+  } else 
+  last();
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - last statement in an if, with a braced else</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>5</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  if (something()) { 
+    foo();
+    return;
+  } else {
+    last();
+  }
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - last statement in an else</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>5</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  if (something()) { 
+    foo();
+  } else {
+    last();
+    return;
+  }
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>pos - last statement in both branches</description>
+      <expected-problems>2</expected-problems>
+      <expected-linenumbers>5,8</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+  if (something()) { 
+    foo();
+    return;
+  } else {
+    last();
+    return;
+  }
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - return in a loop</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>5</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+   for (int i=0;something();i++) { 
+    foo();
+    return;
+  }
+ }
+}
+        ]]></code>
+   </test-code>
+
+   <test-code>
+      <description>neg - technically dead code</description>
+      <expected-problems>1</expected-problems>
+      <expected-linenumbers>3</expected-linenumbers>
+      <code><![CDATA[
+public class Foo {
+ void bar() {
+    return;
+    for (int i=0;something();i++) { 
+      foo();
+    }
+ }
+}
+        ]]></code>
+   </test-code>
+
 </test-data>

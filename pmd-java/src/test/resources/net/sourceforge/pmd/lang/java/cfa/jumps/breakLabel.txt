@@ -1,0 +1,149 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        VariableAccess:    nodes
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 0
++10
+    STATEMENTS
+    OUT
+        -> 11
+    IN
+        -> 8 if !(foo.isIt)
+        -> 9 if false
++11
+    STATEMENTS
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 10
++12
+    STATEMENTS
+        LocalVariableDeclaration:    Node foo2
+    OUT
+        -> 12
+        -> 13 if (foo.isIt)
+        -> 16 if !(foo.isIt)
+    IN
+        -> 12
+        -> 15 if nodes.hasNext()
+        -> 6 if nodes.hasNext()
++13
+    STATEMENTS
+        BreakStatement:    break a;
+    OUT
+        -> 14 if false
+        -> 2
+    IN
+        -> 12 if (foo.isIt)
++14
+    STATEMENTS
+    OUT
+        -> 15
+    IN
+        -> 13 if false
+        -> 16 if false
++15
+    STATEMENTS
+    OUT
+        -> 12 if nodes.hasNext()
+        -> 7 if !nodes.hasNext()
+    IN
+        -> 14
++16
+    STATEMENTS
+        BreakStatement:    {{{inBreak}}};
+    OUT
+        -> 14 if false
+        -> 7
+    IN
+        -> 12 if !(foo.isIt)
++2
+    STATEMENTS
+    OUT
+        -> 3
+    IN
+        -> 1 if !nodes.hasNext()
+        -> 11 if !nodes.hasNext()
+        -> 13
+        -> 9
++3
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 2
++4
+    STATEMENTS
+        LocalVariableDeclaration:    Node foo
+    OUT
+        -> 5
+    IN
+        -> 1 if nodes.hasNext()
+        -> 11 if nodes.hasNext()
++5
+    STATEMENTS
+        ExpressionStatement:    inLoop1(foo);
+    OUT
+        -> 6
+    IN
+        -> 4
++6
+    STATEMENTS
+        VariableAccess:    nodes
+    OUT
+        -> 12 if nodes.hasNext()
+        -> 7 if !nodes.hasNext()
+    IN
+        -> 5
++7
+    STATEMENTS
+    OUT
+        -> 8
+    IN
+        -> 15 if !nodes.hasNext()
+        -> 16
+        -> 6 if !nodes.hasNext()
++8
+    STATEMENTS
+        ExpressionStatement:    inLoop1(foo);
+    OUT
+        -> 10 if !(foo.isIt)
+        -> 8
+        -> 9 if (foo.isIt)
+    IN
+        -> 7
+        -> 8
++9
+    STATEMENTS
+        BreakStatement:    break a;
+    OUT
+        -> 10 if false
+        -> 2
+    IN
+        -> 8 if (foo.isIt)
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 3
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

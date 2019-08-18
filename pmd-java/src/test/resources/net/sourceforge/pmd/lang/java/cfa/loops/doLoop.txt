@@ -1,0 +1,49 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+    OUT
+        -> 2
+    IN
+        -> 0
+        -> 3 if (i++ > 0)
++2
+    STATEMENTS
+        ExpressionStatement:    inLoop(foo);
+    OUT
+        -> 3
+    IN
+        -> 1
++3
+    STATEMENTS
+    OUT
+        -> 1 if (i++ > 0)
+        -> 4 if !(i++ > 0)
+    IN
+        -> 2
++4
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 3 if !(i++ > 0)
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 4
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

@@ -1,0 +1,59 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 0
+        -> 1 if (foo())
+        -> 5 if !(foo())
+    IN
+        -> 0
+        -> START
++1
+    STATEMENTS
+        ExpressionStatement:    inThen();
+    OUT
+        -> 2
+    IN
+        -> 0 if (foo())
++2
+    STATEMENTS
+        ExpressionStatement:    inThen2();
+    OUT
+        -> 3
+    IN
+        -> 1
++3
+    STATEMENTS
+    OUT
+        -> 4
+    IN
+        -> 2
+        -> 5
++4
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 3
++5
+    STATEMENTS
+        ExpressionStatement:    bar();
+    OUT
+        -> 3
+    IN
+        -> 0 if !(foo())
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 4
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

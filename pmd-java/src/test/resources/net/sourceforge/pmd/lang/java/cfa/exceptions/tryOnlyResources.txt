@@ -1,0 +1,110 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        Resource:    Resource1 r1 = foo()
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 2
+    IN
+        -> 0
++2
+    STATEMENTS
+        Resource:    Res2 r2 = bar()
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 2
+        -> 3 if (if1())
+        -> 4 if !(if1())
+    IN
+        -> 1
+        -> 2
++3
+    STATEMENTS
+        ReturnStatement:    return 2;
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 4 if false
+        -> END
+    IN
+        -> 2 if (if1())
++4
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 4
+        -> 5 if (if2())
+        -> 6 if !(if2())
+    IN
+        -> 2 if !(if1())
+        -> 3 if false
+        -> 4
++5
+    STATEMENTS
+        ThrowStatement:    throw Foo();
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 6 if false
+        -> CATCH 8
+    IN
+        -> 4 if (if2())
++6
+    STATEMENTS
+    ERROR_HANDLER
+        CATCH 8
+    OUT
+        -> 7
+    IN
+        -> 4 if !(if2())
+        -> 5 if false
++7
+    STATEMENTS
+        ExpressionStatement:    after();
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> END
+    IN
+        -> 6
++CATCH 8
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> ERROR
+    IN
+        -> 5
++END
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+    IN
+        -> 3
+        -> 7
++ERROR
+    STATEMENTS
+    ERROR_HANDLER
+        null
+    OUT
+    IN
+        -> CATCH 8
++START
+    STATEMENTS
+    ERROR_HANDLER
+        ERROR
+    OUT
+        -> 0
+    IN

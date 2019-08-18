@@ -1,0 +1,65 @@
++0
+    STATEMENTS
+        ExpressionStatement:    before();
+    OUT
+        -> 1
+    IN
+        -> START
++1
+    STATEMENTS
+        VariableAccess:    nodes
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 0
++2
+    STATEMENTS
+    OUT
+        -> 3
+    IN
+        -> 1 if !nodes.hasNext()
+        -> 6 if !nodes.hasNext()
++3
+    STATEMENTS
+        ExpressionStatement:    after();
+    OUT
+        -> END
+    IN
+        -> 2
++4
+    STATEMENTS
+        LocalVariableDeclaration:    Node foo
+    OUT
+        -> 5
+    IN
+        -> 1 if nodes.hasNext()
+        -> 6 if nodes.hasNext()
++5
+    STATEMENTS
+        ExpressionStatement:    inLoop(foo);
+    OUT
+        -> 6
+    IN
+        -> 4
++6
+    STATEMENTS
+    OUT
+        -> 2 if !nodes.hasNext()
+        -> 4 if nodes.hasNext()
+    IN
+        -> 5
++END
+    STATEMENTS
+    OUT
+    IN
+        -> 3
++ERROR
+    STATEMENTS
+    OUT
+    IN
++START
+    STATEMENTS
+    OUT
+        -> 0
+    IN

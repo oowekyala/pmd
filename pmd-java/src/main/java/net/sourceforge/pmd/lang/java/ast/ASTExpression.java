@@ -4,7 +4,12 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.util.Deque;
+import java.util.LinkedList;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 /**
  * Represents an expression, in the most general sense.
@@ -66,6 +71,29 @@ public interface ASTExpression extends JavaNode, TypeNode, ASTMemberValue {
      * were mentioned, so no information is lost.
      */
     int getParenthesisDepth();
+
+
+    /**
+     * Returns the subexpressions of this expression, in the order in
+     * which they're evaluated. For example, for the expression:
+     * <pre>{@code
+     *  <ola.foo(a, b) + c>
+     * }</pre>
+     * the returned stream will contain the following expressions in order:
+     * <pre>{@code
+     *  <ola>, <a>, <b>, <ola.foo(a, b)>, <c>, <ola.foo(a, b) + c>
+     * }</pre>
+     *
+     */
+    default NodeStream<ASTExpression> getSubExpressions() {
+        Deque<ASTExpression> deque = new LinkedList<>();
+        TreeWalkUtils.postOrderWalk(this, n -> {
+            if (n instanceof ASTExpression) {
+                deque.push((ASTExpression) n);
+            }
+        });
+        return NodeStream.fromIterable(deque::descendingIterator);
+    }
 
 
     /**
