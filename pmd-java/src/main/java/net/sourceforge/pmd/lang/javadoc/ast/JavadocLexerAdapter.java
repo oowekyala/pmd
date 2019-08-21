@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_DATA;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_END;
+
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -54,7 +57,7 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
             JavadocTokenType tok = pendingTok != null ? pendingTok : lexer.advance();
             pendingTok = null;
 
-            if (tok == JavadocTokenType.COMMENT_END) {
+            if (tok == COMMENT_END) {
                 maxOffset = -1; // stop iteration
             }
 
@@ -63,10 +66,10 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
             if (tok == null) {
                 // EOF
                 return null;
-            } else if (tok == JavadocTokenType.COMMENT_DATA) {
+            } else if (tok == COMMENT_DATA) {
                 // comment data tokens are single chars, we merge them here
                 while ((curOffset + len) < maxOffset
-                    && (pendingTok = lexer.advance()) == JavadocTokenType.COMMENT_DATA) {
+                    && (pendingTok = lexer.advance()) == COMMENT_DATA) {
                     len += lexer.yylength();
                 }
                 image = doc.getFullText().substring(curOffset, curOffset + len);

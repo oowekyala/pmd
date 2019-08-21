@@ -6,13 +6,18 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 
-abstract class AbstractJavadocNode extends AbstractNode {
+abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
 
     private final JavadocNodeId id;
 
     public AbstractJavadocNode(JavadocNodeId id) {
         super(id.ordinal());
         this.id = id;
+    }
+
+    @Override
+    public JavadocNode jjtGetChild(int index) {
+        return (JavadocNode) super.jjtGetChild(index);
     }
 
     @Override

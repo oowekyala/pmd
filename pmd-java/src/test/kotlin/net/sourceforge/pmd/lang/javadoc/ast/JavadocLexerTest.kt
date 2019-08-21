@@ -88,6 +88,42 @@ class JavadocLexerTest : FunSpec({
         )
     }
 
+    test("Test brace balancing 2") {
+
+        // the <p> is interpreted as COMMENT_DATA inside the {@code}, but as HTML outside
+        val code = """/** some javadoc 
+                <pre>{ @code { <p> } } <p> </pre> */
+            """
+
+        // ["/**", whitespace, comment data, whitespace, comment data, "{", tag name, comment data, "{", comment data, "}", comment data, "}", comment data, "*/"]
+        val tokens = JavadocLexerAdapter(code, 0, 100).consume().map { Tok(it.kind, it.image) }
+
+        tokens shouldBe listOf(
+                Tok(COMMENT_START),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "some javadoc "),
+                Tok(WHITESPACE, "\n                "),
+                Tok(HTML_LT),
+                Tok(HTML_IDENT, "pre"),
+                Tok(HTML_GT),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@code"),
+                // here's it's comment data
+                Tok(COMMENT_DATA, " { <p> } "),
+                Tok(INLINE_TAG_END),
+                Tok(COMMENT_DATA, " "),
+                Tok(HTML_LT),
+                Tok(HTML_IDENT, "p"),
+                Tok(HTML_GT),
+                Tok(COMMENT_DATA, " "),
+                Tok(HTML_LCLOSE),
+                Tok(HTML_IDENT, "pre"),
+                Tok(HTML_GT),
+                Tok(COMMENT_DATA, " "),
+                Tok(COMMENT_END)
+        )
+    }
+
 
 })
 
