@@ -18,6 +18,7 @@ public class JavadocLexerAdapter implements TokenManager {
     private final TokenDocument doc;
     private int maxOffset;
     private JavadocLexer lexer;
+    private JavadocToken prevToken;
     private int curOffset;
     private String fname;
     @Nullable
@@ -78,7 +79,13 @@ public class JavadocLexerAdapter implements TokenManager {
             curOffset += len;
 
 
-            return new JavadocToken(tok, image, start, curOffset, doc);
+            JavadocToken next = new JavadocToken(tok, image, start, curOffset, doc);
+            if (prevToken != null) {
+                prevToken.next = next;
+                next.prev = prevToken;
+            }
+            prevToken = next;
+            return next;
         } catch (IOException e) {
             e.printStackTrace();
         }

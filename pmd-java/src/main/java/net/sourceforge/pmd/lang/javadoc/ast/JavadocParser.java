@@ -15,9 +15,14 @@ public class JavadocParser {
 
     public JavadocComment parse() {
         JavadocComment comment = new JavadocComment();
-        JavadocToken ntoken = lexer.getNextToken();
-        if (ntoken.getKind() == JavadocTokenType.COMMENT_START) {
+        JavadocToken ftoken = lexer.getNextToken();
+        if (ftoken.getKind() == JavadocTokenType.COMMENT_START) {
+            comment.jjtSetFirstToken(ftoken);
+            while (ftoken.getKind() != null && ftoken.getKind() != JavadocTokenType.COMMENT_END) {
+                ftoken = lexer.getNextToken();
 
+
+            }
         }
 
         return comment;
