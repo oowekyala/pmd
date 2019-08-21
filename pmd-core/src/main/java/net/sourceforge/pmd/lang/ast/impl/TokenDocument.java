@@ -13,7 +13,7 @@ import net.sourceforge.pmd.util.document.TextDocument;
  * Token layer of a parsed file.
  */
 @Experimental
-public abstract class TokenDocument<T extends GenericToken> {
+public abstract class TokenDocument<T extends GenericToken<T>> {
 
     private final TextDocument textDocument;
 
