@@ -3,6 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>pmd-java</artifactId>
     <name>PMD Java</name>
+    <properties>
+        <jflex-output>${project.build.directory}/generated-sources/jflex</jflex-output>
+        <javacc-output>${project.build.directory}/generated-sources/javacc</javacc-output>
+    </properties>
 
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
@@ -61,7 +65,7 @@
                 <inherited>true</inherited>
                 <executions>
                     <execution>
-                        <id>generate-sources</id>
+                        <id>generate-java</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>run</goal>
@@ -78,6 +82,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+            <plugin>
+                <groupId>de.jflex</groupId>
+                <artifactId>jflex-maven-plugin</artifactId>
+                <version>1.7.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${jflex-output}</outputDirectory>
+                            <lexDefinitions>
+                                <lexDefinition>etc/grammar/Javadoc.jflex</lexDefinition>
+                            </lexDefinitions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
