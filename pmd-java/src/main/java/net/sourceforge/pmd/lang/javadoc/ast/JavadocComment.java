@@ -4,15 +4,13 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import net.sourceforge.pmd.lang.ast.AbstractNode;
-
 /**
- * @author Clément Fournier
+ * Root node of Javadoc ASTs.
  */
-public class JavadocComment extends AbstractNode {
+public class JavadocComment extends AbstractJavadocNode {
 
-    public JavadocComment(int id) {
-        super(id);
+    public JavadocComment() {
+        super(JavadocNodeId.ROOT);
     }
 
     @Override

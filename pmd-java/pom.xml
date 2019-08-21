@@ -90,6 +90,7 @@
                 <version>1.7.0</version>
                 <executions>
                     <execution>
+                        <id>javadoc-lexer</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
