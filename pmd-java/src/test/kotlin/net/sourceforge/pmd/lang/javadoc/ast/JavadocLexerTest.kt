@@ -90,15 +90,71 @@ class JavadocLexerTest : FunSpec({
     }
     test("Test line breaks") {
 
-        """
-            /**
-             * @param fileText    Full file text
-             * @param startOffset Start offset in the file text
-             */
+        val code = """
+/**
+ * @param fileText    Full file text
+ * @param startOffset Start offset in the file text
+ */
             
         """.trimIndent()
 
+        val tokens = JavadocLexerAdapter(code).consume().map { Tok(it.kind, it.image) }
+
+        tokens shouldBe listOf(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "fileText    Full file text"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "startOffset Start offset in the file text"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+
     }
+
+    test("Test param") {
+
+        val code = """
+/**
+ * @param fileText
+ *          Full file text
+ * @param startOffset
+ *          Start offset in the file text
+ */
+            
+        """.trimIndent()
+
+        val tokens = JavadocLexerAdapter(code).consume().map { Tok(it.kind, it.image) }
+
+        tokens shouldBe listOf(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "fileText"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "          "),
+                Tok(COMMENT_DATA, "Full file text"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "startOffset"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "          "),
+                Tok(COMMENT_DATA, "Start offset in the file text"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+    }
+
     test("Test space before inline tag name doesn't push a tag_name") {
 
         // the <p> is interpreted as COMMENT_DATA inside the {@code}, but as HTML outside
@@ -145,7 +201,13 @@ class JavadocLexerTest : FunSpec({
 
 })
 
-data class Tok(val k: JavadocTokenType, val im: String = k.constValue)
+data class Tok(val k: JavadocTokenType, val im: String = k.constValue) {
+    override fun toString(): String {
+        return if (k.isConst) "Tok(${k.name})" else "Tok(${k.name}, \"${im.addEscapes()}\")"
+    }
+
+    private fun String.addEscapes() = replace("\n", "\\n").replace("\r", "\\r")
+}
 
 private fun JavadocLexerAdapter.consume(): List<JavadocToken> = generateSequence { nextToken }.toList()
 
