@@ -19,6 +19,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
     return lookahead(c, 0);
   }
 
+  private boolean inInlineTag;
+
   public boolean lookahead(char c, int distance) {
     if (zzMarkedPos + distance >= zzBuffer.length) return false;
     return zzBuffer[zzMarkedPos + distance] == c;
@@ -30,6 +32,16 @@ package net.sourceforge.pmd.lang.javadoc.ast;
       }
   }
 
+  private void maybeSetInline() {
+      inInlineTag = zzLexicalState == INLINE_TAG_DOC_SPACE;
+  }
+
+  private boolean isInline() {
+      boolean isInline = inInlineTag;
+      inInlineTag = false;
+      return isInline;
+  }
+
   public void goTo(int offset) {
     zzCurrentPos = zzMarkedPos = zzStartRead = offset;
     zzAtEOF = false;
@@ -38,7 +50,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 %state COMMENT_DATA_START
 %state COMMENT_DATA
-%state TAG_DOC_SPACE
+%state BLOCK_TAG_DOC_SPACE
+%state INLINE_TAG_DOC_SPACE
 %state INLINE_TAG_NAME
 %state INSIDE_CODE_TAG
 %state CODE_TAG_SPACE
@@ -99,8 +112,9 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 
 <COMMENT_DATA_START, COMMENT_DATA> "{"
 {
-  yybegin(lookahead('@') ? INLINE_TAG_NAME : COMMENT_DATA);
-  return JavadocTokenType.INLINE_TAG_START;
+  boolean isTagStart = lookahead('@');
+  yybegin(isTagStart ? INLINE_TAG_NAME : COMMENT_DATA);
+  return isTagStart ? JavadocTokenType.INLINE_TAG_START : JavadocTokenType.COMMENT_DATA;
 }
 // brace balancing inside code and literal envs
 <INSIDE_CODE_TAG> "{" { braces++; return JavadocTokenType.COMMENT_DATA; }
@@ -111,15 +125,23 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
       }
 
 <INLINE_TAG_NAME> ("@code" | "@literal") { yybegin(CODE_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
-<INLINE_TAG_NAME, COMMENT_DATA_START> "@"{INLINE_TAG_IDENTIFIER} { yybegin(TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<INLINE_TAG_NAME> "@"{INLINE_TAG_IDENTIFIER} { yybegin(INLINE_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<COMMENT_DATA_START> "@"{INLINE_TAG_IDENTIFIER} { yybegin(BLOCK_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
 // closing }
-<COMMENT_DATA_START, COMMENT_DATA, TAG_DOC_SPACE, CODE_TAG_SPACE> "}"
-        { yybegin(COMMENT_DATA); return JavadocTokenType.INLINE_TAG_END; }
+<COMMENT_DATA_START, COMMENT_DATA, INLINE_TAG_DOC_SPACE, CODE_TAG_SPACE>
+        "}" {
+          if (isInline()) {
+            yybegin(COMMENT_DATA);
+            return JavadocTokenType.INLINE_TAG_END;
+          } else {
+            return JavadocTokenType.COMMENT_DATA;
+          }
+      }
 
 // {@literal &identifier; } or {@literal &#digits; } or {@literal &#xhex-digits; }
 <COMMENT_DATA> "&" {IDENTIFIER} ";" {return JavadocTokenType.HTML_ENTITY;}
 
-<TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
+<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { maybeSetInline(); yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
 
 <CODE_TAG_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
 

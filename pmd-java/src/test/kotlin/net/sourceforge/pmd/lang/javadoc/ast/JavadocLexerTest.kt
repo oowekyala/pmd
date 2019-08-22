@@ -55,14 +55,9 @@ class JavadocLexerTest : FunSpec({
     test("Test brace balancing") {
 
         // the <p> is interpreted as COMMENT_DATA inside the {@code}, but as HTML outside
-        val code = """/** some javadoc 
+        """/** some javadoc 
                 <pre>{@code { <p> } } <p> </pre> */
-            """
-
-        // ["/**", whitespace, comment data, whitespace, comment data, "{", tag name, comment data, "{", comment data, "}", comment data, "}", comment data, "*/"]
-        val tokens = JavadocLexerAdapter(code, 0, 100).consume().map { Tok(it.kind, it.image) }
-
-        tokens shouldBe listOf(
+            """.shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
@@ -90,17 +85,13 @@ class JavadocLexerTest : FunSpec({
     }
     test("Test line breaks") {
 
-        val code = """
+        """
 /**
  * @param fileText    Full file text
  * @param startOffset Start offset in the file text
  */
             
-        """.trimIndent()
-
-        val tokens = JavadocLexerAdapter(code).consume().map { Tok(it.kind, it.image) }
-
-        tokens shouldBe listOf(
+        """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
@@ -120,7 +111,7 @@ class JavadocLexerTest : FunSpec({
 
     test("Test param") {
 
-        val code = """
+        """
 /**
  * @param fileText
  *          Full file text
@@ -128,11 +119,7 @@ class JavadocLexerTest : FunSpec({
  *          Start offset in the file text
  */
             
-        """.trimIndent()
-
-        val tokens = JavadocLexerAdapter(code).consume().map { Tok(it.kind, it.image) }
-
-        tokens shouldBe listOf(
+        """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
@@ -154,18 +141,77 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_END)
         )
     }
+    test("Test block tag is interpreted in @code 1") {
+
+
+        """
+/**
+ * {@code
+ * foof
+ * @param fullText
+ * }
+ */
+            
+        """.trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@code"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "foof"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "fullText"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "}"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+
+    }
+
+    test("Test block tag is interpreted in @code 2") {
+
+
+        """
+/**
+ * {@code
+ *
+ * @param fullText
+ * }
+ */
+            
+        """.trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@code"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(TAG_NAME, "@param"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "fullText"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "}"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+    }
 
     test("Test space before inline tag name doesn't push a tag_name") {
 
         // the <p> is interpreted as COMMENT_DATA inside the {@code}, but as HTML outside
-        val code = """/** some javadoc 
+        """/** some javadoc 
                 <pre>{ @code { <p> } } <p> </pre> */
-            """
-
-        // ["/**", whitespace, comment data, whitespace, comment data, "{", tag name, comment data, "{", comment data, "}", comment data, "}", comment data, "*/"]
-        val tokens = JavadocLexerAdapter(code, 0, 100).consume().map { Tok(it.kind, it.image) }
-
-        tokens shouldBe listOf(
+        """.shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
@@ -173,19 +219,12 @@ class JavadocLexerTest : FunSpec({
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
-                Tok(INLINE_TAG_START),
                 // here's it's comment data
-                Tok(COMMENT_DATA, " @code "),
-                Tok(INLINE_TAG_START),
-                Tok(COMMENT_DATA, " "),
+                Tok(COMMENT_DATA, "{ @code { "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "p"),
                 Tok(HTML_GT),
-                Tok(COMMENT_DATA, " "),
-                Tok(INLINE_TAG_END),
-                Tok(COMMENT_DATA, " "),
-                Tok(INLINE_TAG_END),
-                Tok(COMMENT_DATA, " "),
+                Tok(COMMENT_DATA, " } } "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "p"),
                 Tok(HTML_GT),
@@ -216,4 +255,11 @@ private fun JavadocToken.assertMatches(ttype: JavadocTokenType, start: Int, end:
     this.image shouldBe image
     startInDocument shouldBe start
     endInDocument shouldBe end
+}
+
+
+private fun String.shouldHaveTokens(vararg tokens: Tok) {
+    val toks = JavadocLexerAdapter(this).consume().map { Tok(it.kind, it.image) }
+
+    toks shouldBe tokens.toList()
 }

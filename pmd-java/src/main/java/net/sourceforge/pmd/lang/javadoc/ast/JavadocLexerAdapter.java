@@ -26,6 +26,12 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
     @Nullable
     private JavadocTokenType pendingTok;
 
+/**
+ * {@code
+ * foo
+ * @param fullText
+ * }
+ */
     public JavadocLexerAdapter(String fullText) {
         this(fullText, 0, fullText.length());
     }
