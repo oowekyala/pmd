@@ -23,22 +23,22 @@ public interface JavadocNode extends Node {
 
 
     /** Root node of Javadoc ASTs. */
-    class JdComment extends AbstractJavadocNode implements RootNode {
+    class JdocComment extends AbstractJavadocNode implements RootNode {
 
-        JdComment() {
+        JdocComment() {
             super(JavadocNodeId.ROOT);
         }
 
     }
 
     /** Some text payload for the comment */
-    class JdCommentData extends AbstractJavadocNode {
+    class JdocCommentData extends AbstractJavadocNode {
 
-        JdCommentData(JavadocToken tok) {
+        JdocCommentData(JavadocToken tok) {
             this(tok, tok);
         }
 
-        JdCommentData(JavadocToken first, JavadocToken last) {
+        JdocCommentData(JavadocToken first, JavadocToken last) {
             super(JavadocNodeId.COMMENT_DATA);
             jjtSetFirstToken(first);
             jjtSetLastToken(last);
@@ -47,21 +47,21 @@ public interface JavadocNode extends Node {
     }
 
     /** Whitespace ignored by Javadoc. */
-    class JdWhitespace extends AbstractTokenNode {
+    class JdocWhitespace extends AbstractTokenNode {
 
-        JdWhitespace(JavadocToken tok) {
+        JdocWhitespace(JavadocToken tok) {
             super(JavadocNodeId.WHITESPACE, tok);
         }
 
     }
 
     /** Malformed tag. */
-    class JdMalformed extends AbstractJavadocNode {
+    class JdocMalformed extends AbstractJavadocNode {
 
         private final Set<JavadocTokenType> expected;
         private final JavadocToken actual;
 
-        JdMalformed(EnumSet<JavadocTokenType> expected, JavadocToken token) {
+        JdocMalformed(EnumSet<JavadocTokenType> expected, JavadocToken token) {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = token;
@@ -96,29 +96,29 @@ public interface JavadocNode extends Node {
         }
     }
 
-    class JdHtmlEnd extends AbstractJavadocNode {
+    class JdocHtmlEnd extends AbstractJavadocNode {
 
         private final String tagName;
 
-        JdHtmlEnd(String tagName) {
+        JdocHtmlEnd(String tagName) {
             super(JavadocNodeId.HTML_END);
             this.tagName = tagName;
         }
     }
 
-    class JdHtmlComment extends AbstractJavadocNode {
+    class JdocHtmlComment extends AbstractJavadocNode {
 
-        JdHtmlComment() {
+        JdocHtmlComment() {
             super(JavadocNodeId.HTML_COMMENT);
         }
     }
 
     /** An inline javadoc tag, eg {@code {@code }}. */
-    class JdInlineTag extends AbstractJavadocNode {
+    class JdocInlineTag extends AbstractJavadocNode {
 
         private final String tagName;
 
-        JdInlineTag(String tagName) {
+        JdocInlineTag(String tagName) {
             super(JavadocNodeId.INLINE_TAG);
             this.tagName = tagName;
         }
