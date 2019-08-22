@@ -90,8 +90,7 @@ class JavadocLexerTest : FunSpec({
  * @param fileText    Full file text
  * @param startOffset Start offset in the file text
  */
-            
-        """.trim().shouldHaveTokens(
+""".trim().shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
@@ -118,8 +117,7 @@ class JavadocLexerTest : FunSpec({
  * @param startOffset
  *          Start offset in the file text
  */
-            
-        """.trim().shouldHaveTokens(
+""".trim().shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
@@ -151,7 +149,7 @@ class JavadocLexerTest : FunSpec({
  * @param fullText
  * }
  */
-            
+
         """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(LINE_BREAK, "\n *"),
@@ -169,6 +167,59 @@ class JavadocLexerTest : FunSpec({
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+
+    }
+
+    test("Test @code 3") {
+
+
+        """
+/**
+ * {@code
+ * foof
+ * @ param fullText
+ * }
+ */
+
+        """.trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@code"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "foof"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "@ param fullText"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "}"),
+                Tok(LINE_BREAK, "\n "),
+                Tok(COMMENT_END)
+        )
+
+    }
+
+    test("Test empty inline tag") {
+
+
+        """
+/**
+ * {@inheritDoc}
+ */
+
+        """.trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@inheritDoc"),
+                Tok(INLINE_TAG_END),
                 Tok(LINE_BREAK, "\n "),
                 Tok(COMMENT_END)
         )
