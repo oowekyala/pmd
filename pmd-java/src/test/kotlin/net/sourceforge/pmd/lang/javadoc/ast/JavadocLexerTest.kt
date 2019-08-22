@@ -17,7 +17,7 @@ class JavadocLexerTest : FunSpec({
         val code = "01234567/** some javadoc */"
         //                  ^
 
-        val lexer = JavadocLexerAdapter(code, 8, code.length + 10)
+        val lexer = JavadocLexer(code, 8, code.length + 10)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -31,7 +31,7 @@ class JavadocLexerTest : FunSpec({
         val comment = "/** some javadoc */"
         val code = "01234567${comment}public void foo()"
         //                  ^
-        val lexer = JavadocLexerAdapter(code, 8, 8 + comment.length + 3)
+        val lexer = JavadocLexer(code, 8, 8 + comment.length + 3)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -44,7 +44,7 @@ class JavadocLexerTest : FunSpec({
 
         val code = "01234567/** some javadoc "
         //                  ^
-        val lexer = JavadocLexerAdapter(code, 8, 100)
+        val lexer = JavadocLexer(code, 8, 100)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -299,7 +299,7 @@ data class Tok(val k: JavadocTokenType, val im: String = k.constValue) {
     private fun String.addEscapes() = replace("\n", "\\n").replace("\r", "\\r")
 }
 
-private fun JavadocLexerAdapter.consume(): List<JavadocToken> = generateSequence { nextToken }.toList()
+private fun JavadocLexer.consume(): List<JavadocToken> = generateSequence { nextToken }.toList()
 
 private fun JavadocToken.assertMatches(ttype: JavadocTokenType, start: Int, end: Int, image: String) {
     kind shouldBe ttype
@@ -310,7 +310,7 @@ private fun JavadocToken.assertMatches(ttype: JavadocTokenType, start: Int, end:
 
 
 private fun String.shouldHaveTokens(vararg tokens: Tok) {
-    val toks = JavadocLexerAdapter(this).consume().map { Tok(it.kind, it.image) }
+    val toks = JavadocLexer(this).consume().map { Tok(it.kind, it.image) }
 
     toks shouldBe tokens.toList()
 }

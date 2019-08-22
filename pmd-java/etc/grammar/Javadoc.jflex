@@ -4,7 +4,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %%
 
 
-%class JavadocLexer
+%class JavadocFlexer
 %unicode
 %function advance
 %type JavadocTokenType
@@ -12,8 +12,6 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %{
 
   private int braces;
-
-  public JavadocLexer() {}
 
   public boolean lookahead(char c) {
     return lookahead(c, 0);

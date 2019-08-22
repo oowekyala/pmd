@@ -16,23 +16,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
-public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
+public class JavadocLexer implements TokenManager<JavadocToken> {
 
     private final TokenDocument<JavadocToken> doc;
     private int maxOffset;
-    private JavadocLexer lexer;
+    private JavadocFlexer lexer;
     private JavadocToken prevToken;
     private int curOffset;
     @Nullable
     private JavadocTokenType pendingTok;
 
-/**
- * {@code
- * foo
- * @param fullText
- * }
- */
-    public JavadocLexerAdapter(String fullText) {
+    public JavadocLexer(String fullText) {
         this(fullText, 0, fullText.length());
     }
 
@@ -40,7 +34,7 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
      * @param fileText    Full file text
      * @param startOffset Start offset in the file text
      */
-    public JavadocLexerAdapter(String fileText, int startOffset, int endOffset) {
+    public JavadocLexer(String fileText, int startOffset, int endOffset) {
         this.curOffset = startOffset;
         this.doc = new JavadocTokenDocument(fileText);
         this.maxOffset = endOffset;
@@ -61,7 +55,7 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
                     return null;
                 }
 
-                this.lexer = new JavadocLexer(reader);
+                this.lexer = new JavadocFlexer(reader);
             }
 
             JavadocTokenType tok = pendingTok != null ? pendingTok : lexer.advance();
