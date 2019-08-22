@@ -4,6 +4,11 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
@@ -53,10 +58,10 @@ public interface JavadocNode extends Node {
     /** Malformed tag. */
     class JdMalformed extends AbstractJavadocNode {
 
-        private final JavadocTokenType expected;
+        private final Set<JavadocTokenType> expected;
         private final JavadocToken actual;
 
-        JdMalformed(JavadocTokenType expected, JavadocToken token) {
+        JdMalformed(EnumSet<JavadocTokenType> expected, JavadocToken token) {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = token;
@@ -68,10 +73,44 @@ public interface JavadocNode extends Node {
             return actual;
         }
 
-        public JavadocTokenType getExpected() {
+        public Set<JavadocTokenType> getExpected() {
             return expected;
         }
 
+    }
+
+    class JdHtmlStart extends AbstractJavadocNode {
+
+        public static final String UNATTRIBUTED = null;
+        final Map<String, String> attributes = new HashMap<>(0);
+        private final String tagName;
+        private boolean autoclose;
+
+        JdHtmlStart(String tagName) {
+            super(JavadocNodeId.HTML_START);
+            this.tagName = tagName;
+        }
+
+        void setAutoclose(boolean autoclose) {
+            this.autoclose = autoclose;
+        }
+    }
+
+    class JdHtmlEnd extends AbstractJavadocNode {
+
+        private final String tagName;
+
+        JdHtmlEnd(String tagName) {
+            super(JavadocNodeId.HTML_END);
+            this.tagName = tagName;
+        }
+    }
+
+    class JdHtmlComment extends AbstractJavadocNode {
+
+        JdHtmlComment() {
+            super(JavadocNodeId.HTML_COMMENT);
+        }
     }
 
     /** An inline javadoc tag, eg {@code {@code }}. */

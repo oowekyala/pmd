@@ -30,6 +30,16 @@ public enum JavadocTokenType {
     HTML_GT(">", true),
     HTML_LCLOSE("</", true),
     HTML_RCLOSE("/>", true),
+
+    HTML_EQ("=", true),
+    HTML_ATTR_START("[\"']", false),
+    HTML_ATTR_END("[\"']", false),
+    HTML_ATTR_VAL("<attribute value>", false),
+
+    HTML_COMMENT_START("<!--", true),
+    HTML_COMMENT_END("-->", true),
+    HTML_COMMENT_CONTENT("<comment>", false),
+
     HTML_IDENT("<identifier>", false),
     HTML_ENTITY("<HTML entity>", false),
     ;
