@@ -66,14 +66,15 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
-                Tok(WHITESPACE, "\n                "),
+                Tok(LINE_BREAK, "\n                "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
                 Tok(INLINE_TAG_START),
                 Tok(TAG_NAME, "@code"),
+                Tok(WHITESPACE, " "),
                 // here's it's comment data
-                Tok(COMMENT_DATA, " { <p> } "),
+                Tok(COMMENT_DATA, "{ <p> } "),
                 Tok(INLINE_TAG_END),
                 Tok(COMMENT_DATA, " "),
                 Tok(HTML_LT),
@@ -87,8 +88,18 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_END)
         )
     }
+    test("Test line breaks") {
 
-    test("Test brace balancing 2") {
+        """
+            /**
+             * @param fileText    Full file text
+             * @param startOffset Start offset in the file text
+             */
+            
+        """.trimIndent()
+
+    }
+    test("Test space before inline tag name doesn't push a tag_name") {
 
         // the <p> is interpreted as COMMENT_DATA inside the {@code}, but as HTML outside
         val code = """/** some javadoc 
@@ -102,14 +113,21 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
-                Tok(WHITESPACE, "\n                "),
+                Tok(LINE_BREAK, "\n                "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
                 Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
                 // here's it's comment data
-                Tok(COMMENT_DATA, " { <p> } "),
+                Tok(COMMENT_DATA, " @code "),
+                Tok(INLINE_TAG_START),
+                Tok(COMMENT_DATA, " "),
+                Tok(HTML_LT),
+                Tok(HTML_IDENT, "p"),
+                Tok(HTML_GT),
+                Tok(COMMENT_DATA, " "),
+                Tok(INLINE_TAG_END),
+                Tok(COMMENT_DATA, " "),
                 Tok(INLINE_TAG_END),
                 Tok(COMMENT_DATA, " "),
                 Tok(HTML_LT),
