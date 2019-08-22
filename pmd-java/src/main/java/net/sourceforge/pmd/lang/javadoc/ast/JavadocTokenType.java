@@ -65,6 +65,11 @@ public enum JavadocTokenType {
         this.isConst = isConst;
     }
 
+
+    public boolean isSignificant() {
+        return this != WHITESPACE && this != LINE_BREAK;
+    }
+
     public boolean isConst() {
         return isConst;
     }
