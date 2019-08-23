@@ -8,6 +8,7 @@ import io.kotlintest.*
 import io.kotlintest.specs.IntelliMarker
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.*
+import io.kotlintest.TestContext as KotlinTestRunCtx
 import io.kotlintest.should as kotlintestShould
 
 /**
@@ -18,9 +19,13 @@ import io.kotlintest.should as kotlintestShould
  *
  * @author Clément Fournier
  */
-abstract class AbstractParserTestSpec<T : AbstractParserTestSpec<T>> : AbstractSpec(), IntelliMarker {
+abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.VersionedTestCtx<V, T>> : AbstractSpec(), IntelliMarker {
 
-    fun test(name: String, test: TestContext.() -> Unit) =
+    protected abstract fun makeCtx(testCtx: KotlinTestRunCtx, ver: V): T
+
+    protected abstract val defaultVer: V
+
+    fun test(name: String, test: KotlinTestRunCtx.() -> Unit) =
             addTestCase(name, test, defaultTestCaseConfig, TestType.Test)
 
     /**
@@ -59,8 +64,8 @@ abstract class AbstractParserTestSpec<T : AbstractParserTestSpec<T>> : AbstractS
      *
      */
     fun parserTest(name: String,
-                   javaVersion: JavaVersion = JavaVersion.Latest,
-                   spec: GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   javaVersion: V = defaultVer,
+                   spec: T.() -> Unit) =
             parserTest(name, listOf(javaVersion), spec)
 
     /**
@@ -79,84 +84,106 @@ abstract class AbstractParserTestSpec<T : AbstractParserTestSpec<T>> : AbstractS
      *             new parser test.
      */
     fun parserTest(name: String,
-                   javaVersions: List<JavaVersion>,
-                   spec: GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   javaVersions: List<V>,
+                   spec: T.() -> Unit) =
             parserTestGroup(name) {
                 onVersions(javaVersions) {
                     spec()
                 }
             }
 
-    private fun containedParserTestImpl(
-            context: TestContext,
-            name: String,
-            javaVersion: JavaVersion,
-            assertions: ParserTestCtx.() -> Unit) {
+    inner class GroupTestCtx(private val context: KotlinTestRunCtx) {
 
-        context.registerTestCase(
-                name = name,
-                spec = this,
-                test = { ParserTestCtx(javaVersion).assertions() },
-                config = defaultTestCaseConfig,
-                type = TestType.Test
-        )
+        fun onVersions(javaVersions: List<V>, spec: T.() -> Unit) {
+            javaVersions.forEach { javaVersion ->
+                makeCtx(context, javaVersion).containedParserTestImpl(context, name = javaVersion.displayName, assertions = spec)
+            }
+        }
     }
 
-    inner class GroupTestCtx(private val context: TestContext) {
+    open abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val javaVersion: V) {
 
-        fun onVersions(javaVersions: List<JavaVersion>, spec: VersionedTestCtx.() -> Unit) {
-            javaVersions.forEach { javaVersion ->
 
-                context.registerTestCase(
-                        name = "Java ${javaVersion.pmdName}",
-                        spec = this@AbstractParserTestSpec,
-                        test = { VersionedTestCtx(this, javaVersion).spec() },
-                        config = defaultTestCaseConfig,
-                        type = TestType.Container
-                )
+        protected inline fun <reified N : JavaNode> makeMatcher(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
+                : Assertions<String> = { nodeParsingCtx.parseAndFind<N>(it, this as T).shouldMatchNode(ignoreChildren, nodeSpec) }
+
+        fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>): Assertions<String> = {
+            shouldThrow<ParseException> {
+                nodeParsingCtx.parseNode(it, this as T)
             }
         }
 
-        inner class VersionedTestCtx(private val context: TestContext, javaVersion: JavaVersion) : ParserTestCtx(javaVersion) {
+        fun parseIn(nodeParsingCtx: NodeParsingCtx<*, T>) = object : Matcher<String> {
 
-            infix fun String.should(matcher: Assertions<String>) {
-                containedParserTestImpl(context, "'$this'", javaVersion = javaVersion) {
-                    this@should kotlintestShould matcher
+            override fun test(value: String): Result {
+                val (pass, e) = try {
+                    nodeParsingCtx.parseNode(value, this as T)
+                    Pair(true, null)
+                } catch (e: ParseException) {
+                    Pair(false, e)
                 }
+
+                return Result(pass,
+                        "Expected '$value' to parse in $nodeParsingCtx, got $e",
+                        "Expected '$value' not to parse in ${nodeParsingCtx.toString().addArticle()}"
+                )
+
             }
+        }
 
-            infix fun String.should(matcher: Matcher<String>) {
-                containedParserTestImpl(context, "'$this'", javaVersion = javaVersion) {
-                    this@should kotlintestShould matcher
-                }
+        infix fun String.should(matcher: Assertions<String>) {
+            containedParserTestImpl(context, "'$this'") {
+                this@should kotlintestShould matcher
             }
+        }
 
-            infix fun String.shouldNot(matcher: Matcher<String>) =
-                    should(matcher.invert())
-
-            fun inContext(nodeParsingCtx: NodeParsingCtx<*>, assertions: ImplicitNodeParsingCtx.() -> Unit) {
-                ImplicitNodeParsingCtx(nodeParsingCtx).assertions()
+        infix fun String.should(matcher: Matcher<String>) {
+            containedParserTestImpl(context, "'$this'") {
+                this@should kotlintestShould matcher
             }
+        }
 
-            inner class ImplicitNodeParsingCtx(private val nodeParsingCtx: NodeParsingCtx<*>) {
 
-                /**
-                 * A matcher that succeeds if the string parses correctly.
-                 */
-                fun parse(): Matcher<String> = this@VersionedTestCtx.parseIn(nodeParsingCtx)
+        internal fun containedParserTestImpl(
+                context: KotlinTestRunCtx,
+                name: String,
+                assertions: T.() -> Unit) {
 
-                fun parseAs(matcher: ValuedNodeSpec<Node, Any>): Assertions<String> = { str ->
-                    val node = nodeParsingCtx.parseNode(str, this@VersionedTestCtx)
-                    val idx = node.jjtGetChildIndex()
-                    node.parent kotlintestShould matchNode<Node> {
-                        if (idx > 0) {
-                            unspecifiedChildren(idx)
-                        }
-                        matcher()
-                        val left = it.numChildren - 1 - idx
-                        if (left > 0) {
-                            unspecifiedChildren(left)
-                        }
+            context.registerTestCase(
+                    name = name,
+                    spec = spec,
+                    test = { (this as T).assertions() },
+                    config = spec.defaultTestCaseConfig,
+                    type = TestType.Test
+            )
+        }
+
+
+        infix fun String.shouldNot(matcher: Matcher<String>) =
+                should(matcher.invert())
+
+        fun inContext(nodeParsingCtx: NodeParsingCtx<*, T>, assertions: ImplicitNodeParsingCtx.() -> Unit) {
+            ImplicitNodeParsingCtx(nodeParsingCtx).assertions()
+        }
+
+        inner class ImplicitNodeParsingCtx(private val nodeParsingCtx: NodeParsingCtx<*, T>) {
+
+            /**
+             * A matcher that succeeds if the string parses correctly.
+             */
+            fun parse(): Matcher<String> = parseIn(nodeParsingCtx)
+
+            fun parseAs(matcher: ValuedNodeSpec<Node, Any>): Assertions<String> = { str ->
+                val node = nodeParsingCtx.parseNode(str, this@VersionedTestCtx as T)
+                val idx = node.jjtGetChildIndex()
+                node.parent kotlintestShould matchNode<Node> {
+                    if (idx > 0) {
+                        unspecifiedChildren(idx)
+                    }
+                    matcher()
+                    val left = it.numChildren - 1 - idx
+                    if (left > 0) {
+                        unspecifiedChildren(left)
                     }
                 }
             }
