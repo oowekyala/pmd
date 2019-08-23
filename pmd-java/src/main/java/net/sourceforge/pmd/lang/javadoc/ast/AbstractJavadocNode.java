@@ -4,9 +4,12 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import net.sourceforge.pmd.lang.ast.AbstractNode;
+import java.util.stream.Collectors;
 
-abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
+import net.sourceforge.pmd.lang.ast.AbstractNode;
+import net.sourceforge.pmd.lang.ast.TextAvailableNode;
+
+abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, TextAvailableNode {
 
     private final JavadocNodeId id;
 
@@ -23,6 +26,21 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
     @Override
     public String getXPathNodeName() {
         return id.getXPathNodeName();
+    }
+
+    @Override
+    public JavadocToken jjtGetFirstToken() {
+        return (JavadocToken) super.jjtGetFirstToken();
+    }
+
+    @Override
+    public JavadocToken jjtGetLastToken() {
+        return (JavadocToken) super.jjtGetLastToken();
+    }
+
+    @Override
+    public String getText() {
+        return jjtGetFirstToken().rangeTo(jjtGetLastToken().next).map(JavadocToken::getImage).collect(Collectors.joining());
     }
 
     @Override

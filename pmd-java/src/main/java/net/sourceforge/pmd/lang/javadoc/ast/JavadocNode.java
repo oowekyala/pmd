@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -42,6 +43,13 @@ public interface JavadocNode extends Node {
             super(JavadocNodeId.COMMENT_DATA);
             jjtSetFirstToken(first);
             jjtSetLastToken(last);
+        }
+
+        public String getData() {
+            return jjtGetFirstToken().rangeTo(jjtGetLastToken())
+                                     .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
+                                     .map(JavadocToken::getImage)
+                                     .collect(Collectors.joining());
         }
 
     }

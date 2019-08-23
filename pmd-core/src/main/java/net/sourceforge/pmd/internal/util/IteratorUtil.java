@@ -53,6 +53,25 @@ public final class IteratorUtil {
         };
     }
 
+    public static <T> Stream<T> generate(T seed, Function<T, @Nullable T> stepper) {
+        Iterable<T> it = () -> new Iterator<T>() {
+            T next = seed;
+
+            @Override
+            public boolean hasNext() {
+                return next != null;
+            }
+
+            @Override
+            public T next() {
+                T n = next;
+                next = stepper.apply(n);
+                return n;
+            }
+        };
+        return StreamSupport.stream(it.spliterator(), false);
+    }
+
     public static <T> Iterator<T> reverse(Iterator<T> it) {
         List<T> tmp = toList(it);
         Collections.reverse(tmp);

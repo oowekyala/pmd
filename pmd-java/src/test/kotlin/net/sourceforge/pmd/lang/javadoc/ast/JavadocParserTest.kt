@@ -4,9 +4,32 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotlintest.specs.FunSpec
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink
 
 
-class JavadocParserTest : FunSpec({
+class JavadocParserTest : JavadocParserSpec({
+
+
+    parserTest("Test javadoc parser 1") {
+
+        """
+        /**
+         * See {@link #hey}
+         */
+        """.trimIndent() should parseAs {
+
+            child<JdocCommentData> {
+                it::getData shouldBe "See "
+            }
+            child<JdocLink> {
+                it::getTagName shouldBe "@link"
+                it::getFieldName shouldBe "hey"
+            }
+        }
+
+
+    }
 
 })

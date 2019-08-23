@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.util.stream.Stream;
+
+import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
@@ -53,5 +56,10 @@ public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<J
     @Override
     public String toString() {
         return image;
+    }
+
+
+    public Stream<JavadocToken> rangeTo(JavadocToken last) {
+        return IteratorUtil.generate(this, t -> t == last ? null : t.next);
     }
 }

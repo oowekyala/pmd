@@ -34,7 +34,6 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocWhitespace;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
@@ -47,6 +46,10 @@ public class JavadocParser {
     private JavadocToken tok;
     /** End of input. */
     private boolean isEoi;
+
+    public JavadocParser(String text) {
+        lexer = new JavadocLexer(text);
+    }
 
     public JavadocParser(String fileText, int startOffset, int maxOffset) {
         lexer = new JavadocLexer(fileText, startOffset, maxOffset);
@@ -61,6 +64,8 @@ public class JavadocParser {
             return null;
         }
         comment.jjtSetFirstToken(tok);
+
+        nodes.push(comment);
 
         while (advance()) {
             dispatch();
@@ -78,7 +83,7 @@ public class JavadocParser {
             growDataLeaf(tok, tok);
             break;
         case WHITESPACE:
-            linkLeaf(new JdocWhitespace(tok));
+        case LINE_BREAK:
             break;
         case INLINE_TAG_START:
             inlineTag();
@@ -101,9 +106,6 @@ public class JavadocParser {
             if (tokIs(TAG_NAME)) {
                 AbstractJavadocNode tag = parseInlineTagContent(tok.getImage());
                 tag.jjtSetFirstToken(start);
-                while (advance() && tok.getKind() != INLINE_TAG_END || tok.getKind() != TAG_NAME) {
-                    // advance does the job
-                }
                 tag.jjtSetLastToken(tokIs(INLINE_TAG_END) ? tok : tok.getPrevious());
                 linkLeaf(tag);
             } else if (!isEnd()) {
@@ -254,10 +256,11 @@ public class JavadocParser {
     }
 
     private void consumeUntil(Predicate<JavadocToken> stopCondition, Predicate<JavadocToken> filter, Consumer<JavadocToken> action) {
-        while (stopCondition.test(tok) && advance()) {
+        while (!stopCondition.test(tok) && !isEoi) {
             if (filter.test(tok)) {
                 action.accept(tok);
             }
+            advance();
         }
     }
 
@@ -265,7 +268,7 @@ public class JavadocParser {
         LINK("@link") {
             @Override
             public AbstractJavadocNode parse(String name, JavadocParser parser) {
-                parser.skipWhitespace();
+                parser.advance();
                 StringBuilder builder = new StringBuilder();
                 parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
                                     it -> it.getKind().isSignificant(),

@@ -49,14 +49,14 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     public static class JdocLink extends JdocInlineTag {
 
         private static final Pattern FORMAT = Pattern.compile(
-            "(?: ((?:[\\w$]+\\.)*(?:[\\w$]+)?))" // type name (g1), empty if absent
+            "((?:[\\w$]+\\.)*[\\w$]+)?"  // type name (g1), null if absent
                 + "(?:#"
-                + "([\\w$]+)"                    // method or field name (g2), null if absent
-                + "("                            // params (g3), null if absent
+                + "([\\w$]+)"            // method or field name (g2), null if absent
+                + "("                    // params (g3), null if absent
                 + "\\([^)]*+\\)"
                 + ")?"
                 + ")?"
-                + "\\s++(.*)"                    // label (g4), empty if absent
+                + "(\\s++(.*))?"            // label (g4), empty if absent
         );
         private final String tname;
         private final String refname;
@@ -96,6 +96,7 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
             return args;
         }
 
+        @Nullable
         public String getLabel() {
             return label;
         }

@@ -7,7 +7,9 @@ package net.sourceforge.pmd.lang.java.ast
 import io.kotlintest.*
 import io.kotlintest.specs.IntelliMarker
 import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.RootNode
 import net.sourceforge.pmd.lang.ast.test.*
+import net.sourceforge.pmd.lang.java.ast.ParserTestCtx.Companion.findFirstNodeOnStraightLine
 import io.kotlintest.TestContext as KotlinTestRunCtx
 import io.kotlintest.should as kotlintestShould
 
@@ -104,8 +106,33 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
     open abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val javaVersion: V) {
 
 
-        protected inline fun <reified N : JavaNode> makeMatcher(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
-                : Assertions<String> = { nodeParsingCtx.parseAndFind<N>(it, this as T).shouldMatchNode(ignoreChildren, nodeSpec) }
+        /**
+         * Parse the string the context described by this object, and finds the first descendant of type [N].
+         * The descendant is searched for by [findFirstNodeOnStraightLine], to prevent accidental
+         * mis-selection of a node. In such a case, a [NoSuchElementException] is thrown, and you
+         * should fix your test case.
+         *
+         * @param construct The construct to parse
+         * @param N The type of node to find
+         *
+         * @return The first descendant of type [N] found in the parsed expression
+         *
+         * @throws NoSuchElementException If no node of type [N] is found by [findFirstNodeOnStraightLine]
+         * @throws ParseException If the argument is no valid construct of this kind
+         *
+         */
+        inline fun <reified N : Node> NodeParsingCtx<*, T>.parseAndFind(construct: String): N =
+                parseNode(construct, this as T).findFirstNodeOnStraightLine(N::class.java)
+                        ?: throw NoSuchElementException("No node of type ${N::class.java.simpleName} in the given $this:\n\t$construct")
+
+        infix fun <N : Node> NodeParsingCtx<N, T>.parse(construct: String): N = parseNode(construct, this as T)
+
+        fun V.rootParsingCtx(): NodeParsingCtx<RootNode, T> = object : NodeParsingCtx<RootNode, T> {
+            override fun parseNode(construct: String, ctx: T): RootNode = this@rootParsingCtx.parse(construct)
+        }
+
+        inline fun <reified N : JavaNode> makeMatcher(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
+                : Assertions<String> = { nodeParsingCtx.parseAndFind<N>(it).shouldMatchNode(ignoreChildren, nodeSpec) }
 
         fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>): Assertions<String> = {
             shouldThrow<ParseException> {
@@ -152,7 +179,7 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
             context.registerTestCase(
                     name = name,
                     spec = spec,
-                    test = { (this as T).assertions() },
+                    test = { (this@VersionedTestCtx as T).assertions() },
                     config = spec.defaultTestCaseConfig,
                     type = TestType.Test
             )
