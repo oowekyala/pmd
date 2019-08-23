@@ -29,6 +29,16 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, 
     }
 
     @Override
+    public JavadocToken getFirstToken() {
+        return jjtGetFirstToken();
+    }
+
+    @Override
+    public JavadocToken getLastToken() {
+        return jjtGetLastToken();
+    }
+
+    @Override
     public JavadocToken jjtGetFirstToken() {
         return (JavadocToken) super.jjtGetFirstToken();
     }
@@ -40,7 +50,7 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, 
 
     @Override
     public String getText() {
-        return jjtGetFirstToken().rangeTo(jjtGetLastToken().next).map(JavadocToken::getImage).collect(Collectors.joining());
+        return jjtGetFirstToken().rangeTo(jjtGetLastToken()).map(JavadocToken::getImage).collect(Collectors.joining());
     }
 
     @Override
@@ -56,6 +66,18 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, 
     @Override
     public int getEndLine() {
         return lastToken.getEndLine();
+    }
+
+    @Override
+    public JavadocNode jjtGetParent() {
+        return (JavadocNode) super.jjtGetParent();
+    }
+
+    @Override
+    public void jjtClose() {
+        if (lastToken == null && jjtGetNumChildren() > 0) {
+            jjtSetLastToken(jjtGetChild(0).getLastToken());
+        }
     }
 
     @Override

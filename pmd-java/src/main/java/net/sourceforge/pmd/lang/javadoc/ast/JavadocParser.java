@@ -18,19 +18,24 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlStart;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
@@ -39,17 +44,47 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
 public class JavadocParser {
 
+    private static final Map<String, Set<String>> HTML_AUTOCLOSED;
     private final JavadocLexer lexer;
-
     private final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
 
     private JavadocToken tok;
     /** End of input. */
     private boolean isEoi;
 
+
+    static {
+        /*
+        An li element's end tag may be omitted if the li element is immediately followed by another li element or if there is no more content in the parent element.
+
+        A dt element's end tag may be omitted if the dt element is immediately followed by another dt element or a dd element.
+        
+        A dd element's end tag may be omitted if the dd element is immediately followed by another dd element or a dt element, or if there is no more content in the parent element.
+        
+        A p element's end tag may be omitted if the p element is immediately followed by an 
+              , or if there is no more content in the parent element and the parent element is an HTML element that is not an
+        a, audio, del, ins, map, noscript, or video element, or an autonomous custom element.
+        
+        */
+        Map<String, Set<String>> tags = new HashMap<>();
+        tags.put("li", setOf("li"));
+        tags.put("dt", setOf("dd", "dd"));
+        tags.put("dd", setOf("dd", "dt"));
+        tags.put("p", setOf("address", "article", "aside", "blockquote",
+                            "details", "div", "dl", "fieldset", "figcaption",
+                            "figure", "footer", "form",
+                            "h1", "h2", "h3", "h4", "h5", "h6",
+                            "header", "hgroup", "hr", "main", "menu", "nav",
+                            "ol", "p", "pre", "section", "table", "ul"));
+
+        HTML_AUTOCLOSED = invertMap(tags);
+    }
+
+
     public JavadocParser(String text) {
         lexer = new JavadocLexer(text);
     }
+
 
     public JavadocParser(String fileText, int startOffset, int maxOffset) {
         lexer = new JavadocLexer(fileText, startOffset, maxOffset);
@@ -65,7 +100,7 @@ public class JavadocParser {
         }
         comment.jjtSetFirstToken(tok);
 
-        nodes.push(comment);
+        pushNode(comment);
 
         while (advance()) {
             dispatch();
@@ -78,21 +113,20 @@ public class JavadocParser {
     private void dispatch() {
         switch (tok.getKind()) {
         case COMMENT_END:
-            break;
-        case COMMENT_DATA:
-            growDataLeaf(tok, tok);
-            break;
         case WHITESPACE:
         case LINE_BREAK:
+            return;
+        case COMMENT_DATA:
+            growDataLeaf(tok, tok);
             break;
         case INLINE_TAG_START:
             inlineTag();
             break;
         case HTML_LT:
-            linkLeaf(htmlStart());
+            htmlStart();
             break;
         case HTML_LCLOSE:
-            linkLeaf(htmlEnd());
+            htmlEnd();
             break;
         case HTML_COMMENT_START:
             linkLeaf(htmlComment());
@@ -128,6 +162,42 @@ public class JavadocParser {
         }
     }
 
+    private void htmlStart() {
+        JavadocToken start = tok;
+        advance();
+        skipWhitespace();
+
+        if (tokIs(HTML_IDENT)) {
+            JdocHtml html = new JdocHtml(tok.getImage());
+            html.jjtSetFirstToken(start);
+            advance();
+            htmlAttrs(html);
+            maybeAutoclose(start.prev, tok.getImage());
+            linkLeaf(html);
+            if (tok.getKind() == HTML_RCLOSE) {
+                html.setAutoclose(true);
+                html.jjtSetLastToken(tok);
+            } else {
+                pushNode(html);
+                if (tok.getKind() != HTML_GT) {
+                    linkLeaf(new JdocMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), tok));
+                }
+            }
+        } else {
+            linkLeaf(new JdocMalformed(EnumSet.of(HTML_IDENT), tok));
+        }
+    }
+
+    private void maybeAutoclose(JavadocToken prevEnd, String curTag) {
+        AbstractJavadocNode top = nodes.peek();
+        if (top instanceof JdocHtml
+            && HTML_AUTOCLOSED.getOrDefault(((JdocHtml) top).getTagName(), Collections.emptySet()).contains(curTag)) {
+            top.jjtSetLastToken(prevEnd);
+            popNode();
+        }
+    }
+
+
     private AbstractJavadocNode htmlComment() {
         JdocHtmlComment comment = new JdocHtmlComment();
         comment.jjtSetFirstToken(tok);
@@ -137,12 +207,13 @@ public class JavadocParser {
         return comment;
     }
 
-    private AbstractJavadocNode htmlEnd() {
+    private void htmlEnd() {
         JavadocToken start = tok;
         advance();
         skipWhitespace();
         if (tokIs(HTML_IDENT)) {
-            JdocHtmlEnd html = new JdocHtmlEnd(tok.getImage());
+            JavadocToken ident = tok;
+            JdocHtmlEnd html = new JdocHtmlEnd(ident.getImage());
             html.jjtSetFirstToken(start);
             advance();
             skipWhitespace();
@@ -152,37 +223,18 @@ public class JavadocParser {
                 JdocMalformed malformed = new JdocMalformed(EnumSet.of(HTML_GT), tok);
                 html.jjtAddChild(malformed, 0);
             }
-            return html;
-        }
-        return new JdocMalformed(EnumSet.of(HTML_IDENT), tok);
-    }
-
-    private AbstractJavadocNode htmlStart() {
-        JavadocToken start = tok;
-        advance();
-        skipWhitespace();
-
-        if (tokIs(HTML_IDENT)) {
-            JdHtmlStart html = new JdHtmlStart(tok.getImage());
-            html.jjtSetFirstToken(start);
-            htmlAttrs(html);
-            switch (tok.getKind()) {
-            case HTML_RCLOSE:
-                html.setAutoclose(true);
-                // fallthrough
-            case HTML_GT:
-                html.jjtSetLastToken(tok);
-                break;
-            default:
-                JdocMalformed malformed = new JdocMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), tok);
-                html.jjtAddChild(malformed, 0);
+            AbstractJavadocNode top = peekNode();
+            linkLeaf(html);
+            if (top instanceof JdocHtml && ((JdocHtml) top).getTagName().equals(html.getTagName())) {
+                AbstractJavadocNode node = popNode();
+                node.jjtSetLastToken(tokIs(HTML_GT) ? tok : ident);
             }
-            return html;
+            return;
         }
-        return new JdocMalformed(EnumSet.of(HTML_IDENT), tok);
+        linkLeaf(new JdocMalformed(EnumSet.of(HTML_IDENT), tok));
     }
 
-    private void htmlAttrs(JdHtmlStart acc) {
+    private void htmlAttrs(JdocHtml acc) {
         skipWhitespace();
         while (tokIs(HTML_IDENT)) {
             String name = tok.getImage();
@@ -200,7 +252,7 @@ public class JavadocParser {
                     skipWhitespace();
                 }
             } else {
-                acc.attributes.put(name, JdHtmlStart.UNATTRIBUTED);
+                acc.attributes.put(name, JdocHtml.UNATTRIBUTED);
                 advance();
                 skipWhitespace();
             }
@@ -221,12 +273,27 @@ public class JavadocParser {
         return isEoi;
     }
 
+    private void pushNode(AbstractJavadocNode node) {
+        nodes.push(node);
+    }
+
+    private AbstractJavadocNode popNode() {
+        AbstractJavadocNode top = nodes.pop();
+        top.jjtClose();
+        return top;
+    }
+
+    private AbstractJavadocNode peekNode() {
+        return nodes.peek();
+    }
+
     private void linkLeaf(AbstractJavadocNode node) {
         if (node == null) {
             return;
         }
         AbstractJavadocNode top = this.nodes.peek();
         Objects.requireNonNull(top).jjtAddChild(node, top.jjtGetNumChildren());
+        top.jjtSetLastToken(node.jjtGetLastToken());
     }
 
     private void growDataLeaf(JavadocToken first, JavadocToken last) {
@@ -262,6 +329,26 @@ public class JavadocParser {
             }
             advance();
         }
+    }
+
+    private static Map<String, Set<String>> invertMap(Map<String, Set<String>> map) {
+        Map<String, Set<String>> tags = new HashMap<>();
+        for (Entry<String, Set<String>> entry : map.entrySet()) {
+            for (String val : entry.getValue()) {
+                tags.computeIfAbsent(val, k -> new HashSet<>()).add(entry.getKey());
+            }
+        }
+        return tags;
+    }
+
+    private static Set<String> setOf(String strings) {
+        return Collections.singleton(strings);
+    }
+
+    private static Set<String> setOf(String... strings) {
+        HashSet<String> hashSet = new HashSet<>(strings.length);
+        Collections.addAll(hashSet, strings);
+        return Collections.unmodifiableSet(hashSet);
     }
 
     enum KnownInlineTagParser implements TagParser {

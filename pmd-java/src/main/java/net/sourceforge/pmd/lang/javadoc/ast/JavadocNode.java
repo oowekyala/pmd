@@ -20,7 +20,13 @@ public interface JavadocNode extends Node {
 
 
     @Override
+    JavadocNode jjtGetParent();
+    @Override
     JavadocNode jjtGetChild(int index);
+
+
+    JavadocToken getFirstToken();
+    JavadocToken getLastToken();
 
 
     /** Root node of Javadoc ASTs. */
@@ -84,19 +90,22 @@ public interface JavadocNode extends Node {
         public Set<JavadocTokenType> getExpected() {
             return expected;
         }
-
     }
 
-    class JdHtmlStart extends AbstractJavadocNode {
+    class JdocHtml extends AbstractJavadocNode {
 
         public static final String UNATTRIBUTED = null;
         final Map<String, String> attributes = new HashMap<>(0);
         private final String tagName;
         private boolean autoclose;
 
-        JdHtmlStart(String tagName) {
+        JdocHtml(String tagName) {
             super(JavadocNodeId.HTML_START);
             this.tagName = tagName;
+        }
+
+        public String getTagName() {
+            return tagName;
         }
 
         void setAutoclose(boolean autoclose) {
@@ -111,6 +120,10 @@ public interface JavadocNode extends Node {
         JdocHtmlEnd(String tagName) {
             super(JavadocNodeId.HTML_END);
             this.tagName = tagName;
+        }
+
+        public String getTagName() {
+            return tagName;
         }
     }
 
