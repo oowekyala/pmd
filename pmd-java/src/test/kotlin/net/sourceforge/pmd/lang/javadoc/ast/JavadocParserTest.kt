@@ -24,7 +24,7 @@ class JavadocParserTest : JavadocParserSpec({
          */
         """.trimIndent() should parseAs {
             it::getText shouldBe "/**\n * See {@link #hey}\n */"
-            
+
             data("See ")
             link {
                 it::getFieldName shouldBe "hey"
@@ -52,6 +52,69 @@ class JavadocParserTest : JavadocParserSpec({
                 it::getText shouldBe "<p> aha"
                 data(" aha")
             }
+        }
+    }
+
+    parserTest("Test nested HTML") {
+
+        """
+/**
+ *  <i> foo</i> <p> aha
+ */
+        """.trimIndent() should parseAs {
+
+            html("i") {
+                it::getText shouldBe "<i> foo</i>"
+                data(" foo")
+                htmlEnd("i")
+            }
+            data(" ")
+            html("p") {
+                it::getText shouldBe "<p> aha"
+                data(" aha")
+            }
+        }
+    }
+    parserTest("f:Autoclosing HTML") {
+
+        """
+/**
+ * Header.
+ *
+ * <p>OHA
+ * <ul>
+ *     <li>LI one
+ *     <li>LI two
+ *     <p>LIP {@link net.sourceforge.pmd.lang.java.ast.JavaNode}
+ *     <li>LI three
+ *     </li>
+ * </ul>
+ *
+ */
+""".trimIndent() should parseAs {
+            data("Header.")
+
+            html("p") {
+                data("OHA")
+                html("ul") {
+                    html("li") {
+                        data("LI one")
+                    }
+                    html("li") {
+                        data("LI two")
+                        html("p") {
+                            data("LIP ")
+                            typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
+                        }
+                        html("li") {
+                            data("LI three")
+                            htmlEnd("li")
+                        }
+                    }
+                    htmlEnd("ul")
+                }
+            }
+
         }
     }
 
@@ -85,6 +148,14 @@ fun TreeNodeWrapper<Node, out JavadocNode>.data(data: String, spec: NodeSpec<Jdo
 fun TreeNodeWrapper<Node, out JavadocNode>.link(plain: Boolean = false, spec: NodeSpec<JdocLink> = EmptyAssertions) =
         child<JdocLink> {
             it::getTagName shouldBe if (plain) "@linkplain" else "@link"
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean = false, spec: NodeSpec<JdocLink> = EmptyAssertions) =
+        link(plain) {
+            it::getTypeName shouldBe name
+            it::getFieldName shouldBe null
+            it::getArgs shouldBe null
             spec()
         }
 

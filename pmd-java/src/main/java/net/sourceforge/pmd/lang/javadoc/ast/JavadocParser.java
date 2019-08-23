@@ -75,7 +75,7 @@ public class JavadocParser {
                             "figure", "footer", "form",
                             "h1", "h2", "h3", "h4", "h5", "h6",
                             "header", "hgroup", "hr", "main", "menu", "nav",
-                            "ol", "p", "pre", "section", "table", "ul"));
+                            "ol", "p", "pre", "section", "table", "ul", "li"));
 
         HTML_AUTOCLOSED = invertMap(tags);
     }
@@ -172,7 +172,7 @@ public class JavadocParser {
             html.jjtSetFirstToken(start);
             advance();
             htmlAttrs(html);
-            maybeAutoclose(start.prev, tok.getImage());
+            maybeAutoclose(start.prev, html.getTagName());
             linkLeaf(html);
             if (tok.getKind() == HTML_RCLOSE) {
                 html.setAutoclose(true);
@@ -191,7 +191,7 @@ public class JavadocParser {
     private void maybeAutoclose(JavadocToken prevEnd, String curTag) {
         AbstractJavadocNode top = nodes.peek();
         if (top instanceof JdocHtml
-            && HTML_AUTOCLOSED.getOrDefault(((JdocHtml) top).getTagName(), Collections.emptySet()).contains(curTag)) {
+            && HTML_AUTOCLOSED.getOrDefault(curTag, Collections.emptySet()).contains(((JdocHtml) top).getTagName())) {
             top.jjtSetLastToken(prevEnd);
             popNode();
         }
@@ -215,16 +215,16 @@ public class JavadocParser {
             JavadocToken ident = tok;
             JdocHtmlEnd html = new JdocHtmlEnd(ident.getImage());
             html.jjtSetFirstToken(start);
+            linkLeaf(html);
             advance();
             skipWhitespace();
             if (tokIs(HTML_GT)) {
                 html.jjtSetLastToken(tok);
             } else {
-                JdocMalformed malformed = new JdocMalformed(EnumSet.of(HTML_GT), tok);
-                html.jjtAddChild(malformed, 0);
+                html.jjtSetLastToken(tok);
+                html.jjtAddChild(new JdocMalformed(EnumSet.of(HTML_GT), tok), 0);
             }
             AbstractJavadocNode top = peekNode();
-            linkLeaf(html);
             if (top instanceof JdocHtml && ((JdocHtml) top).getTagName().equals(html.getTagName())) {
                 AbstractJavadocNode node = popNode();
                 node.jjtSetLastToken(tokIs(HTML_GT) ? tok : ident);
@@ -293,7 +293,6 @@ public class JavadocParser {
         }
         AbstractJavadocNode top = this.nodes.peek();
         Objects.requireNonNull(top).jjtAddChild(node, top.jjtGetNumChildren());
-        top.jjtSetLastToken(node.jjtGetLastToken());
     }
 
     private void growDataLeaf(JavadocToken first, JavadocToken last) {

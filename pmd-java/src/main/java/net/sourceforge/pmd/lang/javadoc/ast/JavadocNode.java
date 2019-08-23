@@ -69,7 +69,7 @@ public interface JavadocNode extends Node {
 
     }
 
-    /** Malformed tag. */
+    /** Unexpected token tag. */
     class JdocMalformed extends AbstractJavadocNode {
 
         private final Set<JavadocTokenType> expected;
