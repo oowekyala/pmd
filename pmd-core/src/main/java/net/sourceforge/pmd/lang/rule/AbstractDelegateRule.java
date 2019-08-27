@@ -312,8 +312,8 @@ public abstract class AbstractDelegateRule implements Rule {
     }
 
     @Override
-    public List<String> getRuleChainVisits() {
-        return rule.getRuleChainVisits();
+    public Set<String> getRuleChainVisitsSet() {
+        return rule.getRuleChainVisitsSet();
     }
 
     @Override
