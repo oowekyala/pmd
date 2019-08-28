@@ -5,7 +5,8 @@
 package net.sourceforge.pmd.lang.rule;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.rule.internal.LinearSmallSet;
+import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
@@ -44,7 +45,8 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     private boolean usesDFA;
     private boolean usesTypeResolution;
     private boolean usesMultifile;
-    private LinearSmallSet<String> ruleChainVisits = new LinearSmallSet<>();
+    private Set<String> ruleChainVisits = new LinkedHashSet<>();
+    private Set<Class<?>> classRuleChainVisits = new LinkedHashSet<>();
 
     public AbstractRule() {
         definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR);
@@ -79,7 +81,8 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
         otherRule.usesDFA = usesDFA;
         otherRule.usesTypeResolution = usesTypeResolution;
         otherRule.usesMultifile = usesMultifile;
-        otherRule.ruleChainVisits = new LinearSmallSet<>(ruleChainVisits);
+        otherRule.ruleChainVisits = new LinkedHashSet<>(ruleChainVisits);
+        otherRule.classRuleChainVisits = new LinkedHashSet<>(classRuleChainVisits);
     }
 
     private List<String> copyExamples() {
@@ -304,29 +307,23 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
         return isRuleChain();
     }
 
-    @Override
-    public boolean isRuleChain() {
-        return !getRuleChainVisits().isEmpty();
-    }
 
     @Override
-    public Set<String> getRuleChainVisitsSet() {
+    public Set<String> getRuleChainVisits() {
         return ruleChainVisits;
     }
 
     @Override
-    public void addRuleChainVisit(Class<? extends Node> nodeClass) {
-        // FIXME : These assume the implementation of getXPathNodeName() for all nodes…
-        final String simpleName = nodeClass.getSimpleName();
-
-        if (simpleName.startsWith("AST")) { // JavaCC node
-            // Classes under the Comment hierarchy and stuff need to be refactored in the Java AST
-            addRuleChainVisit(nodeClass.getSimpleName().substring("AST".length()));
-        } else if (nodeClass.getSimpleName().endsWith("Context")) { // Antlr node
-            addRuleChainVisit(nodeClass.getSimpleName().substring(0, simpleName.length() - "Context".length()));
-        } else {
-            throw new IllegalArgumentException("Node class does not start with 'AST' prefix nor ends with 'Context' suffix: " + nodeClass);
+    public Set<Class<?>> getRuleChainVisitsSet() {
+        if (classRuleChainVisits.isEmpty() && ruleChainVisits.isEmpty()) {
+            return Collections.singleton(RootNode.class);
         }
+        return classRuleChainVisits;
+    }
+
+    @Override
+    public void addRuleChainVisit(Class<? extends Node> nodeClass) {
+        classRuleChainVisits.add(nodeClass);
     }
 
     @Override
