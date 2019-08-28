@@ -4,7 +4,6 @@
 
 package net.sourceforge.pmd;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +13,7 @@ import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.StringProperty;
 
@@ -400,6 +399,7 @@ public interface Rule extends PropertySource {
     @Deprecated // To be removed in PMD 7.0.0
     boolean usesRuleChain();
 
+    // TODO all those need to be removed in favour of getTargetingStrategy
 
     /**
      * Gets whether this Rule uses the RuleChain.
@@ -407,7 +407,7 @@ public interface Rule extends PropertySource {
      * @return <code>true</code> if RuleChain is used.
      */
     default boolean isRuleChain() {
-        return !getRuleChainVisits().isEmpty() || !getRuleChainVisitsSet().isEmpty();
+        return !getRuleChainVisits().isEmpty() || !getClassRuleChainVisits().isEmpty();
     }
 
 
@@ -420,16 +420,8 @@ public interface Rule extends PropertySource {
     Set<String> getRuleChainVisits();
 
 
-    Set<Class<?>> getRuleChainVisitsSet();
+    Set<Class<?>> getClassRuleChainVisits();
 
-
-    default boolean shouldVisit(Node n) {
-        if (!getRuleChainVisits().isEmpty()) {
-            return getRuleChainVisitsSet().stream().anyMatch(it -> it.isInstance(n));
-        } else {
-            return n instanceof RootNode;
-        }
-    }
 
     /**
      * Adds an AST node by class to be visited by the Rule on the RuleChain.
@@ -448,6 +440,10 @@ public interface Rule extends PropertySource {
      * @see Node#getXPathNodeName()
      */
     void addRuleChainVisit(String astNodeName);
+
+
+    TargetSelectionStrategy getTargetingStrategy();
+
 
     /**
      * Start processing. Called once, before apply() is first called.
