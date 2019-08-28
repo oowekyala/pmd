@@ -5,7 +5,12 @@
 package net.sourceforge.pmd.lang.rule;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
@@ -14,6 +19,10 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy.ClassRulechainVisits;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy.StringRulechainVisits;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
@@ -41,7 +50,9 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     private boolean usesDFA;
     private boolean usesTypeResolution;
     private boolean usesMultifile;
-    private List<String> ruleChainVisits = new ArrayList<>();
+    private Set<String> ruleChainVisits = new LinkedHashSet<>();
+    private Set<Class<?>> classRuleChainVisits = new LinkedHashSet<>();
+    private TargetSelectionStrategy myStrategy;
 
     public AbstractRule() {
         definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR);
@@ -76,15 +87,12 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
         otherRule.usesDFA = usesDFA;
         otherRule.usesTypeResolution = usesTypeResolution;
         otherRule.usesMultifile = usesMultifile;
-        otherRule.ruleChainVisits = copyRuleChainVisits();
+        otherRule.ruleChainVisits = new LinkedHashSet<>(ruleChainVisits);
+        otherRule.classRuleChainVisits = new LinkedHashSet<>(classRuleChainVisits);
     }
 
     private List<String> copyExamples() {
         return new ArrayList<>(examples);
-    }
-
-    private List<String> copyRuleChainVisits() {
-        return new ArrayList<>(ruleChainVisits);
     }
 
     @Override
@@ -305,35 +313,46 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
         return isRuleChain();
     }
 
-    @Override
-    public boolean isRuleChain() {
-        return !getRuleChainVisits().isEmpty();
-    }
 
     @Override
-    public List<String> getRuleChainVisits() {
+    public Set<String> getRuleChainVisits() {
         return ruleChainVisits;
     }
 
     @Override
-    public void addRuleChainVisit(Class<? extends Node> nodeClass) {
-        // FIXME : These assume the implementation of getXPathNodeName() for all nodes…
-        final String simpleName = nodeClass.getSimpleName();
-        
-        if (simpleName.startsWith("AST")) { // JavaCC node
-            // Classes under the Comment hierarchy and stuff need to be refactored in the Java AST
-            addRuleChainVisit(nodeClass.getSimpleName().substring("AST".length()));
-        } else if (nodeClass.getSimpleName().endsWith("Context")) { // Antlr node
-            addRuleChainVisit(nodeClass.getSimpleName().substring(0, simpleName.length() - "Context".length()));
-        } else {
-            throw new IllegalArgumentException("Node class does not start with 'AST' prefix nor ends with 'Context' suffix: " + nodeClass);
+    public Set<Class<?>> getClassRuleChainVisits() {
+        if (classRuleChainVisits.isEmpty() && ruleChainVisits.isEmpty()) {
+            return Collections.singleton(RootNode.class);
         }
+        return classRuleChainVisits;
+    }
+
+    @Override
+    public void addRuleChainVisit(Class<? extends Node> nodeClass) {
+        classRuleChainVisits.add(nodeClass);
     }
 
     @Override
     public void addRuleChainVisit(String astNodeName) {
-        if (!ruleChainVisits.contains(astNodeName)) {
-            ruleChainVisits.add(astNodeName);
+        ruleChainVisits.add(astNodeName);
+    }
+
+    @Override
+    public TargetSelectionStrategy getTargetingStrategy() {
+        if (myStrategy == null) {
+            myStrategy = buildSelectionStrat();
+        }
+        return myStrategy;
+    }
+
+    @NonNull
+    private TargetSelectionStrategy buildSelectionStrat() {
+        if (ruleChainVisits.isEmpty() && classRuleChainVisits.isEmpty()) {
+            return ClassRulechainVisits.ROOT_ONLY;
+        } else if (ruleChainVisits.isEmpty()) {
+            return new ClassRulechainVisits(classRuleChainVisits);
+        } else {
+            return new StringRulechainVisits(ruleChainVisits);
         }
     }
 

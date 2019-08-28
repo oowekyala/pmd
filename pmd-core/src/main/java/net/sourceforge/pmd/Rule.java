@@ -5,6 +5,7 @@
 package net.sourceforge.pmd;
 
 import java.util.List;
+import java.util.Set;
 
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.Language;
@@ -12,6 +13,7 @@ import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.StringProperty;
 
@@ -397,12 +399,17 @@ public interface Rule extends PropertySource {
     @Deprecated // To be removed in PMD 7.0.0
     boolean usesRuleChain();
 
+    // TODO all those need to be removed in favour of getTargetingStrategy
+
     /**
      * Gets whether this Rule uses the RuleChain.
      *
      * @return <code>true</code> if RuleChain is used.
      */
-    boolean isRuleChain();
+    default boolean isRuleChain() {
+        return !getRuleChainVisits().isEmpty() || !getClassRuleChainVisits().isEmpty();
+    }
+
 
     /**
      * Gets the collection of AST node names visited by the Rule on the
@@ -410,7 +417,11 @@ public interface Rule extends PropertySource {
      *
      * @return the list of AST node names
      */
-    List<String> getRuleChainVisits();
+    Set<String> getRuleChainVisits();
+
+
+    Set<Class<?>> getClassRuleChainVisits();
+
 
     /**
      * Adds an AST node by class to be visited by the Rule on the RuleChain.
@@ -429,6 +440,10 @@ public interface Rule extends PropertySource {
      * @see Node#getXPathNodeName()
      */
     void addRuleChainVisit(String astNodeName);
+
+
+    TargetSelectionStrategy getTargetingStrategy();
+
 
     /**
      * Start processing. Called once, before apply() is first called.

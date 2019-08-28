@@ -11,9 +11,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.internal.RuleApplicator;
 
 /**
  * Grouping of Rules per Language in a RuleSet.
@@ -26,10 +28,14 @@ public class RuleSets {
      */
     private List<RuleSet> ruleSets = new ArrayList<>();
 
+    private List<Rule> filtered;
+
     /**
      * RuleChain for efficient AST visitation.
      */
     private RuleChain ruleChain = new RuleChain();
+
+    private final RuleApplicator ruleApplicator = new RuleApplicator();
 
     /**
      * Public constructor.
@@ -68,7 +74,6 @@ public class RuleSets {
      */
     public void addRuleSet(RuleSet ruleSet) {
         ruleSets.add(ruleSet);
-        ruleChain.add(ruleSet);
     }
 
     /**
@@ -137,12 +142,15 @@ public class RuleSets {
      *            the Language of the source
      */
     public void apply(List<Node> acuList, RuleContext ctx, Language language) {
-        ruleChain.apply(acuList, ctx, language);
-        for (RuleSet ruleSet : ruleSets) {
-            if (ruleSet.applies(ctx.getSourceCodeFile())) {
-                ruleSet.apply(acuList, ctx);
-            }
+        if (filtered == null) {
+            filtered = ruleSets.stream()
+                               .filter(it -> it.applies(ctx.getSourceCodeFile()))
+                               .flatMap(it -> it.getRules().stream())
+                               .filter(it -> RuleSet.applies(it, ctx.getLanguageVersion()))
+                               .collect(Collectors.toList());
         }
+
+        ruleApplicator.apply(acuList, filtered, ctx);
     }
 
     /**

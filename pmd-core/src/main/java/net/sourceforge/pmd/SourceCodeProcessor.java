@@ -108,9 +108,7 @@ public class SourceCodeProcessor {
 
     private Node parse(RuleContext ctx, Reader sourceCode, Parser parser) {
         try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.PARSER)) {
-            Node rootNode = parser.parse(ctx.getSourceCodeFilename(), sourceCode);
-            ctx.getReport().suppress(parser.getSuppressMap());
-            return rootNode;
+            return parser.parse(ctx.getSourceCodeFilename(), sourceCode);
         }
     }
 
@@ -209,7 +207,9 @@ public class SourceCodeProcessor {
         usesMultifile(rootNode, languageVersionHandler, ruleSets, language);
 
         List<Node> acus = Collections.singletonList(rootNode);
-        ruleSets.apply(acus, ctx, language);
+        try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.RULE_APP)) {
+            ruleSets.apply(acus, ctx, language);
+        }
     }
 
     private void determineLanguage(RuleContext ctx) {
