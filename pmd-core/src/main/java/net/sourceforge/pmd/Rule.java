@@ -420,7 +420,7 @@ public interface Rule extends PropertySource {
     Set<String> getRuleChainVisits();
 
 
-    Set<Class<?>> getClassRuleChainVisits();
+    Set<Class<? extends Node>> getClassRuleChainVisits();
 
 
     /**

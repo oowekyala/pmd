@@ -51,7 +51,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     private boolean usesTypeResolution;
     private boolean usesMultifile;
     private Set<String> ruleChainVisits = new LinkedHashSet<>();
-    private Set<Class<?>> classRuleChainVisits = new LinkedHashSet<>();
+    private Set<Class<? extends Node>> classRuleChainVisits = new LinkedHashSet<>();
     private TargetSelectionStrategy myStrategy;
 
     public AbstractRule() {
@@ -320,7 +320,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     }
 
     @Override
-    public Set<Class<?>> getClassRuleChainVisits() {
+    public Set<Class<? extends Node>> getClassRuleChainVisits() {
         if (classRuleChainVisits.isEmpty() && ruleChainVisits.isEmpty()) {
             return Collections.singleton(RootNode.class);
         }

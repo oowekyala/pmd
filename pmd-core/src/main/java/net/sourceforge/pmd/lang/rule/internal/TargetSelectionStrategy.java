@@ -44,7 +44,7 @@ public abstract class TargetSelectionStrategy {
 
         private final Set<? extends Class<?>> visits;
 
-        public ClassRulechainVisits(Set<? extends Class<?>> visits) {
+        public ClassRulechainVisits(Set<? extends Class<? extends Node>> visits) {
             this.visits = visits;
         }
 

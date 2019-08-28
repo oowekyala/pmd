@@ -8,15 +8,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Set;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 /**
- * The implementation of a rule. Rule impls may be created but not run.
+ * The implementation of a rule. Rule impls may be created without being run.
  */
 public interface RuleImpl {
 
@@ -29,33 +29,19 @@ public interface RuleImpl {
     }
 
 
-    /** Perform some initialization or cleanup before processing a file. */
-    default void beforeFile() {
-        // do nothing
-    }
-
-
-    /** Perform some initialization or cleanup after processing a file. */
-    default void afterFile() {
-        // do nothing
-    }
-
-
-    /** Process a node which has been opted-in by {@link #appliesOn(Node)}). */
-    void visit(Node node, RuleContext ctx);
+    /** Process a node which has been opted-in by the {@link #getTargetingStrategy()}. */
+    void apply(Node node, ScopedRuleContext ctx);
 
 
     /**
-     * Returns true if this rule expects {@link #visit(Node, RuleContext)}
-     * to be called on the given node. Standard, full-tree visit rules
-     * will return true on just {@link RootNode}s. Rulechain rules may
-     * return true on any node in the tree.
-     *
-     * @param node Node to test
+     * Returns an object which decides which nodes are passed to the
+     * {@link #apply(Node, ScopedRuleContext) apply} method. For rules
+     * which want to perform a full tree traversal, the strategy would
+     * select {@link RootNode}s. For rules which want to be called only
+     * on some nodes, for performance, the strategy may select other
+     * nodes based on the index.
      */
-    default boolean appliesOn(Node node) {
-        return node instanceof RootNode;
-    }
+    TargetSelectionStrategy getTargetingStrategy();
 
 
     @Experimental

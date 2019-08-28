@@ -15,13 +15,13 @@ public class JvmRuleDescriptor extends BaseRuleDescriptor {
 
     private final JvmRuleImpl impl;
 
-    protected JvmRuleDescriptor(JavaRuleBuilder builder, JvmRuleImpl impl) {
+    protected JvmRuleDescriptor(JvmRuleBuilder builder, JvmRuleImpl impl) {
         super(builder);
         this.impl = impl;
     }
 
     @Override
     public RuleImpl getVisitor() {
-        return impl.deepCopy();
+        return impl.deepCopy(this);
     }
 }

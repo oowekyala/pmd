@@ -11,7 +11,7 @@ import net.sourceforge.pmd.rule7.RuleImpl;
 import net.sourceforge.pmd.rule7.RuleImpl.JvmRuleImpl;
 
 
-public class JavaRuleBuilder extends RuleDescriptorBuilder {
+public class JvmRuleBuilder extends RuleDescriptorBuilder {
 
     private Class<? extends JvmRuleImpl> implClass;
 

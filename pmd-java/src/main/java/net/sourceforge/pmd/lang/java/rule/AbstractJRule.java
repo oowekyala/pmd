@@ -4,30 +4,37 @@
 
 package net.sourceforge.pmd.lang.java.rule;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.JavaProcessingStage;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.SideEffectingVisitorAdapter;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy;
+import net.sourceforge.pmd.lang.rule.internal.TargetSelectionStrategy.ClassRulechainVisits;
 import net.sourceforge.pmd.rule7.RuleImpl.JvmRuleImpl;
+import net.sourceforge.pmd.rule7.ScopedRuleContext;
 
-public class AbstractJRule extends SideEffectingVisitorAdapter<RuleContext> implements JvmRuleImpl {
+public abstract class AbstractJRule extends SideEffectingVisitorAdapter<ScopedRuleContext> implements JvmRuleImpl {
 
 
     @Override
-    public void visit(JavaNode node, RuleContext data) {
+    public void visit(JavaNode node, ScopedRuleContext data) {
         visitChildren(node, data);
     }
 
-    protected void visitChildren(JavaNode node, RuleContext data) {
+    protected void visitChildren(JavaNode node, ScopedRuleContext data) {
         for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            node.jjtGetChild(i).jjtAccept(this, data);
+            ((JavaNode) node.jjtGetChild(i)).jjtAccept(this, data);
         }
     }
 
     @Override
-    public void visit(Node node, RuleContext ctx) {
+    public TargetSelectionStrategy getTargetingStrategy() {
+        return ClassRulechainVisits.ROOT_ONLY;
+    }
+
+    @Override
+    public void apply(Node node, ScopedRuleContext ctx) {
         ((JavaNode) node).jjtAccept(this, ctx);
     }
 
