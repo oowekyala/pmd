@@ -21,6 +21,9 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sourceforge.pmd.document.TextRegion.RegionByLine;
+import net.sourceforge.pmd.document.TextRegion.RegionByOffset;
+
 /**
  * Implementation that handles a Document as a file in the filesystem and receives operations in a sorted manner
  * (i.e. the regions are sorted). This improves the efficiency of reading the file by only scanning it once while
@@ -108,22 +111,29 @@ public class DocumentFile implements Document, Closeable {
     }
 
     @Override
-    public void replace(final RegionByLine regionByLine, final String textToReplace) {
+    public void replace(final TextRegion.RegionByLine regionByLine, final String textToReplace) {
         try {
-            tryToReplaceInFile(mapToRegionByOffset(regionByLine), textToReplace);
+            tryToReplaceInFile(mapToOffset(regionByLine), textToReplace);
         } catch (final IOException e) {
             LOG.log(Level.WARNING, "An exception occurred when replacing in file " + filePath.toAbsolutePath());
         }
     }
 
-    private RegionByOffset mapToRegionByOffset(final RegionByLine regionByLine) {
+
+    @Override
+    public RegionByLine mapToLine(RegionByOffset offset) {
+        return null;
+    }
+
+    @Override
+    public TextRegion.RegionByOffset mapToOffset(final TextRegion.RegionByLine regionByLine) {
         final int startOffset = mapToOffset(regionByLine.getBeginLine(), regionByLine.getBeginColumn());
         final int endOffset = mapToOffset(regionByLine.getEndLine(), regionByLine.getEndColumn());
 
         return new RegionByOffsetImp(startOffset, endOffset - startOffset);
     }
 
-    private void tryToReplaceInFile(final RegionByOffset regionByOffset, final String textToReplace) throws IOException {
+    private void tryToReplaceInFile(final TextRegion.RegionByOffset regionByOffset, final String textToReplace) throws IOException {
         writeUntilOffsetReached(regionByOffset.getOffset());
         reader.skip(regionByOffset.getLength());
         currentPosition = regionByOffset.getOffsetAfterEnding();
@@ -131,15 +141,15 @@ public class DocumentFile implements Document, Closeable {
     }
 
     @Override
-    public void delete(final RegionByLine regionByOffset) {
+    public void delete(final TextRegion.RegionByLine regionByOffset) {
         try {
-            tryToDeleteFromFile(mapToRegionByOffset(regionByOffset));
+            tryToDeleteFromFile(mapToOffset(regionByOffset));
         } catch (final IOException e) {
             LOG.log(Level.WARNING, "An exception occurred when deleting from file " + filePath.toAbsolutePath());
         }
     }
 
-    private void tryToDeleteFromFile(final RegionByOffset regionByOffset) throws IOException {
+    private void tryToDeleteFromFile(final TextRegion.RegionByOffset regionByOffset) throws IOException {
         writeUntilOffsetReached(regionByOffset.getOffset());
         reader.skip(regionByOffset.getLength());
         currentPosition = regionByOffset.getOffsetAfterEnding();
