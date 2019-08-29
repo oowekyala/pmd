@@ -42,10 +42,7 @@ public class DocumentFileTest {
             documentFile.insert(1, 1, "public ");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("public static void main(String[] args) {}");
     }
 
     @Test
@@ -56,43 +53,7 @@ public class DocumentFileTest {
             documentFile.insert(0, "public ");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(String[] args) {}", actualContent);
-        }
-    }
-
-    private byte[] readAllBytes(final FileInputStream stream) throws IOException {
-        final int defaultBufferSize = 8192;
-        final int maxBufferSize = 2147483639;
-
-        byte[] buf = new byte[defaultBufferSize];
-        int capacity = buf.length;
-        int nread = 0;
-        int n;
-        while (true) {
-            // read to EOF which may read more or less than initial buffer size
-            while ((n = stream.read(buf, nread, capacity - nread)) > 0) {
-                nread += n;
-            }
-
-            // if the last call to read returned -1, then we're done
-            if (n < 0) {
-                break;
-            }
-
-            // need to allocate a larger buffer
-            if (capacity <= maxBufferSize - capacity) {
-                capacity = capacity << 1;
-            } else {
-                if (capacity == maxBufferSize) {
-                    throw new OutOfMemoryError("Required array size too large");
-                }
-                capacity = maxBufferSize;
-            }
-            buf = Arrays.copyOf(buf, capacity);
-        }
-        return (capacity == nread) ? buf : Arrays.copyOf(buf, nread);
+        assertFinalFileIs("public static void main(String[] args) {}");
     }
 
     @Test
@@ -104,10 +65,7 @@ public class DocumentFileTest {
             documentFile.insert(17, "final ");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(final String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("public static void main(final String[] args) {}");
     }
 
     @Test
@@ -119,10 +77,7 @@ public class DocumentFileTest {
             documentFile.insert(code.length(), "{}");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(String[] args){}", actualContent);
-        }
+        assertFinalFileIs("public static void main(String[] args){}");
     }
 
     @Test
@@ -134,10 +89,7 @@ public class DocumentFileTest {
             documentFile.delete(newRegionByLine(1, 25, 1, 31));
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("public static void main(String[] args) {}");
     }
 
     @Test
@@ -150,10 +102,7 @@ public class DocumentFileTest {
             documentFile.delete(newRegionByOffset("static void main(".length(), "final ".length()));
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static void main(String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("public static void main(String[] args) {}");
     }
 
     @Test
@@ -171,10 +120,7 @@ public class DocumentFileTest {
             documentFile.delete(newRegionByOffset("void main(String[] args) ".length(), 2));
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public static  main(final String[] args) ", actualContent);
-        }
+        assertFinalFileIs("public static  main(final String[] args) ");
     }
 
     @Test
@@ -186,10 +132,7 @@ public class DocumentFileTest {
             documentFile.replace(newRegionByOffset(0, 3), "void");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("void main(String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("void main(String[] args) {}");
     }
 
     @Test
@@ -203,10 +146,7 @@ public class DocumentFileTest {
             documentFile.replace(newRegionByOffset("int main(".length(), "String".length()), "CharSequence");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("void foo(CharSequence[] args) {}", actualContent);
-        }
+        assertFinalFileIs("void foo(CharSequence[] args) {}");
     }
 
     @Test
@@ -224,11 +164,14 @@ public class DocumentFileTest {
             documentFile.replace(newRegionByLine(1, 17, 1, 17 + "CharSequence".length()), "String");
         }
 
-        try (FileInputStream stream = new FileInputStream(temporaryFile)) {
-            final String actualContent = new String(readAllBytes(stream));
-            assertEquals("public void main(final String[] args) {}", actualContent);
-        }
+        assertFinalFileIs("public void main(final String[] args) {}");
     }
+
+    private void assertFinalFileIs(String s) throws IOException {
+        final String actualContent = new String(Files.readAllBytes(temporaryFile.toPath()));
+        assertEquals(s, actualContent);
+    }
+
     private void writeContentToTemporaryFile(final String content) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(temporaryFile.toPath(), StandardCharsets.UTF_8)) {
             writer.write(content);
