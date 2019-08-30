@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.document;
 
+import java.util.Objects;
+
 /**
  * Immutable implementation of the {@link TextRegion} interface.
  */
@@ -38,13 +40,31 @@ class TextRegionImpl implements TextRegion {
     }
 
     @Override
-    public TextRegion grow(int shift) {
-        return new TextRegionImpl(startOffset, length + shift);
+    public TextRegion grow(int amount) {
+        return new TextRegionImpl(startOffset, length + amount);
     }
 
     @Override
     public String toString() {
         return "Region(start=" + startOffset + ", len=" + length + ")";
+    }
+
+    @Override
+    public boolean equals(Object data) {
+        if (this == data) {
+            return true;
+        }
+        if (data == null || getClass() != data.getClass()) {
+            return false;
+        }
+        TextRegionImpl that = (TextRegionImpl) data;
+        return startOffset == that.startOffset
+            && length == that.length;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(startOffset, length);
     }
 
     private static int requireNonNegative(int value) {
@@ -105,6 +125,28 @@ class TextRegionImpl implements TextRegion {
             return value;
         }
 
+        @Override
+        public boolean equals(Object data) {
+            if (this == data) {
+                return true;
+            }
+            if (data == null || getClass() != data.getClass()) {
+                return false;
+            }
+            if (!super.equals(data)) {
+                return false;
+            }
+            WithLineInfo that = (WithLineInfo) data;
+            return beginLine == that.beginLine
+                && endLine == that.endLine
+                && beginColumn == that.beginColumn
+                && endColumn == that.endColumn;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), beginLine, endLine, beginColumn, endColumn);
+        }
     }
 
 }

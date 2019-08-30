@@ -6,11 +6,10 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
 import net.sourceforge.pmd.document.patching.TextPatch;
-import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 
 
-class JavaEditSession implements TreeEditSession<JavaNode, JavaccToken> {
+class JavaEditSession implements TreeEditSession<JavaNode> {
 
     private final SafeMutableDocument<TextPatch> document;
     private final TreeEditionHelper editor = new TreeEditionHelper(this);
@@ -25,26 +24,17 @@ class JavaEditSession implements TreeEditSession<JavaNode, JavaccToken> {
     }
 
 
-    public SafeMutableDocument<TextPatch> getDocument() {
+    SafeMutableDocument<TextPatch> getDocument() {
         return document;
-    }
-
-    @Override
-    public TokenEditSession<JavaccToken> getTokenEditor() {
-        return null;
     }
 
     @Override
     public void delete(JavaNode node) {
         if (node instanceof ASTCompilationUnit) {
-
+            // TODO delete file
         } else {
             editor.deleteInParent((AbstractJavaNode) node.jjtGetParent(), (AbstractJavaNode) node);
         }
     }
 
-    @Override
-    public void replace(JavaNode node, JavaNode replacement) {
-        throw new UnsupportedOperationException("TODO");
-    }
 }

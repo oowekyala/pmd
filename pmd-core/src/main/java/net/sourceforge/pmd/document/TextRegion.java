@@ -31,12 +31,12 @@ public interface TextRegion extends Comparable<TextRegion> {
     int getLength();
 
 
-    /** Returns a new text region, with its offset shifted. */
+    /** Returns a new text region, with its offset shifted by the given amount. */
     TextRegion shift(int shift);
 
 
-    /** Returns a new text region, with its length incremented shifted. */
-    TextRegion grow(int shift);
+    /** Returns a new text region, with its length incremented by the given amount. */
+    TextRegion grow(int amount);
 
 
 

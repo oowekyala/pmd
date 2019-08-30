@@ -7,6 +7,7 @@ package net.sourceforge.pmd.document.patching;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Diff;
@@ -16,15 +17,15 @@ import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Patch;
 import net.sourceforge.pmd.document.ReplaceHandler.SafeReplaceHandler;
 import net.sourceforge.pmd.document.TextRegion;
 
-public interface TextPatch {
+/** Interface representing a patch, ie a transform on a string. */
+public interface TextPatch extends Function<CharSequence, CharSequence> {
 
-
+    /** Enumerate components of this patch in a human readable format. */
     List<String> toGnuFormat();
 
-    boolean isNull();
 
-
-    CharSequence apply(CharSequence base);
+    /** Returns true if this patch is a noop. */
+    boolean isNoop();
 
 
     static SafeReplaceHandler<TextPatch> patchMaker(CharSequence originalBuffer) {

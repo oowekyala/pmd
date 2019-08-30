@@ -6,23 +6,19 @@ package net.sourceforge.pmd.lang.rule.autofix;
 
 
 import net.sourceforge.pmd.lang.LanguageVersion;
-import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
 /**
+ * An automated fix for a rule violation.
  * TODO
  *  * Memory leaks (node may be captured by fix, holding off all the tree + tokens + doc)
- *  * Is passing a handler good enough? we could also pass a MutableDocument
- *   to let tree edit operations destroy other tokens
- *  * Act on nodes, not directly text
  *  * Conflicting/overlapping fixes?
- *  * Should we always return an array of patches anyway?
  *  * Applying the fix should be aborted if there were file-system changes
  *
  */
-public interface Autofix<N extends TextAvailableNode, T extends GenericToken> {
+public interface Autofix<N extends TextAvailableNode> {
 
-    AutofixImpl<N, T> getImpl();
+    AutofixImpl<N> getImpl();
 
 
     String getDescription();
@@ -31,10 +27,10 @@ public interface Autofix<N extends TextAvailableNode, T extends GenericToken> {
     LanguageVersion getLanguageVersion();
 
 
-    static <N extends TextAvailableNode, T extends GenericToken> Autofix<N, T> from(String description, LanguageVersion version, AutofixImpl<N, T> impl) {
-        return new Autofix<N, T>() {
+    static <N extends TextAvailableNode> Autofix<N> from(String description, LanguageVersion version, AutofixImpl<N> impl) {
+        return new Autofix<N>() {
             @Override
-            public AutofixImpl<N, T> getImpl() {
+            public AutofixImpl<N> getImpl() {
                 return impl;
             }
 
@@ -51,10 +47,14 @@ public interface Autofix<N extends TextAvailableNode, T extends GenericToken> {
     }
 
 
+    /**
+     * This apply method is kept separate from the Autofix interface to
+     * allow writing a lambda.
+     */
     @FunctionalInterface
-    interface AutofixImpl<N extends TextAvailableNode, T extends GenericToken> {
+    interface AutofixImpl<N extends TextAvailableNode> {
 
-        void apply(TreeEditSession<N, T> session);
+        void apply(TreeEditSession<N> session);
 
     }
 

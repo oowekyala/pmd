@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Patch;
 
+/** Patch implementation using google's diff-match-patch. */
 class DmpPatchImpl implements TextPatch {
 
     private final LinkedList<Patch> patch;
@@ -25,7 +26,7 @@ class DmpPatchImpl implements TextPatch {
     }
 
     @Override
-    public boolean isNull() {
+    public boolean isNoop() {
         return patch.isEmpty();
     }
 

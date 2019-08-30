@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java;
 import java.util.Arrays;
 import java.util.List;
 
-import net.sourceforge.pmd.document.Document;
 import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
 import net.sourceforge.pmd.document.patching.TextPatch;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
@@ -16,7 +15,6 @@ import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.VisitorStarter;
 import net.sourceforge.pmd.lang.XPathHandler;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.ast.xpath.DefaultASTXPathHandler;
 import net.sourceforge.pmd.lang.dfa.DFAGraphRule;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
@@ -162,7 +160,7 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
 
 
     @Override
-    public TreeEditSession<JavaNode, JavaccToken> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
+    public TreeEditSession<JavaNode> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
         return InternalApiBridge.newEditSession(document);
     }
 

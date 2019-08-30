@@ -152,7 +152,7 @@ public interface LanguageVersionHandler {
 
 
     @Nullable
-    default TreeEditSession<?, ?> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
+    default TreeEditSession<?> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
         return null;
     }
 

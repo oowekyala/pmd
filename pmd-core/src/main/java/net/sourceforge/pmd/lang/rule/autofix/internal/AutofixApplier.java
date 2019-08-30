@@ -14,14 +14,11 @@ import net.sourceforge.pmd.document.MutableDocument;
 import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
 import net.sourceforge.pmd.document.ReplaceHandler;
 import net.sourceforge.pmd.document.patching.TextPatch;
-import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.rule.autofix.Autofix;
 import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 
-/**
- * @author Clément Fournier
- */
+/** Simple interactive prototype, this blocks the run on every violation though. */
 public class AutofixApplier implements ThreadSafeReportListener {
 
     private final Document doc;
@@ -38,7 +35,7 @@ public class AutofixApplier implements ThreadSafeReportListener {
     @Override
     public void ruleViolationAdded(RuleViolation ruleViolation) {
         // we assume that concurrent violations come from different files so cannot overlap
-        List<? extends Autofix<?, ?>> autofixes = ruleViolation.getAutofixes();
+        List<? extends Autofix<?>> autofixes = ruleViolation.getAutofixes();
         if (autofixes.isEmpty()) {
             return;
         }
@@ -49,7 +46,7 @@ public class AutofixApplier implements ThreadSafeReportListener {
 
         // TODO don't block
         try {
-            for (Autofix<?, ?> fix : autofixes) {
+            for (Autofix<?> fix : autofixes) {
                 applyFix(ruleViolation, fix);
             }
         } catch (Exception e) {
@@ -57,21 +54,22 @@ public class AutofixApplier implements ThreadSafeReportListener {
         }
     }
 
-    private <N extends TextAvailableNode, T extends GenericToken>
-    void applyFix(RuleViolation ruleViolation, Autofix<N, T> fix) throws java.io.IOException {
+    private <N extends TextAvailableNode> void applyFix(RuleViolation ruleViolation, Autofix<N> fix) throws java.io.IOException {
         final SafeMutableDocument<TextPatch> mutableDoc = doc.newMutableDoc(TextPatch.patchMaker(doc.getText()));
-        @SuppressWarnings("unchecked") final TreeEditSession<N, T> session = (TreeEditSession<N, T>) fix.getLanguageVersion().getLanguageVersionHandler().newTreeEditSession(mutableDoc);
+        @SuppressWarnings("unchecked")
+        final TreeEditSession<N> session = (TreeEditSession<N>) fix.getLanguageVersion().getLanguageVersionHandler().newTreeEditSession(mutableDoc);
         if (session == null) {
-            // abandoned
+            // abandoned, language version doesn't support this
             return;
         }
         fix.getImpl().apply(session);
         final TextPatch patch = session.commit();
-        if (patch.isNull()) {
+        if (patch.isNoop()) {
             return;
         }
 
         if (userConsents(ruleViolation, patch)) {
+            // apply the patch with a real commit handler that writes to disk
             final MutableDocument<?> committing = doc.newMutableDoc(commitToFile);
             committing.replace(doc.createRegion(0, doc.getText().length()), patch.apply(doc.getText()));
             committing.commit();
