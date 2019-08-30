@@ -6,12 +6,17 @@ package net.sourceforge.pmd.lang;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
+import net.sourceforge.pmd.document.patching.TextPatch;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.dfa.DFAGraphRule;
 import net.sourceforge.pmd.lang.metrics.LanguageMetricsProvider;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
+import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 
 
 /**
@@ -144,6 +149,12 @@ public interface LanguageVersionHandler {
     @Deprecated
     @InternalApi
     DFAGraphRule getDFAGraphRule();
+
+
+    @Nullable
+    default TreeEditSession<?, ?> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
+        return null;
+    }
 
 
     /**

@@ -17,7 +17,7 @@ public interface ReplaceHandler<T> {
     /**
      * Replace the content of a region with some text.
      */
-    void replace(TextRegion original, TextRegion mapped, String text);
+    void replace(TextRegion original, TextRegion mapped, CharSequence text);
 
 
     /**
@@ -40,8 +40,8 @@ public interface ReplaceHandler<T> {
             private StringBuilder builder = new StringBuilder(originalBuffer);
 
             @Override
-            public void replace(TextRegion original, TextRegion mapped, String text) {
-                builder.replace(mapped.getStartOffset(), mapped.getEndOffset(), text);
+            public void replace(TextRegion original, TextRegion mapped, CharSequence text) {
+                builder.replace(mapped.getStartOffset(), mapped.getEndOffset(), text.toString());
             }
 
             @Override

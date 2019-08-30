@@ -4,10 +4,16 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.util.List;
+
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
+import net.sourceforge.pmd.document.patching.TextPatch;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.java.qname.JavaOperationQualifiedName;
 import net.sourceforge.pmd.lang.java.qname.JavaTypeQualifiedName;
 import net.sourceforge.pmd.lang.java.typeresolution.typedefinition.JavaTypeDefinition;
+import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 import net.sourceforge.pmd.lang.symboltable.Scope;
 
 /**
@@ -27,6 +33,9 @@ public final class InternalApiBridge {
 
     }
 
+    public static TreeEditSession<JavaNode, JavaccToken> newEditSession(SafeMutableDocument<TextPatch> doc) {
+        return new JavaEditSession(doc);
+    }
 
     public static void setScope(JavaNode node, Scope scope) {
         ((AbstractJavaNode) node).setScope(scope);

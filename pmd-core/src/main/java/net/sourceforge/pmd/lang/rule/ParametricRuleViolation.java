@@ -35,7 +35,7 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     protected String methodName = "";
     protected String variableName = "";
 
-    private final List<Autofix> autofixes;
+    private final List<Autofix<? extends T, ?>> autofixes;
 
     // FUTURE Fix to understand when a violation _must_ have a Node, and when it
     // must not (to prevent erroneous Rules silently logging w/o a Node). Modify
@@ -49,7 +49,7 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     // must not (to prevent erroneous Rules silently logging w/o a Node). Modify
     // RuleViolationFactory to support identifying without a Node, and update
     // Rule base classes too.
-    public ParametricRuleViolation(Rule theRule, RuleContext ctx, T node, String message, List<? extends Autofix> autofixes) {
+    public ParametricRuleViolation(Rule theRule, RuleContext ctx, T node, String message, List<? extends Autofix<? extends T, ?>> autofixes) {
         rule = theRule;
         description = message;
         filename = ctx.getSourceCodeFilename();
@@ -72,7 +72,7 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     }
 
     @Override
-    public List<Autofix> getAutofixes() {
+    public List<Autofix<? extends T, ?>> getAutofixes() {
         return autofixes;
     }
 

@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.document;
 
+import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
+import net.sourceforge.pmd.document.ReplaceHandler.SafeReplaceHandler;
 import net.sourceforge.pmd.document.TextRegion.RegionWithLines;
 import net.sourceforge.pmd.document.TextRegionImpl.WithLineInfo;
 import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
@@ -20,8 +22,13 @@ class DocumentImpl implements Document {
     }
 
     @Override
-    public MutableDocument newMutableDoc(ReplaceHandler out) {
-        return new MutableDocumentImpl(getText(), out);
+    public <T> MutableDocument<T> newMutableDoc(ReplaceHandler<T> out) {
+        return new MutableDocumentImpl<>(getText(), out);
+    }
+
+    @Override
+    public <T> SafeMutableDocument<T> newMutableDoc(SafeReplaceHandler<T> out) {
+        return new MutableDocumentImpl.Safe<>(getText(), out);
     }
 
     @Override

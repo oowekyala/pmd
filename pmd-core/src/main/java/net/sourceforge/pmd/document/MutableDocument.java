@@ -27,15 +27,15 @@ import java.nio.file.Path;
 public interface MutableDocument<T> extends Document, Closeable {
 
     /** Insert some text in the document. */
-    void insert(int beginLine, int beginColumn, String textToInsert);
+    void insert(int beginLine, int beginColumn, CharSequence textToInsert);
 
 
     /** Insert some text in the document. */
-    void insert(int offset, String textToInsert);
+    void insert(int offset, CharSequence textToInsert);
 
 
     /** Replace a region with some new text. */
-    void replace(TextRegion region, String textToReplace);
+    void replace(TextRegion region, CharSequence textToReplace);
 
 
     /** Delete a region in the document. */
@@ -61,6 +61,17 @@ public interface MutableDocument<T> extends Document, Closeable {
     static MutableDocument<Void> forFile(final Path file, final Charset charset) throws IOException {
         Document doc = Document.forFile(file, charset);
         return doc.newMutableDoc(ReplaceHandler.bufferedFile(doc.getText(), file, charset));
+    }
+
+
+    interface SafeMutableDocument<T> extends MutableDocument<T> {
+
+        @Override
+        T commit();
+
+
+        @Override
+        void close();
     }
 
 }

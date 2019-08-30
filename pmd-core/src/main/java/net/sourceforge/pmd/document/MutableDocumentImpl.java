@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import net.sourceforge.pmd.document.ReplaceHandler.SafeReplaceHandler;
+
 
 class MutableDocumentImpl<T> extends DocumentImpl implements MutableDocument<T> {
 
@@ -23,12 +25,12 @@ class MutableDocumentImpl<T> extends DocumentImpl implements MutableDocument<T> 
     }
 
     @Override
-    public void insert(int beginLine, int beginColumn, final String textToInsert) {
+    public void insert(int beginLine, int beginColumn, final CharSequence textToInsert) {
         insert(positioner.offsetFromLineColumn(beginLine, beginColumn), textToInsert);
     }
 
     @Override
-    public void insert(int offset, String textToInsert) {
+    public void insert(int offset, CharSequence textToInsert) {
         replace(createRegion(offset, 0), textToInsert);
     }
 
@@ -39,7 +41,7 @@ class MutableDocumentImpl<T> extends DocumentImpl implements MutableDocument<T> 
     }
 
     @Override
-    public void replace(final TextRegion region, final String textToReplace) {
+    public void replace(final TextRegion region, final CharSequence textToReplace) {
 
         TextRegion realPos = shiftOffset(region, textToReplace.length() - region.getLength());
 
@@ -89,6 +91,26 @@ class MutableDocumentImpl<T> extends DocumentImpl implements MutableDocument<T> 
     @Override
     public void close() throws IOException {
         out.commit();
+    }
+
+    static class Safe<T> extends MutableDocumentImpl<T> implements SafeMutableDocument<T> {
+
+        private final SafeReplaceHandler<T> writer;
+
+        Safe(CharSequence source, SafeReplaceHandler<T> writer) {
+            super(source, writer);
+            this.writer = writer;
+        }
+
+        @Override
+        public void close() {
+            writer.commit();
+        }
+
+        @Override
+        public T commit() {
+            return writer.commit();
+        }
     }
 
 }

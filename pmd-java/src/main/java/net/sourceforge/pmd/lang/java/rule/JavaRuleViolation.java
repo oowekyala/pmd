@@ -12,6 +12,7 @@ import java.util.Set;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
@@ -53,7 +54,7 @@ public class JavaRuleViolation extends ParametricRuleViolation<JavaNode> {
         this(rule, ctx, node, message, Collections.emptyList());
     }
 
-    public JavaRuleViolation(Rule rule, RuleContext ctx, JavaNode node, String message, List<Autofix> autofixes) {
+    public JavaRuleViolation(Rule rule, RuleContext ctx, JavaNode node, String message, List<? extends Autofix<? extends JavaNode, JavaccToken>> autofixes) {
         super(rule, ctx, node, message, autofixes);
 
         if (node != null) {

@@ -110,7 +110,7 @@ public interface RuleViolation {
     String getVariableName();
 
 
-    default List<Autofix> getAutofixes() {
+    default List<? extends Autofix<?, ?>> getAutofixes() {
         return Collections.emptyList();
     }
 }

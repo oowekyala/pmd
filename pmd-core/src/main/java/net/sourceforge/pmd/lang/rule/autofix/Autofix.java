@@ -5,9 +5,9 @@
 package net.sourceforge.pmd.lang.rule.autofix;
 
 
-import java.io.IOException;
-
-import net.sourceforge.pmd.document.ReplaceHandler;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.ast.GenericToken;
+import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
 /**
  * TODO
@@ -20,8 +20,42 @@ import net.sourceforge.pmd.document.ReplaceHandler;
  *  * Applying the fix should be aborted if there were file-system changes
  *
  */
-public interface Autofix {
+public interface Autofix<N extends TextAvailableNode, T extends GenericToken> {
 
-    <T> T apply(ReplaceHandler<T> handler) throws IOException;
+    AutofixImpl<N, T> getImpl();
+
+
+    String getDescription();
+
+
+    LanguageVersion getLanguageVersion();
+
+
+    static <N extends TextAvailableNode, T extends GenericToken> Autofix<N, T> from(String description, LanguageVersion version, AutofixImpl<N, T> impl) {
+        return new Autofix<N, T>() {
+            @Override
+            public AutofixImpl<N, T> getImpl() {
+                return impl;
+            }
+
+            @Override
+            public String getDescription() {
+                return description;
+            }
+
+            @Override
+            public LanguageVersion getLanguageVersion() {
+                return version;
+            }
+        };
+    }
+
+
+    @FunctionalInterface
+    interface AutofixImpl<N extends TextAvailableNode, T extends GenericToken> {
+
+        void apply(TreeEditSession<N, T> session);
+
+    }
 
 }

@@ -7,16 +7,22 @@ package net.sourceforge.pmd.lang.java;
 import java.util.Arrays;
 import java.util.List;
 
+import net.sourceforge.pmd.document.Document;
+import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
+import net.sourceforge.pmd.document.patching.TextPatch;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.DataFlowHandler;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.VisitorStarter;
 import net.sourceforge.pmd.lang.XPathHandler;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.ast.xpath.DefaultASTXPathHandler;
 import net.sourceforge.pmd.lang.dfa.DFAGraphRule;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.MethodLikeNode;
 import net.sourceforge.pmd.lang.java.dfa.DataFlowFacade;
 import net.sourceforge.pmd.lang.java.dfa.JavaDFAGraphRule;
@@ -38,6 +44,7 @@ import net.sourceforge.pmd.lang.metrics.LanguageMetricsProvider;
 import net.sourceforge.pmd.lang.metrics.MetricKey;
 import net.sourceforge.pmd.lang.metrics.internal.AbstractLanguageMetricsProvider;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
+import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 
 import net.sf.saxon.sxpath.IndependentContext;
 
@@ -153,6 +160,11 @@ public abstract class AbstractJavaHandler extends AbstractPmdLanguageVersionHand
         return new JavaDFAGraphRule();
     }
 
+
+    @Override
+    public TreeEditSession<JavaNode, JavaccToken> newTreeEditSession(SafeMutableDocument<TextPatch> document) {
+        return InternalApiBridge.newEditSession(document);
+    }
 
     @Override
     public LanguageMetricsProvider<ASTAnyTypeDeclaration, MethodLikeNode> getLanguageMetricsProvider() {

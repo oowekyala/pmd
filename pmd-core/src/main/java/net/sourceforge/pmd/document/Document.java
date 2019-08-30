@@ -11,6 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import net.sourceforge.pmd.document.MutableDocument.SafeMutableDocument;
+import net.sourceforge.pmd.document.ReplaceHandler.SafeReplaceHandler;
 import net.sourceforge.pmd.document.TextRegion.RegionWithLines;
 
 /**
@@ -57,6 +59,9 @@ public interface Document {
     /** Returns a mutable document that uses the given replace handler to carry out updates. */
     <T> MutableDocument<T> newMutableDoc(ReplaceHandler<T> out);
 
+
+    /** Returns a mutable document that uses the given replace handler to carry out updates. */
+    <T> SafeMutableDocument<T> newMutableDoc(SafeReplaceHandler<T> out);
 
     static Document forFile(final Path file, final Charset charset) throws IOException {
         byte[] bytes = Files.readAllBytes(requireNonNull(file));
