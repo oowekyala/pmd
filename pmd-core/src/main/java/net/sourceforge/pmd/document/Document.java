@@ -4,32 +4,70 @@
 
 package net.sourceforge.pmd.document;
 
+import static java.util.Objects.requireNonNull;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import net.sourceforge.pmd.document.TextRegion.RegionWithLines;
+
 /**
- * Represents a file which contains programming code that will be fixed.
+ * Represents a text document. A document provides methods to identify
+ * regions of text and to convert between lines and columns.
+ *
+ * <p>The default document implementations do *not* normalise line endings.
  */
 public interface Document {
 
     /**
-     * Insert a text at a line at the position/column specified. If there is any text to the right of the insertion,
-     * that text is shifted by the length of the text to insert, which means that it is not replaced.
-     * @param beginLine the line in which to insert the text
-     * @param beginColumn the position in the line in which to insert the text
-     * @param textToInsert the text to be added
+     * Create a new region based on line coordinates.
+     *
+     * @throws IndexOutOfBoundsException If the argument does not identify a valid region in this document
      */
-    void insert(int beginLine, int beginColumn, String textToInsert);
+    RegionWithLines createRegion(final int beginLine, final int beginColumn, final int endLine, final int endColumn);
+
 
     /**
-     * Replace a specific region in the document which contains text by another text, which not necessarily is the same
-     * length as the region's one.
-     * @param regionByOffset the region in which a text will be inserted to replace the current document's contents
-     * @param textToReplace the text to insert
+     * Create a new region based on offset coordinates.
+     *
+     * @throws IndexOutOfBoundsException If the argument does not identify a valid region in this document
      */
-    void replace(RegionByLine regionByOffset, String textToReplace);
+    TextRegion createRegion(final int offset, final int length);
+
 
     /**
-     * Delete a region in the document, removing all text which contains it. If there is any text to the right of this
-     * region, it will be shifted to the left by the length of the region to delete.
-     * @param regionByOffset the region in which to erase all the text
+     * Add line information to the given region. Only the start and end
+     * offsets are considered, if the region is already a {@link RegionWithLines},
+     * that information is discarded.
+     *
+     * @throws IndexOutOfBoundsException If the argument does not identify a valid region in this document
      */
-    void delete(RegionByLine regionByOffset);
+    RegionWithLines addLineInfo(TextRegion region);
+
+
+    /** Returns the text of this document. */
+    CharSequence getText();
+
+
+    /** Returns a region of the {@link #getText() text} as a character sequence. */
+    CharSequence subSequence(TextRegion region);
+
+
+    /** Returns a mutable document that uses the given replace handler to carry out updates. */
+    MutableDocument newMutableDoc(ReplaceHandler out);
+
+
+    static Document forFile(final Path file, final Charset charset) throws IOException {
+        byte[] bytes = Files.readAllBytes(requireNonNull(file));
+        String text = new String(bytes, requireNonNull(charset));
+        return forCode(text);
+    }
+
+
+    static Document forCode(final CharSequence source) {
+        return new DocumentImpl(source);
+    }
+
 }
