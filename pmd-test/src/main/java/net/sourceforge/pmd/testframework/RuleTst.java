@@ -279,7 +279,7 @@ public abstract class RuleTst {
             ctx.setLanguageVersion(languageVersion);
             ctx.setIgnoreExceptions(false);
             RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(rule);
-            p.getSourceCodeProcessor().processSourceCode(new StringReader(code), new RuleSets(rules), ctx);
+            p.getSourceCodeProcessor().processSourceCode(code, new RuleSets(rules), ctx);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

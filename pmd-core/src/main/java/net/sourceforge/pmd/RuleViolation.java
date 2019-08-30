@@ -4,6 +4,11 @@
 
 package net.sourceforge.pmd;
 
+import java.util.Collections;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.rule.autofix.Autofix;
+
 /**
  * A RuleViolation is created by a Rule when it identifies a violation of the
  * Rule constraints.
@@ -103,4 +108,9 @@ public interface RuleViolation {
      * @return The variable name.
      */
     String getVariableName();
+
+
+    default List<Autofix> getAutofixes() {
+        return Collections.emptyList();
+    }
 }

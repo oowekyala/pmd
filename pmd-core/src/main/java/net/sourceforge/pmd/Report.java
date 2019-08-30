@@ -53,6 +53,8 @@ public class Report implements Iterable<RuleViolation> {
     private long end;
     private List<SuppressedViolation> suppressedRuleViolations = new ArrayList<>();
 
+    private final Object violationLock = new Object();
+
     /**
      * Creates a new, initialized, empty report for the given file name.
      *
@@ -302,6 +304,12 @@ public class Report implements Iterable<RuleViolation> {
      */
     public void addListener(ThreadSafeReportListener listener) {
         listeners.add(listener);
+    }
+
+    public void withListener(ThreadSafeReportListener listener, Runnable runnable) {
+        listeners.add(listener);
+        runnable.run();
+        listeners.remove(listener);
     }
 
     public List<SuppressedViolation> getSuppressedRuleViolations() {

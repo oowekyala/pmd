@@ -4,12 +4,16 @@
 
 package net.sourceforge.pmd.lang.rule;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.autofix.Autofix;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.util.StringUtil;
 
@@ -31,14 +35,25 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     protected String methodName = "";
     protected String variableName = "";
 
+    private final List<Autofix> autofixes;
+
     // FUTURE Fix to understand when a violation _must_ have a Node, and when it
     // must not (to prevent erroneous Rules silently logging w/o a Node). Modify
     // RuleViolationFactory to support identifying without a Node, and update
     // Rule base classes too.
     public ParametricRuleViolation(Rule theRule, RuleContext ctx, T node, String message) {
+        this(theRule, ctx, node, message, Collections.emptyList());
+    }
+
+    // FUTURE Fix to understand when a violation _must_ have a Node, and when it
+    // must not (to prevent erroneous Rules silently logging w/o a Node). Modify
+    // RuleViolationFactory to support identifying without a Node, and update
+    // Rule base classes too.
+    public ParametricRuleViolation(Rule theRule, RuleContext ctx, T node, String message, List<? extends Autofix> autofixes) {
         rule = theRule;
         description = message;
         filename = ctx.getSourceCodeFilename();
+        this.autofixes = new ArrayList<>(autofixes);
         if (filename == null) {
             filename = "";
         }
@@ -54,6 +69,11 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
             setSuppression(rule, node);
         }
 
+    }
+
+    @Override
+    public List<Autofix> getAutofixes() {
+        return autofixes;
     }
 
     private void setSuppression(Rule rule, T node) {

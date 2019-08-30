@@ -188,10 +188,8 @@ public final class Benchmarker {
             RuleContext ctx = new RuleContext();
             long start = System.currentTimeMillis();
             for (DataSource dataSource : dataSources) {
-                try (InputStream stream = new BufferedInputStream(dataSource.getInputStream())) {
-                    ctx.setSourceCodeFilename(dataSource.getNiceFileName(false, null));
-                    new SourceCodeProcessor(config).processSourceCode(stream, ruleSets, ctx);
-                }
+                ctx.setSourceCodeFilename(dataSource.getNiceFileName(false, null));
+                new SourceCodeProcessor(config).processSourceCode(dataSource, ruleSets, ctx);
             }
             long end = System.currentTimeMillis();
             long elapsed = end - start;

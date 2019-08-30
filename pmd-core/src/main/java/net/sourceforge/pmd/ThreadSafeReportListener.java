@@ -14,6 +14,10 @@ import net.sourceforge.pmd.stat.Metric;
  * Same file violations are guaranteed to be reported serially.
  */
 public interface ThreadSafeReportListener {
+
+    ThreadSafeReportListener NOOP = ruleViolation -> { };
+
+
     /**
      * A new violation has been found.
      *
@@ -22,13 +26,16 @@ public interface ThreadSafeReportListener {
      */
     void ruleViolationAdded(RuleViolation ruleViolation);
 
+
     /**
      * A new metric point has been reported.
      *
-     * @param metric
-     *            the metric
+     * @param metric the metric
+     *
      * @deprecated see {@link net.sourceforge.pmd.lang.rule.stat.StatisticalRule}
      */
     @Deprecated
-    void metricAdded(Metric metric);
+    default void metricAdded(Metric metric) {
+
+    }
 }

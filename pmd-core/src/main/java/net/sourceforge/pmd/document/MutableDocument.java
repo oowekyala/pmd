@@ -24,7 +24,7 @@ import java.nio.file.Path;
  * <p>Consider that all mutation operations shift the coordinate system
  * transparently.
  */
-public interface MutableDocument extends Document, Closeable {
+public interface MutableDocument<T> extends Document, Closeable {
 
     /** Insert some text in the document. */
     void insert(int beginLine, int beginColumn, String textToInsert);
@@ -42,14 +42,13 @@ public interface MutableDocument extends Document, Closeable {
     void delete(TextRegion region);
 
 
-    /**
-     * Commit the document. The {@link #getUncommittedText() uncommitted text}
-     * becomes the {@link #getText() text}, and subsequent operations use that
-     * coordinate system.
-     */
+    /** Commit the document, discarding the result of the replace handler. */
     @Override
     void close() throws IOException;
 
+
+    /** Commit the document, returning what the replace handler produced. */
+    T commit() throws IOException;
 
     /**
      * Returns the original text, source of the coordinate system used by mutation
@@ -59,11 +58,7 @@ public interface MutableDocument extends Document, Closeable {
     CharSequence getText();
 
 
-    /** Returns the uncommitted text, that will be committed by {@link #close()}. */
-    CharSequence getUncommittedText();
-
-
-    static MutableDocument forFile(final Path file, final Charset charset) throws IOException {
+    static MutableDocument<Void> forFile(final Path file, final Charset charset) throws IOException {
         Document doc = Document.forFile(file, charset);
         return doc.newMutableDoc(ReplaceHandler.bufferedFile(doc.getText(), file, charset));
     }

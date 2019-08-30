@@ -4,9 +4,6 @@
 
 package net.sourceforge.pmd.processor;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -73,15 +70,11 @@ public class PmdRunnable implements Callable<Report> {
             r.startFileAnalysis(dataSource);
         }
 
-        try (InputStream stream = new BufferedInputStream(dataSource.getInputStream())) {
-            tc.ruleContext.setLanguageVersion(null);
-            sourceCodeProcessor.processSourceCode(stream, tc.ruleSets, tc.ruleContext);
-        } catch (PMDException pmde) {
-            addError(report, pmde, "Error while processing file: " + fileName);
-        } catch (IOException ioe) {
-            addError(report, ioe, "IOException during processing of " + fileName);
-        } catch (RuntimeException re) {
-            addError(report, re, "RuntimeException during processing of " + fileName);
+        tc.ruleContext.setLanguageVersion(null);
+        try {
+            sourceCodeProcessor.processSourceCode(dataSource, tc.ruleSets, tc.ruleContext);
+        } catch (Exception e) {
+            addError(report, e, "Error while processing file: " + fileName);
         }
 
         TimeTracker.finishThread();

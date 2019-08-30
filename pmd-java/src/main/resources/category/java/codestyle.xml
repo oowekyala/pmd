@@ -1991,6 +1991,18 @@ List<String> stringsWithDiamond = new ArrayList<>(); // using the diamond operat
         </example>
     </rule>
 
+    <rule name="UselessBound"
+          language="java"
+          since="7.0"
+          message="Useless bound."
+          class="net.sourceforge.pmd.lang.java.rule.codestyle.UselessBoundRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_codestyle.html#uselessbound">
+        <description>Useless bounds should be removed.</description>
+        <priority>4</priority>
+        <example />
+    </rule>
+
+
     <rule name="UselessParentheses"
           language="java"
           since="5.0"

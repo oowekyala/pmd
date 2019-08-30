@@ -123,6 +123,10 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
         return endExclusive;
     }
 
+    public int getLength() {
+        return endExclusive - startInclusive;
+    }
+
     private RegionWithLines getRegion() {
         if (lineRegion == null) {
             lineRegion = (document != null)

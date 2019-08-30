@@ -213,7 +213,7 @@ public class XPathRuleTest extends RuleTst {
         ctx.setReport(report);
         ctx.setSourceCodeFilename("n/a");
         RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(r);
-        p.getSourceCodeProcessor().processSourceCode(new StringReader(test), new RuleSets(rules), ctx);
+        p.getSourceCodeProcessor().processSourceCode(test, new RuleSets(rules), ctx);
         return report;
     }
 

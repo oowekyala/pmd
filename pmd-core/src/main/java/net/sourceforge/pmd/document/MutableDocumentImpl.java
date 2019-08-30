@@ -10,16 +10,14 @@ import java.util.Collections;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
 
+class MutableDocumentImpl<T> extends DocumentImpl implements MutableDocument<T> {
 
-class MutableDocumentImpl extends DocumentImpl implements MutableDocument {
-
-    private ReplaceHandler out;
+    private ReplaceHandler<T> out;
     private SortedMap<Integer, Integer> accumulatedOffsets = new TreeMap<>();
 
 
-    MutableDocumentImpl(final CharSequence source, final ReplaceHandler writer) {
+    MutableDocumentImpl(final CharSequence source, final ReplaceHandler<T> writer) {
         super(source);
         this.out = writer;
     }
@@ -45,7 +43,7 @@ class MutableDocumentImpl extends DocumentImpl implements MutableDocument {
 
         TextRegion realPos = shiftOffset(region, textToReplace.length() - region.getLength());
 
-        out.replace(realPos, textToReplace);
+        out.replace(region, realPos, textToReplace);
     }
 
     private TextRegion shiftOffset(TextRegion origCoords, int lenDiff) {
@@ -71,9 +69,9 @@ class MutableDocumentImpl extends DocumentImpl implements MutableDocument {
         }
 
         TextRegion realPos = shift == 0
-                                 ? origCoords
-                                 // don't check the bounds
-                                 : new TextRegionImpl(origCoords.getStartOffset() + shift, origCoords.getLength());
+                             ? origCoords
+                             // don't check the bounds
+                             : new TextRegionImpl(origCoords.getStartOffset() + shift, origCoords.getLength());
 
         accumulatedOffsets.compute(origCoords.getStartOffset(), (k, v) -> {
             int s = v == null ? lenDiff : v + lenDiff;
@@ -83,17 +81,14 @@ class MutableDocumentImpl extends DocumentImpl implements MutableDocument {
         return realPos;
     }
 
-
     @Override
-    public CharSequence getUncommittedText() {
-        return out.getCurrentText(this);
+    public T commit() throws IOException {
+        return out.commit();
     }
 
     @Override
     public void close() throws IOException {
-        out = out.commit();
-        positioner = new SourceCodePositioner(out.getCurrentText(this));
-        accumulatedOffsets = new TreeMap<>();
+        out.commit();
     }
 
 }

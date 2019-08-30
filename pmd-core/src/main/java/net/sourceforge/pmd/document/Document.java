@@ -55,7 +55,7 @@ public interface Document {
 
 
     /** Returns a mutable document that uses the given replace handler to carry out updates. */
-    MutableDocument newMutableDoc(ReplaceHandler out);
+    <T> MutableDocument<T> newMutableDoc(ReplaceHandler<T> out);
 
 
     static Document forFile(final Path file, final Charset charset) throws IOException {

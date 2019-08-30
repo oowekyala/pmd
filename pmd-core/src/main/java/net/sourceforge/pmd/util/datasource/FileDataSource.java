@@ -7,9 +7,14 @@ package net.sourceforge.pmd.util.datasource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.document.ReplaceHandler;
 
 /**
  * DataSource implementation to read data from a file.
@@ -31,6 +36,11 @@ public class FileDataSource implements DataSource {
     @Override
     public InputStream getInputStream() throws IOException {
         return Files.newInputStream(file.toPath());
+    }
+
+    @Override
+    public @Nullable ReplaceHandler<Void> getReplaceHandler(CharSequence fullText) {
+        return ReplaceHandler.bufferedFile(fullText, file.toPath(), Charset.defaultCharset());
     }
 
     @Override

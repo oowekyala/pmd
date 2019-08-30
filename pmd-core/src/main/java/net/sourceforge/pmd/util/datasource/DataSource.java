@@ -4,8 +4,14 @@
 
 package net.sourceforge.pmd.util.datasource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.document.ReplaceHandler;
 
 /**
  * Represents a source file to be analyzed. Different implementations can get
@@ -22,6 +28,12 @@ public interface DataSource {
      */
     InputStream getInputStream() throws IOException;
 
+
+    @Nullable
+    default ReplaceHandler<Void> getReplaceHandler(CharSequence fullText) {
+        return null;
+    }
+
     /**
      * Return a nice version of the filename.
      *
@@ -32,4 +44,18 @@ public interface DataSource {
      * @return String
      */
     String getNiceFileName(boolean shortNames, String inputFileName);
+
+    static DataSource fromString(String text, String name) {
+        return new DataSource() {
+            @Override
+            public InputStream getInputStream() {
+                return new ByteArrayInputStream(text.getBytes());
+            }
+
+            @Override
+            public String getNiceFileName(boolean shortNames, String inputFileName) {
+                return name;
+            }
+        };
+    }
 }

@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import net.sourceforge.pmd.document.Document;
 import net.sourceforge.pmd.lang.ast.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.JavaCharStream;
 import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
@@ -70,7 +71,8 @@ final class JavaTokenFactory {
 
         @Override
         public String getImage() {
-            return document.getDocument().substring(getStartInDocument(), getEndInDocument());
+            final Document doc = document.getDocument();
+            return doc.subSequence(doc.createRegion(getStartInDocument(), getLength())).toString();
         }
     }
 

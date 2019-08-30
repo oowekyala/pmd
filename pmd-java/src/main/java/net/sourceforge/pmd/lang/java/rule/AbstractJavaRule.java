@@ -28,9 +28,11 @@ import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeArgument;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpressionNotPlusMinus;
 import net.sourceforge.pmd.lang.java.ast.ASTWildcardBounds;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavaParserVisitor;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
 import net.sourceforge.pmd.lang.rule.ImmutableLanguage;
+import net.sourceforge.pmd.lang.rule.autofix.Autofix;
 
 
 /**
@@ -100,6 +102,11 @@ public abstract class AbstractJavaRule extends AbstractRule implements JavaParse
         return JavaRuleViolation.isSupressed(node, this);
     }
 
+
+
+    public void addViolation(Object data, JavaNode node, List<Autofix> fixes) {
+        ((RuleContext) data).getReport().addRuleViolation(new JavaRuleViolation(this, ((RuleContext) data), node, getMessage(), fixes ));
+    }
 
     @Override
     public final boolean dependsOn(AstProcessingStage<?> stage) {

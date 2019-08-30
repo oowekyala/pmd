@@ -4,7 +4,9 @@
 
 package net.sourceforge.pmd.lang.java.rule;
 
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import net.sourceforge.pmd.Rule;
@@ -25,6 +27,7 @@ import net.sourceforge.pmd.lang.java.symboltable.ClassScope;
 import net.sourceforge.pmd.lang.java.symboltable.MethodScope;
 import net.sourceforge.pmd.lang.java.symboltable.SourceFileScope;
 import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.lang.rule.autofix.Autofix;
 import net.sourceforge.pmd.lang.symboltable.Scope;
 
 /**
@@ -47,7 +50,11 @@ public class JavaRuleViolation extends ParametricRuleViolation<JavaNode> {
     }
 
     public JavaRuleViolation(Rule rule, RuleContext ctx, JavaNode node, String message) {
-        super(rule, ctx, node, message);
+        this(rule, ctx, node, message, Collections.emptyList());
+    }
+
+    public JavaRuleViolation(Rule rule, RuleContext ctx, JavaNode node, String message, List<Autofix> autofixes) {
+        super(rule, ctx, node, message, autofixes);
 
         if (node != null) {
             final Scope scope = node.getScope();

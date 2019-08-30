@@ -6,14 +6,18 @@ package net.sourceforge.pmd;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collections;
-import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
+import net.sourceforge.pmd.document.Document;
+import net.sourceforge.pmd.document.ReplaceHandler;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
@@ -21,7 +25,9 @@ import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.VisitorStarter;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.lang.rule.autofix.internal.AutofixApplier;
 import net.sourceforge.pmd.lang.xpath.Initializer;
+import net.sourceforge.pmd.util.datasource.DataSource;
 
 public class SourceCodeProcessor {
 
@@ -31,27 +37,9 @@ public class SourceCodeProcessor {
         this.configuration = configuration;
     }
 
-    /**
-     * Processes the input stream against a rule set using the given input
-     * encoding.
-     *
-     * @param sourceCode
-     *            The InputStream to analyze.
-     * @param ruleSets
-     *            The collection of rules to process against the file.
-     * @param ctx
-     *            The context in which PMD is operating.
-     * @throws PMDException
-     *             if the input encoding is unsupported, the input stream could
-     *             not be parsed, or other error is encountered.
-     * @see #processSourceCode(Reader, RuleSets, RuleContext)
-     */
-    public void processSourceCode(InputStream sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
-        try (Reader streamReader = new InputStreamReader(sourceCode, configuration.getSourceEncoding())) {
-            processSourceCode(streamReader, ruleSets, ctx);
-        } catch (IOException e) {
-            throw new PMDException("IO exception: " + e.getMessage(), e);
-        }
+    @Deprecated
+    public void processSourceCode(String sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
+        processSourceCode(DataSource.fromString(sourceCode, ":dummy:"), ruleSets, ctx);
     }
 
     /**
@@ -62,20 +50,16 @@ public class SourceCodeProcessor {
      * set the Language on the RuleContext, or set it to <code>null</code>
      * first.
      *
+     * @param sourceCode The Reader to analyze.
+     * @param ruleSets   The collection of rules to process against the file.
+     * @param ctx        The context in which PMD is operating.
+     *
+     * @throws PMDException if the input encoding is unsupported, the input stream could
+     *                      not be parsed, or other error is encountered.
      * @see RuleContext#setLanguageVersion(net.sourceforge.pmd.lang.LanguageVersion)
      * @see PMDConfiguration#getLanguageVersionOfFile(String)
-     *
-     * @param sourceCode
-     *            The Reader to analyze.
-     * @param ruleSets
-     *            The collection of rules to process against the file.
-     * @param ctx
-     *            The context in which PMD is operating.
-     * @throws PMDException
-     *             if the input encoding is unsupported, the input stream could
-     *             not be parsed, or other error is encountered.
      */
-    public void processSourceCode(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
+    public void processSourceCode(DataSource sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
         determineLanguage(ctx);
 
         // make sure custom XPath functions are initialized
@@ -167,12 +151,22 @@ public class SourceCodeProcessor {
     }
 
 
-    private void processSource(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) {
+    private void processSource(DataSource source, RuleSets ruleSets, RuleContext ctx) throws IOException {
+
         LanguageVersion languageVersion = ctx.getLanguageVersion();
         LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();
         Parser parser = PMD.parserFor(languageVersion, configuration);
 
-        Node rootNode = parse(ctx, sourceCode, parser);
+        Node rootNode;
+        Document document;
+        try (InputStream is = source.getInputStream()) {
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(is, writer, configuration.getSourceEncoding());
+            String str = writer.toString();
+            document = Document.forCode(str);
+            rootNode = parse(ctx, new StringReader(str), parser);
+        }
+
         // basically:
         // 1. make the union of all stage dependencies of each rule, by language, for the Rulesets
         // 2. order them by dependency
@@ -208,8 +202,11 @@ public class SourceCodeProcessor {
         usesTypeResolution(languageVersion, rootNode, ruleSets, language);
         usesMultifile(rootNode, languageVersionHandler, ruleSets, language);
 
-        List<Node> acus = Collections.singletonList(rootNode);
-        ruleSets.apply(acus, ctx, language);
+        ReplaceHandler<?> handler = source.getReplaceHandler(document.getText());
+        ThreadSafeReportListener applier = handler == null ? ThreadSafeReportListener.NOOP
+                                                           : new AutofixApplier(document, handler, ctx.getSourceCodeFilename());
+
+        ctx.getReport().withListener(applier, () -> ruleSets.apply(Collections.singletonList(rootNode), ctx, language));
     }
 
     private void determineLanguage(RuleContext ctx) {

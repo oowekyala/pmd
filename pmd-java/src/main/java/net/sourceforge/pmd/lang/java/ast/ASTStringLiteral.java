@@ -26,7 +26,7 @@ public final class ASTStringLiteral extends AbstractLiteral implements ASTLitera
 
     @Override
     public String getImage() {
-        return getText();
+        return getText().toString();
     }
 
 
