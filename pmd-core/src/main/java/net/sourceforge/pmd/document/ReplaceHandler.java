@@ -9,16 +9,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Diff;
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Operation;
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Patch;
 
 /** Handles text updates for a {@link MutableDocument}. */
-public interface ReplaceHandler<T extends Object> {
+public interface ReplaceHandler<T> {
 
 
     /**

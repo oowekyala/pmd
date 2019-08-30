@@ -58,7 +58,7 @@ public class AutofixApplier implements ThreadSafeReportListener {
                     continue;
                 }
 
-                if (userConsents(patches)) {
+                if (userConsents(ruleViolation, patches)) {
                     final Object[] objects = new DiffMatchPatch().patchApply(patches, doc.getText().toString());
                     final MutableDocument<?> mutableDoc = doc.newMutableDoc(commitToFile);
                     mutableDoc.replace(doc.createRegion(0, doc.getText().length()), (String) objects[0]);
@@ -71,12 +71,14 @@ public class AutofixApplier implements ThreadSafeReportListener {
         }
     }
 
-    private boolean userConsents(LinkedList<Patch> patches) {
+    private boolean userConsents(RuleViolation violation, LinkedList<Patch> patches) {
         Scanner scanner = new Scanner(System.in);
 
+        System.out.println(violation.getFilename());
+        System.out.println("* " + violation.getDescription());
         System.out.println("The fix consists of the following patches.");
         System.out.println("Review them (f,b) and discard (d) or accept them (y)");
-        System.out.println(patches);
+        System.out.println(patches.get(0));
         System.out.println("Available: [f,b,y,d]?");
         boolean doStage;
         int idx = 0;

@@ -57,8 +57,8 @@ public final class ASTTypeParameter extends AbstractJavaTypeNode implements Anno
      * or null if it is not bounded.
      */
     @Nullable
-    public ASTType getTypeBoundNode() {
-        return getFirstChildOfType(ASTType.class);
+    public ASTReferenceType getTypeBoundNode() {
+        return getFirstChildOfType(ASTReferenceType.class);
     }
 
 
