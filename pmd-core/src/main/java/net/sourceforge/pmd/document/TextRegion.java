@@ -44,6 +44,7 @@ public interface TextRegion extends Comparable<TextRegion> {
      */
     interface RegionWithLines extends TextRegion {
 
+        RegionWithLines UNDEFINED = new TextRegionImpl.WithLineInfo(0, 0, 1, 1, 1, 1);
 
         /** 1-based, inclusive index. */
         int getBeginLine();

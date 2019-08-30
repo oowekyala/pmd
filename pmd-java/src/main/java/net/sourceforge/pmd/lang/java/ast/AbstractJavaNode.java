@@ -6,6 +6,8 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import net.sourceforge.pmd.document.Document;
+import net.sourceforge.pmd.document.TextRegion;
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.Node;
@@ -17,7 +19,6 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
     private Scope scope;
     private Comment comment;
     private ASTCompilationUnit root;
-    private String text;
 
     AbstractJavaNode(int id) {
         super(id);
@@ -115,13 +116,14 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
         return scope;
     }
 
+    @Override
+    public Document getSourceDocument() {
+        return getRoot().getSourceDocument();
+    }
 
     @Override
-    public String getText() {
-        if (text == null) {
-            text = getRoot().getText().substring(getStartOffset(), getEndOffset());
-        }
-        return text;
+    public TextRegion getRegion() {
+        return getSourceDocument().createRegion(getStartOffset(), getEndOffset() - getStartOffset());
     }
 
     void setScope(Scope scope) {

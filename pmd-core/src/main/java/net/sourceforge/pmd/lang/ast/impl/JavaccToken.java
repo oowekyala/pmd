@@ -4,8 +4,10 @@
 
 package net.sourceforge.pmd.lang.ast.impl;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+import net.sourceforge.pmd.document.TextRegion.RegionWithLines;
 import net.sourceforge.pmd.lang.ast.GenericToken;
-import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * A generic token implementation for JavaCC parsers. Will probably help
@@ -68,6 +70,7 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
     private final int startInclusive;
     private final int endExclusive;
     protected final TokenDocument document;
+    private RegionWithLines lineRegion;
 
     /** {@link #undefined()} */
     private JavaccToken() {
@@ -105,6 +108,7 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
     }
 
     @Override
+    @NonNull
     public String getImage() {
         return image.toString();
     }
@@ -119,29 +123,35 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
         return endExclusive;
     }
 
+    private RegionWithLines getRegion() {
+        if (lineRegion == null) {
+            lineRegion = (document != null)
+                         ? document.getDocument().createRegionWithLines(startInclusive, endExclusive - startInclusive)
+                         : RegionWithLines.UNDEFINED;
+        }
+        return lineRegion;
+    }
+
     @Override
     public int getBeginLine() {
-        return document == null ? -1 : StringUtil.lineNumberAt(document.getFullText(), startInclusive);
+        return getRegion().getBeginLine();
     }
 
     @Override
     public int getEndLine() {
-        return document == null ? -1 : StringUtil.lineNumberAt(document.getFullText(), endExclusive - 1);
+        return getRegion().getEndLine();
     }
 
     @Override
     public int getBeginColumn() {
-        return document == null ? -1 : StringUtil.columnNumberAt(document.getFullText(), startInclusive);
+        return getRegion().getBeginColumn();
     }
 
     @Override
     public int getEndColumn() {
-        return document == null ? -1 : StringUtil.columnNumberAt(document.getFullText(), endExclusive - 1);
+        return getRegion().getEndColumn();
     }
 
-    /**
-     * Returns the image.
-     */
     @Override
     public String toString() {
         return image.toString();

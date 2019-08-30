@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.ast.impl;
 
 import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.document.Document;
 
 /**
  * Maybe this can be used to eg double link tokens, provide an identity
@@ -13,14 +14,14 @@ import net.sourceforge.pmd.annotation.Experimental;
 @Experimental
 public class TokenDocument {
 
-    private final String fullText;
+    private final Document fullText;
 
-    public TokenDocument(String fullText) {
-        this.fullText = fullText;
+    public TokenDocument(CharSequence fullText) {
+        this.fullText = Document.forCode(fullText);
     }
 
     /** Returns the original text of the file (without escaping). */
-    public String getFullText() {
+    public Document getDocument() {
         return fullText;
     }
 }

@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.ast;
 
+import net.sourceforge.pmd.document.Document;
+import net.sourceforge.pmd.document.TextRegion;
+
 /**
  * Refinement of {@link Node} for nodes that can provide the underlying
  * source text.
@@ -29,7 +32,15 @@ public interface TextAvailableNode extends Node {
      * particular, for a {@link RootNode}, returns the whole text
      * of the file.
      */
-    String getText();
+    default CharSequence getText() {
+        return getSourceDocument().subSequence(getRegion());
+    }
 
+    /** The original document. */
+    Document getSourceDocument();
+
+
+    /** Get the region of text corresponding to the span of this node. */
+    TextRegion getRegion();
 
 }

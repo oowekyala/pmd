@@ -70,7 +70,7 @@ final class JavaTokenFactory {
 
         @Override
         public String getImage() {
-            return document.getFullText().substring(getStartInDocument(), getEndInDocument());
+            return document.getDocument().substring(getStartInDocument(), getEndInDocument());
         }
     }
 

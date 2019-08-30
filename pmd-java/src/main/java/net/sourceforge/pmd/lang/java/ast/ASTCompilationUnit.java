@@ -9,6 +9,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.document.Document;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
@@ -38,10 +39,9 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
     }
 
     @Override
-    public String getText() {
-        return tokenDocument.getFullText();
+    public Document getSourceDocument() {
+        return tokenDocument.getDocument();
     }
-
 
     void setTokenDocument(TokenDocument document) {
         this.tokenDocument = document;

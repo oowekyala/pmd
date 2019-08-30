@@ -25,11 +25,11 @@ class DocumentImpl implements Document {
     }
 
     @Override
-    public RegionWithLines addLineInfo(TextRegion region) {
-        int bline = positioner.lineNumberFromOffset(region.getStartOffset());
-        int bcol = positioner.columnFromOffset(bline, region.getStartOffset());
-        int eline = positioner.lineNumberFromOffset(region.getEndOffset());
-        int ecol = positioner.columnFromOffset(eline, region.getEndOffset());
+    public RegionWithLines createRegionWithLines(int offset, int length) {
+        int bline = positioner.lineNumberFromOffset(offset);
+        int bcol = positioner.columnFromOffset(bline, offset);
+        int eline = positioner.lineNumberFromOffset(offset + length);
+        int ecol = positioner.columnFromOffset(eline, offset + length);
 
         return createRegion(bline, bcol, eline, ecol);
     }

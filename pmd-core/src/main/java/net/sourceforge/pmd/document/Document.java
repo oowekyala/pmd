@@ -38,13 +38,12 @@ public interface Document {
 
 
     /**
-     * Add line information to the given region. Only the start and end
-     * offsets are considered, if the region is already a {@link RegionWithLines},
-     * that information is discarded.
+     * Create a new region based on offset coordinates, adding line
+     * information.
      *
      * @throws IndexOutOfBoundsException If the argument does not identify a valid region in this document
      */
-    RegionWithLines addLineInfo(TextRegion region);
+    RegionWithLines createRegionWithLines(final int offset, final int length);
 
 
     /** Returns the text of this document. */
