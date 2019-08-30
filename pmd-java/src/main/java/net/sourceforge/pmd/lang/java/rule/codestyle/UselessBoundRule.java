@@ -12,11 +12,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.LanguageVersion;
-import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.java.ast.ASTReferenceType;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeParameter;
 import net.sourceforge.pmd.lang.java.ast.ASTWildcardType;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.rule.autofix.Autofix;
 
@@ -41,12 +41,12 @@ public class UselessBoundRule extends AbstractJavaRule {
     }
 
     @NonNull
-    private List<Autofix> onlyDelete(RuleContext data, ASTReferenceType typeBoundNode) {
+    private List<Autofix<JavaNode, JavaccToken>> onlyDelete(RuleContext data, ASTReferenceType typeBoundNode) {
         return Collections.singletonList(deleteAutofix(typeBoundNode, data.getLanguageVersion()));
     }
 
     @NonNull
-    private static Autofix<TextAvailableNode, JavaccToken> deleteAutofix(TextAvailableNode node, LanguageVersion version) {
+    private static Autofix<JavaNode, JavaccToken> deleteAutofix(JavaNode node, LanguageVersion version) {
         return Autofix.from("Delete node", version, session -> session.delete(node));
     }
 }

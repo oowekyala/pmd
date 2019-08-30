@@ -30,21 +30,22 @@ public interface TextPatch {
     static SafeReplaceHandler<TextPatch> patchMaker(CharSequence originalBuffer) {
         return new SafeReplaceHandler<TextPatch>() {
 
-            final LinkedList<Diff> buffer = new LinkedList<>();
+            final LinkedList<Patch> result = new LinkedList<>();
             String orig = originalBuffer.toString();
 
             @Override
             public void replace(TextRegion original, TextRegion mapped, CharSequence text) {
+                final LinkedList<Diff> buffer = new LinkedList<>();
                 buffer.add(new Diff(Operation.EQUAL, orig.substring(0, original.getStartOffset())));
                 buffer.add(new Diff(Operation.DELETE, orig.substring(original.getStartOffset(), original.getEndOffset())));
                 buffer.add(new Diff(Operation.INSERT, text.toString()));
                 buffer.add(new Diff(Operation.EQUAL, orig.substring(original.getEndOffset())));
+                result.addAll(new DiffMatchPatch().patchMake(orig, buffer));
             }
 
             @Override
             public TextPatch commit() {
-                final LinkedList<Patch> patches = new DiffMatchPatch().patchMake(orig, buffer);
-                return new DmpPatchImpl(patches);
+                return new DmpPatchImpl(result);
             }
 
         };

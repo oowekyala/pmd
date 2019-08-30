@@ -71,7 +71,7 @@ final class JavaTokenFactory {
 
         @Override
         public String getImage() {
-            final Document doc = document.getDocument();
+            final Document doc = tokdoc.getDocument();
             return doc.subSequence(doc.createRegion(getStartInDocument(), getLength())).toString();
         }
     }

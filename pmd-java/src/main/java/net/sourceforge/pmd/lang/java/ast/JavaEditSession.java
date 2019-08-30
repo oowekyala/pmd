@@ -13,6 +13,7 @@ import net.sourceforge.pmd.lang.rule.autofix.TreeEditSession;
 class JavaEditSession implements TreeEditSession<JavaNode, JavaccToken> {
 
     private final SafeMutableDocument<TextPatch> document;
+    private final TreeEditionHelper editor = new TreeEditionHelper(this);
 
     JavaEditSession(SafeMutableDocument<TextPatch> document) {
         this.document = document;
@@ -35,11 +36,15 @@ class JavaEditSession implements TreeEditSession<JavaNode, JavaccToken> {
 
     @Override
     public void delete(JavaNode node) {
-        ((AbstractJavaNode) node).deleteMe(this);
+        if (node instanceof ASTCompilationUnit) {
+
+        } else {
+            editor.deleteInParent((AbstractJavaNode) node.jjtGetParent(), (AbstractJavaNode) node);
+        }
     }
 
     @Override
     public void replace(JavaNode node, JavaNode replacement) {
-        ((AbstractJavaNode) node).replaceBy(replacement, this);
+        throw new UnsupportedOperationException("TODO");
     }
 }

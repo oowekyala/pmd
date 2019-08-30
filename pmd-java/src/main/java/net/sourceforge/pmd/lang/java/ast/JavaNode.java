@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.symboltable.ScopedNode;
 
 
@@ -84,10 +85,10 @@ public interface JavaNode extends ScopedNode, TextAvailableNode {
     JavaNode jjtGetParent();
 
 
-    GenericToken jjtGetFirstToken();
+    JavaccToken jjtGetFirstToken();
 
 
-    GenericToken jjtGetLastToken();
+    JavaccToken jjtGetLastToken();
 
 
     /**

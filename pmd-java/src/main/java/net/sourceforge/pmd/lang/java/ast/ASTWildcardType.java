@@ -72,7 +72,6 @@ public final class ASTWildcardType extends AbstractJavaTypeNode implements ASTRe
         return getFirstChildOfType(ASTReferenceType.class);
     }
 
-
     @Override
     public Object jjtAccept(JavaParserVisitor visitor, Object data) {
         return visitor.visit(this, data);

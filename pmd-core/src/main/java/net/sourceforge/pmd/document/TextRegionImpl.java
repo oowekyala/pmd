@@ -33,6 +33,16 @@ class TextRegionImpl implements TextRegion {
     }
 
     @Override
+    public TextRegion shift(int shift) {
+        return new TextRegionImpl(startOffset + shift, length);
+    }
+
+    @Override
+    public TextRegion grow(int shift) {
+        return new TextRegionImpl(startOffset, length + shift);
+    }
+
+    @Override
     public String toString() {
         return "Region(start=" + startOffset + ", len=" + length + ")";
     }

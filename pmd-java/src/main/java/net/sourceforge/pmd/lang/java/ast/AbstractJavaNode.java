@@ -310,26 +310,6 @@ abstract class AbstractJavaNode extends AbstractNode implements JavaNode {
         return "|" + getXPathNodeName() + "|" + getStartOffset() + "," + getEndOffset() + "|" + getText();
     }
 
-
-    void deleteMe(JavaEditSession session) {
-        ((AbstractJavaNode) jjtGetParent()).deleteChild(this, session);
-    }
-
-    void replaceBy(JavaNode node, JavaEditSession session) {
-        ((AbstractJavaNode) jjtGetParent()).replaceChild(this, (AbstractJavaNode) node, session);
-
-    }
-
-    void deleteChild(AbstractJavaNode node, JavaEditSession session) {
-        session.getDocument().delete(node.getRegion());
-    }
-
-    void replaceChild(AbstractJavaNode node, AbstractJavaNode replacement, JavaEditSession session) {
-        final TextRegion r = node.getRegion();
-        session.getDocument().replace(r, replacement.getText());
-
-    }
-
     private int getStartOffset() {
         return jjtGetFirstToken().getStartInDocument();
     }

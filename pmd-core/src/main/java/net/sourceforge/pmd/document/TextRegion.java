@@ -31,6 +31,15 @@ public interface TextRegion extends Comparable<TextRegion> {
     int getLength();
 
 
+    /** Returns a new text region, with its offset shifted. */
+    TextRegion shift(int shift);
+
+
+    /** Returns a new text region, with its length incremented shifted. */
+    TextRegion grow(int shift);
+
+
+
     @Override
     default int compareTo(@NonNull TextRegion o) {
         return COMPARATOR.compare(this, o);

@@ -38,6 +38,15 @@ public interface Document {
      */
     TextRegion createRegion(final int offset, final int length);
 
+    /**
+     * Create a new region based on offset coordinates.
+     *
+     * @throws IndexOutOfBoundsException If the argument does not identify a valid region in this document
+     */
+    default TextRegion createRegionWithEnd(final int offset, final int endOffset) {
+        return createRegion(offset, endOffset - offset);
+    }
+
 
     /**
      * Create a new region based on offset coordinates, adding line

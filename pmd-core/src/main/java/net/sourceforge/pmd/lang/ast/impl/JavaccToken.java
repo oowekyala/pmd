@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.ast.impl;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import net.sourceforge.pmd.document.TextRegion;
 import net.sourceforge.pmd.document.TextRegion.RegionWithLines;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 
@@ -69,7 +70,7 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
     private final CharSequence image;
     private final int startInclusive;
     private final int endExclusive;
-    protected final TokenDocument document;
+    protected final TokenDocument tokdoc;
     private RegionWithLines lineRegion;
 
     /** {@link #undefined()} */
@@ -88,22 +89,22 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
                        CharSequence image,
                        int startInclusive,
                        int endExclusive,
-                       TokenDocument document) {
+                       TokenDocument tokdoc) {
         this.kind = kind;
         this.image = image;
         this.startInclusive = startInclusive;
         this.endExclusive = endExclusive;
-        this.document = document;
+        this.tokdoc = tokdoc;
     }
 
 
     @Override
-    public GenericToken getNext() {
+    public JavaccToken getNext() {
         return next;
     }
 
     @Override
-    public GenericToken getPreviousComment() {
+    public JavaccToken getPreviousComment() {
         return specialToken;
     }
 
@@ -127,10 +128,16 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
         return endExclusive - startInclusive;
     }
 
-    private RegionWithLines getRegion() {
+    public TextRegion getRegion() {
+        return lineRegion != null ? lineRegion
+                                  : tokdoc != null ? tokdoc.getDocument().createRegion(startInclusive, getLength())
+                                                   : RegionWithLines.UNDEFINED;
+    }
+
+    private RegionWithLines getWLinesRegion() {
         if (lineRegion == null) {
-            lineRegion = (document != null)
-                         ? document.getDocument().createRegionWithLines(startInclusive, endExclusive - startInclusive)
+            lineRegion = (tokdoc != null)
+                         ? tokdoc.getDocument().createRegionWithLines(startInclusive, endExclusive - startInclusive)
                          : RegionWithLines.UNDEFINED;
         }
         return lineRegion;
@@ -138,22 +145,22 @@ public class JavaccToken implements GenericToken, java.io.Serializable {
 
     @Override
     public int getBeginLine() {
-        return getRegion().getBeginLine();
+        return getWLinesRegion().getBeginLine();
     }
 
     @Override
     public int getEndLine() {
-        return getRegion().getEndLine();
+        return getWLinesRegion().getEndLine();
     }
 
     @Override
     public int getBeginColumn() {
-        return getRegion().getBeginColumn();
+        return getWLinesRegion().getBeginColumn();
     }
 
     @Override
     public int getEndColumn() {
-        return getRegion().getEndColumn();
+        return getWLinesRegion().getEndColumn();
     }
 
     @Override

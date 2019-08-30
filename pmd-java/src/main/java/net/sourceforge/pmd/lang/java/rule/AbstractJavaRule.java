@@ -12,6 +12,7 @@ import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.java.JavaLanguageModule;
 import net.sourceforge.pmd.lang.java.JavaProcessingStage;
 import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
@@ -103,9 +104,8 @@ public abstract class AbstractJavaRule extends AbstractRule implements JavaParse
     }
 
 
-
-    public void addViolation(Object data, JavaNode node, List<Autofix> fixes) {
-        ((RuleContext) data).getReport().addRuleViolation(new JavaRuleViolation(this, ((RuleContext) data), node, getMessage(), fixes ));
+    public void addViolation(Object data, JavaNode node, List<? extends Autofix<? extends JavaNode, JavaccToken>> fixes) {
+        ((RuleContext) data).getReport().addRuleViolation(new JavaRuleViolation(this, ((RuleContext) data), node, getMessage(), fixes));
     }
 
     @Override

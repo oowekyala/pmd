@@ -10,13 +10,13 @@ package net.sourceforge.pmd.renderers;
  *
  * @param <T>
  */
-public class ColumnDescriptor<T extends Object> {
+public class ColumnDescriptor<T> {
 
     public final String id;
     public final String title;
     public final Accessor<T> accessor;
 
-    public interface Accessor<T extends Object> {
+    public interface Accessor<T> {
         String get(int idx, T violation, String lineSeparator);
     }
 

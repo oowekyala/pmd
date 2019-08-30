@@ -16,7 +16,7 @@ import java.util.List;
  * @author Brian Remedios
  * @param <T>
  */
-public class CSVWriter<T extends Object> {
+public class CSVWriter<T> {
 
     private final String separator; // e.g., the comma
     private final String lineSeparator; // cr

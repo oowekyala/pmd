@@ -13,7 +13,7 @@ import java.util.Iterator;
  *
  * @param <T>
  */
-public final class EmptyIterator<T extends Object> implements Iterator<T> {
+public final class EmptyIterator<T> implements Iterator<T> {
 
     @SuppressWarnings("rawtypes")
     public static final Iterator INSTANCE = new EmptyIterator();
@@ -22,7 +22,7 @@ public final class EmptyIterator<T extends Object> implements Iterator<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Object> Iterator<T> instance() {
+    public static <T> Iterator<T> instance() {
         return INSTANCE;
     }
 

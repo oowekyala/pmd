@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import net.sourceforge.pmd.lang.ast.impl.JavaccToken;
 import net.sourceforge.pmd.lang.dfa.DataFlowNode;
 
 /**
@@ -223,8 +224,8 @@ public abstract class AbstractNode implements Node {
         this.userData = userData;
     }
 
-    public GenericToken jjtGetFirstToken() {
-        return firstToken;
+    public JavaccToken jjtGetFirstToken() {
+        return (JavaccToken) firstToken;
     }
 
     public void jjtSetFirstToken(final GenericToken token) {
@@ -233,8 +234,8 @@ public abstract class AbstractNode implements Node {
         this.beginColumn = token.getBeginColumn();
     }
 
-    public GenericToken jjtGetLastToken() {
-        return lastToken;
+    public JavaccToken jjtGetLastToken() {
+        return (JavaccToken) lastToken;
     }
 
     public void jjtSetLastToken(final GenericToken token) {
