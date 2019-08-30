@@ -66,7 +66,7 @@ public interface Document {
     }
 
 
-    static Document forCode(final String source) {
+    static Document forCode(final CharSequence source) {
         return new DocumentImpl(source);
     }
 
