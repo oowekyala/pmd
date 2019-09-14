@@ -56,20 +56,20 @@ abstract class BaseNodeParsingCtx<T : Node, C : AbstractParserTestSpec.Versioned
         return retrieveNode(root)
     }
 
-    override fun toString(): String = "$constructName"
+    override fun toString(): String = constructName
 }
 
 object ExpressionParsingCtx : BaseNodeParsingCtx<ASTExpression, ParserTestCtx>("expression") {
 
     override fun getTemplate(construct: String, ctx: ParserTestCtx): String =
-            """
-            ${ctx.imports.joinToString(separator = "\n")}
-            ${ctx.genClassHeader} {
-                {
-                    Object o = $construct;
-                }
-            }
-            """.trimIndent()
+"""
+${ctx.imports.joinToString(separator = "\n")}
+${ctx.genClassHeader} {
+    {
+        Object o = $construct;
+    }
+}
+"""
 
 
     override fun retrieveNode(acu: RootNode): ASTExpression = acu.getFirstDescendantOfType(ASTExpression::class.java)!!

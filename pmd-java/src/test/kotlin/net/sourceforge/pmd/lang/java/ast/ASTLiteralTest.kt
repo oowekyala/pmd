@@ -429,7 +429,7 @@ $delim
 
     parserTestGroup("Binary numeric literals") {
 
-        onVersions(Earliest..J1_6) {
+        onVersions(Earliest..JavaVersion.J1_6) {
             // binary literals were introduced in 1.7
 
             inContext(ExpressionParsingCtx) {

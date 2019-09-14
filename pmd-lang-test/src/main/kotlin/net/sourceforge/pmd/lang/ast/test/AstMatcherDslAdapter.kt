@@ -33,7 +33,7 @@ typealias NodeSpec<N> = ValuedNodeSpec<N, Unit>
 typealias Assertions<M> = (M) -> Unit
 
 fun <N : Node> ValuedNodeSpec<N, *>.ignoreResult(): NodeSpec<N> {
-    val me = this
+    val me: TreeNodeWrapper<Node, N>.() -> Any? = this
     return { this.me() }
 }
 

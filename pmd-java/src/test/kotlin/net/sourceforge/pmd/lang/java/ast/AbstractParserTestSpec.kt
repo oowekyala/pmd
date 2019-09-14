@@ -132,6 +132,10 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         }
 
         inline fun <reified N : JavaNode> makeMatcher(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
+                : Assertions<String> = makeMatcherImpl(nodeParsingCtx, ignoreChildren, nodeSpec)
+
+        // no idea why but there's a compiler bug when inlining matchExpr
+        inline fun <reified N : JavaNode> makeMatcherImpl(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
                 : Assertions<String> = { nodeParsingCtx.parseAndFind<N>(it).shouldMatchNode(ignoreChildren, nodeSpec) }
 
         fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>): Assertions<String> = {
