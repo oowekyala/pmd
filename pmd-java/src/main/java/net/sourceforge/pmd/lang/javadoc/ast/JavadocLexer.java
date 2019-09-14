@@ -35,13 +35,14 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
      * @param startOffset Start offset in the file text
      */
     public JavadocLexer(String fileText, int startOffset, int endOffset) {
-        this.curOffset = startOffset;
         this.doc = new JavadocTokenDocument(fileText);
+        this.curOffset = startOffset;
         this.maxOffset = endOffset;
     }
 
     @Override
     @Nullable
+    @SuppressWarnings("PMD.AssignmentInOperand")
     public JavadocToken getNextToken() {
         if (this.curOffset >= maxOffset) {
             return null;

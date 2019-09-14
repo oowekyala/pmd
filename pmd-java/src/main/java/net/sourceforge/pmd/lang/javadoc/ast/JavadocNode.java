@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
@@ -98,18 +99,33 @@ public interface JavadocNode extends Node {
         final Map<String, String> attributes = new HashMap<>(0);
         private final String tagName;
         private boolean autoclose;
+        private final HtmlTagBehaviour behaviour;
 
         JdocHtml(String tagName) {
             super(JavadocNodeId.HTML_START);
             this.tagName = tagName;
+            this.behaviour = HtmlTagBehaviour.lookup(tagName);
+        }
+
+        @NonNull
+        HtmlTagBehaviour getBehaviour() {
+            return behaviour;
         }
 
         public String getTagName() {
             return tagName;
         }
 
-        void setAutoclose(boolean autoclose) {
-            this.autoclose = autoclose;
+        /**
+         * Returns true if this element is closed with an XHTML autoclosing tag,
+         * eg {@code <br/>}.
+         */
+        public boolean isAutoclose() {
+            return autoclose;
+        }
+
+        void setAutoclose() {
+            this.autoclose = true;
         }
     }
 

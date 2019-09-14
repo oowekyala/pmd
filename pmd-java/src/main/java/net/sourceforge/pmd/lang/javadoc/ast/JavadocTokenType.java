@@ -11,11 +11,13 @@ public enum JavadocTokenType {
 
     /** Name of an inline or block tag. */
     TAG_NAME("@<tag name>", false),
+
     /**
      * Whitespace ignored by javadoc. Significant whitespace is parsed as {@link #COMMENT_DATA}.
      * Whitespace tokens are significant in {@code <pre>} HTML tags though.
      */
     WHITESPACE("<whitespace>", false),
+
     /**
      * This also takes care of the following asterisk. Leading whitespace
      * is treated as {@link #WHITESPACE} if there is no asterisk, in any
@@ -26,15 +28,22 @@ public enum JavadocTokenType {
      * </pre>
      */
     LINE_BREAK("<line break>", false),
-    /** Always followed by a {@link #TAG_NAME} (otherwise treated as comment data). */
+
+    /**
+     * Always followed by a {@link #TAG_NAME} (otherwise treated as comment data).
+     */
     INLINE_TAG_START("{", true),
+
     /**
      * Produced only when there is a corresponding tag to close. In particular,
      * an inline tag may be ended abruptly by the opening of a block tag, or EOI,
-     * in which case the inline tag may not have an INLINE_TAG_END.
+     * in which case the inline tag node may not have an INLINE_TAG_END.
      */
     INLINE_TAG_END("}", true),
-    /** Significant text. */
+
+    /**
+     * Significant text for the HTML output.
+     */
     COMMENT_DATA("<comment data>", false),
 
     BAD_CHAR("<bad character>", false),
@@ -43,6 +52,10 @@ public enum JavadocTokenType {
     HTML_GT(">", true),
     HTML_LCLOSE("</", true),
     HTML_RCLOSE("/>", true),
+
+    /*
+        Attributes.
+     */
 
     HTML_EQ("=", true),
     HTML_ATTR_START("[\"']", false),

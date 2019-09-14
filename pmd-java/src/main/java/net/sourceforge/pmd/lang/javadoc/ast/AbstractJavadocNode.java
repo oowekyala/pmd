@@ -99,4 +99,9 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, 
     public JavadocNodeId getId() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return getText();
+    }
 }
