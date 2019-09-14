@@ -11,12 +11,14 @@ import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.EmptyAssertions
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.*
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral
+import kotlin.streams.toList
 
 
 class JavadocParserTest : JavadocParserSpec({
 
 
-    parserTest("Test javadoc parser 1") {
+    parserTest("Test some inline tags") {
 
         """
         /**
@@ -29,6 +31,21 @@ class JavadocParserTest : JavadocParserSpec({
             link {
                 it::getFieldName shouldBe "hey"
             }
+        }
+
+
+        """
+        /**
+         * Param {@code <T>} is no {@code
+         *   <TUFOUKOI>
+         * }
+         */
+        """.trimIndent() should parseAs {
+
+            data("Param ")
+            code("<T>")
+            data(" is no ")
+            code("<TUFOUKOI>")
         }
 
 
@@ -152,6 +169,24 @@ fun TreeNodeWrapper<Node, out JavadocNode>.link(plain: Boolean = false, spec: No
             spec()
         }
 
+fun TreeNodeWrapper<Node, out JavadocNode>.code(data: String, spec: NodeSpec<JdocLiteral> = EmptyAssertions) =
+        child<JdocLiteral> {
+            it::getTagName shouldBe "@code"
+            it::isLiteral shouldBe false
+            it::isCode shouldBe true
+            it::getData shouldBe data
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.literal(data: String, spec: NodeSpec<JdocLiteral> = EmptyAssertions) =
+        child<JdocLiteral> {
+            it::getTagName shouldBe "@literal"
+            it::isLiteral shouldBe true
+            it::isCode shouldBe false
+            it::getData shouldBe data
+            spec()
+        }
+
 fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean = false, spec: NodeSpec<JdocLink> = EmptyAssertions) =
         link(plain) {
             it::getTypeName shouldBe name
@@ -160,3 +195,5 @@ fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean
             spec()
         }
 
+
+val JavadocNode.tokens: List<JavadocToken> get() = firstToken.rangeTo(lastToken).toList()

@@ -41,6 +41,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
 public class JavadocParser {
@@ -334,6 +335,11 @@ public class JavadocParser {
         return true;
     }
 
+    /**
+     * Consumes token until [stopCondition] is true. All tokens matching
+     * the [filter] are fed to the [action]. This method starts by testing
+     * the current token.
+     */
     private void consumeUntil(Predicate<JavadocToken> stopCondition, Predicate<JavadocToken> filter, Consumer<JavadocToken> action) {
         while (!stopCondition.test(tok) && !isEoi) {
             if (filter.test(tok)) {
@@ -376,13 +382,36 @@ public class JavadocParser {
                 return new JdocLink(name, builder.toString());
             }
         },
+
         LINKPLAIN("@linkplain") {
             @Override
             public AbstractJavadocNode parse(String name, JavadocParser parser) {
                 return LINK.parse(name, parser);
             }
+        },
+
+        CODE("@code") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                parser.advance();
+                StringBuilder builder = new StringBuilder();
+                parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
+                                    it -> it.getKind().isSignificant(),
+                                    tok -> builder.append(tok.getImage()));
+
+                return new JdocLiteral(name, builder.toString());
+            }
+        },
+
+        LITERAL("@literal") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                return CODE.parse(name, parser);
+            }
         };
+
         private static final EnumSet<JavadocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME);
+
         private static final Map<String, KnownInlineTagParser> LOOKUP = Arrays.stream(values()).collect(Collectors.toMap(KnownInlineTagParser::getName, p -> p));
         private final String name;
 
@@ -406,6 +435,15 @@ public class JavadocParser {
         String getName();
 
 
+        /**
+         * Parse an inline tag. When the method is called, the parser's
+         * {@link #tok} is set on the {@link JavadocTokenType#TAG_NAME}.
+         *
+         * @param name   Name of the tag to parse
+         * @param parser Parser
+         *
+         * @return A node for the tag
+         */
         AbstractJavadocNode parse(String name, JavadocParser parser);
     }
 

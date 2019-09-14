@@ -22,9 +22,8 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
  * <ul>
  *     <li>The root node is always {@link JdocComment}.
  *     <li>Significant text of the comment is represented by {@link JdocCommentData}.
- *     Note that {@link #getText()} may return some insignificant whitespace
- *     characters (or asterisks), so use {@link JdocCommentData#getData()} to
- *     retrieve the actual content.
+ *     <li>Javadoc inline tags (eg {@code {@code foo}}, are represented by {@link JdocInlineTag}
+ *     and its subclasses.
  *     <li>HTML nodes are represented by {@link JdocHtml}.
  *     <li>HTML comments are represented by {@link JdocHtmlComment}.
  *     <li>Whitespace characters, and leading asterisks are only available
@@ -42,6 +41,15 @@ public interface JavadocNode extends TextAvailableNode {
 
     JavadocToken getFirstToken();
     JavadocToken getLastToken();
+
+
+    /**
+     * Returns the original source code underlying this node. This may
+     * contain some insignificant whitespace characters (or asterisks),
+     * so use {@link JdocCommentData#getData()} to retrieve the actual content.
+     */
+    @Override
+    String getText();
 
 
     /** Root node of Javadoc ASTs. */
@@ -66,6 +74,7 @@ public interface JavadocNode extends TextAvailableNode {
             jjtSetLastToken(last);
         }
 
+        /** Returns the significant text of this comment. */
         public String getData() {
             return jjtGetFirstToken().rangeTo(jjtGetLastToken())
                                      .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
@@ -170,15 +179,19 @@ public interface JavadocNode extends TextAvailableNode {
         }
     }
 
-    /**
-     * An HTML comment. Like for {@link JdocCommentData}, the
-     * text of a comment may contain ignored line breaks or whitespace
-     * characters.
-     */
+    /** An HTML comment. */
     class JdocHtmlComment extends AbstractJavadocNode {
 
         JdocHtmlComment() {
             super(JavadocNodeId.HTML_COMMENT);
+        }
+
+        /** Returns the significant text of this comment. */
+        public String getData() {
+            return jjtGetFirstToken().rangeTo(jjtGetLastToken())
+                                     .filter(it -> it.getKind() == JavadocTokenType.HTML_COMMENT_CONTENT)
+                                     .map(JavadocToken::getImage)
+                                     .collect(Collectors.joining());
         }
     }
 

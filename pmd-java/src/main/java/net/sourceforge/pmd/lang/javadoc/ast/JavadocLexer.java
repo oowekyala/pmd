@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_DATA;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_END;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_COMMENT_CONTENT;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -59,22 +60,22 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
                 this.lexer = new JavadocFlexer(reader);
             }
 
-            JavadocTokenType tok = pendingTok != null ? pendingTok : lexer.advance();
+            final JavadocTokenType tok = pendingTok != null ? pendingTok : lexer.advance();
             pendingTok = null;
 
             if (tok == COMMENT_END) {
                 maxOffset = -1; // stop iteration
             }
 
-            String image;
+            final String image;
             int len = lexer.yylength();
             if (tok == null) {
                 // EOF
                 return null;
-            } else if (tok == COMMENT_DATA) {
+            } else if (tok == COMMENT_DATA || tok == HTML_COMMENT_CONTENT) {
                 // comment data tokens are single chars, we merge them here
                 while ((curOffset + len) < maxOffset
-                    && (pendingTok = lexer.advance()) == COMMENT_DATA) {
+                    && (pendingTok = lexer.advance()) == tok) {
                     len += lexer.yylength();
                 }
                 image = doc.getFullText().substring(curOffset, curOffset + len);
@@ -82,7 +83,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
                 image = tok.isConst() ? tok.getConstValue() : lexer.yytext();
             }
 
-            int start = curOffset;
+            final int start = curOffset;
             curOffset += len;
 
 
