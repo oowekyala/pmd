@@ -13,11 +13,25 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
-
-public interface JavadocNode extends Node {
+/**
+ * A node for the Javadoc language. The javadoc AST is pretty simple:
+ * <ul>
+ *     <li>The root node is always {@link JdocComment}.
+ *     <li>Significant text of the comment is represented by {@link JdocCommentData}.
+ *     Note that {@link #getText()} may return some insignificant whitespace
+ *     characters (or asterisks), so use {@link JdocCommentData#getData()} to
+ *     retrieve the actual content.
+ *     <li>HTML nodes are represented by {@link JdocHtml}.
+ *     <li>HTML comments are represented by {@link JdocHtmlComment}.
+ *     <li>Whitespace characters, and leading asterisks are only available
+ *     in the tokens (see {@link JavadocTokenType#LINE_BREAK} and {@link JavadocTokenType#WHITESPACE}).
+ * </ul>
+ */
+public interface JavadocNode extends TextAvailableNode {
 
 
     @Override
@@ -61,15 +75,6 @@ public interface JavadocNode extends Node {
 
     }
 
-    /** Whitespace ignored by Javadoc. */
-    class JdocWhitespace extends AbstractTokenNode {
-
-        JdocWhitespace(JavadocToken tok) {
-            super(JavadocNodeId.WHITESPACE, tok);
-        }
-
-    }
-
     /** Unexpected token tag. */
     class JdocMalformed extends AbstractJavadocNode {
 
@@ -93,6 +98,18 @@ public interface JavadocNode extends Node {
         }
     }
 
+    /**
+     * Represents an HTML element.HTML elements may be closed in one of three ways:
+     * <ul>
+     *     <li>With a close tag, eg {@code <p>Text</p>}, in that case, there
+     *     will be a {@link JdocHtmlEnd} node as a child of the {@link JdocHtml}.
+     *     <li>With an autoclose tag, eg {@code <br/>}. Technically this is
+     *     only a feature of XHTML, but the parser supports it. In that case,
+     *     {@link JdocHtml#isAutoclose()} returns true.
+     *     <li>Implicitly, because eg the parent tag is closed, or some following
+     *     opening tag implies that this tag ends (eg {@code <li> A <li> B}).
+     * </ul>
+     */
     class JdocHtml extends AbstractJavadocNode {
 
         public static final String UNATTRIBUTED = null;
@@ -107,13 +124,15 @@ public interface JavadocNode extends Node {
             this.behaviour = HtmlTagBehaviour.lookup(tagName);
         }
 
-        @NonNull
-        HtmlTagBehaviour getBehaviour() {
-            return behaviour;
-        }
-
+        /** Returns the name of the tag. */
         public String getTagName() {
             return tagName;
+        }
+
+        /** Returns the value of an attribute, or null if the attribute has no value. */
+        @Nullable
+        public String getAttribute(String name) {
+            return attributes.get(name);
         }
 
         /**
@@ -124,6 +143,14 @@ public interface JavadocNode extends Node {
             return autoclose;
         }
 
+
+        @NonNull
+        @InternalApi
+        HtmlTagBehaviour getBehaviour() {
+            return behaviour;
+        }
+
+        @InternalApi
         void setAutoclose() {
             this.autoclose = true;
         }
@@ -143,6 +170,11 @@ public interface JavadocNode extends Node {
         }
     }
 
+    /**
+     * An HTML comment. Like for {@link JdocCommentData}, the
+     * text of a comment may contain ignored line breaks or whitespace
+     * characters.
+     */
     class JdocHtmlComment extends AbstractJavadocNode {
 
         JdocHtmlComment() {

@@ -75,6 +75,7 @@ class JavadocParserTest : JavadocParserSpec({
             }
         }
     }
+
     parserTest("Autoclosing HTML") {
 
         """
