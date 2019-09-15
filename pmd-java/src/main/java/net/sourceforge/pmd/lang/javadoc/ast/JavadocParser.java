@@ -153,7 +153,7 @@ public class JavadocParser {
             }
         } else {
             backup(1); // move cursor back to the '<', so that #advance() moves past it
-            
+            // FIXME where to report that fucking error?
             linkLeaf(new JdocMalformed(EnumSet.of(HTML_IDENT), head()));
         }
     }
