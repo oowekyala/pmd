@@ -85,6 +85,11 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
         return (JavadocNode) super.jjtGetParent();
     }
 
+    
+    void appendChild(AbstractJavadocNode node) {
+        jjtAddChild(node, jjtGetNumChildren());
+    }
+    
     @Override
     public void jjtClose() {
         if (lastToken == null && jjtGetNumChildren() > 0) {

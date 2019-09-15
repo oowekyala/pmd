@@ -62,8 +62,8 @@ public enum JavadocTokenType {
      */
 
     HTML_EQ("=", true),
-    HTML_SQUOTE("\"", true),
-    HTML_DQUOTE("'", true),
+    HTML_SQUOTE("'", true),
+    HTML_DQUOTE("\"", true),
     HTML_ATTR_VAL("<attribute value>", false),
 
     HTML_COMMENT_START("<!--", true),
@@ -102,6 +102,6 @@ public enum JavadocTokenType {
 
     @Override
     public String toString() {
-        return isConst ? "\"" + value + "\"" : value;
+        return isConst ? "'" + value + "'" : value;
     }
 }
