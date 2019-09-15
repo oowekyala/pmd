@@ -142,6 +142,24 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_END)
         )
     }
+
+    test("Test html attributes empty syntax") {
+
+        """
+/** <value foo> */
+""".trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(WHITESPACE, " "),
+                Tok(HTML_LT),
+                Tok(HTML_IDENT, "value"),
+                Tok(WHITESPACE, " "),
+                Tok(HTML_IDENT, "foo"),
+                Tok(HTML_GT),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_END)
+        )
+    }
+
     test("Test block tag is interpreted in @code 1") {
 
 

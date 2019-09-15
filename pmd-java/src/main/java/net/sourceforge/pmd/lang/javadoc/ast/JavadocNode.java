@@ -17,6 +17,7 @@ import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
+
 /**
  * A node for the Javadoc language. The javadoc AST is pretty simple:
  * <ul>
@@ -94,6 +95,8 @@ public interface JavadocNode extends TextAvailableNode {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = token;
+            jjtSetFirstToken(token);
+            jjtSetLastToken(token);
         }
 
         /** Null if EOF. */
@@ -121,8 +124,12 @@ public interface JavadocNode extends TextAvailableNode {
      */
     class JdocHtml extends AbstractJavadocNode {
 
-        public static final String UNATTRIBUTED = null;
-        final Map<String, String> attributes = new HashMap<>(0);
+        /**
+         * Empty-attribute syntax for boolean attribute, eg {@code <option selected>},
+         * equivalent to {@code <option selected="true">}
+         */
+        static final String UNATTRIBUTED = "true";
+        private final Map<String, JdocHtmlAttr> attributes = new HashMap<>(0);
         private final String tagName;
         private boolean autoclose;
         private final HtmlTagBehaviour behaviour;
@@ -133,6 +140,11 @@ public interface JavadocNode extends TextAvailableNode {
             this.behaviour = HtmlTagBehaviour.lookup(tagName);
         }
 
+        void addAttribute(JdocHtmlAttr attr) {
+            attributes.put(attr.getName(), attr);
+            jjtAddChild(attr, this.jjtGetNumChildren());
+        }
+
         /** Returns the name of the tag. */
         public String getTagName() {
             return tagName;
@@ -140,7 +152,7 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the value of an attribute, or null if the attribute has no value. */
         @Nullable
-        public String getAttribute(String name) {
+        public JdocHtmlAttr getAttribute(String name) {
             return attributes.get(name);
         }
 
@@ -162,6 +174,77 @@ public interface JavadocNode extends TextAvailableNode {
         @InternalApi
         void setAutoclose() {
             this.autoclose = true;
+        }
+    }
+
+    /**
+     * An attribute of an {@linkplain JdocHtml HTML node}.
+     */
+    class JdocHtmlAttr extends AbstractJavadocNode {
+
+        private final @Nullable JavadocToken valueToken;
+        private final HtmlAttrSyntax syntax;
+
+        JdocHtmlAttr(@Nullable JavadocToken valueToken, HtmlAttrSyntax syntax) {
+            super(JavadocNodeId.HTML_ATTR);
+            this.valueToken = valueToken;
+            this.syntax = syntax;
+        }
+
+
+        /**
+         * Returns the string value of the attribute. For {@linkplain HtmlAttrSyntax#EMPTY empty attribute syntax},
+         * the value is the name of the attribute.
+         */
+        @NonNull
+        public String getValue() {
+            return getSyntax() == HtmlAttrSyntax.EMPTY ? getName()
+                                                       : getValueToken().getImage();
+        }
+
+        /** Returns the name of the attribute. */
+        @NonNull
+        public String getName() {
+            return getIdentifierToken().getImage();
+        }
+
+        /** Returns the identifier token. */
+        @NonNull
+        public JavadocToken getIdentifierToken() {
+            return getFirstToken();
+        }
+
+        /**
+         * Returns the value token, or null if this is uses the
+         * {@linkplain HtmlAttrSyntax#EMPTY empty attribute syntax},
+         * or if the value is the empty string.
+         */
+        @Nullable
+        public JavadocToken getValueToken() {
+            return valueToken;
+        }
+
+        /** Returns the syntax used by this attribute. */
+        @NonNull
+        public HtmlAttrSyntax getSyntax() {
+            return syntax;
+        }
+
+        /**
+         * Kind of syntax for the attribute.
+         */
+        public enum HtmlAttrSyntax {
+            /**
+             * Empty-attribute syntax for boolean attribute, eg {@code <option selected>},
+             * equivalent to {@code <option selected="selected">}
+             */
+            EMPTY,
+            /** Unquoted attribute, eg {@code <input value=yes>}. */
+            UNQUOTED,
+            /** Single-quoted attribute, eg {@code <input type='checkbox'>}. */
+            SINGLE_QUOTED,
+            /** Double-quoted attribute, eg {@code <input name="be evil">}. */
+            DOUBLE_QUOTED
         }
     }
 

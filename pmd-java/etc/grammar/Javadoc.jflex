@@ -126,13 +126,13 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 <IN_HTML, HTML_ATTRS> "/>" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_RCLOSE; }
 
 <HTML_ATTRS> {HTML_ATTR_NAME} { return JavadocTokenType.HTML_IDENT; }
-<HTML_ATTRS> [=] { return JavadocTokenType.HTML_EQ; }
-<HTML_ATTRS> [\"] { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_ATTR_START; }
-<HTML_ATTRS> [\'] { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_ATTR_START; }
+<HTML_ATTRS> [=]  { return JavadocTokenType.HTML_EQ; }
+<HTML_ATTRS> [\"] { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_DQUOTE; }
+<HTML_ATTRS> [\'] { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_SQUOTE; }
 <HTML_ATTRS> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
 
-<HTML_ATTR_VAL_DQ> [\"] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_END; }
-<HTML_ATTR_VAL_SQ> [\'] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_END; }
+<HTML_ATTR_VAL_DQ> [\"] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_DQUOTE; }
+<HTML_ATTR_VAL_SQ> [\'] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_SQUOTE; }
 <HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ> . { return JavadocTokenType.HTML_ATTR_VAL; }
 
 <COMMENT_DATA_START, COMMENT_DATA> "{"

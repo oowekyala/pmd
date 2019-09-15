@@ -6,6 +6,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import java.util.stream.Stream;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
@@ -13,7 +15,9 @@ import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 /** A token implementation for Javadoc nodes. */
 public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<JavadocToken>> {
 
+    @Nullable
     JavadocToken prev;
+    @Nullable
     JavadocToken next;
 
     private final String image;
