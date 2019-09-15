@@ -4,7 +4,6 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -78,10 +77,10 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the significant text of this comment. */
         public String getData() {
-            return jjtGetFirstToken().rangeTo(jjtGetLastToken())
-                                     .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
-                                     .map(JavadocToken::getImage)
-                                     .collect(Collectors.joining(" "));
+            return getFirstToken().rangeTo(getLastToken())
+                                  .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
+                                  .map(JavadocToken::getImage)
+                                  .collect(Collectors.joining(" "));
         }
 
     }
@@ -92,7 +91,8 @@ public interface JavadocNode extends TextAvailableNode {
         private final Set<JavadocTokenType> expected;
         private final @Nullable JavadocToken actual;
 
-        JdocMalformed(EnumSet<JavadocTokenType> expected, @Nullable JavadocToken actual) {
+        JdocMalformed(Set<JavadocTokenType> expected,
+                      @Nullable JavadocToken actual) {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = actual;
@@ -113,9 +113,12 @@ public interface JavadocNode extends TextAvailableNode {
         public String getMessage() {
             if (actual == null) {
                 return "Unexpected end of input, expecting " + format(expected);
+            }
+            String message = "Unexpected token " + actual.getKind() + " at " + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
+            if (!expected.isEmpty()) {
+                return message + " expecting " + format(expected);
             } else {
-                return "Unexpected token of type " + actual.getKind() + " at "
-                    + actual.getBeginLine() + ":" + actual.getBeginColumn() + " expecting " + format(expected);
+                return message;
             }
         }
 
@@ -291,10 +294,10 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the significant text of this comment. */
         public String getData() {
-            return jjtGetFirstToken().rangeTo(jjtGetLastToken())
-                                     .filter(it -> it.getKind() == JavadocTokenType.HTML_COMMENT_CONTENT)
-                                     .map(JavadocToken::getImage)
-                                     .collect(Collectors.joining());
+            return getFirstToken().rangeTo(getLastToken())
+                                  .filter(it -> it.getKind() == JavadocTokenType.HTML_COMMENT_CONTENT)
+                                  .map(JavadocToken::getImage)
+                                  .collect(Collectors.joining());
         }
     }
 
