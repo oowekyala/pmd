@@ -4,16 +4,14 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import java.util.stream.Stream;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
 /** A token implementation for Javadoc nodes. */
-public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<JavadocToken>> {
+public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<JavadocToken>> implements PrevLinkedToken<JavadocToken> {
 
     @Nullable
     JavadocToken prev;
@@ -34,11 +32,13 @@ public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<J
         return kind;
     }
 
-    /** Returns the previous token. */
+    @Override
+    @Nullable
     public JavadocToken getPrevious() {
         return prev;
     }
 
+    @Nullable
     @Override
     public JavadocToken getNext() {
         return next;
@@ -63,7 +63,4 @@ public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<J
     }
 
 
-    public Stream<JavadocToken> rangeTo(JavadocToken last) {
-        return IteratorUtil.generate(this, t -> t == last ? null : t.next);
-    }
 }

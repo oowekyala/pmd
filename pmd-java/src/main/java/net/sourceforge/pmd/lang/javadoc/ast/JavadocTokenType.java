@@ -75,9 +75,6 @@ public enum JavadocTokenType {
     ;
 
     static final EnumSet<JavadocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
-    // the flexer produces single chars for those tokens, we merge them here
-    static final EnumSet<JavadocTokenType> MERGED_TOKENS =
-        EnumSet.of(COMMENT_DATA, HTML_COMMENT_CONTENT, HTML_ATTR_VAL, BAD_CHAR);
 
     private final boolean isConst;
     private String value;
