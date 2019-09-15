@@ -64,7 +64,7 @@ public class JavadocParser {
             // EOF
             return null;
         }
-        comment.jjtSetFirstToken(head());
+        comment.setFirstToken(head());
 
         pushNode(comment);
 
@@ -74,7 +74,7 @@ public class JavadocParser {
 
         while (!nodes.isEmpty()) {
             AbstractJavadocNode top = nodes.pop();
-            top.jjtSetLastToken(head());
+            top.setLastToken(head());
         }
         return comment;
     }
@@ -108,8 +108,8 @@ public class JavadocParser {
         if (advance()) {
             if (tokIs(TAG_NAME)) {
                 AbstractJavadocNode tag = parseInlineTagContent(head().getImage());
-                tag.jjtSetFirstToken(start);
-                tag.jjtSetLastToken(tokIs(INLINE_TAG_END) ? head() : head().getPrevious());
+                tag.setFirstToken(start);
+                tag.setLastToken(tokIs(INLINE_TAG_END) ? head() : head().getPrevious());
                 linkLeaf(tag);
             } else if (!tokens.isEoi()) {
                 growDataLeaf(start, head());
@@ -137,17 +137,19 @@ public class JavadocParser {
 
         if (tokIs(HTML_IDENT)) {
             JdocHtml html = new JdocHtml(head().getImage());
-            html.jjtSetFirstToken(start);
+            html.setFirstToken(start);
             advance();
+
             htmlAttrs(html);
+
             maybeImplicitClose(start.prev, html.getTagName());
             linkLeaf(html);
-            if (head().getKind() == HTML_RCLOSE) {
+            if (tokIs(HTML_RCLOSE) || tokIs(HTML_GT) && html.getBehaviour().isVoid()) {
                 html.setAutoclose();
-                html.jjtSetLastToken(head());
+                html.setLastToken(head());
             } else {
                 pushNode(html);
-                if (head().getKind() != HTML_GT) {
+                if (!tokIs(HTML_GT)) {
                     linkLeaf(new JdocMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), head()));
                 }
             }
@@ -190,7 +192,7 @@ public class JavadocParser {
     private void popImplicitCloseNodes(int n, JavadocToken lastToken) {
         while (n-- > 0) {
             JdocHtml top = (JdocHtml) nodes.pop();
-            top.jjtSetLastToken(lastToken);
+            top.setLastToken(lastToken);
             top.jjtClose();
         }
     }
@@ -198,9 +200,9 @@ public class JavadocParser {
 
     private AbstractJavadocNode htmlComment() {
         JdocHtmlComment comment = new JdocHtmlComment();
-        comment.jjtSetFirstToken(head());
+        comment.setFirstToken(head());
         while (advance() && !tokIs(HTML_COMMENT_END)) {
-            comment.jjtSetLastToken(head());
+            comment.setLastToken(head());
         }
         return comment;
     }
@@ -217,14 +219,14 @@ public class JavadocParser {
         if (tokIs(HTML_IDENT)) {
             JavadocToken ident = head();
             JdocHtmlEnd html = new JdocHtmlEnd(ident.getImage());
-            html.jjtSetFirstToken(start);
+            html.setFirstToken(start);
             linkLeaf(html);
             advance();
             skipWhitespace();
             // </a>
             //    ^
 
-            html.jjtSetLastToken(head());
+            html.setLastToken(head());
             if (!tokIs(HTML_GT)) {
                 html.appendChild(new JdocMalformed(EnumSet.of(HTML_GT), head()));
             }
@@ -310,8 +312,8 @@ public class JavadocParser {
             }
 
             JdocHtmlAttr attr = new JdocHtmlAttr(value, syntax);
-            attr.jjtSetFirstToken(name);
-            attr.jjtSetLastToken(end);
+            attr.setFirstToken(name);
+            attr.setLastToken(end);
             if (malformed != null) {
                 attr.jjtAddChild(malformed, 0);
             }
@@ -358,7 +360,7 @@ public class JavadocParser {
         AbstractJavadocNode top = this.nodes.getFirst();
         JavadocNode lastNode = top.jjtGetNumChildren() > 0 ? top.jjtGetChild(top.jjtGetNumChildren() - 1) : null;
         if (lastNode instanceof JdocCommentData) {
-            ((JdocCommentData) lastNode).jjtSetLastToken(last);
+            ((JdocCommentData) lastNode).setLastToken(last);
         } else {
             linkLeaf(new JdocCommentData(first, last));
         }

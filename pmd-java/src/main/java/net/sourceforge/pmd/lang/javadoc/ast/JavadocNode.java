@@ -71,8 +71,8 @@ public interface JavadocNode extends TextAvailableNode {
 
         JdocCommentData(JavadocToken first, JavadocToken last) {
             super(JavadocNodeId.COMMENT_DATA);
-            jjtSetFirstToken(first);
-            jjtSetLastToken(last);
+            setFirstToken(first);
+            setLastToken(last);
         }
 
         /** Returns the significant text of this comment. */
@@ -96,8 +96,8 @@ public interface JavadocNode extends TextAvailableNode {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = actual;
-            jjtSetFirstToken(actual);
-            jjtSetLastToken(actual);
+            setFirstToken(actual);
+            setLastToken(actual);
         }
 
         /** Null if EOF. */

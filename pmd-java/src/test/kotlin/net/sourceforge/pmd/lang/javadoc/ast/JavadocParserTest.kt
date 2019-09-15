@@ -19,6 +19,12 @@ import kotlin.streams.toList
 
 
 class JavadocParserTest : JavadocParserSpec({
+    /*
+        TODO tests:
+         - entities
+         - void elements
+         - case sensitivity
+    */
 
 
     parserTest("Test some inline tags") {

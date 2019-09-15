@@ -79,11 +79,11 @@ class AbstractJavadocNode implements JavadocNode {
         return lastToken;
     }
 
-    public void jjtSetFirstToken(JavadocToken token) {
+    void setFirstToken(JavadocToken token) {
         firstToken = token;
     }
 
-    public void jjtSetLastToken(JavadocToken token) {
+    void setLastToken(JavadocToken token) {
         lastToken = token;
     }
 
@@ -112,7 +112,7 @@ class AbstractJavadocNode implements JavadocNode {
         return parent;
     }
 
-    
+
     void appendChild(AbstractJavadocNode node) {
         jjtAddChild(node, jjtGetNumChildren());
     }
@@ -125,7 +125,7 @@ class AbstractJavadocNode implements JavadocNode {
     @Override
     public void jjtClose() {
         if (lastToken == null && jjtGetNumChildren() > 0) {
-            jjtSetLastToken(jjtGetChild(0).getLastToken());
+            setLastToken(jjtGetChild(0).getLastToken());
         }
     }
 
