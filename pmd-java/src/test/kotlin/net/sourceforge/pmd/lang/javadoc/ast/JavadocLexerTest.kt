@@ -21,7 +21,8 @@ class JavadocLexerTest : FunSpec({
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 25, image = "some javadoc ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 24, image = "some javadoc")
+        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 24, end = 25, image = " ")
         lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 25, end = 27, image = "*/")
         lexer.nextToken shouldBe null
     }
@@ -35,7 +36,8 @@ class JavadocLexerTest : FunSpec({
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 25, image = "some javadoc ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 24, image = "some javadoc")
+        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 24, end = 25, image = " ")
         lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 25, end = 27, image = "*/")
         lexer.nextToken shouldBe null
     }
@@ -60,7 +62,8 @@ class JavadocLexerTest : FunSpec({
             """.shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "some javadoc "),
+                Tok(COMMENT_DATA, "some javadoc"),
+                Tok(WHITESPACE, " "),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE,"                "),
                 Tok(HTML_LT),
@@ -80,7 +83,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(HTML_LCLOSE),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
-                Tok(COMMENT_DATA, " "),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
     }
@@ -103,6 +106,33 @@ class JavadocLexerTest : FunSpec({
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "startOffset Start offset in the file text"),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_END)
+        )
+
+    }
+
+    test("Test trailing whitespace") {
+
+        """
+/**
+ * abc   
+ *    ^^^
+ *    those are spaces
+ */
+""".trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "abc"),
+                Tok(WHITESPACE, "   "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "    "),
+                Tok(COMMENT_DATA, "^^^"),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "    "),
+                Tok(COMMENT_DATA, "those are spaces"),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
@@ -313,7 +343,8 @@ class JavadocLexerTest : FunSpec({
         """.shouldHaveTokens(
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "some javadoc "),
+                Tok(COMMENT_DATA, "some javadoc"),
+                Tok(WHITESPACE, " "),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, "                "),
                 Tok(HTML_LT),
@@ -332,7 +363,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(HTML_LCLOSE),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
-                Tok(COMMENT_DATA, " "),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
     }

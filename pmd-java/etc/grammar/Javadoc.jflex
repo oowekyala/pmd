@@ -91,13 +91,13 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %state HTML_ATTR_VAL_DQ
 %state HTML_ATTR_VAL_SQ
 
-WHITE_DOC_SPACE_CHAR=[\ \t\f]
+WHITESPACE_CHAR=[\ \t\f]
 DIGIT=[0-9]
 ALPHA=[:jletter:]
 IDENTIFIER={ALPHA}({ALPHA}|{DIGIT}|[":.-"])*
 TAG_IDENTIFIER=[^\ \t\f\n\r]+
 INLINE_TAG_IDENTIFIER=[^\ \t\f\n\r\}]+
-LINE_TERM=(\n | \r\n)
+LINE_TERM=(\r\n | [\r\n\u0085\u2028\u2029]) // Uses the same convention as java.util.regex.Pattern#line-terminators
 
 HTML_TAG_NAME=({ALPHA}|"_"|":")({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
 HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
@@ -129,7 +129,7 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 <HTML_ATTRS> [=]  { return JavadocTokenType.HTML_EQ; }
 <HTML_ATTRS> [\"] { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTRS> [\'] { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_SQUOTE; }
-<HTML_ATTRS> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
+<HTML_ATTRS> {WHITESPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
 
 <HTML_ATTR_VAL_DQ> [\"] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL_SQ> [\'] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_SQUOTE; }
@@ -169,22 +169,29 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 
 // whitespace
 
-<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
+<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITESPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
 
-<CODE_TAG_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
+<CODE_TAG_SPACE> {WHITESPACE_CHAR}+ { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
 
-<COMMENT_DATA_START> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
+<COMMENT_DATA_START> {WHITESPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
 
-<COMMENT_DATA> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.COMMENT_DATA; }
+<COMMENT_DATA> {WHITESPACE_CHAR}+ { return JavadocTokenType.COMMENT_DATA; }
 
+// TODO HTML entities [^&]
 <COMMENT_DATA_START, COMMENT_DATA> .   { yybegin(COMMENT_DATA); return JavadocTokenType.COMMENT_DATA; }
 <INSIDE_CODE_TAG> .                    { return JavadocTokenType.COMMENT_DATA; }
 
-<LINE_HEAD> {WHITE_DOC_SPACE_CHAR}+    { exitLineHead(); return JavadocTokenType.WHITESPACE; }
+<LINE_HEAD> {WHITESPACE_CHAR}+    { exitLineHead(); return JavadocTokenType.WHITESPACE; }
+
+// Trailing spaces before the end marker
+// If the comment is one one line, eg /** Foo */, it shouldn't be lexed as COMMENT_DATA
+{WHITESPACE_CHAR}+ / "*/"         { return JavadocTokenType.WHITESPACE; }
+// Trailing whitespace before a line terminator
+{WHITESPACE_CHAR}+ / {LINE_TERM}  { return JavadocTokenType.WHITESPACE; }
 
 // line termination (all states)
 // the part / [^/]  avoids matching "*/"
-{LINE_TERM} {WHITE_DOC_SPACE_CHAR}* "*" / [^/] { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
+{LINE_TERM} {WHITESPACE_CHAR}* "*" / [^/]      { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
 {LINE_TERM}                                    { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
 
 "*/" { return JavadocTokenType.COMMENT_END; }
