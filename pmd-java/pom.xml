@@ -96,6 +96,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${jflex-output}</outputDirectory>
+                            <dot>true</dot>
                             <lexDefinitions>
                                 <lexDefinition>etc/grammar/Javadoc.jflex</lexDefinition>
                             </lexDefinitions>
