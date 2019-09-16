@@ -20,6 +20,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
+/**
+ * Wraps the generated JFlex lexer.
+ */
 public class JavadocLexer implements TokenManager<JavadocToken> {
 
     // the flexer produces single chars for those tokens, we merge them here
@@ -40,13 +43,24 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
     @Nullable
     private JavadocTokenType pendingTok;
 
+    /**
+     * Build a lexer that scans the whole text.
+     *
+     * @see #JavadocLexer(String, int, int)
+     */
     public JavadocLexer(String fullText) {
         this(fullText, 0, fullText.length());
     }
 
     /**
-     * @param fullText    Full file text
+     * Builds a lexer that will lex the region of the [fullText] delimited
+     * by the given offsets. The region must start with the token "/*". The
+     * lexer stops when the region is ended, or when it encounters a "*" "/"
+     * token (end of comment), whichever comes first.
+     *
+     * @param fullText    Full file text, may contain Java unicode escapes
      * @param startOffset Start offset in the file text
+     * @param endOffset   End offset (exclusive) in the file text
      */
     public JavadocLexer(String fullText, int startOffset, int endOffset) {
         this.doc = new JavadocTokenDocument(fullText);
