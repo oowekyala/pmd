@@ -117,7 +117,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      * so.
      */
     @JvmOverloads
-    fun parse(sourceCode: String, version: String? = null): T {
+    open fun parse(sourceCode: String, version: String? = null): T {
         val lversion = if (version == null) defaultVersion else getVersion(version)
         val handler = lversion.languageVersionHandler
         val options = params.parserOptions ?: handler.defaultParserOptions

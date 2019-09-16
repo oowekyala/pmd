@@ -74,6 +74,10 @@ class AbstractJavadocNode implements JavadocNode {
         return firstToken;
     }
 
+    /**
+     * <a href="https://
+     * bar"> </a>
+     */
     @Override
     public JavadocToken getLastToken() {
         return lastToken;

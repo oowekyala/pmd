@@ -45,16 +45,16 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
     }
 
     /**
-     * @param fileText    Full file text
+     * @param fullText    Full file text
      * @param startOffset Start offset in the file text
      */
-    public JavadocLexer(String fileText, int startOffset, int endOffset) {
-        this.doc = new JavadocTokenDocument(fileText);
+    public JavadocLexer(String fullText, int startOffset, int endOffset) {
+        this.doc = new JavadocTokenDocument(fullText);
         this.curOffset = startOffset;
         this.maxOffset = endOffset;
     }
 
-    public TokenDocument getDoc() {
+    public TokenDocument<JavadocToken> getDoc() {
         return doc;
     }
 
