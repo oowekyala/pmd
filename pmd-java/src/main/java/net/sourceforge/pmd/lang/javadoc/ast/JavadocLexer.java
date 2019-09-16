@@ -34,7 +34,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
 
     private final TokenDocument<JavadocToken> doc;
     private int maxOffset;
-    private JavadocFlexer lexer;
+    private net.sourceforge.pmd.lang.javadoc.ast.JavadocFlexer lexer;
     private JavadocToken prevToken;
     private int curOffset;
     @Nullable
@@ -74,7 +74,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
                     return null;
                 }
 
-                this.lexer = new JavadocFlexer(reader);
+                this.lexer = new net.sourceforge.pmd.lang.javadoc.ast.JavadocFlexer(reader);
             }
 
             final JavadocTokenType tok = pendingTok != null ? pendingTok : lexer.advance();
@@ -90,7 +90,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
                 // EOF
                 return null;
             } else if (MERGED_TOKENS.contains(tok)) {
-                // those tokens are single chars, we merge them here
+                // adjacent tokens of those kinds are merged together
                 while ((curOffset + len) < maxOffset
                     && (pendingTok = lexer.advance()) == tok) {
                     len += lexer.yylength();

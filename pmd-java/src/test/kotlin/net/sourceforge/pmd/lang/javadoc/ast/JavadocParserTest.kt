@@ -24,6 +24,7 @@ class JavadocParserTest : JavadocParserSpec({
          - entities
          - void elements
          - case sensitivity
+         - html comments
     */
 
 

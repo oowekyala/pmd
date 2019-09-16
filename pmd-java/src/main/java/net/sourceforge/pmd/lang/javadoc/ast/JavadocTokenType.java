@@ -19,7 +19,6 @@ public enum JavadocTokenType {
      * Whitespace tokens are significant in {@code <pre>} HTML tags though.
      */
     WHITESPACE("<whitespace>", false),
-    LEADER("<line leader>", false),
 
     /**
      * This also takes care of any following asterisk. Leading whitespace

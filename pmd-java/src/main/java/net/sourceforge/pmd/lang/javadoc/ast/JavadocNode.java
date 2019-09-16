@@ -80,6 +80,7 @@ public interface JavadocNode extends TextAvailableNode {
             return getFirstToken().rangeTo(getLastToken())
                                   .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
                                   .map(JavadocToken::getImage)
+                                  .map(String::trim)
                                   .collect(Collectors.joining(" "));
         }
 
