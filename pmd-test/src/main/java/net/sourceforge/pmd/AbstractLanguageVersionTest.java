@@ -19,12 +19,13 @@ import net.sourceforge.pmd.ant.SourceLanguage;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.LanguageVersionImpl;
 import net.sourceforge.pmd.util.ResourceLoader;
 
 /**
- * Base test class for {@link LanguageVersion} implementations. <br>
+ * Base test class for {@link LanguageVersionImpl} implementations. <br>
  * Each language implementation should subclass this and provide a data method.
- * 
+ *
  * <pre>
  * &#64;Parameters
  *     public static Collection&lt;Object[]&gt; data() {
@@ -39,7 +40,7 @@ import net.sourceforge.pmd.util.ResourceLoader;
  *              null }
  *       });
  * </pre>
- * 
+ *
  * <p>For the parameters, see the constructor
  * {@link #AbstractLanguageVersionTest(String, String, String, LanguageVersion)}.</p>
  */
@@ -54,7 +55,7 @@ public class AbstractLanguageVersionTest {
 
     /**
      * Creates a new {@link AbstractLanguageVersionTest}
-     * 
+     *
      * @param name
      *            the name under which the language module is registered
      * @param terseName
@@ -62,7 +63,7 @@ public class AbstractLanguageVersionTest {
      * @param version
      *            the specific version of the language version
      * @param expected
-     *            the expected {@link LanguageVersion} instance
+     *            the expected {@link LanguageVersionImpl} instance
      */
     public AbstractLanguageVersionTest(String name, String terseName, String version, LanguageVersion expected) {
         this.name = name;
@@ -76,7 +77,7 @@ public class AbstractLanguageVersionTest {
     }
 
     /**
-     * Checks that the expected {@link LanguageVersion} can be found by the
+     * Checks that the expected {@link LanguageVersionImpl} can be found by the
      * combination of {@link #terseName} and {@link #version}.
      */
     @Test
@@ -85,7 +86,7 @@ public class AbstractLanguageVersionTest {
     }
 
     /**
-     * Checks that the expected {@link LanguageVersion} can be found via
+     * Checks that the expected {@link LanguageVersionImpl} can be found via
      * {@link #name} and {@link #version}.
      */
     @Test
@@ -105,7 +106,7 @@ public class AbstractLanguageVersionTest {
 
     /**
      * Makes sure, that for each language a "categories.properties" file exists.
-     * 
+     *
      * @throws Exception
      *             any error
      */
@@ -127,7 +128,7 @@ public class AbstractLanguageVersionTest {
 
     /**
      * If a rulesets.properties file still exists, test it as well.
-     * 
+     *
      * @throws Exception
      *             any error
      */

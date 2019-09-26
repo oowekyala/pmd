@@ -11,10 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sourceforge.pmd.lang.services.ServiceBundle;
+import net.sourceforge.pmd.lang.services.internal.ServiceBundleImpl;
+
 /**
  * Created by christoferdutz on 21.09.14.
  */
 public abstract class BaseLanguageModule implements Language {
+
+    private final ServiceBundle services = new ServiceBundleImpl();
 
     protected String name;
     protected String shortName;
@@ -37,7 +42,7 @@ public abstract class BaseLanguageModule implements Language {
         if (versions == null) {
             versions = new HashMap<>();
         }
-        LanguageVersion languageVersion = new LanguageVersion(this, version, languageVersionHandler);
+        LanguageVersion languageVersion = new LanguageVersionImpl(this, version, languageVersionHandler);
         versions.put(version, languageVersion);
         if (isDefault) {
             defaultVersion = languageVersion;
@@ -105,6 +110,11 @@ public abstract class BaseLanguageModule implements Language {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    @Override
+    public ServiceBundle getServiceBundle() {
+        return services;
     }
 
     @Override

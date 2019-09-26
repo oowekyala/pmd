@@ -6,15 +6,16 @@ package net.sourceforge.pmd.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+
+import net.sourceforge.pmd.lang.services.internal.LanguagePluginLoader;
 
 /**
  * Created by christoferdutz on 20.09.14.
@@ -41,19 +42,17 @@ public final class LanguageRegistry {
             }
         }
 
+        Set<Language> newLangs = LanguagePluginLoader.masterLoad(getClass().getClassLoader());
+        languagesList.addAll(newLangs);
+
         // sort languages by terse name. Avoiding differences in the order of languages
         // across JVM versions / OS.
-        Collections.sort(languagesList, new Comparator<Language>() {
-            @Override
-            public int compare(Language o1, Language o2) {
-                return o1.getTerseName().compareToIgnoreCase(o2.getTerseName());
-            }
-        });
+        languagesList.sort((o1, o2) -> o1.getTerseName().compareToIgnoreCase(o2.getTerseName()));
 
         // using a linked hash map to maintain insertion order
-        languages = new LinkedHashMap<>();
+        this.languages = new LinkedHashMap<>();
         for (Language language : languagesList) {
-            languages.put(language.getName(), language);
+            this.languages.put(language.getName(), language);
         }
     }
 
