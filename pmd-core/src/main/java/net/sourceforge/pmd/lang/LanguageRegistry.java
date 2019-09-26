@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import net.sourceforge.pmd.lang.services.PmdContext;
 import net.sourceforge.pmd.lang.services.internal.LanguagePluginLoader;
 
 /**
@@ -42,7 +43,7 @@ public final class LanguageRegistry {
             }
         }
 
-        Set<Language> newLangs = LanguagePluginLoader.masterLoad(getClass().getClassLoader());
+        Set<Language> newLangs = LanguagePluginLoader.load(PmdContext.STATIC, getClass().getClassLoader());
         languagesList.addAll(newLangs);
 
         // sort languages by terse name. Avoiding differences in the order of languages

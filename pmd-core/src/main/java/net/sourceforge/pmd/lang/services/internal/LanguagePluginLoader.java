@@ -18,6 +18,7 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersionImpl;
 import net.sourceforge.pmd.lang.rule.RuleChainVisitor;
+import net.sourceforge.pmd.lang.services.PmdContext;
 import net.sourceforge.pmd.lang.services.PmdLanguagePlugin;
 import net.sourceforge.pmd.lang.services.common.FileLanguagePicker;
 
@@ -26,8 +27,13 @@ import net.sourceforge.pmd.lang.services.common.FileLanguagePicker;
  */
 public class LanguagePluginLoader {
 
+    private PmdContext context;
 
-    public static Set<Language> masterLoad(ClassLoader classLoader) {
+    public LanguagePluginLoader(PmdContext context) {
+        this.context = context;
+    }
+
+    public Set<Language> load(ClassLoader classLoader) {
 
         Set<Language> languages = loadImpl(classLoader, e -> {/*TODO log*/});
         validate(languages);
@@ -35,7 +41,7 @@ public class LanguagePluginLoader {
     }
 
 
-    private static void validate(Set<Language> languages) {
+    private void validate(Set<Language> languages) {
 
         StringBuilder errorMessage = new StringBuilder();
         AssertionError error = null;
@@ -60,7 +66,7 @@ public class LanguagePluginLoader {
         }
     }
 
-    private static void validateAndDefault(StringBuilder errorMessage, Language lang) {
+    private void validateAndDefault(StringBuilder errorMessage, Language lang) {
         // those are the required services
         expectExactly(errorMessage, lang, RuleChainVisitor.class, 1);
         expectAtLeast(errorMessage, lang, FileLanguagePicker.class, 1);
@@ -96,7 +102,7 @@ public class LanguagePluginLoader {
     }
 
 
-    private static Set<Language> loadImpl(ClassLoader classLoader, Consumer<Throwable> exceptionHandler) {
+    private Set<Language> loadImpl(ClassLoader classLoader, Consumer<Throwable> exceptionHandler) {
 
 
         // Use current class' classloader instead of the threads context classloader, see https://github.com/pmd/pmd/issues/1377
@@ -121,7 +127,7 @@ public class LanguagePluginLoader {
         for (PmdLanguagePlugin plugin : pluginList) {
             try {
                 Language lang = plugin.getLanguage(seen);
-                plugin.initialize(lang, lang.getServiceBundle());
+                plugin.initialize(lang, context.getServices(lang));
             } catch (Throwable e) {
                 exceptionHandler.accept(e);
             }
