@@ -13,7 +13,7 @@
 package net.sourceforge.pmd.lang.services.internal;
 
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -22,21 +22,23 @@ import java.util.logging.Level;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.services.LanguageServices;
 import net.sourceforge.pmd.lang.services.PmdContext;
 import net.sourceforge.pmd.lang.services.ServiceBundle;
+import net.sourceforge.pmd.lang.services.ServiceBundle.MutableServiceBundle;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertySource;
 
 public final class PmdContextImpl implements PmdContext {
 
     private final PropertySource properties;
-    private final Map<Language, ServiceBundle> languageServices;
+    private final Map<Language, LangServicesImpl> languageServices;
     private final PmdLogger logger;
 
     public PmdContextImpl(String name, ClassLoader classLoader, PmdLogger logger) {
         properties = new ContextProperties(name);
         this.logger = logger;
-        languageServices = new HashMap<>();
+        languageServices = new LinkedHashMap<>();
         new LanguagePluginLoader(this).load(classLoader);
     }
 
@@ -56,9 +58,9 @@ public final class PmdContextImpl implements PmdContext {
 
 
     @Override
-    public ServiceBundle getServices(Language language) {
+    public LangServicesImpl getServices(Language language) {
         Objects.requireNonNull(language, "Language is null!");
-        return languageServices.computeIfAbsent(language, k -> new ServiceBundleImpl());
+        return languageServices.computeIfAbsent(language, LangServicesImpl::new);
     }
 
     @Override
@@ -76,6 +78,32 @@ public final class PmdContextImpl implements PmdContext {
         @Override
         public void report(Level level, @Nullable String message, @Nullable Throwable err) {
             // TODO
+        }
+    }
+
+
+    static class LangServicesImpl implements LanguageServices {
+
+        private final ServiceBundleImpl bundle = new ServiceBundleImpl();
+        private final Language lang;
+
+        LangServicesImpl(Language lang) {
+            this.lang = lang;
+        }
+
+        @Override
+        public Language getLanguage() {
+            return lang;
+        }
+
+        @Override
+        public ServiceBundle getBundle() {
+            return bundle;
+        }
+
+
+        MutableServiceBundle getBundleMutable() {
+            return bundle.new Mutable();
         }
     }
 

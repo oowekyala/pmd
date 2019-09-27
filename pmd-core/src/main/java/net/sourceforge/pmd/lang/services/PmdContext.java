@@ -14,14 +14,19 @@ import net.sourceforge.pmd.lang.services.internal.PmdContextImpl;
 import net.sourceforge.pmd.properties.PropertySource;
 
 /**
- * Top-level context for a PMD run. This encapsulates all static state.
+ * Top-level context for a PMD run. This encapsulates all global state.
  */
 public interface PmdContext extends AutoCloseable {
 
+    /**
+     * This is a static context, initialized with the current classloader
+     * when this interface is initialized.
+     */
     PmdContext STATIC = new PmdContextImpl("static", PmdContext.class.getClassLoader());
 
 
-    PropertySource getRunProperties();
+    /** Properties provided by the CLI, or made with a builder */
+    PropertySource getRunProperties(); // TODO use a data store
 
 
     /** Returns the set of known language modules. */
@@ -32,7 +37,7 @@ public interface PmdContext extends AutoCloseable {
      * Returns the services registered for the given language.
      * If the language is unknown, returns a fresh language module.
      */
-    ServiceBundle getServices(Language language);
+    LanguageServices getServices(Language language);
 
 
     PmdLogger logger();
@@ -87,6 +92,5 @@ public interface PmdContext extends AutoCloseable {
         class FatalError extends Error {
 
         }
-
     }
 }

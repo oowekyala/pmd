@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang;
 
 import java.util.List;
 
-import net.sourceforge.pmd.lang.services.ServiceBundle;
-import net.sourceforge.pmd.lang.services.common.LanguageVersionDefaulter;
-
 /**
  * Interface each Language implementation has to implement. It is used by the
  * LanguageRregistry to access constants and implementation classes in order to
@@ -32,9 +29,6 @@ import net.sourceforge.pmd.lang.services.common.LanguageVersionDefaulter;
 public interface Language extends Comparable<Language> {
 
     String LANGUAGE_MODULES_CLASS_NAMES_PROPERTY = "languageModulesClassNames";
-
-
-    ServiceBundle getServiceBundle();
 
 
     /**
@@ -116,7 +110,7 @@ public interface Language extends Comparable<Language> {
      *     version string is not recognized.
      */
     default LanguageVersion getVersion(String version) {
-        return getVersions().stream().filter(it -> it.getVersion().equals(version)).findAny().orElse(null);
+        return getVersions().stream().filter(it -> it.getVersion().equals(version)).findFirst().orElse(null);
     }
 
 
@@ -127,28 +121,7 @@ public interface Language extends Comparable<Language> {
      *
      * @return The current default LanguageVersion for this Language.
      */
-    default LanguageVersion getDefaultVersion() {
-        return getSingleService(LanguageVersionDefaulter.class).defaultVersion(this);
-    }
-
-
-    default <T> List<T> getServices(Class<T> serviceInterface) {
-        return getServiceBundle().getServices(serviceInterface);
-    }
-
-
-    default <T> T getSingleService(Class<T> serviceInterface) {
-        List<T> services = getServiceBundle().getServices(serviceInterface);
-        if (services.size() != 1) {
-            if (services.size() > 1) {
-                throw new IllegalStateException(
-                    serviceInterface + " is registered more than once for language " + this);
-            } else {
-                throw new IllegalStateException(serviceInterface + " is not registered for language " + this);
-            }
-        }
-        return services.get(0);
-    }
+    LanguageVersion getDefaultVersion();
 
 
 }

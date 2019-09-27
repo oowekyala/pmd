@@ -15,49 +15,60 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.services.ServiceBundle;
+import net.sourceforge.pmd.lang.services.ServiceKey;
 
 /**
  * @author Clément Fournier
  */
 public class ServiceBundleImpl implements ServiceBundle {
 
-    private final Map<Class<?>, List<?>> map = new ConcurrentHashMap<>();
-
+    private final Map<ServiceKey<?>, List<?>> map = new ConcurrentHashMap<>();
 
     @NonNull
     @SuppressWarnings("unchecked")
-    private <T> List<T> getMutable(Class<T> serviceInterface) {
-        return (List<T>) map.computeIfAbsent(serviceInterface, k -> new ArrayList<>());
+    private <T> List<T> getMutable(ServiceKey<T> serviceKeyInterface) {
+        return (List<T>) map.computeIfAbsent(serviceKeyInterface, k -> new ArrayList<>());
     }
 
+
     @Override
-    public <T> List<T> getServices(Class<T> serviceInterface) {
-        @SuppressWarnings("unchecked")
-        List<T> ts = (List<T>) map.get(serviceInterface);
+    @SuppressWarnings("unchecked")
+    public <T> List<T> getServices(ServiceKey<? super T> serviceKeyInterface) {
+        List<T> ts = (List<T>) map.get(serviceKeyInterface);
         if (ts == null) {
-            return Collections.emptyList();
+            return (List<T>) serviceKeyInterface.getDefaultValue();
         }
         return Collections.unmodifiableList(ts);
     }
 
-    @Override
-    public <T> void registerService(Class<T> serviceInterface, T impl) {
-        Objects.requireNonNull(serviceInterface, "serviceInterface");
-        Objects.requireNonNull(impl, "impl");
-        getMutable(serviceInterface).add(impl);
-    }
 
-    @Override
-    public <T> void registerService(Class<T> serviceInterface, Collection<? extends T> impls) {
-        Objects.requireNonNull(serviceInterface, "serviceInterface");
-        for (T impl : impls) {
-            Objects.requireNonNull(impl, "impl");
-            getMutable(serviceInterface).add(impl);
+    class Mutable implements MutableServiceBundle {
+
+        @Override
+        public <T> List<T> getServices(ServiceKey<? super T> serviceKeyInterface) {
+            return ServiceBundleImpl.this.getServices(serviceKeyInterface);
         }
-    }
 
-    @Override
-    public <E extends Enum<E>> void registerService(Class<? super E> serviceInterface, Class<E> impls) {
-        Collections.addAll(getMutable(serviceInterface), impls.getEnumConstants());
+
+        @Override
+        public <T> void register(ServiceKey<T> serviceKey, T impl) {
+            Objects.requireNonNull(serviceKey, "serviceInterface");
+            Objects.requireNonNull(impl, "impl");
+            getMutable(serviceKey).add(impl);
+        }
+
+        @Override
+        public <T> void registerMore(ServiceKey<T> serviceKey, Collection<? extends T> impls) {
+            Objects.requireNonNull(serviceKey, "serviceInterface");
+            for (T impl : impls) {
+                Objects.requireNonNull(impl, "impl");
+                getMutable(serviceKey).add(impl);
+            }
+        }
+
+        @Override
+        public <E extends Enum<E>> void registerEnum(ServiceKey<? super E> serviceKey, Class<E> impls) {
+            Collections.addAll(getMutable(serviceKey), impls.getEnumConstants());
+        }
     }
 }

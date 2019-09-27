@@ -100,6 +100,11 @@ public enum JavaProcessingStage implements AstProcessingStage<JavaProcessingStag
     }
 
 
+    @Override
+    public int compareTo(AstProcessingStage o) {
+        return o instanceof JavaProcessingStage ? compareTo((JavaProcessingStage) o) : 0;
+    }
+
     /**
      * Returns true if the given Java rule depends on this stage.
      *

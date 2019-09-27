@@ -18,18 +18,18 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersionImpl;
 import net.sourceforge.pmd.lang.rule.RuleChainVisitor;
-import net.sourceforge.pmd.lang.services.PmdContext;
+import net.sourceforge.pmd.lang.services.LanguageServices;
 import net.sourceforge.pmd.lang.services.PmdLanguagePlugin;
 import net.sourceforge.pmd.lang.services.common.FileLanguagePicker;
 
 /**
  * Replacement for {@link LanguageRegistry}.
  */
-public class LanguagePluginLoader {
+class LanguagePluginLoader {
 
-    private PmdContext context;
+    private PmdContextImpl context;
 
-    public LanguagePluginLoader(PmdContext context) {
+    LanguagePluginLoader(PmdContextImpl context) {
         this.context = context;
     }
 
@@ -47,7 +47,7 @@ public class LanguagePluginLoader {
         AssertionError error = null;
         for (Language lang : languages) {
 
-            validateAndDefault(errorMessage, lang);
+            validateAndDefault(errorMessage, context.getServices(lang));
 
 
             if (errorMessage.length() != 0) {
@@ -66,7 +66,7 @@ public class LanguagePluginLoader {
         }
     }
 
-    private void validateAndDefault(StringBuilder errorMessage, Language lang) {
+    private void validateAndDefault(StringBuilder errorMessage, LanguageServices lang) {
         // those are the required services
         expectExactly(errorMessage, lang, RuleChainVisitor.class, 1);
         expectAtLeast(errorMessage, lang, FileLanguagePicker.class, 1);
@@ -74,33 +74,6 @@ public class LanguagePluginLoader {
 
         // todo for other stuff, add a default here (eg violation suppressors, node describer for designer, etc)
     }
-
-    private static <T> void expectAtLeast(StringBuilder errorMessage,
-                                          Language lang,
-                                          Class<T> serviceInterface,
-                                          int minSize) {
-
-        List<T> services = lang.getServices(serviceInterface);
-        if (services.size() < minSize) {
-            errorMessage.append("Expected at least ").append(minSize).append(" ")
-                        .append(serviceInterface.getName()).append(", got ")
-                        .append(services.size()).append('\n');
-        }
-    }
-
-    private static <T> void expectExactly(StringBuilder errorMessage,
-                                          Language lang,
-                                          Class<T> serviceInterface,
-                                          int size) {
-
-        List<T> services = lang.getServices(serviceInterface);
-        if (services.size() == size) {
-            errorMessage.append("Expected exactly ").append(size).append(" ")
-                        .append(serviceInterface.getName()).append(", got ")
-                        .append(services.size()).append('\n');
-        }
-    }
-
 
     private Set<Language> loadImpl(ClassLoader classLoader, Consumer<Throwable> exceptionHandler) {
 
@@ -127,13 +100,39 @@ public class LanguagePluginLoader {
         for (PmdLanguagePlugin plugin : pluginList) {
             try {
                 Language lang = plugin.getLanguage(seen);
-                plugin.initialize(lang, context.getServices(lang));
+                plugin.initialize(lang, context.getServices(lang).getBundleMutable());
             } catch (Throwable e) {
                 exceptionHandler.accept(e);
             }
         }
 
         return seen;
+    }
+
+    private static <T> void expectAtLeast(StringBuilder errorMessage,
+                                          LanguageServices lang,
+                                          Class<T> serviceInterface,
+                                          int minSize) {
+
+        List<T> services = lang.getServices(serviceInterface);
+        if (services.size() < minSize) {
+            errorMessage.append("Expected at least ").append(minSize).append(" ")
+                        .append(serviceInterface.getName()).append(", got ")
+                        .append(services.size()).append('\n');
+        }
+    }
+
+    private static <T> void expectExactly(StringBuilder errorMessage,
+                                          LanguageServices lang,
+                                          Class<T> serviceInterface,
+                                          int size) {
+
+        List<T> services = lang.getServices(serviceInterface);
+        if (services.size() == size) {
+            errorMessage.append("Expected exactly ").append(size).append(" ")
+                        .append(serviceInterface.getName()).append(", got ")
+                        .append(services.size()).append('\n');
+        }
     }
 
     private static Set<Language> sort(Set<Language> langs) {

@@ -12,11 +12,12 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.LanguageVersionImpl;
 import net.sourceforge.pmd.lang.rule.RuleChainVisitor;
+import net.sourceforge.pmd.lang.services.ServiceBundle.MutableServiceBundle;
 import net.sourceforge.pmd.lang.services.common.FileLanguagePicker;
 
 /**
- * This is the service provider that should be provided with {@link ServiceLoader}.
- * Language implementations need to expose one such class in {@code META-INF/services/net.sourceforge.pmd.lang.services.PmdLanguagePlugin}.
+ * This is the service provider that should be provided to {@link ServiceLoader}.
+ * Language implementations need to expose at least one such class in {@code META-INF/services/}.
  *
  * <p>TODO what would be nice is to be able to pass properties to services,
  *     eg -Ljava:eagerTypeResolution -Ljava:disambiguateAll
@@ -54,6 +55,6 @@ public interface PmdLanguagePlugin {
      * @param lang           Language instance, the result of {@link #getLanguage(Set)}
      * @param contextBuilder Service builder
      */
-    void initialize(Language lang, ServiceBundle contextBuilder);
+    void initialize(Language lang, MutableServiceBundle contextBuilder);
 
 }

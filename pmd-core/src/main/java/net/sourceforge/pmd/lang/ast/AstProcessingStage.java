@@ -85,4 +85,6 @@ public interface AstProcessingStage<T extends AstProcessingStage<T>> extends Com
     void processAST(RootNode rootNode, AstAnalysisConfiguration configuration);
 
 
+    @Override
+    int compareTo(AstProcessingStage o);
 }
