@@ -105,23 +105,23 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         }
     }
 
-    abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val version: V) {
+    abstract class VersionedTestCtx<V : Ver<V>, Self : VersionedTestCtx<V, Self>>(val spec: AbstractParserTestSpec<V, Self>, private val context: KotlinTestRunCtx, val version: V) {
 
         abstract val parser: BaseParsingHelper<*, *>
 
 
-        fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>, expected: (ParseException) -> Unit = {}): Assertions<String> = {
+        fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, Self>, expected: (ParseException) -> Unit = {}): Assertions<String> = {
             val e = shouldThrow<ParseException> {
-                nodeParsingCtx.parseNode(it, this as T)
+                nodeParsingCtx.parseNode(it, thisCtx)
             }
             expected(e)
         }
 
-        fun parseIn(nodeParsingCtx: NodeParsingCtx<*, T>) = object : Matcher<String> {
+        fun parseIn(nodeParsingCtx: NodeParsingCtx<*, Self>) = object : Matcher<String> {
 
             override fun test(value: String): Result {
                 val (pass, e) = try {
-                    nodeParsingCtx.parseNode(value, this as T)
+                    nodeParsingCtx.parseNode(value, thisCtx)
                     Pair(true, null)
                 } catch (e: ParseException) {
                     Pair(false, e)
@@ -134,7 +134,7 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
             }
         }
 
-        fun doTest(name: String, assertions: T.() -> Unit) {
+        fun doTest(name: String, assertions: Self.() -> Unit) {
             containedParserTestImpl(context, name) {
                 assertions()
             }
@@ -156,12 +156,12 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         internal fun containedParserTestImpl(
                 context: KotlinTestRunCtx,
                 name: String,
-                assertions: T.() -> Unit) {
+                assertions: Self.() -> Unit) {
 
             context.registerTestCase(
                     name = name,
                     spec = spec,
-                    test = { (this@VersionedTestCtx as T).assertions() },
+                    test = { thisCtx.assertions() },
                     config = spec.defaultTestCaseConfig,
                     type = TestType.Test
             )
@@ -171,11 +171,13 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         infix fun String.shouldNot(matcher: Matcher<String>) =
                 should(matcher.invert())
 
-        fun inContext(nodeParsingCtx: NodeParsingCtx<*, T>, assertions: ImplicitNodeParsingCtx.() -> Unit) {
+        fun inContext(nodeParsingCtx: NodeParsingCtx<*, Self>, assertions: ImplicitNodeParsingCtx.() -> Unit) {
             ImplicitNodeParsingCtx(nodeParsingCtx).assertions()
         }
 
-        inner class ImplicitNodeParsingCtx(private val nodeParsingCtx: NodeParsingCtx<*, T>) {
+        val thisCtx : Self = this as Self
+
+        inner class ImplicitNodeParsingCtx(private val nodeParsingCtx: NodeParsingCtx<*, Self>) {
 
 
             /**
@@ -191,7 +193,7 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
 
 
             fun parseAs(matcher: ValuedNodeSpec<Node, Any>): Assertions<String> = { str ->
-                val node = nodeParsingCtx.parseNode(str, this@VersionedTestCtx as T)
+                val node = nodeParsingCtx.parseNode(str, thisCtx)
                 val idx = node.indexInParent
                 node.parent kotlintestShould matchNode<Node> {
                     if (idx > 0) {
