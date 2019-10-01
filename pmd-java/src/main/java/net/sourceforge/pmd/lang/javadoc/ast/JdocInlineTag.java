@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -24,13 +23,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public abstract class JdocInlineTag extends AbstractJavadocNode {
 
-    /**
-     *
-     */
     private final String tagName;
 
-    JdocInlineTag(String tagName) {
-        super(JavadocNodeId.INLINE_TAG);
+    JdocInlineTag(JavadocNodeId id, String tagName) {
+        super(id);
         this.tagName = tagName;
     }
 
@@ -42,37 +38,32 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         return tagName;
     }
 
-
-    @Override
-    public String getXPathNodeName() {
-        // todo memory intensive
-        return "Inline" + StringUtils.capitalize(tagName.substring(1));
-    }
-
     public static class JdocUnknownInlineTag extends JdocInlineTag {
 
         JdocUnknownInlineTag(String tagName) {
-            super(tagName);
-        }
-
-        @Override
-        public String getXPathNodeName() {
-            return "UnknownInline";
+            super(JavadocNodeId.UNKNOWN_INLINE_TAG, tagName);
         }
     }
 
     /**
      * A {@code {@literal }} or {@code {@code }} tag.
      * Whether this is one or the other can be queried with
-     * {@link #isCode()} and {@link #isLiteral()}.
+     * {@link #isCode()} and {@link #isLiteral()}. The only
+     * difference is that {@code {@code }} is rendered
+     * with a monospace font, while {@code {@literal }} is
+     * not.
      */
     public static class JdocLiteral extends JdocInlineTag {
 
         private final String data;
 
-        JdocLiteral(String tagname, String data) {
-            super(tagname);
+        JdocLiteral(String tagName, String data) {
+            super(JavadocNodeId.LITERAL_TAG, tagName);
             this.data = data;
+
+
+            assert tagName.equals("@code")
+                || tagName.equals("@literal");
         }
 
         /**
@@ -100,9 +91,14 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     /**
      * A {@code {@link }} or {@code {@linkplain }} tag.
      * Whether this is one or the other can be queried with
-     * {@link #isLinkPlain()}, {@link #isLink()}.
+     * {@link #isLinkPlain()}, {@link #isLink()}. The only
+     * difference is that {@code {@link }} is rendered
+     * with a monospace font, while {@code {@linkplain }} is
+     * not.
      */
     public static class JdocLink extends JdocInlineTag {
+
+        // TODO make node for references to reuse it!
 
         private static final Pattern FORMAT = Pattern.compile(
             "((?:[\\w$]+\\.)*[\\w$]+)?"  // type name (g1), null if absent
@@ -120,7 +116,11 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         private final String label;
 
         JdocLink(String tagName, String data) {
-            super(tagName);
+            super(JavadocNodeId.LINK_TAG, tagName);
+
+            assert tagName.equals("@link")
+                || tagName.equals("@linkplain");
+
             if (data != null) {
                 Matcher matcher = FORMAT.matcher(data);
                 if (matcher.matches()) {
@@ -144,7 +144,7 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
 
         /** Returns true if this is a {@code {@link }} tag. */
         public boolean isLink() {
-            return getTagName().endsWith("n");
+            return !getTagName().endsWith("n");
         }
 
         @Nullable

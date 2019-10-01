@@ -65,7 +65,7 @@ class AbstractJavadocNode implements JavadocNode {
     }
 
     @Override
-    public String getXPathNodeName() {
+    public final String getXPathNodeName() {
         return id.getXPathNodeName();
     }
 
@@ -74,10 +74,6 @@ class AbstractJavadocNode implements JavadocNode {
         return firstToken;
     }
 
-    /**
-     * <a href="https://
-     * bar"> </a>
-     */
     @Override
     public JavadocToken getLastToken() {
         return lastToken;

@@ -31,6 +31,7 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
      *
      * @return the comment-type token if it exists; null if it does not exist
      */
+    @Nullable
     T getPreviousComment();
 
     /**

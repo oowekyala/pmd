@@ -9,14 +9,19 @@ enum JavadocNodeId {
     ROOT("Comment"),
     COMMENT_DATA("Data"),
     WHITESPACE("Whitespace"),
+
     INLINE_TAG("InlineTag"),
+    LITERAL_TAG("InlineLiteralTag"),
+    LINK_TAG("InlineLinkTag"),
+    UNKNOWN_INLINE_TAG("UnknownInlineTag"),
+
     BLOCK_TAG("BlockTag"),
-    MALFORMED("Error"),
-    HTML_START("HtmlStart"),
+
+    MALFORMED("Malformed"),
+    HTML("Html"),
     HTML_ATTR("HtmlAttr"),
     HTML_END("HtmlEnd"),
     HTML_COMMENT("HtmlComment"),
-    REF("Ref"),
     ;
 
     private final String xpathName;

@@ -136,7 +136,7 @@ public interface JavadocNode extends TextAvailableNode {
     }
 
     /**
-     * Represents an HTML element.HTML elements may be closed in one of three ways:
+     * Represents an HTML element. HTML elements may be closed in one of three ways:
      * <ul>
      *     <li>With a close tag, eg {@code <p>Text</p>}, in that case, there
      *     will be a {@link JdocHtmlEnd} node as a child of the {@link JdocHtml}.
@@ -155,7 +155,7 @@ public interface JavadocNode extends TextAvailableNode {
         private final HtmlTagBehaviour behaviour;
 
         JdocHtml(String tagName) {
-            super(JavadocNodeId.HTML_START);
+            super(JavadocNodeId.HTML);
             this.tagName = tagName;
             this.behaviour = HtmlTagBehaviour.lookup(tagName);
         }
