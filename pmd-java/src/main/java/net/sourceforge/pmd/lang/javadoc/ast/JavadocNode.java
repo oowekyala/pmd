@@ -273,23 +273,16 @@ public interface JavadocNode extends TextAvailableNode {
     }
 
     /**
-     * Represents an HTML element. HTML elements may be closed in one of three ways:
-     * <ul>
-     *     <li>With a close tag, eg {@code <p>Text</p>}, in that case, there
-     *     will be a {@link JdocHtmlEnd} node as a child of the {@link JdocHtml}.
-     *     <li>With an autoclose tag, eg {@code <br/>}. Technically this is
-     *     only a feature of XHTML, but the parser supports it. In that case,
-     *     {@link JdocHtml#isAutoclose()} returns true.
-     *     <li>Implicitly, because eg the parent tag is closed, or some following
-     *     opening tag implies that this tag ends (eg {@code <li> A <li> B}).
-     * </ul>
+     * Represents an HTML element. This node is pushed for every HTML
+     * start tag, and encloses all following nodes until the node is
+     * closed. The node may be closed in several ways, see {@link HtmlCloseSyntax}.
      */
     class JdocHtml extends AbstractJavadocNode {
 
         private final Map<String, JdocHtmlAttr> attributes = new HashMap<>(0);
         private final String tagName;
-        private boolean autoclose;
         private final HtmlTagBehaviour behaviour;
+        private HtmlCloseSyntax syntax;
 
         JdocHtml(String tagName) {
             super(JavadocNodeId.HTML);
@@ -313,14 +306,6 @@ public interface JavadocNode extends TextAvailableNode {
             return attributes.get(name);
         }
 
-        /**
-         * Returns true if this element is closed with an XHTML autoclosing tag,
-         * eg {@code <br/>}.
-         */
-        public boolean isAutoclose() {
-            return autoclose;
-        }
-
 
         @NonNull
         @InternalApi
@@ -329,8 +314,36 @@ public interface JavadocNode extends TextAvailableNode {
         }
 
         @InternalApi
-        void setAutoclose() {
-            this.autoclose = true;
+        void setCloseSyntax(HtmlCloseSyntax syntax) {
+            this.syntax = syntax;
+        }
+
+        @NonNull
+        public HtmlCloseSyntax getCloseSyntax() {
+            assert syntax != null : "Syntax was not set";
+            return syntax;
+        }
+
+        /**
+         * Describe how the HMTL tag was closed (or not).
+         */
+        enum HtmlCloseSyntax {
+            /** Eg {@code <br>}, only for some tags that cannot have any content. */
+            VOID,
+            /** Eg {@code <a/>}, technically this is only a feature of XHTML, but the parser supports it. */
+            XML,
+            /**
+             * Eg {@code <a></a>}, with a regular HTML end tag. In that case, there
+             * will be a {@link JdocHtmlEnd} node as a child of the {@link JdocHtml}.
+             */
+            HTML,
+            /**
+             * Eg {@code <li>a<li>b}, the end tag is inferred because some other tag follows,
+             * or because the parent is closed. Only valid for some combinations of tags.
+             */
+            IMPLICIT,
+            /** Unclosed, because no {@link #IMPLICIT} condition matched. This is an error. */
+            UNCLOSED
         }
     }
 

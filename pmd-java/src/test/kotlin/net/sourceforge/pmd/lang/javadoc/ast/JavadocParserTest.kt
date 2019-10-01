@@ -11,6 +11,7 @@ import net.sourceforge.pmd.lang.ast.test.NodeSpec
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.EmptyAssertions
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.*
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.*
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink
@@ -21,8 +22,6 @@ import kotlin.streams.toList
 class JavadocParserTest : JavadocParserSpec({
     /*
         TODO tests:
-         - entities
-         - void elements
          - case sensitivity
          - html comments
     */
@@ -47,7 +46,7 @@ class JavadocParserTest : JavadocParserSpec({
         """
         /**
          * Param {@code <T>} is no {@code
-         *   <TUFOUKOI>
+         *   <R>
          * }
          */
         """.trimIndent() should parseAs {
@@ -55,7 +54,7 @@ class JavadocParserTest : JavadocParserSpec({
             data("Param ")
             code("<T>")
             data(" is no ")
-            code("<TUFOUKOI>")
+            code("<R>")
         }
 
 
@@ -115,6 +114,27 @@ class JavadocParserTest : JavadocParserSpec({
         """.trimIndent() should parseAs {
             data("& amp;")
         }
+    }
+
+    parserTest("Test void elements") {
+
+        """
+/**
+ *  <area> contents <p> p;
+ */
+        """.trimIndent() should parseAs {
+
+            html("area") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.VOID
+            }
+            data(" contents ")
+            html("p") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+
+                data(" p;")
+            }
+        }
+
     }
 
     parserTest("Test HTML attributes") {
@@ -232,23 +252,62 @@ class JavadocParserTest : JavadocParserSpec({
                 data("OHA")
             }
             html("ul") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.HTML
                 html("li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
                     data("LI one")
                 }
                 html("li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
                     data("LI two")
                     html("p") {
+                        it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
                         data("LIP ")
                         typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
                     }
                 }
                 html("li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.HTML
                     data("LI three")
                     htmlEnd("li")
                 }
                 htmlEnd("ul")
             }
 
+        }
+
+
+        """
+/**
+ *  contents <unknown> p;
+ */
+        """.trimIndent() should parseAs {
+
+            data("contents ")
+            html("unknown") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.UNCLOSED
+
+                data(" p;")
+            }
+        }
+        """
+/**
+ *  <ul><li>li1<li>li2
+ */
+        """.trimIndent() should parseAs {
+
+
+            html("ul") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.UNCLOSED
+                html("li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+                    data("li1")
+                }
+                html("li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+                    data("li2")
+                }
+            }
         }
     }
 

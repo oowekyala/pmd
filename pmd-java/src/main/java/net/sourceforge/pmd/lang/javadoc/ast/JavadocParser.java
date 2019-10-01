@@ -38,6 +38,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCharacterReference;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
@@ -73,10 +74,7 @@ public class JavadocParser {
             dispatch();
         }
 
-        while (!nodes.isEmpty()) {
-            AbstractJavadocNode top = nodes.pop();
-            top.setLastToken(head());
-        }
+        finishStack(head());
         return comment;
     }
 
@@ -139,28 +137,27 @@ public class JavadocParser {
         JavadocToken start = head();
         advance(); // don't skip whitespace
 
-        if (tokIs(HTML_IDENT)) {
-            JdocHtml html = new JdocHtml(head().getImage());
-            html.setFirstToken(start);
-            advance();
+        assert tokIs(HTML_IDENT); // lexer doesn't push an HTML_LT if there is no following ident
 
-            htmlAttrs(html);
+        JdocHtml html = new JdocHtml(head().getImage());
+        html.setFirstToken(start);
+        advance();
 
-            maybeImplicitClose(start.prev, html.getTagName());
-            linkLeaf(html);
-            if (tokIs(HTML_RCLOSE) || tokIs(HTML_GT) && html.getBehaviour().isVoid()) {
-                html.setAutoclose();
-                html.setLastToken(head());
-            } else {
-                pushNode(html);
-                if (!tokIs(HTML_GT)) {
-                    linkLeaf(new JdocMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), head()));
-                }
-            }
+        htmlAttrs(html);
+
+        maybeImplicitClose(start.prev, html.getTagName());
+        linkLeaf(html);
+        if (tokIs(HTML_RCLOSE)) {
+            html.setCloseSyntax(HtmlCloseSyntax.XML);
+            html.setLastToken(head());
+        } else if (tokIs(HTML_GT) && html.getBehaviour().isVoid()) {
+            html.setCloseSyntax(HtmlCloseSyntax.VOID);
+            html.setLastToken(head());
         } else {
-            backup(1); // move cursor back to the '<', so that #advance() moves past it
-            // FIXME where to report that fucking error?
-            linkLeaf(new JdocMalformed(EnumSet.of(HTML_IDENT), head()));
+            pushNode(html);
+            if (!tokIs(HTML_GT)) {
+                linkLeaf(new JdocMalformed(EnumSet.of(HTML_GT), head()));
+            }
         }
     }
 
@@ -181,7 +178,7 @@ public class JavadocParser {
                 if (node instanceof JdocHtml) {
                     JdocHtml topHtml = (JdocHtml) node;
                     if (topHtml.getBehaviour().shouldCloseBecauseTagIsStarting(curTag)) {
-                        popImplicitCloseNodes(i, prevEnd);
+                        popHtmlUntil(i, prevEnd, false);
                         i = 0;
                     } else {
                         break;
@@ -193,11 +190,36 @@ public class JavadocParser {
         }
     }
 
-    private void popImplicitCloseNodes(int n, JavadocToken lastToken) {
+    private void popHtmlUntil(int n, JavadocToken lastToken, boolean lastIsExplicit) {
+        JdocHtml top = null;
         while (n-- > 0) {
-            JdocHtml top = (JdocHtml) nodes.pop();
+            top = (JdocHtml) nodes.pop();
+            top.setCloseSyntax(HtmlCloseSyntax.IMPLICIT);
             top.setLastToken(lastToken);
             top.jjtClose();
+        }
+        if (lastIsExplicit && top != null) { // this was closed normally
+            top.setCloseSyntax(HtmlCloseSyntax.HTML);
+        }
+    }
+
+
+    private void finishStack(JavadocToken lastToken) {
+        JdocHtml html = null;
+        while (!nodes.isEmpty()) {
+            AbstractJavadocNode top = nodes.pop();
+            if (top instanceof JdocHtml) {
+                html = (JdocHtml) top;
+                html.setCloseSyntax(HtmlCloseSyntax.IMPLICIT);
+            }
+            top.setLastToken(lastToken);
+            top.jjtClose();
+        }
+
+        // the last HTML node, unclosed
+        if (html != null) {
+            boolean implicitClose = html.getBehaviour().shouldCloseBecauseParentIsEnded("div"); // the name here is irrelevant
+            html.setCloseSyntax(implicitClose ? HtmlCloseSyntax.IMPLICIT : HtmlCloseSyntax.UNCLOSED);
         }
     }
 
@@ -247,7 +269,7 @@ public class JavadocParser {
             if (node instanceof JdocHtml) {
                 JdocHtml topHtml = (JdocHtml) node;
                 if (topHtml.getTagName().equals(end.getTagName())) {
-                    popImplicitCloseNodes(i, lastToken);
+                    popHtmlUntil(i, lastToken, true);
                     return;
                 }
             }
