@@ -4,9 +4,14 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -83,6 +88,138 @@ public interface JavadocNode extends TextAvailableNode {
                                   .collect(Collectors.joining(" "));
         }
 
+    }
+
+    /**
+     * An HTML character reference. This comes in two forms:
+     * <ul>
+     * <li><i>Character entity references</i>, eg {@code &amp;}
+     * <li><i>Numeric character references</i>, either decimal
+     *     (eg {@code &#0010;}) or hexadecimal (eg {@code &#x00a0;})
+     * </ul>
+     */
+    class JdocCharacterReference extends AbstractJavadocNode {
+
+        private static final Pattern NAMED_ENTITY = Pattern.compile("&(\\w+);");
+        private static final Pattern NUMERIC_ENTITY = Pattern.compile("&#([xX])?([0-9a-zA-Z]+);");
+
+        private final String name;
+        private final int point;
+        private final int base;
+
+        JdocCharacterReference(JavadocToken tok) {
+            super(JavadocNodeId.CHARACTER_REFERENCE);
+            assert tok.getKind() == JavadocTokenType.CHARACTER_REFERENCE;
+            setFirstToken(tok);
+            setLastToken(tok);
+
+            Matcher named = NAMED_ENTITY.matcher(tok.getImage());
+            Matcher numeric = NUMERIC_ENTITY.matcher(tok.getImage());
+
+            if (named.matches()) {
+                this.name = named.group(1);
+                this.point = 0;
+                this.base = 0;
+            } else if (numeric.matches()) {
+                this.name = null;
+                this.base = numeric.group(1) != null ? 16 : 10;
+                String repr = numeric.group(2);
+                this.point = Integer.parseInt(repr, base);
+            } else {
+                throw new IllegalStateException(tok.getImage() + " is not a valid HTML character reference");
+            }
+        }
+
+        /**
+         * Returns the constant corresponding to the entity. Returns null
+         * if it's unknown.
+         */
+        @Nullable
+        public NamedSgmlEntity getConstant() {
+            return name != null ? NamedSgmlEntity.fromName(name) : NamedSgmlEntity.fromCodePoint(getCodePoint());
+        }
+
+        /**
+         * Returns the name of this named entity reference, or null if
+         * this is a numeric character reference.
+         */
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+
+        /**
+         * Returns the decimal value of the reference, or zero (0) if this
+         * is a named character reference.
+         * TODO in case of known character reference, should this return the
+         *  correct code point?
+         */
+        public int getCodePoint() {
+            return point;
+        }
+
+        /**
+         * Returns true if this is a hexadecimal numeric character reference.
+         */
+        public boolean isHexadecimal() {
+            return base == 16;
+        }
+
+        enum EntityKind {
+            DECIMAL,
+            NAMED,
+            HEXADECIMAL
+        }
+
+        public enum NamedSgmlEntity {
+            NBSP(160),
+            LT(60),
+            GT(62),
+            AMP(38),
+            QUOT(34),
+            APOS(39),
+            // TODO many more
+            //   https://www.w3schools.com/html/html_entities.asp
+            //   https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
+            ;
+
+            private static final Map<String, NamedSgmlEntity> BY_NAME =
+                Arrays.stream(values()).collect(Collectors.toMap(NamedSgmlEntity::getName, e -> e));
+
+            private static final Map<Integer, NamedSgmlEntity> BY_CODEPOINT =
+                Arrays.stream(values()).collect(Collectors.toMap(NamedSgmlEntity::getCodePoint, e -> e));
+
+            private final int codePoint;
+
+            NamedSgmlEntity(int codePoint) {
+                this.codePoint = codePoint;
+            }
+
+            public int getCodePoint() {
+                return codePoint;
+            }
+
+            public String getName() {
+                return name().toLowerCase(Locale.ROOT);
+            }
+
+            @Override
+            public String toString() {
+                return "&" + getName() + ";";
+            }
+
+            @Nullable
+            public static NamedSgmlEntity fromName(String name) {
+                Objects.requireNonNull(name, "Name was null");
+                return BY_NAME.get(name);
+            }
+
+            @Nullable
+            public static NamedSgmlEntity fromCodePoint(int name) {
+                return BY_CODEPOINT.get(name);
+            }
+        }
     }
 
     /** Unexpected token tag. */

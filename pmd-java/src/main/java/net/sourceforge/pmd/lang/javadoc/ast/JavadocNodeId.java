@@ -8,6 +8,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 enum JavadocNodeId {
     ROOT("Comment"),
     COMMENT_DATA("Data"),
+    CHARACTER_REFERENCE("HtmlEntity"),
     WHITESPACE("Whitespace"),
 
     INLINE_TAG("InlineTag"),

@@ -370,6 +370,15 @@ class JavadocLexerTest : FunSpec({
         )
     }
 
+    test("Test bad character reference") {
+        """/** & amp; */""".shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "& amp;"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_END)
+        )
+    }
 
 })
 
