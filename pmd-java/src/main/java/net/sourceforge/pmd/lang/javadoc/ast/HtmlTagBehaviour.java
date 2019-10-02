@@ -12,6 +12,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sourceforge.pmd.lang.javadoc.ast.HtmlTagBehaviour.TagBehaviourImpl.AutocloseBehaviour;
 import net.sourceforge.pmd.lang.javadoc.ast.HtmlTagBehaviour.TagBehaviourImpl.VoidBehaviour;
 
@@ -69,7 +71,7 @@ enum HtmlTagBehaviour {
 
         @Override
         boolean shouldCloseBecauseParentIsEnded(String parentTag) {
-            return !exceptions.contains(parentTag);
+            return !exceptions.contains(HtmlTagBehaviour.toLower(parentTag));
         }
     },
     ;
@@ -98,8 +100,13 @@ enum HtmlTagBehaviour {
     }
 
     HtmlTagBehaviour(TagBehaviourImpl impl) {
-        this.tagName = name().toLowerCase(Locale.ROOT);
+        this.tagName = toLower(name());
         this.impl = impl;
+    }
+
+    @NonNull
+    private static String toLower(String name) {
+        return name.toLowerCase(Locale.ROOT);
     }
 
     boolean shouldCloseBecauseParentIsEnded(String parentTag) {
@@ -125,9 +132,9 @@ enum HtmlTagBehaviour {
         return Collections.unmodifiableSet(hashSet);
     }
 
-
+    /** Case insensitive. */
     public static HtmlTagBehaviour lookup(String tagName) {
-        return LOOKUP.getOrDefault(tagName, UNKNOWN);
+        return LOOKUP.getOrDefault(toLower(tagName), UNKNOWN);
     }
 
 
@@ -188,7 +195,7 @@ enum HtmlTagBehaviour {
 
             @Override
             public boolean shouldCloseBecauseTagIsStarting(String startingTag) {
-                return autoclosedBy.contains(startingTag);
+                return autoclosedBy.contains(toLower(startingTag));
             }
 
         }

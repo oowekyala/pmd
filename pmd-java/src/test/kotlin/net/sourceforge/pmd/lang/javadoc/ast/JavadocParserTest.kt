@@ -22,7 +22,6 @@ import kotlin.streams.toList
 class JavadocParserTest : JavadocParserSpec({
     /*
         TODO tests:
-         - case sensitivity
          - html comments
     */
 
@@ -290,6 +289,25 @@ class JavadocParserTest : JavadocParserSpec({
                 data(" p;")
             }
         }
+
+        """
+/**
+ *  contents <ul><unknown> p;</ul>
+ */
+        """.trimIndent() should parseAs {
+
+            data("contents ")
+            html("ul") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.HTML
+                html("unknown") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.UNCLOSED
+
+                    data(" p;")
+                }
+                htmlEnd("ul")
+            }
+        }
+
         """
 /**
  *  <ul><li>li1<li>li2
@@ -307,6 +325,53 @@ class JavadocParserTest : JavadocParserSpec({
                     it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
                     data("li2")
                 }
+            }
+        }
+    }
+
+    parserTest("Test case insensitivity") {
+
+        """
+/**
+ * Header.
+ *
+ * <P>OHA
+ * <UL>
+ *     <LI>LI one
+ *     <Li>LI two
+ *     <P>LIP {@link net.sourceforge.pmd.lang.java.ast.JavaNode}
+ *     <LI>LI three
+ *     </li>
+ * </uL>
+ *
+ */
+""".trimIndent() should parseAs {
+            data("Header.")
+
+            html("P") {
+                data("OHA")
+            }
+            html("UL") {
+                it::getCloseSyntax shouldBe HtmlCloseSyntax.HTML
+                html("LI") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+                    data("LI one")
+                }
+                html("Li") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+                    data("LI two")
+                    html("P") {
+                        it::getCloseSyntax shouldBe HtmlCloseSyntax.IMPLICIT
+                        data("LIP ")
+                        typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
+                    }
+                }
+                html("LI") {
+                    it::getCloseSyntax shouldBe HtmlCloseSyntax.HTML
+                    data("LI three")
+                    htmlEnd("li")
+                }
+                htmlEnd("uL")
             }
         }
     }

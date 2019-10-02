@@ -190,16 +190,26 @@ public class JavadocParser {
         }
     }
 
+    /**
+     * @param n              Number of nodes to pop from the stack, all are JdocHtml
+     * @param lastToken      Last token to set to all the popped nodes
+     * @param lastIsExplicit If true, the last node popped is closed by an explicit end tag,
+     *                       otherwise they're either implicit or unclosed
+     */
     private void popHtmlUntil(int n, JavadocToken lastToken, boolean lastIsExplicit) {
-        JdocHtml top = null;
+        JdocHtml last = null;
         while (n-- > 0) {
-            top = (JdocHtml) nodes.pop();
+            JdocHtml top = (JdocHtml) nodes.pop();
             top.setCloseSyntax(HtmlCloseSyntax.IMPLICIT);
+            if (last != null && !last.getBehaviour().shouldCloseBecauseParentIsEnded(top.getTagName())) {
+                last.setCloseSyntax(HtmlCloseSyntax.UNCLOSED);
+            }
             top.setLastToken(lastToken);
             top.jjtClose();
+            last = top;
         }
-        if (lastIsExplicit && top != null) { // this was closed normally
-            top.setCloseSyntax(HtmlCloseSyntax.HTML);
+        if (lastIsExplicit && last != null) { // this was closed normally
+            last.setCloseSyntax(HtmlCloseSyntax.HTML);
         }
     }
 
@@ -246,7 +256,6 @@ public class JavadocParser {
             JavadocToken ident = head();
             JdocHtmlEnd html = new JdocHtmlEnd(ident.getImage());
             html.setFirstToken(start);
-            linkLeaf(html);
             advance();
             skipWhitespace();
             // </a>
@@ -268,12 +277,15 @@ public class JavadocParser {
             i++;
             if (node instanceof JdocHtml) {
                 JdocHtml topHtml = (JdocHtml) node;
-                if (topHtml.getTagName().equals(end.getTagName())) {
+                if (topHtml.getTagName().equalsIgnoreCase(end.getTagName())) {
+                    topHtml.appendChild(end);
                     popHtmlUntil(i, lastToken, true);
                     return;
                 }
             }
         }
+        // no node to close, the end tag is dangling
+        linkLeaf(end);
     }
 
     // TODO error recovery
@@ -475,7 +487,7 @@ public class JavadocParser {
             return name;
         }
 
-        @Nullable // TODO case insensitive lookup
+        @Nullable // case sensitive
         static KnownInlineTagParser lookup(String name) {
             return LOOKUP.get(name);
         }
