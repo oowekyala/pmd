@@ -43,13 +43,15 @@ class JavadocLexer implements TokenManager<JavadocToken> {
     @Nullable
     private JavadocTokenType pendingTok;
 
+    // TODO java unicode escape
+
     /**
      * Build a lexer that scans the whole text.
      *
      * @see #JavadocLexer(String, int, int)
      */
-    public JavadocLexer(String fullText) {
-        this(fullText, 0, fullText.length());
+    public JavadocLexer(String commentText) {
+        this(commentText, 0, commentText.length());
     }
 
     /**
@@ -82,7 +84,7 @@ class JavadocLexer implements TokenManager<JavadocToken> {
 
         try {
             if (lexer == null) {
-                StringReader reader = new StringReader(doc.getFullText()); // TODO java unicode escapes
+                StringReader reader = new StringReader(doc.getFullText());
                 long skipped = reader.skip(curOffset);
                 if (skipped == 0 && curOffset != 0) {
                     return null;
