@@ -4,14 +4,13 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
 import io.kotlintest.TestContext
 import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.RootNode
 import net.sourceforge.pmd.lang.ast.test.Assertions
 import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper
 import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
 import net.sourceforge.pmd.lang.java.ast.AbstractParserTestSpec
-import net.sourceforge.pmd.lang.java.ast.JavaMatchingConfig
 import net.sourceforge.pmd.lang.java.ast.Ver
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment
 
@@ -34,7 +33,7 @@ class JdocParserTestCtx(spec: JavadocParserSpec, ktCtx: TestContext, version: Ja
         get() = version.parser
 
     fun parseAs(matcher: ValuedNodeSpec<JdocComment, Any>): Assertions<String> = {
-        version.parser.parse(it).baseShouldMatchSubtree<Node, JdocComment>(JavaMatchingConfig, false) {
+        version.parser.parse(it).shouldMatchComment {
             matcher()
         }
     }

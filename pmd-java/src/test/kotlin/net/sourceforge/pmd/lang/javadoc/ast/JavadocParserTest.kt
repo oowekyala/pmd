@@ -5,11 +5,13 @@
 package net.sourceforge.pmd.lang.javadoc.ast
 
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
+import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
 import io.kotlintest.shouldBe
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.EmptyAssertions
+import net.sourceforge.pmd.lang.java.ast.JavaMatchingConfig
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.*
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax
@@ -398,6 +400,11 @@ class JavadocParserTest : JavadocParserSpec({
 
 })
 
+
+fun JdocComment?.shouldMatchComment(spec: NodeSpec<JdocComment>) =
+        this.baseShouldMatchSubtree<Node, JdocComment>(JavaMatchingConfig, false) {
+            spec()
+        }
 
 fun TreeNodeWrapper<Node, out JavadocNode>.html(name: String, spec: NodeSpec<JdocHtml>) =
         child<JdocHtml> {
