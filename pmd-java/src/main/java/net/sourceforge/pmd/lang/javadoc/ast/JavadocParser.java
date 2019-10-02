@@ -288,7 +288,6 @@ public class JavadocParser {
         linkLeaf(end);
     }
 
-    // TODO error recovery
     private void htmlAttrs(JdocHtml html) {
         // name=
         //    ^

@@ -84,25 +84,30 @@ class JavadocParserTest : JavadocParserSpec({
 
         """
 /**
- *  <i> &amp; foo</i> <p> &#10; aha &#x00a;
+ *  <i> &amp; foo</i> <p> &#160; aha &#x00a0;
  */
         """.trimIndent() should parseAs {
 
             html("i") {
                 it::getText shouldBe "<i> &amp; foo</i>"
                 data(" ")
-                namedEntity("amp")
+                namedEntity("amp") {
+                    it::getConstant shouldBe KnownHtmlEntity.AMP
+                }
                 data(" foo")
                 htmlEnd("i")
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> &#10; aha &#x00a;\n */"
+                it::getText shouldBe "<p> &#160; aha &#x00a0;\n */"
                 data(" ")
-                decCharReference(10)
+                decCharReference(160) {
+                    it::getConstant shouldBe KnownHtmlEntity.NONBREAKINGSPACE
+                }
                 data(" aha ")
-                hexCharReference(10) {
-                    it::getText shouldBe "&#x00a;"
+                hexCharReference(160) {
+                    it::getText shouldBe "&#x00a0;"
+                    it::getConstant shouldBe KnownHtmlEntity.NONBREAKINGSPACE
                 }
             }
         }
