@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
@@ -48,13 +49,13 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
-public class JavadocParser {
+class JavadocParser {
 
     private final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
 
     private TokenCursor<JavadocToken> tokens;
 
-    public JavadocParser(TokenManager<JavadocToken> lexer) {
+    JavadocParser(TokenManager<JavadocToken> lexer) {
         this.tokens = new TokenCursor<>(lexer);
     }
 
@@ -127,7 +128,7 @@ public class JavadocParser {
     private AbstractJavadocNode parseInlineTagContent(String name) {
         TagParser parser = KnownInlineTagParser.lookup(name);
         if (parser == null) {
-            return new JdocUnknownInlineTag(name);
+            return KnownInlineTagParser.parseUnknown(name, this);
         } else {
             return parser.parse(name, this);
         }
@@ -436,12 +437,8 @@ public class JavadocParser {
             @Override
             public AbstractJavadocNode parse(String name, JavadocParser parser) {
                 parser.advance();
-                StringBuilder builder = new StringBuilder();
-                parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
-                                    it -> it.getKind().isSignificant(),
-                                    tok -> builder.append(tok.getImage()));
-
-                return new JdocLink(name, builder.toString());
+                String data = consumeInlineTag(parser);
+                return new JdocLink(name, data);
             }
         },
 
@@ -456,12 +453,8 @@ public class JavadocParser {
             @Override
             public AbstractJavadocNode parse(String name, JavadocParser parser) {
                 parser.advance();
-                StringBuilder builder = new StringBuilder();
-                parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
-                                    it -> it.getKind().isSignificant(),
-                                    tok -> builder.append(tok.getImage()));
-
-                return new JdocLiteral(name, builder.toString());
+                String data = consumeInlineTag(parser);
+                return new JdocLiteral(name, data);
             }
         },
 
@@ -489,6 +482,21 @@ public class JavadocParser {
         @Nullable // case sensitive
         static KnownInlineTagParser lookup(String name) {
             return LOOKUP.get(name);
+        }
+
+        public static JdocUnknownInlineTag parseUnknown(String name, JavadocParser parser) {
+            parser.advance();
+            String data = consumeInlineTag(parser);
+            return new JdocUnknownInlineTag(name, data);
+        }
+
+        @NonNull
+        private static String consumeInlineTag(JavadocParser parser) {
+            StringBuilder builder = new StringBuilder();
+            parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
+                                it -> it.getKind().isSignificant(),
+                                tok -> builder.append(tok.getImage()));
+            return builder.toString();
         }
     }
 

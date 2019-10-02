@@ -38,10 +38,19 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         return tagName;
     }
 
+    /** An unknown inline tag. */
     public static class JdocUnknownInlineTag extends JdocInlineTag {
 
-        JdocUnknownInlineTag(String tagName) {
+        private final String data;
+
+        JdocUnknownInlineTag(String tagName, String data) {
             super(JavadocNodeId.UNKNOWN_INLINE_TAG, tagName);
+            this.data = data;
+        }
+
+        /** Returns the contents of the tag. */
+        public String getData() {
+            return data;
         }
     }
 

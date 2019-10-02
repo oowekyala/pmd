@@ -14,8 +14,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.*
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.*
-import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink
-import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.*
 import kotlin.streams.toList
 
 
@@ -57,6 +56,22 @@ class JavadocParserTest : JavadocParserSpec({
         }
 
 
+    }
+
+
+    parserTest("Test unknown inline tags") {
+
+        """
+        /**
+         * See {@cobalt #hey}
+         */
+        """.trimIndent() should parseAs {
+            data("See ")
+            unknownInline("@cobalt") {
+                it::getText shouldBe "{@cobalt #hey}"
+                it::getData shouldBe "#hey"
+            }
+        }
     }
 
     parserTest("Test some HTML") {
@@ -420,6 +435,12 @@ fun TreeNodeWrapper<Node, out JavadocNode>.data(data: String, spec: NodeSpec<Jdo
 fun TreeNodeWrapper<Node, out JavadocNode>.link(plain: Boolean = false, spec: NodeSpec<JdocLink> = EmptyAssertions) =
         child<JdocLink> {
             it::getTagName shouldBe if (plain) "@linkplain" else "@link"
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.unknownInline(name: String, spec: NodeSpec<JdocUnknownInlineTag> = EmptyAssertions) =
+        child<JdocUnknownInlineTag> {
+            it::getTagName shouldBe name
             spec()
         }
 

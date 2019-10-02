@@ -23,7 +23,7 @@ import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 /**
  * Wraps the generated JFlex lexer.
  */
-public class JavadocLexer implements TokenManager<JavadocToken> {
+class JavadocLexer implements TokenManager<JavadocToken> {
 
     // the flexer produces single chars for those tokens, we merge them here
     private static final EnumSet<JavadocTokenType> MERGED_TOKENS =
