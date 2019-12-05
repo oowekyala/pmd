@@ -55,9 +55,10 @@
                 </simpleType>
             </element>
         </sequence>
-        <attribute name="reinitializeRule" type="boolean" default="true"></attribute>
-        <attribute name="regressionTest" type="boolean" default="true"></attribute>
-        <attribute name="useAuxClasspath" type="boolean" default="true"></attribute>
+        <attribute name="reinitializeRule" type="boolean" default="true" />
+        <attribute name="focused" type="boolean" default="false" />
+        <attribute name="ignored" type="boolean" default="false" />
+        <attribute name="useAuxClasspath" type="boolean" default="true" />
     </complexType>
 
     <complexType name="codeFragmentType">
