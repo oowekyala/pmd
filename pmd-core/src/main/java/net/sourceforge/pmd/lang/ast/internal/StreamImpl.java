@@ -2,6 +2,10 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
+/*
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
 package net.sourceforge.pmd.lang.ast.internal;
 
 
@@ -28,6 +32,7 @@ import net.sourceforge.pmd.lang.ast.internal.AxisStream.FilteredDescendantStream
 
 public final class StreamImpl {
 
+    @SuppressWarnings("rawtypes")
     private static final NodeStream EMPTY = new IteratorBasedNStream() {
         @Override
         public Iterator iterator() {
