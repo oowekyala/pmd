@@ -96,7 +96,6 @@ public abstract class AbstractJjtreeNode<N extends Node> extends AbstractNode im
         return this.jjtGetFirstToken().getStartInDocument();
     }
 
-
     private int getEndOffset() {
         return this.jjtGetLastToken().getEndInDocument();
     }

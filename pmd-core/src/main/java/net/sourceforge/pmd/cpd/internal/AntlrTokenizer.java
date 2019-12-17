@@ -33,7 +33,7 @@ public abstract class AntlrTokenizer implements Tokenizer {
 
         try {
             AntlrToken currentToken = tokenFilter.getNextToken();
-            while (currentToken != null) {
+            while (currentToken != null && !currentToken.isEof()) {
                 processToken(tokenEntries, tokenManager.getFileName(), currentToken);
                 currentToken = tokenFilter.getNextToken();
             }

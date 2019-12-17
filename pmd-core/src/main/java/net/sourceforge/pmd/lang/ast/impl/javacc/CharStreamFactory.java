@@ -11,6 +11,9 @@ import java.util.function.Function;
 import org.apache.commons.io.IOUtils;
 
 import net.sourceforge.pmd.lang.ast.CharStream;
+import net.sourceforge.pmd.lang.ast.impl.javacc.io.CharSeqReader;
+import net.sourceforge.pmd.lang.ast.impl.javacc.io.JavaEscapeReader;
+import net.sourceforge.pmd.lang.ast.impl.javacc.io.OffsetAwareReader;
 
 public final class CharStreamFactory {
 
@@ -31,7 +34,9 @@ public final class CharStreamFactory {
     public static CharStream simpleCharStream(Reader input, Function<? super String, ? extends JavaccTokenDocument> documentMaker) {
         String source = toString(input);
         JavaccTokenDocument document = documentMaker.apply(source);
-        return new SimpleCharStream(document);
+        OffsetAwareReader strategy = new CharSeqReader(document.getFullText());
+
+        return new CharStreamImpl(strategy, document);
     }
 
     /**
@@ -47,7 +52,9 @@ public final class CharStreamFactory {
     public static CharStream javaCharStream(Reader input, Function<? super String, ? extends JavaccTokenDocument> documentMaker) {
         String source = toString(input);
         JavaccTokenDocument tokens = documentMaker.apply(source);
-        return new JavaCharStream(tokens);
+        OffsetAwareReader reader = new CharSeqReader(source);
+
+        return new CharStreamImpl(new JavaEscapeReader(reader), tokens);
     }
 
     /**

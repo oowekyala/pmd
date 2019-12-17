@@ -13,7 +13,7 @@ import net.sourceforge.pmd.util.StringUtil;
  * Token layer of a parsed file.
  */
 @Experimental
-public abstract class TokenDocument<T extends GenericToken> {
+public abstract class TokenDocument<T extends GenericToken<T>> {
 
     private final String fullText;
     private final SourceCodePositioner positioner;

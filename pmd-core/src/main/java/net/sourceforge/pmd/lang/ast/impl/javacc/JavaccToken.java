@@ -25,7 +25,7 @@ import net.sourceforge.pmd.lang.ast.GenericToken;
  *
  * <p>TODO replace duplicates over PMD.
  */
-public class JavaccToken implements GenericToken {
+public class JavaccToken implements GenericToken<JavaccToken> {
 
     /**
      * Kind for EOF tokens.
@@ -160,6 +160,10 @@ public class JavaccToken implements GenericToken {
         return document == null ? -1 : document.columnFromOffset(endExclusive);
     }
 
+    @Override
+    public boolean isEof() {
+        return kind == 0;
+    }
 
     @Override
     public boolean isImplicit() {

@@ -11,34 +11,37 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
+import net.sourceforge.pmd.lang.cpp.internal.CppEscapeReader;
+
 public class CppCharStreamTest {
 
     @Test
     public void testContinuationUnix() throws IOException {
-        CppCharStream stream = CppCharStream.newCppCharStream(new StringReader("a\\\nb"));
+        CharStream stream = CppEscapeReader.cppCharStream(new StringReader("a\\\nb"));
         assertStream(stream, "ab");
     }
 
     @Test
     public void testContinuationWindows() throws IOException {
-        CppCharStream stream = CppCharStream.newCppCharStream(new StringReader("a\\\r\nb"));
+        CharStream stream = CppEscapeReader.cppCharStream(new StringReader("a\\\r\nb"));
         assertStream(stream, "ab");
     }
 
     @Test
     public void testBackup() throws IOException {
-        CppCharStream stream = CppCharStream.newCppCharStream(new StringReader("a\\b\\\rc"));
+        CharStream stream = CppEscapeReader.cppCharStream(new StringReader("a\\b\\\rc"));
         assertStream(stream, "a\\b\\\rc");
     }
 
-    private void assertStream(CppCharStream stream, String token) throws IOException {
-        char c = stream.BeginToken();
+    private void assertStream(CharStream stream, String token) throws IOException {
+        char c = stream.markTokenStart();
         assertEquals(token.charAt(0), c);
         for (int i = 1; i < token.length(); i++) {
             c = stream.readChar();
             assertEquals(token.charAt(i), c);
         }
-        assertEquals(token, stream.GetImage());
-        assertEquals(token, new String(stream.GetSuffix(token.length())));
+        assertEquals(token, stream.tokenImage());
+        assertEquals(token, new String(stream.imageSuffix(token.length())));
     }
 }

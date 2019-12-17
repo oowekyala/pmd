@@ -8,6 +8,7 @@ import java.io.Reader;
 
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.cpp.ast.CppParserTokenManager;
+import net.sourceforge.pmd.lang.cpp.internal.CppEscapeReader;
 
 /**
  * C++ Token Manager implementation.
@@ -22,7 +23,7 @@ public class CppTokenManager implements TokenManager {
      *            the source code
      */
     public CppTokenManager(Reader source) {
-        tokenManager = new CppParserTokenManager(CppCharStream.newCppCharStream(source));
+        tokenManager = new CppParserTokenManager(CppEscapeReader.cppCharStream(source));
     }
 
     @Override

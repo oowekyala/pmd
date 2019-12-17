@@ -12,7 +12,7 @@ import net.sourceforge.pmd.lang.ast.GenericToken;
  * A generic filter for JavaCC-based token managers that allows to use comments
  * to enable / disable analysis of parts of the stream
  */
-public class JavaCCTokenFilter extends BaseTokenFilter<GenericToken> {
+public class JavaCCTokenFilter extends BaseTokenFilter {
 
     /**
      * Creates a new JavaCCTokenFilter

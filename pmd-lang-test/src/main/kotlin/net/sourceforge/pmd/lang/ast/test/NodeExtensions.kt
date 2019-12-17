@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.ast.test
 
 import io.kotlintest.matchers.string.shouldContain
-import net.sourceforge.pmd.lang.ast.AbstractNode
-import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.TextAvailableNode
 import java.util.*
@@ -25,14 +23,6 @@ val Node.childIndex: Int
 
 val Node.parent: Node?
     get() = this.jjtGetParent()
-
-
-val Node.firstToken: GenericToken
-    get() = (this as AbstractNode).jjtGetFirstToken()
-
-val Node.lastToken: GenericToken
-    get() = (this as AbstractNode).jjtGetLastToken()
-
 
 fun Node.getChild(i: Int): Node = jjtGetChild(i)
 
