@@ -20,10 +20,20 @@ public enum JdocTokenType {
      */
     COMMENT_START("/**", true),
     /** End of input. */
-    COMMENT_END("*/", true),
+    COMMENT_END("*/", true) {
+        @Override
+        public String format(JdocToken token) {
+            return "comment delimiter";
+        }
+    },
 
     /** Name of an inline or block tag. This includes the preceding @ sign. */
-    TAG_NAME("@<tag name>", false),
+    TAG_NAME("@<tag name>", false) {
+        @Override
+        public String format(JdocToken token) {
+            return "tag name " + token.getImage();
+        }
+    },
 
     /**
      * Whitespace ignored by javadoc. Significant whitespace is parsed as {@link #COMMENT_DATA}.
@@ -43,7 +53,12 @@ public enum JdocTokenType {
      * lineBreak ::= ("\n" | "\r\n") ({:whitespace:}* "*")?
      * </pre>
      */
-    LINE_BREAK("<line break>", false),
+    LINE_BREAK("<line break>", false) {
+        @Override
+        public String format(JdocToken token) {
+            return "line break";
+        }
+    },
 
     /**
      * Always followed by a {@link #TAG_NAME} (otherwise treated as comment data).
@@ -106,7 +121,7 @@ public enum JdocTokenType {
 
 
     /** An implicit token, generated to support an implicit node. */
-    OTHER_IMPLICIT("", true);
+    EXPECTED_TOKEN("", true);
 
     static final EnumSet<JdocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
     static final EnumSet<JdocTokenType> EMPTY_SET = EnumSet.noneOf(JdocTokenType.class);
@@ -118,6 +133,14 @@ public enum JdocTokenType {
         this.value = value;
         this.isConst = isConst;
     }
+
+
+    public String format(JdocToken token) {
+        assert token.getKind() == this;
+        return isConst ? "token " + token.getImage()
+                       : "token " + token.getImage() + " (" + this + ")";
+    }
+
 
     boolean isSignificant() {
         return this != WHITESPACE && this != LINE_BREAK;

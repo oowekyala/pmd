@@ -105,6 +105,10 @@ public final class JdocToken extends OffsetBasedToken<JdocToken> implements Prev
         return left;
     }
 
+    /**
+     * Creates a zero-length token with the given kind right before the
+     * given successor token. This links the tokens appropriately.
+     */
     static JdocToken implicitBefore(JdocTokenType kind, JdocToken successor) {
         JdocToken tok = new JdocToken(kind, successor.getStartInDocument(), successor.getDocument());
         tok.prev = successor.prev;
