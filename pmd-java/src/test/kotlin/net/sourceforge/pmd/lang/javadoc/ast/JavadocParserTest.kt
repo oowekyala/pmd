@@ -44,10 +44,7 @@ class JavadocParserTest : JavadocParserSpec({
                 it::getText shouldBe "{@link #hey}"
                 it::getRef shouldBe fieldRef("hey") {
                     it::getText shouldBe "#hey"
-                    classRef("") {
-                        it::getText shouldBe ""
-                        it::isImplicit shouldBe true
-                    }
+                    emptyClassRef()
                 }
             }
         }
@@ -67,7 +64,6 @@ class JavadocParserTest : JavadocParserSpec({
                     it::getText shouldBe "Oha#hey"
                     classRef("Oha") {
                         it::getText shouldBe "Oha"
-                        it::isImplicit shouldBe false
                     }
                 }
 
@@ -90,7 +86,6 @@ class JavadocParserTest : JavadocParserSpec({
                 it::getText shouldBe "{@link Oha# label label}"
                 it::getRef shouldBe classRef("Oha") {
                     it::getText shouldBe "Oha#"
-                    it::isImplicit shouldBe false
 
                     malformed {
                         it.message.shouldContain("Unexpected token #")
@@ -131,6 +126,71 @@ class JavadocParserTest : JavadocParserSpec({
                 // TODO malformed?
                 it::getRef shouldBe null
                 it::getLabel shouldBe null
+            }
+        }
+
+
+    }
+
+
+    parserTest("Test @value inline tags") {
+
+        """
+        /**
+         * See {@value #hey}
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@value #hey}\n */"
+
+            data("See ")
+            value {
+                it::getText shouldBe "{@value #hey}"
+                it::getRef shouldBe fieldRef("hey") {
+                    it::getText shouldBe "#hey"
+                    emptyClassRef()
+                }
+            }
+        }
+
+
+        // malformed
+
+        """
+        /**
+         * See {@value Oha#hey label label}
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@value Oha#hey label label}\n */"
+
+            data("See ")
+            value {
+                it::getText shouldBe "{@value Oha#hey label label}"
+                it::getRef shouldBe fieldRef("hey") {
+                    it::getText shouldBe "Oha#hey"
+                    classRef("Oha") {
+                        it::getText shouldBe "Oha"
+                    }
+                }
+
+                malformed {
+                    it::getText shouldBe "label"
+                }
+            }
+        }
+
+
+        """
+        /**
+         * See {@value }
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@value }\n */"
+
+            data("See ")
+            value {
+                it::getText shouldBe "{@value }"
+                // TODO malformed?
+                it::getRef shouldBe null
             }
         }
 
@@ -543,9 +603,22 @@ fun TreeNodeWrapper<Node, out JavadocNode>.link(plain: Boolean = false, spec: No
             spec()
         }
 
+fun TreeNodeWrapper<Node, out JavadocNode>.value(spec: NodeSpec<JdocValue> = EmptyAssertions) =
+        child<JdocValue> {
+            spec()
+        }
+
 fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec<JdocClassRef> = EmptyAssertions) =
         child<JdocClassRef> {
             it::getSimpleRef shouldBe name
+            it::isImplicit shouldBe false
+            spec()
+        }
+fun TreeNodeWrapper<Node, out JavadocNode>.emptyClassRef(spec: NodeSpec<JdocClassRef> = EmptyAssertions) =
+        child<JdocClassRef> {
+            it::getSimpleRef shouldBe ""
+            it::getText shouldBe ""
+            it::isImplicit shouldBe true
             spec()
         }
 

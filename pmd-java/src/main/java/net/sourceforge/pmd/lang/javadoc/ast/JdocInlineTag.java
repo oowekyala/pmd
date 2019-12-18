@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
-import net.sourceforge.pmd.lang.java.metrics.JavaMetrics;
-
 /**
  * An inline javadoc tag, eg {@code {@code }}.
  *
@@ -104,8 +101,6 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
      * difference is that {@code {@link }} is rendered
      * with a monospace font, while {@code {@linkplain }} is
      * not.
-     *
-     * @see JavaMetrics#get(net.sourceforge.pmd.lang.metrics.MetricKey, ASTAnyTypeDeclaration)
      */
     public static class JdocLink extends JdocInlineTag {
 
@@ -137,6 +132,25 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         @Nullable
         public String getLabel() {
             return children(JdocCommentData.class).firstOpt().map(JdocCommentData::getData).orElse(null);
+        }
+    }
+
+    /**
+     * A {@code {@value }} tag.
+     */
+    public static class JdocValue extends JdocInlineTag {
+
+        JdocValue(String tagName) {
+            super(JavadocNodeId.VALUE_TAG, tagName);
+        }
+
+        /**
+         * Returns the ref, or null if this node has none and is thus
+         * invalid wrt to javadoc spec. This should always be a {@link JdocFieldRef}.
+         */
+        @Nullable
+        JdocRef getRef() {
+            return children(JdocRef.class).first();
         }
     }
 }
