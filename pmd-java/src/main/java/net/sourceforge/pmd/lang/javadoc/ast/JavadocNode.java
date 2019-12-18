@@ -16,10 +16,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
-import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 
 
 /**
@@ -58,14 +56,15 @@ public interface JavadocNode extends TextAvailableNode {
      * Returns true if this node is implied by context.
      */
     default boolean isImplicit() {
-        return false;
+        return getFirstToken().equals(getLastToken()) && getFirstToken().isImplicit();
     }
 
 
     /**
      * Returns the original source code underlying this node. This may
      * contain some insignificant whitespace characters (or asterisks),
-     * so use {@link JdocCommentData#getData()} to retrieve the actual content.
+     * so use {@link JdocCommentData#getData()} to retrieve the actual
+     * content. It also features all unicode escapes.
      */
     @Override
     String getText();
@@ -419,94 +418,6 @@ public interface JavadocNode extends TextAvailableNode {
                                   .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
                                   .map(JdocToken::getImage)
                                   .collect(Collectors.joining());
-        }
-    }
-
-    interface JdocRef extends JavadocNode {
-
-    }
-
-    /**
-     * A reference to a {@linkplain JdocFieldRef field} or {@linkplain JdocExecutableRef method or constructor}.
-     */
-    interface JdocMemberRef extends JdocRef {
-
-        /**
-         * Returns the reference to the owner class.
-         */
-        default JdocClassRef getOwnerClassRef() {
-            return (JdocClassRef) jjtGetChild(0);
-        }
-    }
-
-    /**
-     * A reference to a java class in javadoc.
-     */
-    class JdocClassRef extends AbstractJavadocNode implements JdocRef {
-
-        JdocClassRef(@Nullable JdocToken tok) {
-            super(JavadocNodeId.CLASS_REF);
-            setFirstToken(tok);
-            setLastToken(tok);
-        }
-
-        /**
-         * Returns the name of the class. This may be a simple name,
-         * which needs to be resolved with a {@link JSymbolTable}.
-         * This may also be empty, in which case the enclosing class
-         * is implied.
-         */
-        public String getSimpleRef() {
-            return getFirstToken().getImage();
-        }
-
-        @Override
-        public boolean isImplicit() {
-            return getFirstToken().isImplicit();
-        }
-    }
-
-    /**
-     * A reference to a field of a class in javadoc.
-     */
-    class JdocFieldRef extends AbstractJavadocNode implements JdocMemberRef {
-
-        JdocFieldRef(JdocClassRef classRef, JdocToken fieldName) {
-            super(JavadocNodeId.FIELD_REF);
-            jjtAddChild(classRef, 0);
-            setFirstToken(classRef.getFirstToken());
-            setLastToken(fieldName);
-        }
-
-        /**
-         * Returns the name of the field.
-         */
-        public String getName() {
-            return getLastToken().getImage();
-        }
-    }
-
-    /**
-     * A reference to a method or constructor of a class in javadoc.
-     */
-    class JdocExecutableRef extends AbstractJavadocNode implements JdocMemberRef {
-
-        private final String name;
-
-        public JdocExecutableRef(JdocClassRef classRef, JdocToken nametok) {
-            super(JavadocNodeId.EXECUTABLE_REF);
-            jjtAddChild(classRef, 0);
-            setFirstToken(classRef.getFirstToken());
-            name = nametok.getImage();
-        }
-
-        public NodeStream<JdocClassRef> getParamRefs() {
-            return children(JdocClassRef.class).drop(1);
-        }
-
-
-        public String getName() {
-            return name;
         }
     }
 

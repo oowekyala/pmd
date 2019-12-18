@@ -18,11 +18,10 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocClassRef;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocExecutableRef;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocFieldRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocExecutableRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocRef;
 
 /**
  * Parses references. At the time the tokens come out those are COMMENT_DATA.

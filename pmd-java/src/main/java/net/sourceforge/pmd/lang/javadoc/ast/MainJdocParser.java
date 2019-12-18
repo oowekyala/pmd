@@ -40,7 +40,6 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyn
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocRef;
 
 class MainJdocParser extends BaseJavadocParser {
 
@@ -102,10 +101,14 @@ class MainJdocParser extends BaseJavadocParser {
     private void blockTag() {
         JdocToken tagname = head();
         assert tagname.getKind() == TAG_NAME;
+        JdocBlockTag tag = KnownBlockTagParser.selectAndParse(head().getImage(), this);
+        tag.setFirstToken(tagname);
 
+        if (nodes.peek() instanceof JdocBlockTag) {
+            // close previous node
+            AbstractJavadocNode pop = nodes.pop();
 
-
-
+        }
 
 
     }
@@ -114,7 +117,7 @@ class MainJdocParser extends BaseJavadocParser {
         JdocToken start = head();
         if (advance()) {
             if (tokIs(TAG_NAME)) {
-                AbstractJavadocNode tag = parseInlineTagContent(head().getImage());
+                AbstractJavadocNode tag = KnownInlineTagParser.selectAndParse(head().getImage(), this);
                 tag.setFirstToken(start);
                 if (tokIs(INLINE_TAG_END)) {
                     tag.setLastToken(head());
@@ -127,20 +130,6 @@ class MainJdocParser extends BaseJavadocParser {
             } else if (!tokens.isEoi()) {
                 growDataLeaf(start, head());
             }
-        }
-    }
-
-    /**
-     * Parse the content of an inline tag depending on its name. After
-     * this exits, we'll consume tokens until the next INLINE_TAG_END,
-     * or element that interrupts the tag.
-     */
-    private AbstractJavadocNode parseInlineTagContent(String name) {
-        TagParser parser = KnownInlineTagParser.lookup(name);
-        if (parser == null) {
-            return KnownInlineTagParser.parseUnknown(name, this);
-        } else {
-            return parser.parse(name, this);
         }
     }
 
@@ -429,28 +418,6 @@ class MainJdocParser extends BaseJavadocParser {
             // doesn't matter, we'll just consume until the closing brace
         }
         return firstLabelTok;
-    }
-
-    interface TagParser {
-
-        /** Returns the tag name. */
-        String getName();
-
-
-        /**
-         * Parse an inline tag. When the method is called, the parser's
-         * {@link #head()} is set on the {@link JdocTokenType#TAG_NAME}.
-         * When it returns, it should be set on the {@link JdocTokenType#INLINE_TAG_END}.
-         *
-         * <p>This method does not need to set the first/end tokens on
-         * the returned node.
-         *
-         * @param name   Name of the tag to parse
-         * @param parser Parser
-         *
-         * @return A node for the tag
-         */
-        AbstractJavadocNode parse(String name, MainJdocParser parser);
     }
 
 

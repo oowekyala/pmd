@@ -15,16 +15,26 @@ enum JavadocNodeId {
     WHITESPACE("Whitespace"),
 
     INLINE_TAG("InlineTag"),
-    LITERAL_TAG("InlineLiteralTag"),
-    LINK_TAG("InlineLinkTag"),
-    VALUE_TAG("InlineValueTag"),
+    LITERAL_TAG("InlineTag"),
+    LINK_TAG("InlineTag"),
+    VALUE_TAG("InlineTag"),
     UNKNOWN_INLINE_TAG("UnknownInlineTag"),
+
+
+    RETURN_TAG("BlockTag"),
+    PARAM_TAG("BlockTag"),
+    THROWS_TAG("BlockTag"),
+    AUTHOR_TAG("BlockTag"),
+    SINCE_TAG("BlockTag"),
+    DEPRECATED_TAG("BlockTag"),
+    UNKNOWN_BLOCK_TAG("UnknownBlockTag"),
+
 
     CLASS_REF("ClassRef"),
     EXECUTABLE_REF("ExecutableRef"),
     FIELD_REF("FieldRef"),
-
-    BLOCK_TAG("BlockTag"),
+    PARAM_REF("ParamRef"),
+    TPARAM_REF("TypeParamRef"),
 
     MALFORMED("Malformed"),
     HTML("Html"),

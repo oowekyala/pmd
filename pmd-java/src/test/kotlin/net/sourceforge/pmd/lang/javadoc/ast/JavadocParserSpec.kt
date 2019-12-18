@@ -128,22 +128,22 @@ fun TreeNodeWrapper<Node, out JavadocNode>.value(spec: NodeSpec<JdocInlineTag.Jd
             spec()
         }
 
-fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec<JavadocNode.JdocClassRef> = EmptyAssertions) =
-        child<JavadocNode.JdocClassRef> {
+fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec<JdocRef.JdocClassRef> = EmptyAssertions) =
+        child<JdocRef.JdocClassRef> {
             it::getSimpleRef shouldBe name
             it::isImplicit shouldBe false
             spec()
         }
-fun TreeNodeWrapper<Node, out JavadocNode>.emptyClassRef(spec: NodeSpec<JavadocNode.JdocClassRef> = EmptyAssertions) =
-        child<JavadocNode.JdocClassRef> {
+fun TreeNodeWrapper<Node, out JavadocNode>.emptyClassRef(spec: NodeSpec<JdocRef.JdocClassRef> = EmptyAssertions) =
+        child<JdocRef.JdocClassRef> {
             it::getSimpleRef shouldBe ""
             it::getText shouldBe ""
             it::isImplicit shouldBe true
             spec()
         }
 
-fun TreeNodeWrapper<Node, out JavadocNode>.fieldRef(name: String, spec: NodeSpec<JavadocNode.JdocFieldRef> = EmptyAssertions) =
-        child<JavadocNode.JdocFieldRef> {
+fun TreeNodeWrapper<Node, out JavadocNode>.fieldRef(name: String, spec: NodeSpec<JdocRef.JdocFieldRef> = EmptyAssertions) =
+        child<JdocRef.JdocFieldRef> {
             it::getName shouldBe name
             spec()
         }

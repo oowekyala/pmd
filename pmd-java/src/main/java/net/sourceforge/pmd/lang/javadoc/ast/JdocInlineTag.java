@@ -6,6 +6,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
+
 /**
  * An inline javadoc tag, eg {@code {@code }}.
  *
@@ -13,10 +15,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <ul>
  *     <li>{@code @code}, {@code @literal}: {@link JdocLiteral}</li>
  *     <li>{@code @link}, {@code @linkplain}: {@link JdocLink}</li>
+ *     <li>{@code @value}: {@link JdocValue}</li>
+ *     <li>{@code @inheritDoc}: {@link JdocInheritDoc}</li>
  *     <li>Anything else: {@link JdocUnknownInlineTag}</li>
  * </ul>
- *
- * TODO support all standard doclet tags
  */
 public abstract class JdocInlineTag extends AbstractJavadocNode {
 
