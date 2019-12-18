@@ -50,7 +50,8 @@ public class BaseJavadocParser {
     }
 
     /**
-     * Returns false if end of input is reached (in which case tok remains the last non-null token).
+     * Returns false if end of input is reached (in which case tok
+     * remains the last non-null token).
      */
     protected boolean advance() {
         return tokens.advance();
