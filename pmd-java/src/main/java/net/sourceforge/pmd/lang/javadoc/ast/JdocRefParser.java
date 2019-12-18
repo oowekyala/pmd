@@ -15,7 +15,6 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.TYPE_REFERENCE;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.WHITESPACE;
 
 import java.util.EnumSet;
-import java.util.regex.Pattern;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -27,19 +26,9 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocRef;
 
 /**
  * Parses references. At the time the tokens come out those are COMMENT_DATA.
+ * They're lexed in a second pass depending on parser decisions.
  */
 class JdocRefParser extends BaseJavadocParser {
-
-    private static final Pattern REFERENCE_FORMAT = Pattern.compile(
-        "((?:[\\w$]+\\.)*[\\w$]+)?"  // type name (g1), null if absent
-            + "(?:#"
-            + "([\\w$]+)"            // method or field name (g2), null if absent
-            + "("                    // params (g3), null if absent
-            + "\\([^)]*+\\)"         // (permissive, eat up to the next opening paren)
-            + ")?"
-            + ")?"
-            + "(\\s++(.*))?"            // label (g4), empty if absent
-    );
 
     JdocRefParser(JdocToken tokenToSplit) {
         super(new JavadocLexer(tokenToSplit, JavadocFlexer.REF_START));

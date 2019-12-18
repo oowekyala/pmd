@@ -8,7 +8,16 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import java.util.EnumSet;
 
 public enum JdocTokenType {
-    /** End of input. */
+
+    /* ****************
+     * Javadoc proper *
+     **************** */
+
+
+    /**
+     * Start of input. Any parsable comment must at the very least start
+     * with this token.
+     */
     COMMENT_START("/**", true),
     /** End of input. */
     COMMENT_END("*/", true),
@@ -51,7 +60,11 @@ public enum JdocTokenType {
     /** Significant text for the HTML output. */
     COMMENT_DATA("<comment data>", false),
 
-    /** A type reference. */
+    /* *****************************
+     * References to Java elements *
+     ***************************** */
+
+
     TYPE_REFERENCE("type reference", false),
     MEMBER_REFERENCE("member reference", false),
     REF_POUND("#", true),
@@ -66,14 +79,21 @@ public enum JdocTokenType {
      */
     BAD_CHAR("<bad character>", false),
 
+    /* *************
+     * HTML tokens *
+     ************* */
+
+    /** Identifier of an HTML attribute or tag. */
+    HTML_IDENT("<identifier>", false),
+
+    /** An HTML character reference. See {@link JavadocNode.JdocCharacterReference}. */
+    CHARACTER_REFERENCE("<HTML entity>", false),
+
+
     HTML_LT("<", true),
     HTML_GT(">", true),
     HTML_LCLOSE("</", true),
     HTML_RCLOSE("/>", true),
-
-    /*
-        Attributes.
-     */
 
     HTML_EQ("=", true),
     HTML_SQUOTE("'", true),
@@ -84,12 +104,9 @@ public enum JdocTokenType {
     HTML_COMMENT_END("-->", true),
     HTML_COMMENT_CONTENT("<comment>", false),
 
-    /** Identifier of an HTML attribute or tag. */
-    HTML_IDENT("<identifier>", false),
 
-    /** An HTML character reference. See {@link JavadocNode.JdocCharacterReference}. */
-    CHARACTER_REFERENCE("<HTML entity>", false),
-    ;
+    /** An implicit token, generated to support an implicit node. */
+    OTHER_IMPLICIT("", true);
 
     static final EnumSet<JdocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
     static final EnumSet<JdocTokenType> EMPTY_SET = EnumSet.noneOf(JdocTokenType.class);
@@ -108,12 +125,17 @@ public enum JdocTokenType {
 
     /**
      * If true, {@link #getConstValue()} returns the image of the token.
-     * It can be shared between all tokens of this type.
+     * It can be shared between all tokens of this type (no need to allocate
+     * a string).
      */
     boolean isConst() {
         return isConst;
     }
 
+    /**
+     * See {@link #isConst()}. If that method returns false, then the
+     * return value of this method is unspecified.
+     */
     String getConstValue() {
         return value;
     }

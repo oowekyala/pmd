@@ -66,7 +66,7 @@ class JavadocParsingHelper(params: Params)
 
 
     override fun parse(sourceCode: String, version: String?): JdocComment =
-            JavadocParser(JavadocLexer(sourceCode)).parse()
+            MainJdocParser(JavadocLexer(sourceCode)).parse()
 
 
     companion object {
