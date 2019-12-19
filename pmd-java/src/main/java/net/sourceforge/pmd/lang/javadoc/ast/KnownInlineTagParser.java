@@ -73,6 +73,11 @@ enum KnownInlineTagParser implements InlineTagParser {
         }
     },
 
+    // TODO
+    //  Displays constant values. When the {@value} tag is used without
+    //  an argument in the documentation comment of a static field, it
+    //  displays the value of that constant
+
     VALUE("@value") {
         @Override
         public JdocInlineTag parse(String name, MainJdocParser parser) {
@@ -90,6 +95,8 @@ enum KnownInlineTagParser implements InlineTagParser {
         }
 
     },
+
+    // TODO DocRoot tag
 
     INHERIT_DOC("@inheritDoc") {
         @Override

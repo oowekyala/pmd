@@ -51,6 +51,9 @@ class MainJdocParser extends BaseJavadocParser {
         this.lexer = lexer;
     }
 
+    /**
+     * Root production.
+     */
     public JdocComment parse() {
         JdocComment comment = new JdocComment();
 
@@ -168,6 +171,19 @@ class MainJdocParser extends BaseJavadocParser {
      *
      * @param prevEnd Token that should be used as the end token of the autoclosed tag
      * @param curTag  Name of the tag being opened
+     */
+
+    /**
+     * oho
+     *
+     * @param prevEnd Token that should be used as the end token of the autoclosed tag
+     * @param curTag  Name of the tag being opened
+     *
+     *
+     * @deprecated
+     *
+     * ohi
+     *
      */
     private void maybeImplicitClose(JdocToken prevEnd, String curTag) {
         if (nodes.peek() instanceof JdocHtml) {
