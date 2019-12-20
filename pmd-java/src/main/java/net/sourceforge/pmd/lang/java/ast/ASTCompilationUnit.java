@@ -63,6 +63,10 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
     }
 
 
+    /**
+     * @deprecated Use {@code getPackageName().isEmpty()}
+     */
+    @Deprecated
     public boolean declarationsAreInDefaultPackage() {
         return getPackageDeclaration() == null;
     }
@@ -91,6 +95,7 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ro
         List<ASTTypeDeclaration> tds = findChildrenOfType(ASTTypeDeclaration.class);
         return tds.stream().map(it -> (ASTAnyTypeDeclaration) it.getFirstChild()).collect(Collectors.toList());
     }
+
 
     @InternalApi
     @Deprecated
