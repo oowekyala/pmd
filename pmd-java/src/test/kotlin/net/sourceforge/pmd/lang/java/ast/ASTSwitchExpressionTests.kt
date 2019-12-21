@@ -72,16 +72,10 @@ class ASTSwitchExpressionTests : ParserTestSpec({
                 child<ASTSwitchLabel> {
                     it::isDefault shouldBe true
                 }
-                child<ASTBlock> {
-                    child<ASTBlockStatement>(ignoreChildren = true) {}
-                    child<ASTBlockStatement>(ignoreChildren = true) {}
-                    child<ASTBlockStatement> {
-                        child<ASTStatement> {
-                            child<ASTBreakStatement> {
-                                it::getImage shouldBe "result"
-                            }
-                        }
-                    }
+                block {
+                    localVarDecl()
+                    localVarDecl()
+                    breakStatement(label = "result")
                 }
             }
         }
@@ -241,42 +235,31 @@ class ASTSwitchExpressionTests : ParserTestSpec({
                 child<ASTExpression>(ignoreChildren = true) {}
 
             }
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTStatementExpression>(ignoreChildren = true) {}
-                }
-            }
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTBreakStatement> {}
-                }
-            }
+
+            exprStatement()
+            breakStatement()
             child<ASTSwitchLabel> {
                 it::isDefault shouldBe false
 
                 child<ASTExpression>(ignoreChildren = true) {}
 
             }
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTSwitchStatement> {
 
-                        it::getTestedExpression shouldBe child(ignoreChildren = true) {}
+            child<ASTSwitchStatement> {
 
-                        child<ASTSwitchLabeledExpression>(ignoreChildren = true) {}
-                        child<ASTSwitchLabeledExpression>(ignoreChildren = true) {}
+                it::getTestedExpression shouldBe child(ignoreChildren = true) {}
 
-                    }
-                }
+                child<ASTSwitchLabeledExpression>(ignoreChildren = true) {}
+                child<ASTSwitchLabeledExpression>(ignoreChildren = true) {}
+
             }
+
+
             child<ASTSwitchLabel> {
                 it::isDefault shouldBe true
             }
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTStatementExpression>(ignoreChildren = true) {}
-                }
-            }
+
+            exprStatement()
         }
     }
 
@@ -336,14 +319,9 @@ class ASTSwitchExpressionTests : ParserTestSpec({
 
                 variableAccess("TUESDAY")
             }
-            child<ASTBlockStatement>(ignoreChildren = true) { }
 
-
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTBreakStatement> {}
-                }
-            }
+            exprStatement()
+            breakStatement()
 
             child<ASTSwitchLabel> {
                 it::isDefault shouldBe false
@@ -352,24 +330,14 @@ class ASTSwitchExpressionTests : ParserTestSpec({
                 child<ASTExpression>(ignoreChildren = true) {}
             }
 
-            child<ASTBlockStatement>(ignoreChildren = true) { }
-
-
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTBreakStatement> {}
-                }
-            }
+            exprStatement()
+            breakStatement()
 
             child<ASTSwitchLabel> {
                 it::isDefault shouldBe true
             }
 
-            child<ASTBlockStatement> {
-                child<ASTStatement> {
-                    child<ASTBreakStatement> {}
-                }
-            }
+            breakStatement()
         }
     }
 
