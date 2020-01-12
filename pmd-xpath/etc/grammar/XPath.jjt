@@ -17,13 +17,13 @@ options {
 //   DEBUG_LOOKAHEAD = true;
 }
 
-PARSER_BEGIN(XPathParser)
+PARSER_BEGIN(XPathParserImpl)
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import net.sourceforge.pmd.lang.ast.CharStream;
 
-public class XPathParser {
+public class XPathParserImpl {
 
     void throwParseException(String message) {
         ParseException exc = generateParseException();
@@ -48,7 +48,7 @@ public class XPathParser {
 
 
 }
-PARSER_END(XPathParser)
+PARSER_END(XPathParserImpl)
 
 TOKEN_MGR_DECLS :
 {

@@ -9,8 +9,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode;
 
 
 /**
@@ -19,7 +19,7 @@ import net.sourceforge.pmd.lang.ast.Node;
  * @author Clément Fournier
  * @since 6.7.0
  */
-abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
+abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implements XPathNode {
 
     /** May be null if the node is synthetic. */
     @Nullable
@@ -67,28 +67,6 @@ abstract class AbstractXPathNode extends AbstractNode implements XPathNode {
                 ((XPathNode) child).jjtAccept(visitor);
             }
         }
-    }
-
-
-    @Override
-    public void jjtOpen() {
-        if (beginLine == -1 && parser.token.next != null) {
-            beginLine = parser.token.next.beginLine;
-            beginColumn = parser.token.next.beginColumn;
-        }
-    }
-
-
-    @Override
-    public void jjtClose() {
-        if (beginLine == -1 && (children == null || children.length == 0)) {
-            beginColumn = parser.token.beginColumn;
-        }
-        if (beginLine == -1) {
-            beginLine = parser.token.beginLine;
-        }
-        endLine = parser.token.endLine;
-        endColumn = parser.token.endColumn;
     }
 
 
