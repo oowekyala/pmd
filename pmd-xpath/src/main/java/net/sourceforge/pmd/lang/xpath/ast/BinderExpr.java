@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface BinderExpr extends ExprSingle {
+public interface BinderExpr extends Expr {
 
 
     /**
@@ -37,8 +37,8 @@ public interface BinderExpr extends ExprSingle {
      * in scope. Variables are also in scope in the initializers
      * of variables declared after themselves.
      */
-    default ExprSingle getBodyExpr() {
-        return (ExprSingle) Objects.requireNonNull(getLastChild());
+    default Expr getBodyExpr() {
+        return (Expr) Objects.requireNonNull(getLastChild());
     }
 
 }

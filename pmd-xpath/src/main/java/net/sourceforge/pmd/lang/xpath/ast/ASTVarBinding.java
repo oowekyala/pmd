@@ -14,7 +14,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link ExprSingle}
+ * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link Expr}
  *
  * </pre>
  */
@@ -55,8 +55,8 @@ public final class ASTVarBinding extends AbstractXPathNode {
     /**
      * Returns the expression initializing the variable.
      */
-    public ExprSingle getInitializerExpr() {
-        return (ExprSingle) getChild(1);
+    public Expr getInitializerExpr() {
+        return (Expr) getChild(1);
     }
 
 

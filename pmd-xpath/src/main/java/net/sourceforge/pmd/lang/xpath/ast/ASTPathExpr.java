@@ -26,7 +26,7 @@ import java.util.Iterator;
  *
  * </pre>
  */
-public final class ASTPathExpr extends AbstractXPathNode implements Iterable<StepExpr>, ExprSingle {
+public final class ASTPathExpr extends AbstractXPathExpr implements Iterable<StepExpr>, Expr {
 
     private PathAnchor pathAnchor;
 

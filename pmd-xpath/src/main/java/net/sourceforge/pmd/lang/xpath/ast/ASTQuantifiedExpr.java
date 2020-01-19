@@ -9,11 +9,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding}  ( "," {@linkplain ASTVarBinding VarBinding} )* "satisfies" {@link ExprSingle}
+ * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding}  ( "," {@linkplain ASTVarBinding VarBinding} )* "satisfies" {@link Expr}
  *
  * </pre>
  */
-public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSingle, BinderExpr {
+public final class ASTQuantifiedExpr extends AbstractXPathExpr implements Expr, BinderExpr {
 
     private boolean isUniversallyQuantified;
 

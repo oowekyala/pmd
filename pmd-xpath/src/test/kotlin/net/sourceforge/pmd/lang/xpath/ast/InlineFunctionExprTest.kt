@@ -109,33 +109,30 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                 it::getFunctionNameNode shouldBe simpleName("collection")
                 it::getArguments shouldBe child {}
             }
-            child<ASTParenthesizedExpr> {
+            child<ASTLetExpr> {
 
-                it::getWrappedNode shouldBe child<ASTLetExpr> {
+                val binding = child<ASTVarBinding> {
+                    it::isLetStyle shouldBe true
+                    it::getVarName shouldBe "a"
 
-                    val binding = child<ASTVarBinding> {
-                        it::isLetStyle shouldBe true
-                        it::getVarName shouldBe "a"
+                    it::getVarNameNode shouldBe simpleName("a")
+                    it::getInitializerExpr shouldBe child<ASTContextItemExpr> {
+
+                    }
+                }
+
+                it.bindings.toList().shouldContainAll(binding)
+
+
+                it::getBodyExpr shouldBe child<ASTInlineFunctionExpr> {
+                    it::getDeclaredReturnType shouldBe null
+                    it::isDefaultReturnType shouldBe true
+
+                    it::getParamList shouldBe child {}
+
+                    it::getBodyExpr shouldBe child<ASTVarRef> {
 
                         it::getVarNameNode shouldBe simpleName("a")
-                        it::getInitializerExpr shouldBe child<ASTContextItemExpr> {
-
-                        }
-                    }
-
-                    it.bindings.toList().shouldContainAll(binding)
-
-
-                    it::getBodyExpr shouldBe child<ASTInlineFunctionExpr> {
-                        it::getDeclaredReturnType shouldBe null
-                        it::isDefaultReturnType shouldBe true
-
-                        it::getParamList shouldBe child {}
-
-                        it::getBodyExpr shouldBe child<ASTVarRef> {
-
-                            it::getVarNameNode shouldBe simpleName("a")
-                        }
                     }
                 }
             }

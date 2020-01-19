@@ -608,7 +608,7 @@ void PrimaryExpr() #void:
     | ("$" VarName())       #VarRef
     | "."                   #ContextItemExpr
     | (LOOKAHEAD (2)
-       ("(" Expr() ")")     #ParenthesizedExpr
+       ("(" Expr() ")")     {((AbstractXPathExpr)jjtree.peekNode()).bumpParenDepth();}
      | ("(" ")")            #EmptySequenceExpr)
     |
     (LOOKAHEAD (2)

@@ -14,18 +14,18 @@ import net.sourceforge.pmd.lang.ast.Node;
 /**
  * Sequence expression. The comma separated expressions compose a sequence.
  * The comma operator has the lowest priority of all, and this expression is
- * forbidden in some contexts unless it's {@linkplain ASTParenthesizedExpr parenthesized}.
+ * forbidden in some contexts unless it's parenthesized.
  *
  * <pre>
  *
- * SequenceExpr ::= {@link ExprSingle} ("," {@link ExprSingle})+
+ * SequenceExpr ::= {@link Expr} ("," {@link Expr})+
  *
  * </pre>
  */
-public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable<ExprSingle>, Expr, SequenceExpr {
+public final class ASTSequenceExpr extends AbstractXPathExpr implements Iterable<Expr>, Expr, SequenceExpr {
 
     /** Constructor for synthetic node. */
-    public ASTSequenceExpr(List<? extends ExprSingle> elts) {
+    public ASTSequenceExpr(List<? extends Expr> elts) {
         super(XPathParserImplTreeConstants.JJTSEQUENCEEXPR);
 
         if (elts.isEmpty()) {
@@ -35,7 +35,7 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
         children = new Node[elts.size()];
 
         int i = 0;
-        for (ExprSingle elt : elts) {
+        for (Expr elt : elts) {
             insertSyntheticChild(elt, i++);
         }
     }
@@ -60,7 +60,7 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
 
     @Override
-    public Iterator<ExprSingle> iterator() {
-        return children(ExprSingle.class).iterator();
+    public Iterator<Expr> iterator() {
+        return children(Expr.class).iterator();
     }
 }

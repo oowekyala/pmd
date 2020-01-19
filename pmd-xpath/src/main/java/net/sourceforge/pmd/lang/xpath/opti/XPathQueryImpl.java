@@ -17,7 +17,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTVarRef;
 import net.sourceforge.pmd.lang.xpath.ast.ASTWildcardNameTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.ast.Expr;
-import net.sourceforge.pmd.lang.xpath.ast.ExprSingle;
+import net.sourceforge.pmd.lang.xpath.ast.Expr;
 import net.sourceforge.pmd.lang.xpath.ast.StepExpr;
 import net.sourceforge.pmd.lang.xpath.ast.SyntheticNodeFactory;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -65,7 +65,7 @@ class XPathQueryImpl implements XPathQuery {
 
         for (ASTVarRef ref : root.getFreeVarRefs()) {
             Object value = propNamesToValues.get(ref.getVarName());
-            ExprSingle node = SyntheticNodeFactory.getNodeForValue(value);
+            Expr node = SyntheticNodeFactory.getNodeForValue(value);
             ref.replaceWith(node);
         }
     }
@@ -118,7 +118,7 @@ class XPathQueryImpl implements XPathQuery {
         Expr main = root.getMainExpr();
 
         if (main instanceof ASTInfixExpr && ((ASTInfixExpr) main).getOperator().isUnion()) {
-            for (ExprSingle expr : ((ASTInfixExpr) main).children()) {
+            for (Expr expr : ((ASTInfixExpr) main).children()) {
                 if (expr instanceof ASTPathExpr) {
 
                     StepExpr firstStep = ((ASTPathExpr) expr).getFirstStep();

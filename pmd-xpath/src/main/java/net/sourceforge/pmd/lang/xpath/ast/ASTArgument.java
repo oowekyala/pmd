@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <pre>
  *
- * Argument ::= {@link ExprSingle} | "?"
+ * Argument ::= {@link Expr} | "?"
  *
  * </pre>
  */
@@ -44,8 +44,8 @@ public final class ASTArgument extends AbstractXPathNode {
      * Return the child, or an empty optional if this is a placeholder argument.
      */
     @Nullable
-    public ExprSingle getExpression() {
-        return isPlaceholder ? null : (ExprSingle) getChild(0);
+    public Expr getExpression() {
+        return isPlaceholder ? null : (Expr) getChild(0);
     }
 
 

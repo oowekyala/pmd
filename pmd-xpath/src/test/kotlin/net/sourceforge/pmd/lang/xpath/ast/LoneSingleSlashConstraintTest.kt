@@ -60,10 +60,8 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
 
             it::getOperator shouldBe XpBinaryOp.MUL
 
-            child<ASTParenthesizedExpr> {
-                child<ASTPathExpr> {
-                    it::getPathAnchor shouldBe ROOT
-                }
+            child<ASTPathExpr> {
+                it::getPathAnchor shouldBe ROOT
             }
 
             int(5)

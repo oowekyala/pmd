@@ -19,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * </pre>
  */
-public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
+public final class ASTVarRef extends AbstractXPathExpr implements PrimaryExpr {
 
 
     /** Constructor for synthetic node. */

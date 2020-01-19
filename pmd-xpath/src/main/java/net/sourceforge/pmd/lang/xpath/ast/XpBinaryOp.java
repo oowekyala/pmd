@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Binary operator
+ * Binary operator for {@link ASTInfixExpr}.
  *
  * @author Clément Fournier
  * @since 6.7.0
@@ -54,7 +54,7 @@ public enum XpBinaryOp {
     VAL_GT("gt", XPathTokenKinds.GT),
     VAL_GE("ge", XPathTokenKinds.GE),
 
-    RANGE("..", XPathTokenKinds.DOUBLE_PERIOD),
+    RANGE("to", XPathTokenKinds.TO),
     STRING_CONCAT("||", XPathTokenKinds.DOUBLE_PIPE),
     ;
 
@@ -145,7 +145,7 @@ public enum XpBinaryOp {
         case XPathTokenKinds.GE:
             return VAL_GE;
 
-        case XPathTokenKinds.DOUBLE_PERIOD:
+        case XPathTokenKinds.TO:
             return RANGE;
 
         case XPathTokenKinds.DOUBLE_PIPE:

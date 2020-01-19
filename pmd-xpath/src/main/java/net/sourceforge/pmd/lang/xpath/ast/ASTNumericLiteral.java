@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * </pre>
  */
-public final class ASTNumericLiteral extends AbstractXPathNode implements PrimaryExpr {
+public final class ASTNumericLiteral extends AbstractXPathExpr implements PrimaryExpr {
 
     private Boolean literalType = null;
     private int integerPart;

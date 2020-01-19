@@ -114,7 +114,9 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
 
     @Override
     public void visit(ASTInfixExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator().getImage() + " ");
+        exitExpr(node, builder);
     }
 
     /*
@@ -186,51 +188,64 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
 
     @Override
     public void visit(ASTInstanceofExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         visit(node.getTestedExpr(), builder);
         appendToken(builder, " instance of ");
         visit(node.getTestedType(), builder);
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTTreatExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         visit(node.getCastedExpr(), builder);
         appendToken(builder, " treat as ");
         visit(node.getCastedType(), builder);
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTCastableExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         visit(node.getTestedExpr(), builder);
         appendToken(builder, " castable as ");
         visit(node.getTestedType(), builder);
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTCastExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         visit(node.getCastedExpr(), builder);
         appendToken(builder, " cast as ");
         visit(node.getCastedType(), builder);
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTUnaryExpr node, StringBuilder builder) {
-        appendToken(builder, node.getOperator());
+        enterExpr(node, builder);
+        appendToken(builder, node.getOperator().getImage());
         visit(node.getOperand(), builder);
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTMapExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         joinExprsOnBuilder(builder, node.getOperands(), " ! ");
+        exitExpr(node, builder);
     }
 
 
     @Override
     public void visit(ASTPathExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         appendToken(builder, node.getPathAnchor().getPrefix());
 
         Iterator<StepExpr> steps = node.iterator();
@@ -248,6 +263,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
             prev = step;
             visit(step, builder);
         }
+        exitExpr(node, builder);
     }
 
 
@@ -264,7 +280,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
             appendToken(builder, node.getAxis().getAxisName());
             appendToken(builder, "::");
             visit(node.getNodeTest(), builder);
-        } else if (node.isAbbrevNoAxis()) {
+        } else {
             visit(node.getNodeTest(), builder);
         }
 
@@ -300,7 +316,9 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
 
     @Override
     public void visit(ASTPostfixExpr node, StringBuilder builder) {
+        enterExpr(node, builder);
         justAppendChildren(builder, node);
+        exitExpr(node, builder);
     }
 
 
@@ -343,14 +361,28 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         visit(node.getVarNameNode(), builder);
     }
 
-
+/* FIXME
     @Override
     public void visit(ASTParenthesizedExpr node, StringBuilder builder) {
         appendToken(builder, "(");
         visit(node.getWrappedNode(), builder);
         appendToken(builder, ")");
     }
+*/
 
+
+    private void enterExpr(Expr expr, StringBuilder b) {
+        if (expr.getParenDepth() > 0) {
+            appendToken(b, "(");
+        }
+    }
+
+
+    private void exitExpr(Expr expr, StringBuilder b) {
+        if (expr.getParenDepth() > 0) {
+            appendToken(b, ")");
+        }
+    }
 
     @Override
     public void visit(ASTContextItemExpr node, StringBuilder builder) {
@@ -497,7 +529,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
     public void visit(ASTProcessingInstructionTest node, StringBuilder builder) {
         appendToken(builder, "processing-instruction(");
         if (node.hasArgument()) {
-            visit((XPathNode) node.getChild(0), builder);
+            visit(node.getChild(0), builder);
         }
         appendToken(builder, ")");
     }

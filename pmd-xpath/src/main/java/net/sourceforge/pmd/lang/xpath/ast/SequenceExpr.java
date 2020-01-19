@@ -11,7 +11,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface SequenceExpr extends Expr, Iterable<ExprSingle> {
+public interface SequenceExpr extends Expr, Iterable<Expr> {
 
 
     /**

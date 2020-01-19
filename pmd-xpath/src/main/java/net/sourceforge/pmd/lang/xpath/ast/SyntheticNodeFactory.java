@@ -33,7 +33,7 @@ public final class SyntheticNodeFactory {
      *
      * @throws IllegalArgumentException If the value type is not supported
      */
-    public static ExprSingle getNodeForValue(Object value) {
+    public static Expr getNodeForValue(Object value) {
         if (value == null) {
             return new ASTEmptySequenceExpr();
         } else if (value instanceof String || value instanceof Character) {
@@ -66,14 +66,16 @@ public final class SyntheticNodeFactory {
     }
 
 
-    public static ExprSingle convertListToSequence(List<?> value) {
+    public static Expr convertListToSequence(List<?> value) {
         if (value.isEmpty()) {
             return new ASTEmptySequenceExpr();
         } else if (value.size() == 1) {
             return getNodeForValue(value.get(0));
         } else {
-            List<ExprSingle> elts = value.stream().map(SyntheticNodeFactory::getNodeForValue).collect(Collectors.toList());
-            return new ASTParenthesizedExpr(new ASTSequenceExpr(elts));
+            List<Expr> elts = value.stream().map(SyntheticNodeFactory::getNodeForValue).collect(Collectors.toList());
+            ASTSequenceExpr seq = new ASTSequenceExpr(elts);
+            seq.bumpParenDepth();
+            return seq;
         }
     }
 }

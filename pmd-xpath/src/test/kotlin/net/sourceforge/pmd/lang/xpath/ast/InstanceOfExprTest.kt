@@ -1,8 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeEmpty
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -30,8 +28,8 @@ class InstanceOfExprTest : XPathParserTestSpec({
         }
 
         "(5, 6) instance of xs:integer+" should matchExpr<ASTInstanceofExpr> {
-            child<ASTParenthesizedExpr> {
-                child<ASTSequenceExpr>(ignoreChildren = true) {}
+            child<ASTSequenceExpr>(ignoreChildren = true) {
+                it::getParenDepth shouldBe 1
             }
 
             child<ASTSequenceType> {

@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
  *
  * </pre>
  */
-public final class ASTStringLiteral extends AbstractXPathNode implements PrimaryExpr {
+public final class ASTStringLiteral extends AbstractXPathExpr implements PrimaryExpr {
 
     private String value;
 

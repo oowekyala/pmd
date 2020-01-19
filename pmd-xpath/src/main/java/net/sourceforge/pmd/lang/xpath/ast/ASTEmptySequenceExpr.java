@@ -18,7 +18,7 @@ import java.util.Iterator;
  *
  * </pre>
  */
-public final class ASTEmptySequenceExpr extends AbstractXPathNode implements ExprSingle, SequenceExpr {
+public final class ASTEmptySequenceExpr extends AbstractXPathExpr implements Expr, SequenceExpr {
 
 
     /** Constructor for synthetic node. */
@@ -50,7 +50,7 @@ public final class ASTEmptySequenceExpr extends AbstractXPathNode implements Exp
 
 
     @Override
-    public Iterator<ExprSingle> iterator() {
+    public Iterator<Expr> iterator() {
         return Collections.emptyIterator();
     }
 }

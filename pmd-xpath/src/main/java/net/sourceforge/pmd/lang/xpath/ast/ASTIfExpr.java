@@ -9,11 +9,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * IfExpr ::= "if" "(" {@link Expr} ")" "then" {@link ExprSingle} "else" {@link ExprSingle}
+ * IfExpr ::= "if" "(" {@link Expr} ")" "then" {@link Expr} "else" {@link Expr}
  *
  * </pre>
  */
-public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTIfExpr extends AbstractXPathExpr implements Expr {
 
     /** Constructor for synthetic node. */
     public ASTIfExpr() {
@@ -37,8 +37,8 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
      * Returns the node that represents the expression that will be evaluated
      * if the guard evaluates to true.
      */
-    public ExprSingle getTrueAlternative() {
-        return (ExprSingle) getChild(1);
+    public Expr getTrueAlternative() {
+        return (Expr) getChild(1);
     }
 
 
@@ -46,8 +46,8 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
      * Returns the node that represents the expression that will be evaluated
      * if the guard evaluates to false.
      */
-    public ExprSingle getFalseAlternative() {
-        return (ExprSingle) getChild(2);
+    public Expr getFalseAlternative() {
+        return (Expr) getChild(2);
     }
 
 

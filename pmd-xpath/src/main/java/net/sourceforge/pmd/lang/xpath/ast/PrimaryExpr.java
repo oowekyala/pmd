@@ -13,7 +13,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * PrimaryExpr ::= {@linkplain ASTNumericLiteral NumericLiteral}
  *               | {@linkplain ASTStringLiteral StringLiteral}
  *               | {@linkplain ASTVarRef VarRef}
- *               | {@linkplain ASTParenthesizedExpr ParenthesizedExpr}
  *               | {@linkplain ASTContextItemExpr ContextItemExpr}
  *               | {@linkplain ASTFunctionCall FunctionCall}
  *               | {@link FunctionItemExpr} )
@@ -23,5 +22,5 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * @author Clément Fournier
  * @since 6.7.0
  */
-public interface PrimaryExpr extends ExprSingle, StepExpr {
+public interface PrimaryExpr extends Expr, StepExpr {
 }

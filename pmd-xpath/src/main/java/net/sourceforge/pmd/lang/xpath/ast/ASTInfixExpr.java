@@ -10,9 +10,9 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 /**
  * Additive expression.
  * The XPath specification defines no associativity for these expressions.
- * For parsing simplicity, they're parsed right-associatively. Examples:
+ * For parsing simplicity, they're parsed left-associatively. Examples:
  * <ul>
- *     <li>{@code 1 + 2 - 3 * 4 + 5} is parsed as {@code 1 + ((2 - (3 * 4)) + 5)}</li>
+ *     <li>{@code 1 + 2 - 3 * 4 + 5} is parsed as {@code (((1 + 2) - (3 * 4)) + 5)}</li>
  *     <li>{@code 1 + 2 + 5} is parsed as {@code 1 + 2 + 5}, not {@code 1 + (2 + 5)}</li>
  *     <li>{@code 1 - 2 + 5} is parsed as {@code 1 - (2 + 5)}</li>
  * </ul>
@@ -20,11 +20,11 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
  *
  * <pre>
  *
- * AdditiveExpr ::= {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} ( ("+" | "-") {@linkplain ASTMultiplicativeExpr MultiplicativeExpr} )*
+ * InfixExpr ::= {@link Expr} ("+" | "-") {@link Expr}
  *
  * </pre>
  */
-public final class ASTInfixExpr extends AbstractXPathExpr implements ExprSingle {
+public final class ASTInfixExpr extends AbstractXPathExpr implements Expr {
 
     private XpBinaryOp op;
 
@@ -47,8 +47,8 @@ public final class ASTInfixExpr extends AbstractXPathExpr implements ExprSingle 
 
 
     @Override
-    public NodeStream<ExprSingle> children() {
-        return (NodeStream<ExprSingle>) super.children();
+    public NodeStream<Expr> children() {
+        return (NodeStream<Expr>) super.children();
     }
 
     @Override

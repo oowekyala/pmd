@@ -13,7 +13,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTCastExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTCastExpr extends AbstractXPathExpr implements Expr {
 
     /** Constructor for synthetic node. */
     public ASTCastExpr() {
@@ -25,8 +25,8 @@ public final class ASTCastExpr extends AbstractXPathNode implements ExprSingle {
     }
 
 
-    public ExprSingle getCastedExpr() {
-        return (ExprSingle) getChild(0);
+    public Expr getCastedExpr() {
+        return (Expr) getChild(0);
     }
 
 

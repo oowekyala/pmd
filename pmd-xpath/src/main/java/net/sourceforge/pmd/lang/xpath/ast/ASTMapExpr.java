@@ -16,7 +16,7 @@ import java.util.List;
  *
  * </pre>
  */
-public final class ASTMapExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTMapExpr extends AbstractXPathExpr implements Expr {
 
     /** Constructor for synthetic node. */
     public ASTMapExpr() {
@@ -40,8 +40,8 @@ public final class ASTMapExpr extends AbstractXPathNode implements ExprSingle {
     }
 
 
-    public List<ExprSingle> getOperands() {
-        return findChildrenOfType(ExprSingle.class);
+    public List<Expr> getOperands() {
+        return findChildrenOfType(Expr.class);
     }
 
 

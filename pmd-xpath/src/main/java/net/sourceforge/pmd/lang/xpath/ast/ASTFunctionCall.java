@@ -18,7 +18,7 @@ import net.sourceforge.pmd.lang.ast.Node;
  *
  * </pre>
  */
-public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryExpr {
+public final class ASTFunctionCall extends AbstractXPathExpr implements PrimaryExpr {
 
     /**
      * Constructor for synthetic node.

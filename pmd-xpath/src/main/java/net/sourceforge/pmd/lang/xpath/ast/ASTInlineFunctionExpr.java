@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * </pre>
  */
-public final class ASTInlineFunctionExpr extends AbstractXPathNode implements FunctionItemExpr {
+public final class ASTInlineFunctionExpr extends AbstractXPathExpr implements FunctionItemExpr {
 
     /** Constructor for synthetic node. */
     public ASTInlineFunctionExpr() {

@@ -1,7 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -25,31 +24,24 @@ class RangeExprTest : XPathParserTestSpec({
                 child<ASTArgument> {
                     it::isPlaceholder shouldBe false
 
-                    it::getExpression shouldBe child<ASTRangeExpr> {
-                        it::getLowerBound shouldBe child<ASTNumericLiteral> {}
-                        it::getUpperBound shouldBe child<ASTNumericLiteral> {}
+                    it::getExpression shouldBe infixExpr(XpBinaryOp.RANGE) {
+                        int(10)
+                        int(15)
                     }
                 }
             }
         }
 
 
-        "(10, 1 to 4)" should matchExpr<ASTParenthesizedExpr> {
+        "(10, 1 to 4)" should matchExpr<ASTSequenceExpr> {
 
-            it::getWrappedNode shouldBe child<ASTSequenceExpr> {
+            child<ASTNumericLiteral> {
+                it::getIntValue shouldBe 10
+            }
 
-                child<ASTNumericLiteral> {
-                    it::getIntValue shouldBe 10
-                }
-
-                child<ASTRangeExpr> {
-                    it::getLowerBound shouldBe child<ASTNumericLiteral> {
-                        it::getIntValue shouldBe 1
-                    }
-                    it::getUpperBound shouldBe child<ASTNumericLiteral> {
-                        it::getIntValue shouldBe 4
-                    }
-                }
+            infixExpr(XpBinaryOp.RANGE) {
+                int(1)
+                int(4)
             }
         }
     }

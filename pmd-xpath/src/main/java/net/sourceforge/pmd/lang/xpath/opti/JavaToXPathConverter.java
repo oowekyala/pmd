@@ -11,7 +11,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTEmptySequenceExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTNumericLiteral;
 import net.sourceforge.pmd.lang.xpath.ast.ASTSequenceExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTStringLiteral;
-import net.sourceforge.pmd.lang.xpath.ast.ExprSingle;
+import net.sourceforge.pmd.lang.xpath.ast.Expr;
 import net.sourceforge.pmd.lang.xpath.ast.SyntheticNodeFactory;
 
 
