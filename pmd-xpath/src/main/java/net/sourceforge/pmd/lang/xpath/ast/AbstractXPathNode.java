@@ -18,7 +18,6 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
         super(id);
     }
 
-
     /**
      * Replaces this node with the given node in the children of its parent.
      * This can lead to inconsistencies and runtime failures if the node is

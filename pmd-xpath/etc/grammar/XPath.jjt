@@ -389,6 +389,7 @@ void MultiplicativeExpr() #void:
     | "idiv"
     | "mod"
     )
+    {jjtThis.setOperator(token);}
     UnionExpr()
     ) #InfixExpr(2)
   )*

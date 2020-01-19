@@ -70,7 +70,7 @@ public enum XpBinaryOp {
 
     @Override
     public String toString() {
-        return image;
+        return name() + "(\"" + image + "\")";
     }
 
     public boolean isUnion() {
