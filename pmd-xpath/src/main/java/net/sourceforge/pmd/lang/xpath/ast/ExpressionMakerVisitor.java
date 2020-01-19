@@ -19,7 +19,7 @@ import java.util.Optional;
  * @author Clément Fournier
  * @since 6.7.0
  */
-final class ExpressionMakerVisitor implements SideEffectingVisitor<StringBuilder> {
+final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBuilder> {
 
     /**
      * Joins some nodes on the builder with a delimiter.

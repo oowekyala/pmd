@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Additive expression.
  * The XPath specification defines no associativity for these expressions.
@@ -27,7 +25,7 @@ public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSing
 
     /** Constructor for synthetic node. */
     public ASTAdditiveExpr(ExprSingle a, ExprSingle b, ExprSingle... rest) {
-        super(null, XPathParserTreeConstants.JJTADDITIVEEXPR);
+        super(XPathParserImplTreeConstants.JJTADDITIVEEXPR);
 
         jjtAddChild(a, 0);
         a.jjtSetParent(this);
@@ -36,28 +34,6 @@ public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSing
         for (int j = 0; j < rest.length; j++) {
             jjtAddChild(rest[j], j + 2);
             rest[j].jjtSetParent(this);
-        }
-    }
-
-
-    ASTAdditiveExpr(XPathParser p, int id) {
-        super(p, id);
-    }
-
-
-    @Override
-    public void jjtClose() {
-        super.jjtClose();
-
-        String[] operators = getImage().trim().split(" ");
-        this.setImage(operators[operators.length - 1]);
-        final String myOp = operators[operators.length - 1];
-        for (int i = operators.length - 2; i >= 0; i--) {
-            String newOp = operators[i];
-            if (!newOp.equals(myOp)) {
-
-                ASTAdditiveExpr newExpr = new ASTAdditiveExpr()
-            }
         }
     }
 
@@ -70,20 +46,13 @@ public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSing
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
-
 /**
  * A predicate occurring in a {@linkplain StepExpr StepExpr}.
  *
@@ -20,12 +18,7 @@ public final class ASTPredicate extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
     public ASTPredicate() {
-        super(null, XPathParserTreeConstants.JJTPREDICATE);
-    }
-
-
-    ASTPredicate(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTPREDICATE);
     }
 
 
@@ -38,21 +31,16 @@ public final class ASTPredicate extends AbstractXPathNode {
 
 
     @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
 }
 /* JavaCC - OriginalChecksum=da66ad6f42ac28b3cf50f8457dd9033a (do not edit this line) */

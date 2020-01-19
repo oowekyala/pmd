@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
@@ -23,12 +23,7 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
 
     /** Constructor for synthetic node. */
     public ASTVarRef() {
-        super(null, XPathParserTreeConstants.JJTVARREF);
-    }
-
-
-    ASTVarRef(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTVARREF);
     }
 
 
@@ -62,33 +57,25 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
     @Nullable
     public ASTVarBinding getBinding() {
         // these are excluded, since the scope of a variable binding should not include its initializer
-        Set<ASTVarBinding> bindingParents = getParentStream().filter(x -> x instanceof ASTVarBinding)
-                                                             .map(x -> (ASTVarBinding) x)
-                                                             .collect(Collectors.toSet());
+        Set<ASTVarBinding> bindingParents = ancestors().filter(x -> x instanceof ASTVarBinding)
+                                                       .map(x -> (ASTVarBinding) x)
+                                                       .collect(Collectors.toSet());
 
         return ancestors(BinderExpr.class).flatMap(BinderExpr::getBindings)
                                           .filterNot(bindingParents::contains)
                                           .filterMatching(ASTVarBinding::getVarName, this.getVarName())
-                                          .first()
-                                          .orElse(null);
+                                          .first();
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

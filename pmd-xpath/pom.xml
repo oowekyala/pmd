@@ -64,11 +64,12 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <target>
-                              <ant antfile="${javacc.ant.wrapper}" target="alljavacc">
+                              <ant antfile="${javacc.ant.wrapper}" target="alljavacc-visitor+">
                                   <property name="lang-name" value="XPath" />
                                   <property name="lang-terse-name" value="xpath" />
                                   <property name="javacc.jar" value="${javacc.jar}" />
-                                </ant>
+                              </ant>
+                              <delete file="${javacc.outputDirectory}/net/sourceforge/pmd/lang/xpath/ast/XPathParserVisitor.java" />
                             </target>
                         </configuration>
                         <goals>
@@ -144,12 +145,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
         </dependency>
 
         <dependency>

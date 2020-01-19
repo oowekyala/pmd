@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
-
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
 
 
@@ -27,7 +25,7 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
 
     /** Constructor for synthetic node. */
     public ASTWildcardNameTest() {
-        super(null, XPathParserTreeConstants.JJTWILDCARDNAMETEST);
+        super(XPathParserImplTreeConstants.JJTWILDCARDNAMETEST);
     }
 
     // they don't have the same name as the getters because kotlin gets
@@ -35,11 +33,6 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
     private String expectedLocalName = null;
     private String expectedNamespacePrefix = null;
     private String expectedUri = null;
-
-
-    ASTWildcardNameTest(XPathParser p, int id) {
-        super(p, id);
-    }
 
 
     /**
@@ -86,20 +79,13 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

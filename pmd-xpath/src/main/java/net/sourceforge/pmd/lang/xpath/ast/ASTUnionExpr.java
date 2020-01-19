@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.List;
-import javax.annotation.Nullable;
 
 
 /**
@@ -21,12 +20,7 @@ public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle 
 
     /** Constructor for synthetic node. */
     public ASTUnionExpr() {
-        super(null, XPathParserTreeConstants.JJTUNIONEXPR);
-    }
-
-
-    ASTUnionExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTUNIONEXPR);
     }
 
 
@@ -39,20 +33,13 @@ public final class ASTUnionExpr extends AbstractXPathNode implements ExprSingle 
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

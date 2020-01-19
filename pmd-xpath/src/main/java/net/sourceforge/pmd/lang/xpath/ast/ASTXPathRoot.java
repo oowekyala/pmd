@@ -9,7 +9,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.RootNode;
 
@@ -28,12 +27,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
     /** Constructor for synthetic node. */
     public ASTXPathRoot() {
-        super(null, XPathParserTreeConstants.JJTXPATHROOT);
-    }
-
-
-    ASTXPathRoot(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTXPATHROOT);
     }
 
 
@@ -41,7 +35,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
      * Returns the toplevel expression of the XPath tree.
      */
     public Expr getMainExpr() {
-        return (Expr) jjtGetChild(0);
+        return (Expr) getChild(0);
     }
 
 
@@ -52,26 +46,20 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
      */
     public Set<ASTVarRef> getFreeVarRefs() {
         FreeVarsResolver visitor = new FreeVarsResolver();
-        this.jjtAccept(visitor);
+        this.jjtAccept(visitor, null);
         return visitor.getFreeVars();
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
 
     @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
@@ -83,7 +71,7 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
      * @author Clément Fournier
      * @since 6.7.0
      */
-    private static class FreeVarsResolver implements ParameterlessSideEffectingVisitor {
+    private static class FreeVarsResolver implements XPathSideEffectingVisitor<Void> {
 
 
         private Deque<ASTVarBinding> bindings = new ArrayDeque<>();
@@ -100,22 +88,22 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
 
         @Override
-        public void visit(ASTXPathRoot node) {
+        public void visit(ASTXPathRoot node, Void v) {
             bindings.clear();
             freeVars = new HashSet<>();
-            visitChildren(node);
+            XPathSideEffectingVisitor.super.visit(node, v);
         }
 
 
         private void addBindings(BinderExpr node) {
             for (ASTVarBinding binding : node.getBindings()) {
                 // visit the initializer before putting the binding in scope
-                binding.getInitializerExpr().jjtAccept(this);
+                binding.getInitializerExpr().jjtAccept(this, null);
                 bindings.push(binding);
             }
             // now every binding is in scope
 
-            node.getBodyExpr().jjtAccept(this);
+            node.getBodyExpr().jjtAccept(this, null);
 
             for (int i = 0; i < node.getBindings().count(); i++) {
                 bindings.pop();
@@ -124,32 +112,32 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
 
 
         @Override
-        public void visit(ASTQuantifiedExpr node) {
+        public void visit(ASTQuantifiedExpr node, Void v) {
             addBindings(node);
         }
 
 
         @Override
-        public void visit(ASTForExpr node) {
+        public void visit(ASTForExpr node, Void v) {
             addBindings(node);
         }
 
 
         @Override
-        public void visit(ASTLetExpr node) {
+        public void visit(ASTLetExpr node, Void v) {
             addBindings(node);
         }
 
 
         @Override
-        public void visit(ASTVarBinding node) {
+        public void visit(ASTVarBinding node, Void v) {
             bindings.push(node);
-            visitChildren(node);
+            XPathSideEffectingVisitor.super.visit(node, v);
         }
 
 
         @Override
-        public void visit(ASTVarRef node) {
+        public void visit(ASTVarRef node, Void v) {
 
             for (ASTVarBinding b : bindings) {
                 if (b.getVarName().equals(node.getVarName())) {

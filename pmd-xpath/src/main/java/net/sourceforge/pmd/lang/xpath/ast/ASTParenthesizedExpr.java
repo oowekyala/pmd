@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Parenthesized expression. The parentheses bind more tightly than any other expression
  * (this is one of the primary expressions).
@@ -24,13 +22,8 @@ public final class ASTParenthesizedExpr extends AbstractXPathNode implements Pri
      * @param wrapped Node wrapped in the parentheses
      */
     public ASTParenthesizedExpr(Expr wrapped) {
-        super(null, XPathParserTreeConstants.JJTPARENTHESIZEDEXPR);
+        super(XPathParserImplTreeConstants.JJTPARENTHESIZEDEXPR);
         insertSyntheticChild(wrapped, 0);
-    }
-
-
-    ASTParenthesizedExpr(XPathParser p, int id) {
-        super(p, id);
     }
 
 
@@ -44,20 +37,13 @@ public final class ASTParenthesizedExpr extends AbstractXPathNode implements Pri
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

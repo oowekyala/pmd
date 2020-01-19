@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
-
 /**
  * String concatenation expression.
  *
@@ -20,30 +18,18 @@ public final class ASTStringConcatExpr extends AbstractXPathNode implements Expr
 
     /** Constructor for synthetic node. */
     public ASTStringConcatExpr() {
-        super(null, XPathParserTreeConstants.JJTSTRINGCONCATEXPR);
-    }
-
-
-    ASTStringConcatExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTSTRINGCONCATEXPR);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

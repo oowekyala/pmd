@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -14,7 +14,5 @@
  *
  */
 
-@NonnullApi
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import net.sourceforge.pmd.lang.xpath.annotation.NonnullApi;

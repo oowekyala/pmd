@@ -3,6 +3,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.matchers.collections.shouldBeEmpty
 import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.shouldBe
+import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**

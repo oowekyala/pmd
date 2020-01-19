@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Unary prefix expression. The sequence of "+" and "-" is concatenated
  * into a string, available from {@link #getOperator()}.
@@ -20,14 +18,9 @@ public final class ASTUnaryExpr extends AbstractXPathNode implements ExprSingle 
 
     /** Constructor for synthetic node. */
     public ASTUnaryExpr() {
-        super(null, XPathParserTreeConstants.JJTUNARYEXPR);
+        super(XPathParserImplTreeConstants.JJTUNARYEXPR);
     }
     private String operator;
-
-
-    ASTUnaryExpr(XPathParser p, int id) {
-        super(p, id);
-    }
 
 
     void setOperator(String operator) {
@@ -46,20 +39,13 @@ public final class ASTUnaryExpr extends AbstractXPathNode implements ExprSingle 
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

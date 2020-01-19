@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
 import java.util.List;
-import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -27,7 +26,7 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
     /** Constructor for synthetic node. */
     public ASTSequenceExpr(List<? extends ExprSingle> elts) {
-        super(null, XPathParserTreeConstants.JJTSEQUENCEEXPR);
+        super(XPathParserImplTreeConstants.JJTSEQUENCEEXPR);
 
         if (elts.isEmpty()) {
             throw new IllegalArgumentException("ASTSequenceExpr cannot represent empty sequence");
@@ -42,11 +41,6 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
     }
 
 
-    ASTSequenceExpr(XPathParser p, int id) {
-        super(p, id);
-    }
-
-
     @Override
     public int getSize() {
         return jjtGetNumChildren();
@@ -54,20 +48,13 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

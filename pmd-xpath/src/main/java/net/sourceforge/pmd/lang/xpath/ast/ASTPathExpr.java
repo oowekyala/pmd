@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
-import javax.annotation.Nullable;
 
 
 /**
@@ -34,12 +33,7 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
 
     /** Constructor for synthetic node. */
     public ASTPathExpr() {
-        super(null, XPathParserTreeConstants.JJTPATHEXPR);
-    }
-
-
-    ASTPathExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTPATHEXPR);
     }
 
 
@@ -83,20 +77,13 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

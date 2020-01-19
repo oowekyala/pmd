@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
@@ -21,16 +21,11 @@ public final class ASTArgument extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
     public ASTArgument() {
-        super(null, XPathParserTreeConstants.JJTARGUMENT);
+        super(XPathParserImplTreeConstants.JJTARGUMENT);
     }
 
 
     private boolean isPlaceholder;
-
-
-    ASTArgument(XPathParser p, int id) {
-        super(p, id);
-    }
 
 
     /**
@@ -56,20 +51,13 @@ public final class ASTArgument extends AbstractXPathNode {
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

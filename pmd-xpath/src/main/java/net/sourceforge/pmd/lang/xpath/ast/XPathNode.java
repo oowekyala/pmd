@@ -4,11 +4,10 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.meta.When;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
@@ -24,7 +23,7 @@ public interface XPathNode extends Node {
      */
     @Nullable
     default XPathNode getLastChild() {
-        return jjtGetNumChildren() > 0 ? (XPathNode) jjtGetChild(jjtGetNumChildren() - 1) : null;
+        return getNumChildren() > 0 ? getChild(getNumChildren() - 1) : null;
     }
 
 
@@ -33,41 +32,26 @@ public interface XPathNode extends Node {
      */
     @Nullable
     default XPathNode getFirstChild() {
-        return jjtGetNumChildren() > 0 ? (XPathNode) jjtGetChild(0) : null;
+        return getNumChildren() > 0 ? getChild(0) : null;
     }
 
 
     @Override
-    @Nonnull(when = When.UNKNOWN)
-    XPathNode jjtGetParent();
+    XPathNode getParent();
 
 
-    /**
-     * Returns true if this node was not created by regular
-     * parsing. Tokens may be missing.
-     */
-    boolean isSynthetic();
+    @Override
+    XPathNode getChild(int index);
 
 
-    @Nullable
-    <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data);
+    @Override
+    NodeStream<XPathNode> children();
 
 
-    <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data);
+    <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data);
 
 
-    default void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
+    <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data);
 
-
-    @Nullable
-    <T> T childrenAccept(XPathGenericVisitor<T> visitor, @Nullable T data);
-
-
-    <T> void childrenAccept(SideEffectingVisitor<T> visitor, @Nullable T data);
-
-
-    void childrenAccept(ParameterlessSideEffectingVisitor visitor);
 
 }

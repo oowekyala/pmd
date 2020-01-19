@@ -87,7 +87,14 @@ TOKEN :
 | < PATH: "/" >
 | < PATH_ALT: "//" >
 
-| < COMP: "=" | "!=" | "<" | "<=" | ">" | ">=" | ">>" | "<<" >
+| <SEP_EQ: "=">
+| <SEP_NE: "!=">
+| <SEP_LT: "<">
+| <SEP_LE: "<=">
+| <SEP_GT: ">">
+| <SEP_GE: ">=">
+| <SEP_NODE_FOLLOWS: ">>">
+| <SEP_NODE_PRECEDES: "<<">
 
 | < LPAREN: "(" >
 | < RPAREN: ")" >
@@ -108,12 +115,6 @@ TOKEN :
 | < STAR: "*" >
 | < PLUS: "+" >
 | < DOLLAR: "$" >
-}
-
-//<FOO>
-TOKEN:
-{
-  <("*")?>
 }
 
 // must be error
@@ -350,7 +351,14 @@ void ComparisonExpr() #ComparisonExpr(>1):
 String ComparisonOperator() #void:
 {}
 {
-   ( <COMP> | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE> | <IS> )
+   (
+   // general comp
+     <SEP_EQ> | <SEP_NE> | <SEP_LT> | <SEP_LE> | <SEP_GT> | <SEP_GE>
+   // value comp
+   | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE>
+   // node comp
+   | <SEP_NODE_FOLLOWS> | <SEP_NODE_PRECEDES> | <IS>
+   )
    { return token.getImage(); }
 }
 
@@ -388,10 +396,10 @@ void MultiplicativeExpr() #MultiplicativeExpr(>1):
 {
   UnionExpr()
   (
-    ( <STAR>
-    | <DIV>
-    | <IDIV>
-    | <MOD>
+    ( "*"
+    | "div"
+    | "idiv"
+    | "mod"
     ) { sb.append(getToken(0).getImage() + " "); }
 
     UnionExpr()
@@ -409,7 +417,7 @@ void UnionExpr() #UnionExpr(>1):
 void UnionOperator():
 {}
 {
-    ( <UNION>
+    ( "union"
     | "|" { jjtThis.setShorthand(true); }
     ) { jjtThis.setImage(getToken(0).getImage()); }
 }
@@ -423,8 +431,8 @@ void IntersectExceptExpr() #IntersectExceptExpr(>1):
 void IntersectExceptOperator():
 {}
 {
-     ( <INTERSECT>
-     | <EXCEPT>
+     ( "intersect"
+     | "except"
      ) { jjtThis.setImage(getToken(0).getImage()); }
 }
 

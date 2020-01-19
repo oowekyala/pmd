@@ -3,7 +3,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.Description
 import io.kotlintest.Spec
 import io.kotlintest.extensions.TestListener
-import io.kotlintest.specs.FunSpec
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.sxpath.XPathEvaluator
 import net.sf.saxon.trans.XPathException
@@ -58,13 +57,13 @@ class RulesetRegressionTests : XPathParserTestSpec(){
 
                 var numNodes = 0
                 // counts nodes
-                object : ParameterlessSideEffectingVisitor {
-                    override fun visit(node: XPathNode) {
+                object : XPathSideEffectingVisitor<Void> {
+                    override fun visit(node: XPathNode, data:Void) {
                         numNodes += 1
-                        return super.visit(node)
+                        return super.visit(node, data)
                     }
                 }.let {
-                    root.jjtAccept(it)
+                    root.jjtAccept(it, null)
                 }
 
                 addTimingResult(TimingResult(time, saxonTime, numNodes, xpath.length, rule))

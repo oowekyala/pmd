@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
-
 /**
  * Binding of a name to an expression, occurring in a {@linkplain BinderExpr binder expressions}.
  * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, which is a {@linkplain PrimaryExpr primary expression}.
@@ -24,30 +22,18 @@ public final class ASTVarBinding extends AbstractXPathNode {
 
     /** Constructor for synthetic node. */
     public ASTVarBinding() {
-        super(null, XPathParserTreeConstants.JJTVARBINDING);
-    }
-
-
-    ASTVarBinding(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTVARBINDING);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

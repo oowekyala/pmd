@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Reference to a named function. A named function is a function defined in the static
  * context for the expression. To uniquely identify a particular named function, both
@@ -24,32 +22,20 @@ public final class ASTNamedFunctionRef extends AbstractXPathNode implements Func
 
     /** Constructor for synthetic node. */
     public ASTNamedFunctionRef() {
-        super(null, XPathParserTreeConstants.JJTNAMEDFUNCTIONREF);
+        super(XPathParserImplTreeConstants.JJTNAMEDFUNCTIONREF);
     }
 
     private int arity = 0;
 
 
-    ASTNamedFunctionRef(XPathParser p, int id) {
-        super(p, id);
-    }
-
-
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 

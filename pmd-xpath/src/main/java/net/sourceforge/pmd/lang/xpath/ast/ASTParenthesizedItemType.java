@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Parenthesized item type.
@@ -19,12 +19,7 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
 
     /** Constructor for synthetic node. */
     public ASTParenthesizedItemType() {
-        super(null, XPathParserTreeConstants.JJTPARENTHESIZEDITEMTYPE);
-    }
-
-
-    ASTParenthesizedItemType(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTPARENTHESIZEDITEMTYPE);
     }
 
 
@@ -39,20 +34,16 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
 
     @Nullable
     @Override
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
 }
 /* JavaCC - OriginalChecksum=4d0e9b33e4c4e44319aeba3f167fb764 (do not edit this line) */

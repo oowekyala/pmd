@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
@@ -23,12 +23,7 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
 
     /** Constructor for synthetic node. */
     public ASTDocumentTest() {
-        super(null, XPathParserTreeConstants.JJTDOCUMENTTEST);
-    }
-
-
-    ASTDocumentTest(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTDOCUMENTTEST);
     }
 
 
@@ -42,21 +37,16 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
 
 
     @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
 }
 /* JavaCC - OriginalChecksum=83dc39618e2fa96fb72e304333aa5cac (do not edit this line) */

@@ -5,8 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import javax.annotation.Nullable;
-
 /**
  * Castable expression.
  *
@@ -20,12 +18,7 @@ public final class ASTCastableExpr extends AbstractXPathNode implements ExprSing
 
     /** Constructor for synthetic node. */
     public ASTCastableExpr() {
-        super(null, XPathParserTreeConstants.JJTCASTABLEEXPR);
-    }
-
-
-    ASTCastableExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTCASTABLEEXPR);
     }
 
 
@@ -40,21 +33,16 @@ public final class ASTCastableExpr extends AbstractXPathNode implements ExprSing
 
 
     @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
 }
 /* JavaCC - OriginalChecksum=b535c749ecd93510ad8d8304dbb498e2 (do not edit this line) */

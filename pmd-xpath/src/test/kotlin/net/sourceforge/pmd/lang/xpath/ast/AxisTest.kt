@@ -1,5 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
+import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**

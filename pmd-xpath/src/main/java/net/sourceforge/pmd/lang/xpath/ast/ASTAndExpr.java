@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Boolean AND expression.
  *
@@ -19,30 +17,18 @@ public final class ASTAndExpr extends AbstractXPathNode implements LogicalExpr {
 
     /** Constructor for synthetic node. */
     public ASTAndExpr() {
-        super(null, XPathParserTreeConstants.JJTANDEXPR);
-    }
-
-
-    ASTAndExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTANDEXPR);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Context item expression.
  *
@@ -19,31 +17,19 @@ public final class ASTContextItemExpr extends AbstractXPathNode implements Prima
 
     /** Constructor for synthetic node. */
     public ASTContextItemExpr() {
-        super(null, XPathParserTreeConstants.JJTCONTEXTITEMEXPR);
-    }
-
-
-    ASTContextItemExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTCONTEXTITEMEXPR);
     }
 
 
     @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
-    }
-
-
-    @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
     }
 
 

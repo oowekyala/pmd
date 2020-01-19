@@ -4,13 +4,9 @@
 
 package net.sourceforge.pmd.lang.xpath;
 
-import java.io.Writer;
-
-import net.sourceforge.pmd.lang.AbstractLanguageVersionHandler;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
-import net.sourceforge.pmd.lang.VisitorStarter;
 import net.sourceforge.pmd.lang.XPathHandler;
 import net.sourceforge.pmd.lang.ast.xpath.DefaultASTXPathHandler;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
@@ -37,8 +33,4 @@ public class XPathLanguageHandler extends AbstractPmdLanguageVersionHandler {
     }
 
 
-    @Override
-    public VisitorStarter getDumpFacade(final Writer writer, final String prefix, final boolean recurse) {
-        return VisitorStarter.DUMMY; // FIXME
-    }
 }

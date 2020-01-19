@@ -9,7 +9,7 @@
     <property name="base-visitor-abstract-class-file" value="${target}/${ast-package}/Abstract${base-visitor-interface-name}.java"/>
 
     <!-- -r+p = no return, one param -->
-    <property name="-r+p-visitor-interface-name" value="SideEffectingVisitor"/>
+    <property name="-r+p-visitor-interface-name" value="XPathSideEffectingVisitor"/>
     <property name="-r+p-visitor-interface-file" value="${target}/${ast-package}/${-r+p-visitor-interface-name}.java"/>
 
     <!-- -r-p = no return, no param -->

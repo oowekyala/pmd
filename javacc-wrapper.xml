@@ -57,10 +57,27 @@
 
     <!-- Visitor names -->
     <property name="gen-visitor-name" value="${parser-name}Visitor" />
-    <property name="base-visitor-interface-name" value="${lang-name}ParserVisitor" />
+    <condition property="base-visitor-interface-name" value="${lang-name}ParserVisitor">
+        <not>
+            <isset property="base-visitor-interface-name" />
+        </not>
+    </condition>
     <property name="base-visitor-interface-file" value="${target-package-dir}/${base-visitor-interface-name}.java" />
 
-    <property name="generic-sideeffect-visitor-interface-name" value="SideEffectingVisitor" />
+    <condition property="generic-visitor-interface-name" value="${lang-name}Visitor">
+        <not>
+            <isset property="generic-visitor-interface-name" />
+        </not>
+    </condition>
+    <property name="generic-visitor-interface-file" value="${target-package-dir}/${generic-visitor-interface-name}.java" />
+
+    <condition property="generic-sideeffect-visitor-interface-name" value="${lang-name}SideEffectingVisitor">
+        <not>
+            <isset property="generic-sideeffect-visitor-interface-name" />
+        </not>
+    </condition>
+
+
     <property name="generic-sideeffect-visitor-interface-file"
               value="${target-package-dir}/${generic-sideeffect-visitor-interface-name}.java" />
 
@@ -73,7 +90,7 @@
 
     <target name="alljavacc-visitor+"
             description="Like alljavacc, and adds another visitor"
-            depends="alljavacc,side-effecting-visitor" />
+            depends="alljavacc,side-effecting-visitor,generic-visitor" />
 
     <target name="checkUpToDate"
             description="Checks the input files are up to date">
@@ -472,6 +489,20 @@ public interface" />
             <replacefilter token="T visit" value="void visit" />
             <replacefilter token="return data;" value="" />
             <replacefilter token="return " value="" />
+        </replace>
+    </target>
+
+    <target name="generic-visitor" depends="default-visitor" unless="jjtreeBuildNotRequired">
+        <copy file="${base-visitor-interface-file}" tofile="${generic-visitor-interface-file}" />
+        <replace file="${generic-visitor-interface-file}">
+            <replacefilter token="${base-visitor-interface-name}"
+                           value="${generic-visitor-interface-name}&lt;R, T>" />
+
+            <replacefilter token="{ for (int i = 0, len = node.getNumChildren(); i &lt; len; i++) node.getChild(i).jjtAccept(this, data); return data; }"
+                           value=";"/>
+            <replacefilter token="default Object visit(${node-name}" value="R visit(${node-name}" />
+            <replacefilter token="Object visit" value="R visit" />
+            <replacefilter token="Object data" value="T data" />
         </replace>
     </target>
 

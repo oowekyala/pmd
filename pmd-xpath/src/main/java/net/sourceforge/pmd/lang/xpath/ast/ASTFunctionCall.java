@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 
@@ -25,15 +24,10 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      * Constructor for synthetic node.
      */
     public ASTFunctionCall(ASTName functionName, ASTArgumentList arguments) {
-        super(null, XPathParserTreeConstants.JJTFUNCTIONCALL);
+        super(XPathParserImplTreeConstants.JJTFUNCTIONCALL);
         children = new Node[2];
         children[0] = Objects.requireNonNull(functionName);
         children[1] = Objects.requireNonNull(arguments);
-    }
-
-
-    ASTFunctionCall(XPathParser p, int id) {
-        super(p, id);
     }
 
 
@@ -89,20 +83,13 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

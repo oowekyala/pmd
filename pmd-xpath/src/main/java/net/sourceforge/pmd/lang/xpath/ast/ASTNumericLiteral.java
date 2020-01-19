@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,13 +33,8 @@ public final class ASTNumericLiteral extends AbstractXPathNode implements Primar
 
     /** Constructor for synthetic node. */
     public ASTNumericLiteral(String image) {
-        super(null, XPathParserTreeConstants.JJTNUMERICLITERAL);
+        super(XPathParserImplTreeConstants.JJTNUMERICLITERAL);
         setImage(image);
-    }
-
-
-    ASTNumericLiteral(XPathParser p, int id) {
-        super(p, id);
     }
 
 
@@ -158,20 +152,13 @@ public final class ASTNumericLiteral extends AbstractXPathNode implements Primar
 
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }

@@ -4,11 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Iterator;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import javax.annotation.Nullable;
-
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode;
 
@@ -21,52 +16,9 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode;
  */
 abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implements XPathNode {
 
-    /** May be null if the node is synthetic. */
-    @Nullable
-    protected final XPathParser parser;
 
-
-    protected AbstractXPathNode(@Nullable XPathParser parser, int id) {
+    protected AbstractXPathNode(int id) {
         super(id);
-        this.parser = parser;
-    }
-
-
-    @Override
-    public boolean isSynthetic() {
-        return parser == null;
-    }
-
-
-    @Override
-    @Nullable
-    public final <T> T childrenAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
-        if (children != null) {
-            for (Node child : children) {
-                ((XPathNode) child).jjtAccept(visitor, data);
-            }
-        }
-        return data;
-    }
-
-
-    @Override
-    public final <T> void childrenAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
-        if (children != null) {
-            for (Node child : children) {
-                ((XPathNode) child).jjtAccept(visitor, data);
-            }
-        }
-    }
-
-
-    @Override
-    public final void childrenAccept(ParameterlessSideEffectingVisitor visitor) {
-        if (children != null) {
-            for (Node child : children) {
-                ((XPathNode) child).jjtAccept(visitor);
-            }
-        }
     }
 
 
@@ -84,8 +36,8 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
         if (parent == null) {
             throw new IllegalStateException();
         }
-        parent.children[this.jjtGetChildIndex()] = null;
-        parent.insertChild(node, this.jjtGetChildIndex(), false);
+        parent.children[this.getIndexInParent()] = null;
+        parent.insertChild(node, this.getIndexInParent(), false);
 
         // remove reference to the parent to avoid memory leak
         this.jjtSetParent(null);
@@ -152,39 +104,7 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
 
 
     @Override
-    public final XPathNode jjtGetParent() {
-        return (XPathNode) super.jjtGetParent();
-    }
-
-
-    /**
-     * Returns an iterator giving out parents one by one, in to out.
-     * The first value is the parent of this node, not this node.
-     */
-    protected Stream<XPathNode> getParentStream() {
-        Iterable<XPathNode> iterable = () -> new Iterator<XPathNode>() {
-            XPathNode currentNode = AbstractXPathNode.this;
-
-
-            @Override
-            public boolean hasNext() {
-                return currentNode.jjtGetParent() != null;
-            }
-
-
-            @Override
-            public XPathNode next() {
-                currentNode = currentNode.jjtGetParent();
-                return currentNode;
-            }
-        };
-
-        return StreamSupport.stream(iterable.spliterator(), false);
-    }
-
-
-    @Override
     public String getXPathNodeName() {
-        return XPathParserTreeConstants.jjtNodeName[id];
+        return XPathParserImplTreeConstants.jjtNodeName[id];
     }
 }

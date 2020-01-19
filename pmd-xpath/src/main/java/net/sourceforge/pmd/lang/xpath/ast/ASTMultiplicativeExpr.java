@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import javax.annotation.Nullable;
-
 /**
  * Multiplicative expression.
  *
@@ -21,12 +19,7 @@ public final class ASTMultiplicativeExpr extends AbstractXPathNode implements Ex
 
     /** Constructor for synthetic node. */
     public ASTMultiplicativeExpr() {
-        super(null, XPathParserTreeConstants.JJTMULTIPLICATIVEEXPR);
-    }
-
-
-    ASTMultiplicativeExpr(XPathParser p, int id) {
-        super(p, id);
+        super(XPathParserImplTreeConstants.JJTMULTIPLICATIVEEXPR);
     }
 
 
@@ -38,20 +31,13 @@ public final class ASTMultiplicativeExpr extends AbstractXPathNode implements Ex
     }
 
     @Override
-    public <T> void jjtAccept(SideEffectingVisitor<T> visitor, @Nullable T data) {
+    public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);
     }
 
 
     @Override
-    public void jjtAccept(ParameterlessSideEffectingVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    @Override
-    @Nullable
-    public <T> T jjtAccept(XPathGenericVisitor<T> visitor, @Nullable T data) {
+    public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
     }
 }
