@@ -40,6 +40,11 @@ public final class ASTSequenceExpr extends AbstractXPathExpr implements Iterable
         }
     }
 
+    public ASTSequenceExpr(int id) {
+        super(XPathParserImplTreeConstants.JJTSEQUENCEEXPR);
+
+    }
+
 
     @Override
     public int getSize() {

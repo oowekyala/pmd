@@ -338,7 +338,7 @@ void AndExpr() #void:
 }
 
 void ComparisonExpr() #void:
-{XpBinaryOp operator = null;}
+{}
 {
   StringConcatExpr()
   ((
@@ -350,11 +350,10 @@ void ComparisonExpr() #void:
        // node comp
        | <SEP_NODE_FOLLOWS> | <SEP_NODE_PRECEDES> | <IS>
     )
-    {jjtThis.setOperator(operator);}
+    {jjtThis.setOperator(token);}
     StringConcatExpr()
     )
     #InfixExpr(2)
-
   )?
 }
 

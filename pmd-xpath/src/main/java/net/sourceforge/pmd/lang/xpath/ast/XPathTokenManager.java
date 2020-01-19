@@ -2,13 +2,16 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang.xpath;
+/*
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.io.Reader;
 
 import net.sourceforge.pmd.lang.TokenManager;
-import net.sourceforge.pmd.lang.ast.JavaCharStream;
-import net.sourceforge.pmd.lang.xpath.ast.XPathParserTokenManager;
+import net.sourceforge.pmd.lang.ast.impl.javacc.CharStreamFactory;
 
 
 /**
@@ -16,11 +19,11 @@ import net.sourceforge.pmd.lang.xpath.ast.XPathParserTokenManager;
  */
 public class XPathTokenManager implements TokenManager {
 
-    private final XPathParserTokenManager tokenManager;
+    private final XPathParserImplTokenManager tokenManager;
 
 
     public XPathTokenManager(Reader source) {
-        tokenManager = new XPathParserTokenManager(new JavaCharStream(source));
+        tokenManager = new XPathParserImplTokenManager(CharStreamFactory.simpleCharStream(source));
     }
 
 
@@ -32,6 +35,6 @@ public class XPathTokenManager implements TokenManager {
 
     @Override
     public void setFileName(String fileName) {
-        XPathParserTokenManager.setFileName(fileName);
+        XPathParserImplTokenManager.setFileName(fileName);
     }
 }
