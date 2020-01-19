@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,14 +21,18 @@ public final class ASTCastableExpr extends AbstractXPathNode implements ExprSing
         super(XPathParserImplTreeConstants.JJTCASTABLEEXPR);
     }
 
+    ASTCastableExpr(int id) {
+        this();
+    }
+
 
     public ExprSingle getTestedExpr() {
-        return (ExprSingle) jjtGetChild(0);
+        return (ExprSingle) getChild(0);
     }
 
 
     public ASTSingleType getTestedType() {
-        return (ASTSingleType) jjtGetChild(1);
+        return (ASTSingleType) getChild(1);
     }
 
 
@@ -45,4 +49,3 @@ public final class ASTCastableExpr extends AbstractXPathNode implements ExprSing
 
 
 }
-/* JavaCC - OriginalChecksum=b535c749ecd93510ad8d8304dbb498e2 (do not edit this line) */

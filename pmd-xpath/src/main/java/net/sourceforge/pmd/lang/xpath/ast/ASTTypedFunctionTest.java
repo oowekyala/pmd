@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -23,12 +23,16 @@ public final class ASTTypedFunctionTest extends AbstractXPathNode implements Fun
         super(XPathParserImplTreeConstants.JJTTYPEDFUNCTIONTEST);
     }
 
+    ASTTypedFunctionTest(int id) {
+        this();
+    }
+
 
     /**
      * Returns the parameter list.
      */
     public ASTArgumentTypeList getParamTypeList() {
-        return (ASTArgumentTypeList) jjtGetChild(0);
+        return (ASTArgumentTypeList) getChild(0);
     }
 
 
@@ -36,7 +40,7 @@ public final class ASTTypedFunctionTest extends AbstractXPathNode implements Fun
      * Returns the declared return type of the function.
      */
     public ASTSequenceType getDeclaredReturnType() {
-        return (ASTSequenceType) jjtGetChild(1);
+        return (ASTSequenceType) getChild(1);
     }
 
 
@@ -51,4 +55,3 @@ public final class ASTTypedFunctionTest extends AbstractXPathNode implements Fun
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=ed05b0527ec9096e982d2e82504dd7d2 (do not edit this line) */

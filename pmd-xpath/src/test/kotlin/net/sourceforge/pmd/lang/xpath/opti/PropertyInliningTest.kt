@@ -19,7 +19,7 @@ class PropertyInliningTest : XPathParserTestSpec({
 
     parserTest("Test IntProperty") {
 
-        fun matcherWithHole(hole: NodeSpec<ASTComparisonExpr>): Assertions<Node?> = matchNode<ASTXPathRoot> {
+        fun matcherWithHole(hole: NodeSpec<ASTInfixExpr>): Assertions<Node?> = matchNode<ASTXPathRoot> {
             child<ASTPathExpr> {
 
                 child<ASTAxisStep> {
@@ -28,8 +28,7 @@ class PropertyInliningTest : XPathParserTestSpec({
                         child<ASTName> { }
                     }
                     child<ASTPredicate> {
-                        child<ASTComparisonExpr> {
-                            it.operatorImage shouldBe "="
+                        infixExpr(XpBinaryOp.EQ) {
 
                             child<ASTPathExpr>(ignoreChildren = true) {}
 

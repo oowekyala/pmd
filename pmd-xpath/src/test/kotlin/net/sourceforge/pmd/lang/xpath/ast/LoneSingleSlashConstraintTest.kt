@@ -43,13 +43,11 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
 
 
     parserTest("Test ambiguity with single slash path: 5*/") {
-        "5*/" should matchExpr<ASTMultiplicativeExpr> {
+        "5*/" should matchExpr<ASTInfixExpr> {
 
-            it::getOperator shouldBe "*"
+            it::getOperator shouldBe XpBinaryOp.MUL
 
-            child<ASTNumericLiteral> {
-                it::getImage shouldBe "5"
-            }
+            int(5)
 
             child<ASTPathExpr> {
                 it::getPathAnchor shouldBe ROOT
@@ -58,10 +56,9 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
     }
 
     parserTest("Test ambiguity with single slash path: (/)*5") {
-        "(/)*5" should matchExpr<ASTMultiplicativeExpr> {
+        "(/)*5" should matchExpr<ASTInfixExpr> {
 
-
-            it::getOperator shouldBe "*"
+            it::getOperator shouldBe XpBinaryOp.MUL
 
             child<ASTParenthesizedExpr> {
                 child<ASTPathExpr> {
@@ -69,13 +66,11 @@ class LoneSingleSlashConstraintTest : XPathParserTestSpec({
                 }
             }
 
-            child<ASTNumericLiteral> {
-                it::getImage shouldBe "5"
-            }
+            int(5)
         }
     }
 
-    XPathTokens.binaryOperators.values.flatMap { it }.filter { it[0].isLetter() }.forEach { op ->
+    XpBinaryOp.values().map { it.image }.filter { it[0].isLetter() }.forEach { op ->
 
         parserTest("The keyword '$op' occuring after a slash should be treated as a name test") {
             "/ $op /*" should matchExpr<ASTPathExpr> {

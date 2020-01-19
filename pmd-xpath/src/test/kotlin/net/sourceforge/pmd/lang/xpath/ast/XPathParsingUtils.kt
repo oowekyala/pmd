@@ -1,11 +1,10 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.Failures
-import io.kotlintest.Matcher
 import io.kotlintest.matchers.string.shouldContain
-import io.kotlintest.specs.AbstractFunSpec
 import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.LanguageVersionHandler
+import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.Assertions
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
@@ -14,7 +13,6 @@ import net.sourceforge.pmd.lang.ast.test.shouldMatchNode
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule
 import java.io.StringReader
 import kotlin.reflect.KClass
-import io.kotlintest.should as kotlintestShould
 
 /**
  * Represents the different XPath language versions.
@@ -43,7 +41,7 @@ inline infix fun <T> (() -> T).catchAnyParserError(handler: (Exception) -> T): T
         } catch (e: Exception) {
             val ex = when (e) {
                 is ParseException -> e
-                is TokenMgrError -> e
+                is TokenMgrError  -> e
                 else -> throw e
             }
             handler(ex)

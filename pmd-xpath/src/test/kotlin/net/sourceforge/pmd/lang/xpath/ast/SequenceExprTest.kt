@@ -16,9 +16,9 @@ class SequenceExprTest : XPathParserTestSpec({
     parserTest("Test unparenthesized sequence") {
 
         "1,2/a,3 union 6" should matchExpr<ASTSequenceExpr> {
-            val fst = child<ASTNumericLiteral> { it.intValue shouldBe 1 }
+            val fst = int(1)
             val snd = child<ASTPathExpr>(ignoreChildren = true) { }
-            val thrd = child<ASTUnionExpr>(ignoreChildren = true) { }
+            val thrd = infixExpr(XpBinaryOp.UNION) { int(3); int(6) }
 
             it.toList().shouldContainExactly(fst, snd, thrd)
         }
@@ -33,7 +33,7 @@ class SequenceExprTest : XPathParserTestSpec({
             child<ASTSequenceExpr> {
                 val fst = child<ASTNumericLiteral> { it.intValue shouldBe 1 }
                 val snd = child<ASTPathExpr>(ignoreChildren = true) { }
-                val thrd = child<ASTUnionExpr>(ignoreChildren = true) { }
+                val thrd = infixExpr(XpBinaryOp.UNION) { int(3); int(6) }
 
                 it.toList().shouldContainExactly(fst, snd, thrd)
                 it.size shouldBe 3
@@ -58,11 +58,11 @@ class SequenceExprTest : XPathParserTestSpec({
             child<ASTSequenceExpr> {
                 it::isEmpty shouldBe false
 
-                val fst = child<ASTNumericLiteral> { }
+                val fst = int(1)
                 val snd = child<ASTParenthesizedExpr> {
                     child<ASTSequenceExpr> {
-                        child<ASTNumericLiteral> {  }
-                        child<ASTNumericLiteral> {  }
+                        int(2)
+                        int(3)
                     }
                 }
                 val thrd = child<ASTEmptySequenceExpr> {

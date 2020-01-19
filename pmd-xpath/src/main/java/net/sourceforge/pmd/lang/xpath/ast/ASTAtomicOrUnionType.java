@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -20,12 +20,16 @@ public final class ASTAtomicOrUnionType extends AbstractXPathNode implements Ite
         super(XPathParserImplTreeConstants.JJTATOMICORUNIONTYPE);
     }
 
+    ASTAtomicOrUnionType(int id) {
+        this();
+    }
+
 
     /**
      * Returns the type name.
      */
     public ASTName getTypeNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -40,4 +44,3 @@ public final class ASTAtomicOrUnionType extends AbstractXPathNode implements Ite
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=f8116dc05dbbbc73b3879482a82a629e (do not edit this line) */

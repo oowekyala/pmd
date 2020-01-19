@@ -2,9 +2,7 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.shouldBe
-import net.sourceforge.pmd.lang.xpath.ast.ASTComparisonExpr.ComparisonOperator.G_EQUALS
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -155,12 +153,12 @@ class PathExprTest : XPathParserTestSpec({
             child<ASTAxisStep> {
                 it.axis shouldBe Axis.FOLLOWING_SIBLING
 
-                it.nodeTest shouldBe child<ASTExactNameTest>(ignoreChildren = true) {
-
+                it.nodeTest shouldBe child<ASTExactNameTest> {
+                    it::getNameNode shouldBe simpleName("chapter")
                 }
 
                 val pred = child<ASTPredicate> {
-                    child<ASTComparisonExpr> {
+                    infixExpr(XpBinaryOp.EQ) {
                         child<ASTFunctionCall> {
                             it.functionNameNode shouldBe child {
                                 it.localName shouldBe "position"
@@ -169,8 +167,8 @@ class PathExprTest : XPathParserTestSpec({
 
                             child<ASTArgumentList> { }
                         }
-                        it.operator shouldBe G_EQUALS
-                        child<ASTNumericLiteral> { }
+
+                        int(1)
                     }
                 }
 
@@ -190,9 +188,7 @@ class PathExprTest : XPathParserTestSpec({
                 it.axis shouldBe Axis.CHILD
 
                 it.nodeTest shouldBe child<ASTExactNameTest> {
-                    it.nameImage shouldBe "A"
-
-                    child<ASTName> { it.image shouldBe "A" }
+                    it::getNameNode shouldBe simpleName("A")
                 }
             }
 
@@ -211,9 +207,7 @@ class PathExprTest : XPathParserTestSpec({
                 it.axis shouldBe Axis.CHILD
 
                 child<ASTExactNameTest> {
-                    it.nameImage shouldBe "N"
-
-                    child<ASTName> { it.image shouldBe "N" }
+                    it::getNameNode shouldBe simpleName("N")
                 }
 
                 child<ASTPredicate>(ignoreChildren = true) {}

@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,12 +24,16 @@ public final class ASTProcessingInstructionTest extends AbstractXPathNode implem
         super(XPathParserImplTreeConstants.JJTPROCESSINGINSTRUCTIONTEST);
     }
 
+    ASTProcessingInstructionTest(int id) {
+        this();
+    }
+
 
     /**
      * Returns true if test specifies the name of a specific PI.
      */
     public boolean hasArgument() {
-        return jjtGetNumChildren() > 0;
+        return getNumChildren() > 0;
     }
 
 
@@ -44,4 +48,3 @@ public final class ASTProcessingInstructionTest extends AbstractXPathNode implem
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=9736f93d02630e9fe57519649309dc83 (do not edit this line) */

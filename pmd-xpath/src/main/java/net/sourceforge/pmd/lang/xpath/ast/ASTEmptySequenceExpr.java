@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -26,6 +26,10 @@ public final class ASTEmptySequenceExpr extends AbstractXPathNode implements Exp
         super(XPathParserImplTreeConstants.JJTEMPTYSEQUENCEEXPR);
     }
 
+    ASTEmptySequenceExpr(int id) {
+        this();
+    }
+
 
     @Override
     public int getSize() {
@@ -50,4 +54,3 @@ public final class ASTEmptySequenceExpr extends AbstractXPathNode implements Exp
         return Collections.emptyIterator();
     }
 }
-/* JavaCC - OriginalChecksum=2e2c123dc1554f24119210ce5dedcec4 (do not edit this line) */

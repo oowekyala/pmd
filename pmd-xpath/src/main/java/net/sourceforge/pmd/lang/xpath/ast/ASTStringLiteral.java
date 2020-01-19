@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -28,6 +28,10 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
     public ASTStringLiteral(String image) {
         super(XPathParserImplTreeConstants.JJTSTRINGLITERAL);
         setImage(image);
+    }
+
+    ASTStringLiteral(int id) {
+        super(XPathParserImplTreeConstants.JJTSTRINGLITERAL);
     }
 
 
@@ -98,4 +102,3 @@ public final class ASTStringLiteral extends AbstractXPathNode implements Primary
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=98f7aaa4be4b56badb9f2abeb228cb00 (do not edit this line) */

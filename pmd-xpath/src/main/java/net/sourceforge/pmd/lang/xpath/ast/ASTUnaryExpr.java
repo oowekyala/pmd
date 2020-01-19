@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -20,21 +20,26 @@ public final class ASTUnaryExpr extends AbstractXPathNode implements ExprSingle 
     public ASTUnaryExpr() {
         super(XPathParserImplTreeConstants.JJTUNARYEXPR);
     }
-    private String operator;
+
+    ASTUnaryExpr(int id) {
+        this();
+    }
+
+    private XpUnaryOp operator;
 
 
-    void setOperator(String operator) {
+    void setOp(XpUnaryOp operator) {
         this.operator = operator;
     }
 
 
-    public String getOperator() {
+    public XpUnaryOp getOperator() {
         return operator;
     }
 
 
     public ExprSingle getOperand() {
-        return (ExprSingle) jjtGetChild(0);
+        return (ExprSingle) getChild(0);
     }
 
 
@@ -51,4 +56,3 @@ public final class ASTUnaryExpr extends AbstractXPathNode implements ExprSingle 
 
 
 }
-/* JavaCC - OriginalChecksum=1036550861161e650ddf9b4917bae7c1 (do not edit this line) */

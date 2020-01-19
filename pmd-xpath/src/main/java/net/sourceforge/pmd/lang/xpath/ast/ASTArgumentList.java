@@ -1,10 +1,12 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
+
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
@@ -23,8 +25,12 @@ public final class ASTArgumentList extends AbstractXPathNode implements Iterable
         super(XPathParserImplTreeConstants.JJTARGUMENTLIST);
     }
 
+    ASTArgumentList(int id) {
+        this();
+    }
+
     public int getArgumentNumber() {
-        return jjtGetNumChildren();
+        return getNumChildren();
     }
 
     @Override
@@ -38,10 +44,13 @@ public final class ASTArgumentList extends AbstractXPathNode implements Iterable
         return visitor.visit(this, data);
     }
 
+    @Override
+    public NodeStream<ASTArgument> children() {
+        return children(ASTArgument.class);
+    }
 
     @Override
     public Iterator<ASTArgument> iterator() {
-        return new NodeChildrenIterator<>(this, ASTArgument.class);
+        return children().iterator();
     }
 }
-/* JavaCC - OriginalChecksum=fd6d075b8d6ce0f018e80673e3944af3 (do not edit this line) */

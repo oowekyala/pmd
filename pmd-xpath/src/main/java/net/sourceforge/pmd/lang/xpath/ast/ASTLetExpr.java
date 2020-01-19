@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,6 +21,10 @@ public final class ASTLetExpr extends AbstractXPathNode implements ExprSingle, B
         super(XPathParserImplTreeConstants.JJTLETEXPR);
     }
 
+    ASTLetExpr(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -33,4 +37,3 @@ public final class ASTLetExpr extends AbstractXPathNode implements ExprSingle, B
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=78269336e6bae8882c7fd308eae64438 (do not edit this line) */

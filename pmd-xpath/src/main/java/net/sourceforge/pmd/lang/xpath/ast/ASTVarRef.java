@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 
@@ -26,13 +27,17 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
         super(XPathParserImplTreeConstants.JJTVARREF);
     }
 
+    ASTVarRef(int id) {
+        this();
+    }
+
 
     /**
      * Gets the node representing the name of
      * the referenced variable.
      */
     public ASTName getVarNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -80,4 +85,3 @@ public final class ASTVarRef extends AbstractXPathNode implements PrimaryExpr {
     }
 
 }
-/* JavaCC - OriginalChecksum=f684717c97ae752b7476d8ec9bfe515b (do not edit this line) */

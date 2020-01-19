@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -20,6 +20,10 @@ public final class ASTAnyItemType extends AbstractXPathNode implements ItemType 
         super(XPathParserImplTreeConstants.JJTANYITEMTYPE);
     }
 
+    ASTAnyItemType(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -32,4 +36,3 @@ public final class ASTAnyItemType extends AbstractXPathNode implements ItemType 
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=6411fea1ca8a1382af9466f9eb3abb57 (do not edit this line) */

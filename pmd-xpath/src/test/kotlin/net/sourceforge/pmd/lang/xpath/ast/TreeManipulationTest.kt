@@ -1,7 +1,6 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.should
-import io.kotlintest.shouldBe
 import net.sourceforge.pmd.lang.ast.test.matchNode
 
 /**
@@ -17,18 +16,18 @@ class TreeManipulationTest : XPathParserTestSpec({
 
 
         root should matchNode<ASTXPathRoot> {
-            child<ASTComparisonExpr> {
-                child<ASTNumericLiteral> { }
-                child<ASTNumericLiteral> { }
+            infixExpr(XpBinaryOp.EQ) {
+                int(1)
+                int(2)
             }
         }
 
         root.getFirstDescendantOfType(ASTNumericLiteral::class.java).replaceWith(ASTStringLiteral("'hey'"))
 
         root should matchNode<ASTXPathRoot> {
-            child<ASTComparisonExpr> {
-                child<ASTStringLiteral> { it.unescapedValue shouldBe "hey" }
-                child<ASTNumericLiteral> { }
+            infixExpr(XpBinaryOp.EQ) {
+                stringLit("hey")
+                int(2)
             }
         }
 

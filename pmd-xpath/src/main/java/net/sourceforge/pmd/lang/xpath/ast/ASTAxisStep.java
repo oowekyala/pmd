@@ -1,10 +1,12 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.ParseException;
 
 // @formatter:off
 /**
@@ -45,6 +47,10 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
     /** Constructor for synthetic node. */
     public ASTAxisStep() {
         super(XPathParserImplTreeConstants.JJTAXISSTEP);
+    }
+
+    ASTAxisStep(int id) {
+        this();
     }
 
 
@@ -99,7 +105,7 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
                     || getNodeTest() instanceof ASTSchemaAttributeTest) {
                 this.axis = Axis.ATTRIBUTE;
             } else if (getNodeTest() instanceof ASTNamespaceNodeTest) {
-                parser.throwParseException("Namespace tests are illegal when not mentioning an axis.");
+                throw new ParseException("Namespace tests are illegal when not mentioning an axis.");
             }
         }
     }
@@ -138,7 +144,7 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
      * type. Never null.
      */
     public NodeTest getNodeTest() {
-        return (NodeTest) jjtGetChild(0);
+        return (NodeTest) getChild(0);
     }
 
 
@@ -165,4 +171,3 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
         insertSyntheticChild(new ASTAnyKindTest(), 0);
     }
 }
-/* JavaCC - OriginalChecksum=1b2f7cc49a50ed5ffaad09284531e531 (do not edit this line) */

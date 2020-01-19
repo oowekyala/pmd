@@ -176,9 +176,9 @@ class MapExprTest : XPathParserTestSpec({
 
                                     it::getExpression shouldBe child<ASTStringLiteral> {
                                         //it::getDelimiter
-                                        it::getImage shouldBe "'${'$'}a'"
-                                        it::getUnescapedValue shouldBe "${'$'}a"
-                                        it::getXmlUnescapedValue shouldBe "${'$'}a"
+                                        it::getImage shouldBe "'\$a'"
+                                        it::getUnescapedValue shouldBe "\$a"
+                                        it::getXmlUnescapedValue shouldBe "\$a"
                                     }
                                 }
                                 child<ASTArgument> {

@@ -2,7 +2,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 
 import io.kotlintest.matchers.collections.shouldContainAll
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import java.util.*
 
 /**
  * @author Clément Fournier
@@ -23,21 +22,14 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                 it::isEmptySequence shouldBe false
 
                 it::getItemType shouldBe child<ASTAtomicOrUnionType> {
-
-                    it::getTypeNameNode shouldBe child {
-                        it::getImage shouldBe "xs:integer"
-                        it::getLocalName shouldBe "integer"
-                        it::getExplicitNamespacePrefix shouldBe "xs"
-                        it::isUriLiteral shouldBe false
-
-                    }
+                    it::getTypeNameNode shouldBe prefixedName("xs", "integer")
                 }
             }
             it::getBodyExpr shouldBe child<ASTSequenceExpr>(ignoreChildren = true) {}
         }
 
 
-        "function(${'$'}a as xs:double, ${'$'}b as xs:double) as xs:double { ${'$'}a * ${'$'}b }" should matchExpr<ASTInlineFunctionExpr> {
+        "function(\$a as xs:double, \$b as xs:double) as xs:double { \$a * \$b }" should matchExpr<ASTInlineFunctionExpr> {
             it::isDefaultReturnType shouldBe false
 
             it::getParamList shouldBe child {
@@ -45,26 +37,15 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                 child<ASTParam> {
                     it::isDefaultType shouldBe false
 
-                    it::getNameNode shouldBe child {
-                        it::getImage shouldBe "a"
-                        it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe null
-                        it::isUriLiteral shouldBe false
+                    it::getNameNode shouldBe simpleName("a")
 
-                    }
                     it::getDeclaredType shouldBe child<ASTSequenceType> {
                         it::getCardinality shouldBe Cardinality.EXACTLY_ONE
                         it::isEmptySequence shouldBe false
 
                         it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                            it::getTypeNameNode shouldBe child {
-                                it::getImage shouldBe "xs:double"
-                                it::getLocalName shouldBe "double"
-                                it::getExplicitNamespacePrefix shouldBe "xs"
-                                it::isUriLiteral shouldBe false
-
-                            }
+                            it::getTypeNameNode shouldBe prefixedName("xs", "double")
                         }
                     }
                 }
@@ -84,13 +65,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
 
                         it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                            it::getTypeNameNode shouldBe child {
-                                it::getImage shouldBe "xs:double"
-                                it::getLocalName shouldBe "double"
-                                it::getExplicitNamespacePrefix shouldBe "xs"
-                                it::isUriLiteral shouldBe false
-
-                            }
+                            it::getTypeNameNode shouldBe prefixedName("xs", "double")
                         }
                     }
                 }
@@ -101,44 +76,16 @@ class InlineFunctionExprTest : XPathParserTestSpec({
 
                 it::getItemType shouldBe child<ASTAtomicOrUnionType> {
 
-                    it::getTypeNameNode shouldBe child {
-                        it::getImage shouldBe "xs:double"
-                        it::getLocalName shouldBe "double"
-                        it::getExplicitNamespacePrefix shouldBe "xs"
-                        it::isUriLiteral shouldBe false
-
-                    }
+                    it::getTypeNameNode shouldBe prefixedName("xs", "double")
                 }
             }
-            it::getBodyExpr shouldBe child<ASTMultiplicativeExpr> {
-
-                it::getOperator shouldBe "*"
-
-                child<ASTVarRef> {
-
-                    it::getVarNameNode shouldBe child {
-                        it::getImage shouldBe "a"
-                        it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe null
-                        it::isUriLiteral shouldBe false
-
-                    }
-                }
-
-                child<ASTVarRef> {
-
-                    it::getVarNameNode shouldBe child {
-                        it::getImage shouldBe "b"
-                        it::getLocalName shouldBe "b"
-                        it::getExplicitNamespacePrefix shouldBe null
-                        it::isUriLiteral shouldBe false
-
-                    }
-                }
+            it::getBodyExpr shouldBe infixExpr(XpBinaryOp.MUL) {
+                simpleVarRef("a")
+                simpleVarRef("b")
             }
         }
 
-        "function(${'$'}a) { ${'$'}a }" should matchExpr<ASTInlineFunctionExpr> {
+        "function(\$a) { \$a }" should matchExpr<ASTInlineFunctionExpr> {
             it::getDeclaredReturnType shouldBe null
             it::isDefaultReturnType shouldBe true
 
@@ -148,39 +95,18 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                     it::getDeclaredType shouldBe null
                     it::isDefaultType shouldBe true
 
-                    it::getNameNode shouldBe child {
-                        it::getImage shouldBe "a"
-                        it::getLocalName shouldBe "a"
-                        it::getExplicitNamespacePrefix shouldBe null
-                        it::isUriLiteral shouldBe false
-
-                    }
+                    it::getNameNode shouldBe simpleName("a")
                 }
             }
-            it::getBodyExpr shouldBe child<ASTVarRef> {
-
-                it::getVarNameNode shouldBe child {
-                    it::getImage shouldBe "a"
-                    it::getLocalName shouldBe "a"
-                    it::getExplicitNamespacePrefix shouldBe null
-                    it::isUriLiteral shouldBe false
-
-                }
-            }
+            it::getBodyExpr shouldBe simpleVarRef("a")
         }
 
-        "collection()/(let ${'$'}a := . return function() { ${'$'}a })" should matchExpr<ASTPathExpr> {
+        "collection()/(let \$a := . return function() { \$a })" should matchExpr<ASTPathExpr> {
             //it::getPathAnchor
 
             child<ASTFunctionCall> {
 
-                it::getFunctionNameNode shouldBe child {
-                    it::getImage shouldBe "collection"
-                    it::getLocalName shouldBe "collection"
-                    it::getExplicitNamespacePrefix shouldBe null
-                    it::isUriLiteral shouldBe false
-
-                }
+                it::getFunctionNameNode shouldBe simpleName("collection")
                 it::getArguments shouldBe child {}
             }
             child<ASTParenthesizedExpr> {
@@ -191,13 +117,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
                         it::isLetStyle shouldBe true
                         it::getVarName shouldBe "a"
 
-                        it::getVarNameNode shouldBe child {
-                            it::getImage shouldBe "a"
-                            it::getLocalName shouldBe "a"
-                            it::getExplicitNamespacePrefix shouldBe null
-                            it::isUriLiteral shouldBe false
-
-                        }
+                        it::getVarNameNode shouldBe simpleName("a")
                         it::getInitializerExpr shouldBe child<ASTContextItemExpr> {
 
                         }
@@ -214,13 +134,7 @@ class InlineFunctionExprTest : XPathParserTestSpec({
 
                         it::getBodyExpr shouldBe child<ASTVarRef> {
 
-                            it::getVarNameNode shouldBe child {
-                                it::getImage shouldBe "a"
-                                it::getLocalName shouldBe "a"
-                                it::getExplicitNamespacePrefix shouldBe null
-                                it::isUriLiteral shouldBe false
-
-                            }
+                            it::getVarNameNode shouldBe simpleName("a")
                         }
                     }
                 }

@@ -21,7 +21,8 @@ PARSER_BEGIN(XPathParserImpl)
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import net.sourceforge.pmd.lang.ast.CharStream;
+import net.sourceforge.pmd.lang.ast.*;
+import net.sourceforge.pmd.lang.ast.impl.javacc.*;
 
 public class XPathParserImpl {
 
@@ -43,9 +44,6 @@ public class XPathParserImpl {
     String getUriFromLiteral(Token bracedUriLiteral) {
         return bracedUriLiteral.getImage().substring("Q{".length(), bracedUriLiteral.getImage().length() - 1);
     }
-
-
-
 
 }
 PARSER_END(XPathParserImpl)
@@ -327,147 +325,118 @@ void IfExpr():
 
 /* Main expression precedence hierarchy */
 
-void OrExpr() #OrExpr(>1):
+void OrExpr() #void:
 {}
 {
-  AndExpr() ( <OR> AndExpr() )*
+  AndExpr() (("or" {jjtThis.setOperator(token);} AndExpr()) #InfixExpr(2))*
 }
 
-void AndExpr() #AndExpr(>1):
+void AndExpr() #void:
 {}
 {
-  ComparisonExpr() ( <AND> ComparisonExpr() )*
+  ComparisonExpr() (("and" {jjtThis.setOperator(token);} ComparisonExpr()) #InfixExpr(2))*
 }
 
-void ComparisonExpr() #ComparisonExpr(>1):
-{String operator = null;}
+void ComparisonExpr() #void:
+{XpBinaryOp operator = null;}
 {
   StringConcatExpr()
-  (
-    (operator = ComparisonOperator()) StringConcatExpr() {jjtThis.setOperator(operator);}
+  ((
+    (
+       // general comp
+         <SEP_EQ> | <SEP_NE> | <SEP_LT> | <SEP_LE> | <SEP_GT> | <SEP_GE>
+       // value comp
+       | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE>
+       // node comp
+       | <SEP_NODE_FOLLOWS> | <SEP_NODE_PRECEDES> | <IS>
+    )
+    {jjtThis.setOperator(operator);}
+    StringConcatExpr()
+    )
+    #InfixExpr(2)
+
   )?
 }
 
-String ComparisonOperator() #void:
+void StringConcatExpr() #void:
 {}
 {
-   (
-   // general comp
-     <SEP_EQ> | <SEP_NE> | <SEP_LT> | <SEP_LE> | <SEP_GT> | <SEP_GE>
-   // value comp
-   | <NE> | <EQ> | <LT> | <LE> | <GT> | <GE>
-   // node comp
-   | <SEP_NODE_FOLLOWS> | <SEP_NODE_PRECEDES> | <IS>
-   )
-   { return token.getImage(); }
+  RangeExpr() (("||" {jjtThis.setOperator(token);} RangeExpr()) #InfixExpr(2))*
 }
 
-
-
-void StringConcatExpr() #StringConcatExpr(>1):
+void RangeExpr() #void:
 {}
 {
-  RangeExpr() ( "||" RangeExpr() )*
-}
-
-void RangeExpr() #RangeExpr(>1):
-{}
-{
-  AdditiveExpr() ( <TO> AdditiveExpr() )?
+  AdditiveExpr() [ ( <TO> {jjtThis.setOperator(token);} AdditiveExpr()) #InfixExpr(2) ]
 }
 
 // In the following, we use nodes to represent the operators because there may be several expressions chained.
 // e.g. E1 + E2 - E3 ~> E1 PlusOperator E2 MinusOperator E3
 
-void AdditiveExpr()
-#AdditiveExpr(>1):
-{ StringBuilder sb = new StringBuilder(); }
+void AdditiveExpr() #void:
+{}
 {
   MultiplicativeExpr()
-  (
-    ("+" | "-") { sb.append(getToken(0).getImage() + " "); }
-    MultiplicativeExpr()
-  )*
-  { jjtThis.setImage(sb.toString()); }
+  ((("+"| "-") {jjtThis.setOperator(token);} MultiplicativeExpr()) #InfixExpr(2))*
 }
 
-void MultiplicativeExpr() #MultiplicativeExpr(>1):
-{ StringBuilder sb = new StringBuilder(); }
+void MultiplicativeExpr() #void:
+{}
 {
   UnionExpr()
-  (
+  ( (
     ( "*"
     | "div"
     | "idiv"
     | "mod"
-    ) { sb.append(getToken(0).getImage() + " "); }
-
+    )
     UnionExpr()
+    ) #InfixExpr(2)
   )*
-  { jjtThis.setImage(sb.toString()); }
 }
 
 
-void UnionExpr() #UnionExpr(>1):
+void UnionExpr() #void:
 {}
 {
-  IntersectExceptExpr() ( UnionOperator() IntersectExceptExpr() )*
+  IntersectExceptExpr() ((( "union" | "|"){jjtThis.setOperator(token);} IntersectExceptExpr())#InfixExpr(2))*
 }
 
-void UnionOperator():
+void IntersectExceptExpr() #void:
 {}
 {
-    ( "union"
-    | "|" { jjtThis.setShorthand(true); }
-    ) { jjtThis.setImage(getToken(0).getImage()); }
+  InstanceofExpr() ((("intersect" | "except") InstanceofExpr()) #InfixExpr(2) )*
 }
-
-void IntersectExceptExpr() #IntersectExceptExpr(>1):
-{}
-{
-  InstanceofExpr() (IntersectExceptOperator() InstanceofExpr())*
-}
-
-void IntersectExceptOperator():
-{}
-{
-     ( "intersect"
-     | "except"
-     ) { jjtThis.setImage(getToken(0).getImage()); }
-}
-
 
 void InstanceofExpr() #InstanceofExpr(>1):
 {}
 {
-  TreatExpr() ( <INSTANCE> <OF> SequenceType() )?
+  TreatExpr() ( "instance" "of" SequenceType() )?
 }
 
 void TreatExpr() #TreatExpr(>1):
 {}
 {
-  CastableExpr() ( <TREAT> <AS> SequenceType() )?
+  CastableExpr() ( "treat" "as" SequenceType() )?
 }
 
 void CastableExpr() #CastableExpr(>1):
 {}
 {
-  CastExpr() ( <CASTABLE> <AS> SingleType() )?
+  CastExpr() ( "castable" "as" SingleType() )?
 }
 
 void CastExpr() #CastExpr(>1):
 {}
 {
-  UnaryExpr() ( <CAST> <AS> SingleType() )?
+  UnaryExpr() ( "cast" "as" SingleType() )?
 }
 
-void UnaryExpr() #UnaryExpr(sb.length() > 0):
+void UnaryExpr() #UnaryExpr(op != null):
+{XpUnaryOp op = null;}
 {
-  StringBuilder sb = new StringBuilder();
-}
-{
-      [ (("+" | "-") { sb.append(getToken(0).getImage()); } )+ ] MapExpr()
-      { jjtThis.setOperator(sb.toString()); }
+        ("+" | "-") {op=XpUnaryOp.fromTokenKind(token.kind);} UnaryExpr() {jjtThis.setOp(op);}
+      | MapExpr()
 }
 
 void MapExpr() #MapExpr(>1) :
@@ -551,20 +520,20 @@ Axis Axis() #void:
   Axis axis = null;
 }
 {
-    ( <SELF> { axis = Axis.SELF;}
-    | <CHILD> { axis = Axis.CHILD; }
+    ( "self" { axis = Axis.SELF;}
+    | "child" { axis = Axis.CHILD; }
     // Handled upstream
-    // | <ATTRIBUTE> { axis = Axis.ATTRIBUTE; }
-    | <DESCENDANT> { axis = Axis.DESCENDANT; }
-    | <DESCENDANT_OR_SELF> { axis = Axis.DESCENDANT_OR_SELF; }
-    | <FOLLOWING> { axis = Axis.FOLLOWING; }
-    | <FOLLOWING_SIBLING> { axis = Axis.FOLLOWING_SIBLING; }
-    | <NAMESPACE> { axis = Axis.NAMESPACE; }
-    | <PARENT> { axis = Axis.PARENT; }
-    | <ANCESTOR> { axis = Axis.ANCESTOR; }
-    | <ANCESTOR_OR_SELF> { axis = Axis.ANCESTOR_OR_SELF; }
-    | <PRECEDING_SIBLING> { axis = Axis.PRECEDING_SIBLING; }
-    | <PRECEDING> { axis = Axis.PRECEDING; }
+    // | "attribute" { axis = Axis.ATTRIBUTE; }
+    | "descendant" { axis = Axis.DESCENDANT; }
+    | "descendant-or-self" { axis = Axis.DESCENDANT_OR_SELF; }
+    | "following" { axis = Axis.FOLLOWING; }
+    | "following-sibling" { axis = Axis.FOLLOWING_SIBLING; }
+    | "namespace" { axis = Axis.NAMESPACE; }
+    | "parent" { axis = Axis.PARENT; }
+    | "ancestor" { axis = Axis.ANCESTOR; }
+    | "ancestor-or-self" { axis = Axis.ANCESTOR_OR_SELF; }
+    | "preceding-sibling" { axis = Axis.PRECEDING_SIBLING; }
+    | "preceding" { axis = Axis.PRECEDING; }
     )
     { return axis; }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -28,6 +28,10 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
     /** Constructor for synthetic node. */
     public ASTXPathRoot() {
         super(XPathParserImplTreeConstants.JJTXPATHROOT);
+    }
+
+    ASTXPathRoot(int id) {
+        this();
     }
 
 
@@ -150,4 +154,3 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
         }
     }
 }
-/* JavaCC - OriginalChecksum=36a6c7059e4596742a6d4ff2c4d61869 (do not edit this line) */

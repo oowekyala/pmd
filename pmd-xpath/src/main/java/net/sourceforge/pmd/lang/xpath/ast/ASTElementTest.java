@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -44,6 +44,10 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
     /** Constructor for synthetic node. */
     public ASTElementTest() {
         super(XPathParserImplTreeConstants.JJTELEMENTTEST);
+    }
+
+    ASTElementTest(int id) {
+        this();
     }
 
     // null means absent
@@ -94,7 +98,7 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
     public ASTName getElementName() {
         return isWildcard == null || isWildcard
                ? null
-               : (ASTName) jjtGetChild(0);
+               : (ASTName) getChild(0);
     }
 
 
@@ -112,10 +116,10 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
      */
     @Nullable
     public ASTName getTypeName() {
-        if (getElementName() == null && jjtGetNumChildren() == 1) {
-            return (ASTName) jjtGetChild(0);
-        } else if (getElementName() != null && jjtGetNumChildren() == 2) {
-            return (ASTName) jjtGetChild(1);
+        if (getElementName() == null && getNumChildren() == 1) {
+            return (ASTName) getChild(0);
+        } else if (getElementName() != null && getNumChildren() == 2) {
+            return (ASTName) getChild(1);
         } else {
             return null;
         }
@@ -133,4 +137,3 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=77aa327f82e35f535bdae68879b9dc27 (do not edit this line) */

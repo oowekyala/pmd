@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -43,6 +43,10 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
         super(XPathParserImplTreeConstants.JJTATTRIBUTETEST);
     }
 
+    ASTAttributeTest(int id) {
+        this();
+    }
+
 
     void setIsWildcard(boolean value) {
         isWildcard = value;
@@ -70,7 +74,7 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
     public ASTName getAttributeName() {
         return isWildcard == null || isWildcard
                ? null
-               : (ASTName) jjtGetChild(0);
+               : (ASTName) getChild(0);
     }
 
 
@@ -86,10 +90,10 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
      */
     @Nullable
     public ASTName getTypeName() {
-        if (getAttributeName() == null && jjtGetNumChildren() == 1) {
-            return (ASTName) jjtGetChild(0);
-        } else if (getAttributeName() != null && jjtGetNumChildren() == 2) {
-            return (ASTName) jjtGetChild(1);
+        if (getAttributeName() == null && getNumChildren() == 1) {
+            return (ASTName) getChild(0);
+        } else if (getAttributeName() != null && getNumChildren() == 2) {
+            return (ASTName) getChild(1);
         } else {
             return null;
         }
@@ -107,4 +111,3 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=ff3f1f36406fc4c537672c556b59ef93 (do not edit this line) */

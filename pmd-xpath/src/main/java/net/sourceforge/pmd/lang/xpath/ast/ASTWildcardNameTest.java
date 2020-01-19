@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -26,6 +26,10 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
     /** Constructor for synthetic node. */
     public ASTWildcardNameTest() {
         super(XPathParserImplTreeConstants.JJTWILDCARDNAMETEST);
+    }
+
+    ASTWildcardNameTest(int id) {
+        this();
     }
 
     // they don't have the same name as the getters because kotlin gets
@@ -104,4 +108,3 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
         expectedLocalName = substring;
     }
 }
-/* JavaCC - OriginalChecksum=9cc10133cc5ea5705f090e1cc01ecf11 (do not edit this line) */

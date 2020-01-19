@@ -1,8 +1,11 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
 package net.sourceforge.pmd.lang.xpath.ast;
+
+import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 
 /**
  * Additive expression.
@@ -21,29 +24,32 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * </pre>
  */
-public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSingle {
+public final class ASTInfixExpr extends AbstractXPathExpr implements ExprSingle {
 
-    /** Constructor for synthetic node. */
-    public ASTAdditiveExpr(ExprSingle a, ExprSingle b, ExprSingle... rest) {
-        super(XPathParserImplTreeConstants.JJTADDITIVEEXPR);
+    private XpBinaryOp op;
 
-        jjtAddChild(a, 0);
-        a.jjtSetParent(this);
-        jjtAddChild(b, 1);
-        b.jjtSetParent(this);
-        for (int j = 0; j < rest.length; j++) {
-            jjtAddChild(rest[j], j + 2);
-            rest[j].jjtSetParent(this);
-        }
+    protected ASTInfixExpr(int id) {
+        super(id);
     }
+
+
+    void setOperator(JavaccToken token) {
+        this.op = XpBinaryOp.fromTokenKind(token.kind);
+    }
+
 
     /**
-     * Returns the image of the operator of this node, ie "+" or "-".
+     * Returns the operator of this node, eg "+" or "-".
      */
-    public String getOperator() {
-        return getImage();
+    public XpBinaryOp getOperator() {
+        return op;
     }
 
+
+    @Override
+    public NodeStream<ExprSingle> children() {
+        return (NodeStream<ExprSingle>) super.children();
+    }
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -56,4 +62,3 @@ public final class ASTAdditiveExpr extends AbstractXPathNode implements ExprSing
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=b855e550465145a77a403001a71450fb (do not edit this line) */

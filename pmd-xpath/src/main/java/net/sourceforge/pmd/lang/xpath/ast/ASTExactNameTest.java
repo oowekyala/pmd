@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -25,6 +25,10 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
         super(XPathParserImplTreeConstants.JJTEXACTNAMETEST);
     }
 
+    ASTExactNameTest(int id) {
+        this();
+    }
+
 
     /**
      * Returns the image of the name tested for.
@@ -38,7 +42,7 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
      * Returns the node representing the name tested for.
      */
     public ASTName getNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -53,4 +57,3 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=f84ce10a4a9a29e0d18b17f6a11e34f8 (do not edit this line) */

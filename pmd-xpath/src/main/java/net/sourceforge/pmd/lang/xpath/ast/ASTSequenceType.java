@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -31,6 +31,10 @@ public final class ASTSequenceType extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTSEQUENCETYPE);
     }
 
+    ASTSequenceType(int id) {
+        this();
+    }
+
     // the setter is called on ?+*, so this is the default
     private Cardinality cardinality = Cardinality.EXACTLY_ONE;
 
@@ -58,7 +62,7 @@ public final class ASTSequenceType extends AbstractXPathNode {
      * Check with {@link #isEmptySequence()}.
      */
     public ItemType getItemType() {
-        return isEmptySequence() ? null : (ItemType) jjtGetChild(0);
+        return isEmptySequence() ? null : (ItemType) getChild(0);
     }
 
 
@@ -78,4 +82,3 @@ public final class ASTSequenceType extends AbstractXPathNode {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=d53954607fe0124e2dded5a96f8b404b (do not edit this line) */

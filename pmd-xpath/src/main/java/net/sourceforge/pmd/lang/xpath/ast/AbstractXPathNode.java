@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -32,7 +32,7 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
      * @param node Node with which to replace this node
      */
     public void replaceWith(XPathNode node) {
-        AbstractXPathNode parent = (AbstractXPathNode) jjtGetParent();
+        AbstractXPathNode parent = (AbstractXPathNode) getParent();
         if (parent == null) {
             throw new IllegalStateException();
         }

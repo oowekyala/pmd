@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -43,7 +43,7 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
     @Override
     public int getSize() {
-        return jjtGetNumChildren();
+        return getNumChildren();
     }
 
 
@@ -61,7 +61,6 @@ public final class ASTSequenceExpr extends AbstractXPathNode implements Iterable
 
     @Override
     public Iterator<ExprSingle> iterator() {
-        return new NodeChildrenIterator<>(this, ExprSingle.class);
+        return children(ExprSingle.class).iterator();
     }
 }
-/* JavaCC - OriginalChecksum=2e2c123dc1554f24119210ce5dedcec4 (do not edit this line) */

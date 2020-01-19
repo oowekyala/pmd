@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,12 +21,16 @@ public final class ASTPredicate extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTPREDICATE);
     }
 
+    ASTPredicate(int id) {
+        this();
+    }
+
 
     /**
      * Gets the expression wrapped in the predicate.
      */
     public Expr getWrappedExpression() {
-        return (Expr) jjtGetChild(0);
+        return (Expr) getChild(0);
     }
 
 
@@ -43,4 +47,3 @@ public final class ASTPredicate extends AbstractXPathNode {
 
 
 }
-/* JavaCC - OriginalChecksum=da66ad6f42ac28b3cf50f8457dd9033a (do not edit this line) */

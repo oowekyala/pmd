@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTNamespaceNodeTest extends AbstractXPathNode implements Kin
         super(XPathParserImplTreeConstants.JJTNAMESPACENODETEST);
     }
 
+    ASTNamespaceNodeTest(int id) {
+        this();
+    }
+
 
     @Override
     public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
@@ -38,4 +42,3 @@ public final class ASTNamespaceNodeTest extends AbstractXPathNode implements Kin
 
 
 }
-/* JavaCC - OriginalChecksum=2ca63014f2dd56c9afb62540fb273054 (do not edit this line) */

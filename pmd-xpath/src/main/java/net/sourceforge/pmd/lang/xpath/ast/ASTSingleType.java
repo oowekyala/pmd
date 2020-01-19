@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,6 +21,10 @@ public final class ASTSingleType extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTSINGLETYPE);
     }
 
+    ASTSingleType(int id) {
+        this();
+    }
+
     private boolean optional;
 
 
@@ -38,7 +42,7 @@ public final class ASTSingleType extends AbstractXPathNode {
      * Gets the node representing the type name.
      */
     public ASTName getTypeNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -53,4 +57,3 @@ public final class ASTSingleType extends AbstractXPathNode {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=503098c0ce5f4526907d74af03418b35 (do not edit this line) */

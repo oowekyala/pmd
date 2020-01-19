@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -20,12 +20,16 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
         super(XPathParserImplTreeConstants.JJTIFEXPR);
     }
 
+    ASTIfExpr(int id) {
+        this();
+    }
+
 
     /**
      * Returns the node that represents the guard of this conditional.
      */
-    public Expr getGuardExpressionNode() {
-        return (Expr) jjtGetChild(0);
+    public Expr getCondition() {
+        return (Expr) getChild(0);
     }
 
 
@@ -34,7 +38,7 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
      * if the guard evaluates to true.
      */
     public ExprSingle getTrueAlternative() {
-        return (ExprSingle) jjtGetChild(1);
+        return (ExprSingle) getChild(1);
     }
 
 
@@ -43,7 +47,7 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
      * if the guard evaluates to false.
      */
     public ExprSingle getFalseAlternative() {
-        return (ExprSingle) jjtGetChild(2);
+        return (ExprSingle) getChild(2);
     }
 
 
@@ -58,4 +62,3 @@ public final class ASTIfExpr extends AbstractXPathNode implements ExprSingle {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=bc4bcc1f2a1daa67c83fae268966da0d (do not edit this line) */

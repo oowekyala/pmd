@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -25,12 +25,16 @@ public final class ASTSchemaElementTest extends AbstractXPathNode implements Kin
         super(XPathParserImplTreeConstants.JJTSCHEMAELEMENTTEST);
     }
 
+    ASTSchemaElementTest(int id) {
+        this();
+    }
+
 
     /**
      * Gets the node representing the name of the tested element.
      */
     public ASTName getElementNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -45,4 +49,3 @@ public final class ASTSchemaElementTest extends AbstractXPathNode implements Kin
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=d820a212ba68b42360ab7f30a7b34171 (do not edit this line) */

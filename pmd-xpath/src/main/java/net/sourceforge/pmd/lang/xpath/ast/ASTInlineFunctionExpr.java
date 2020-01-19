@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -35,12 +35,16 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
         super(XPathParserImplTreeConstants.JJTINLINEFUNCTIONEXPR);
     }
 
+    ASTInlineFunctionExpr(int id) {
+        this();
+    }
+
 
     /**
      * Returns the parameter list.
      */
     public ASTParamList getParamList() {
-        return (ASTParamList) jjtGetChild(0);
+        return (ASTParamList) getChild(0);
     }
 
     // TODO synthesize default type node?
@@ -51,7 +55,7 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
      * in which case {@code item()*} is assumed.
      */
     public boolean isDefaultReturnType() {
-        return jjtGetNumChildren() == 2;
+        return getNumChildren() == 2;
     }
 
 
@@ -61,7 +65,7 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
      */
     @Nullable
     public ASTSequenceType getDeclaredReturnType() {
-        return isDefaultReturnType() ? null : (ASTSequenceType) jjtGetChild(1);
+        return isDefaultReturnType() ? null : (ASTSequenceType) getChild(1);
     }
 
 
@@ -84,4 +88,3 @@ public final class ASTInlineFunctionExpr extends AbstractXPathNode implements Fu
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=b64c06535567c75890f8423e25c97e32 (do not edit this line) */

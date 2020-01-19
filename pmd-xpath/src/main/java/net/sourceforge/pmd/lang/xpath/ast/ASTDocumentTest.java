@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -26,13 +26,17 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
         super(XPathParserImplTreeConstants.JJTDOCUMENTTEST);
     }
 
+    ASTDocumentTest(int id) {
+        this();
+    }
+
 
     /**
      * Returns the argument kind test, or null if there is none.
      */
     @Nullable
     public ElementTestOrSchemaElementTest getArgumentTest() {
-        return jjtGetNumChildren() == 0 ? null : (ElementTestOrSchemaElementTest) jjtGetChild(0);
+        return getNumChildren() == 0 ? null : (ElementTestOrSchemaElementTest) getChild(0);
     }
 
 
@@ -49,4 +53,3 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
 
 
 }
-/* JavaCC - OriginalChecksum=83dc39618e2fa96fb72e304333aa5cac (do not edit this line) */

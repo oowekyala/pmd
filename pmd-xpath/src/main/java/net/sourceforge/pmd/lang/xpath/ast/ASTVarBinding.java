@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -25,6 +25,10 @@ public final class ASTVarBinding extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTVARBINDING);
     }
 
+    ASTVarBinding(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -44,7 +48,7 @@ public final class ASTVarBinding extends AbstractXPathNode {
      * token "in".
      */
     public boolean isLetStyle() {
-        return jjtGetParent() instanceof ASTLetExpr;
+        return getParent() instanceof ASTLetExpr;
     }
 
 
@@ -52,7 +56,7 @@ public final class ASTVarBinding extends AbstractXPathNode {
      * Returns the expression initializing the variable.
      */
     public ExprSingle getInitializerExpr() {
-        return (ExprSingle) jjtGetChild(1);
+        return (ExprSingle) getChild(1);
     }
 
 
@@ -60,7 +64,7 @@ public final class ASTVarBinding extends AbstractXPathNode {
      * Returns the node representing the name of the variable.
      */
     public ASTName getVarNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 

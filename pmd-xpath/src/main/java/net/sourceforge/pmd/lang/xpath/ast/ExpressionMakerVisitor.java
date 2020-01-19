@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -102,11 +102,29 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
     @Override
     public void visit(ASTIfExpr node, StringBuilder builder) {
         appendToken(builder, "if (");
-        visit(node.getGuardExpressionNode(), builder);
+        visit(node.getCondition(), builder);
         appendToken(builder, ") then ");
         visit(node.getTrueAlternative(), builder);
         appendToken(builder, " else ");
         visit(node.getFalseAlternative(), builder);
+    }
+
+
+
+
+    @Override
+    public void visit(ASTInfixExpr node, StringBuilder builder) {
+        joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator().getImage() + " ");
+    }
+
+    /*
+
+
+    @Override
+    public void visit(ASTRangeExpr node, StringBuilder builder) {
+        visit(node.getLowerBound(), builder);
+        appendToken(builder, " to ");
+        visit(node.getUpperBound(), builder);
     }
 
 
@@ -135,23 +153,8 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         joinExprsOnBuilder(builder, childrenOf(node), " || ");
     }
 
-
-    @Override
-    public void visit(ASTRangeExpr node, StringBuilder builder) {
-        visit(node.getLowerBound(), builder);
-        appendToken(builder, " to ");
-        visit(node.getUpperBound(), builder);
-    }
-
-
     @Override
     public void visit(ASTAdditiveExpr node, StringBuilder builder) {
-        joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator() + " ");
-    }
-
-
-    @Override
-    public void visit(ASTMultiplicativeExpr node, StringBuilder builder) {
         joinExprsOnBuilder(builder, childrenOf(node), " " + node.getOperator() + " ");
     }
 
@@ -177,6 +180,8 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
     public void visit(ASTIntersectExceptOperator node, StringBuilder builder) {
         appendToken(builder, node.getImage());
     }
+
+ */
 
 
     @Override
@@ -492,7 +497,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
     public void visit(ASTProcessingInstructionTest node, StringBuilder builder) {
         appendToken(builder, "processing-instruction(");
         if (node.hasArgument()) {
-            visit((XPathNode) node.jjtGetChild(0), builder);
+            visit((XPathNode) node.getChild(0), builder);
         }
         appendToken(builder, ")");
     }
@@ -649,13 +654,13 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
 
         @Override
         public boolean hasNext() {
-            return parent.jjtGetNumChildren() > current;
+            return parent.getNumChildren() > current;
         }
 
 
         @Override
         public XPathNode next() {
-            return (XPathNode) parent.jjtGetChild(current++);
+            return (XPathNode) parent.getChild(current++);
         }
     }
 }

@@ -18,32 +18,19 @@ class BinderExprTest : XPathParserTestSpec({
             val iBinding = child<ASTVarBinding> {
                 it::getVarName shouldBe "i"
 
-                child<ASTName> {
-                    it::getImage shouldBe "i"
-                }
+                it::getVarNameNode shouldBe simpleName("i")
 
-                child<ASTAdditiveExpr>(ignoreChildren = true) {
-
-
+                infixExpr(XpBinaryOp.ADD) {
+                    int(1)
+                    int(2)
                 }
             }
 
-            child<ASTMultiplicativeExpr> {
-
-                it::getOperator shouldBe "*"
-
-                child<ASTVarRef> {
+            infixExpr(XpBinaryOp.MUL) {
+                simpleVarRef("i") {
                     it::getBinding shouldBe iBinding
-
-                    it::getVarNameNode shouldBe child {
-                        it::getLocalName shouldBe "i"
-                    }
                 }
-
-
-                child<ASTNumericLiteral> {
-                    it::getImage shouldBe "3"
-                }
+                int(3)
             }
         }
     }
@@ -54,56 +41,53 @@ class BinderExprTest : XPathParserTestSpec({
             val aBinding = child<ASTVarBinding> {
                 child<ASTName> { }
 
-                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe infixExpr(XpBinaryOp.ADD) {
                     child<ASTVarRef> {
                         it::getBinding shouldBe null
-                        child<ASTName> { }
+                        it::getVarNameNode shouldBe simpleName("a")
                     }
-                    unspecifiedChild()
+                    int(2)
                 }
             }
 
-            it::getBodyExpr shouldBe child<ASTVarRef> {
+            it::getBodyExpr shouldBe simpleVarRef("a") {
                 it::getBinding shouldBe aBinding
-                child<ASTName> { }
             }
         }
 
         "for \$a in \$a + 2 return \$a" should matchExpr<ASTForExpr> {
             val aBinding = child<ASTVarBinding> {
-                child<ASTName> { }
+                it::getVarNameNode shouldBe simpleName("a")
 
-                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe infixExpr(XpBinaryOp.ADD) {
                     child<ASTVarRef> {
                         it::getBinding shouldBe null
-                        child<ASTName> { }
+                        it::getVarNameNode shouldBe simpleName("a")
                     }
-                    unspecifiedChild()
+                    int(2)
                 }
             }
 
-            it::getBodyExpr shouldBe child<ASTVarRef> {
+            it::getBodyExpr shouldBe simpleVarRef("a") {
                 it::getBinding shouldBe aBinding
-                child<ASTName> { }
             }
         }
 
         "some \$a in \$a + 2 satisfies \$a" should matchExpr<ASTQuantifiedExpr> {
             val aBinding = child<ASTVarBinding> {
-                child<ASTName> { }
+                it::getVarNameNode shouldBe simpleName("a")
 
-                it::getInitializerExpr shouldBe child<ASTAdditiveExpr> {
+                it::getInitializerExpr shouldBe infixExpr(XpBinaryOp.ADD) {
                     child<ASTVarRef> {
                         it::getBinding shouldBe null
-                        child<ASTName> { }
+                        it::getVarNameNode shouldBe simpleName("a")
                     }
-                    unspecifiedChild()
+                    int(2)
                 }
             }
 
-            it::getBodyExpr shouldBe child<ASTVarRef> {
+            it::getBodyExpr shouldBe simpleVarRef("a") {
                 it::getBinding shouldBe aBinding
-                child<ASTName> { }
             }
         }
     }
@@ -112,22 +96,20 @@ class BinderExprTest : XPathParserTestSpec({
     parserTest("A variable's scope should include the initialisers of the next variables") {
         "let \$a := 2, \$b := \$a return \$b" should matchExpr<ASTLetExpr> {
             val aBinding = child<ASTVarBinding> {
-                child<ASTName> { }
-                it::getInitializerExpr shouldBe child<ASTNumericLiteral> {}
+                it::getVarNameNode shouldBe simpleName("a")
+                it::getInitializerExpr shouldBe int(2)
             }
 
             val bBinding = child<ASTVarBinding> {
-                child<ASTName> { }
+                it::getVarNameNode shouldBe simpleName("b")
 
-                it::getInitializerExpr shouldBe child<ASTVarRef> {
+                it::getInitializerExpr shouldBe simpleVarRef("a") {
                     it::getBinding shouldBe aBinding
-                    child<ASTName> { }
                 }
             }
 
-            it::getBodyExpr shouldBe child<ASTVarRef> {
+            it::getBodyExpr shouldBe simpleVarRef("b") {
                 it::getBinding shouldBe bBinding
-                child<ASTName> { }
             }
 
             it.bindings.toList().shouldContainExactly(aBinding, bBinding)
@@ -135,7 +117,7 @@ class BinderExprTest : XPathParserTestSpec({
 
         "for \$a in (1,2), \$b in f(\$a) return \$b" should matchExpr<ASTForExpr> {
             val aBinding = child<ASTVarBinding> {
-                child<ASTName> { }
+                it::getVarNameNode shouldBe simpleName("a")
                 unspecifiedChild()
             }
 
@@ -168,23 +150,18 @@ class BinderExprTest : XPathParserTestSpec({
 
         "let \$a := 2 return let \$a := 1 return \$a" should matchExpr<ASTLetExpr> {
             val fstABinding = child<ASTVarBinding> {
-                it::getVarName shouldBe "a"
-
-                child<ASTName> { }
-                it::getInitializerExpr shouldBe child<ASTNumericLiteral> {}
+                it::getVarNameNode shouldBe simpleName("a")
+                it::getInitializerExpr shouldBe int(2)
             }
 
             it::getBodyExpr shouldBe child<ASTLetExpr> {
                 val sndABinding = child<ASTVarBinding> {
-                    it::getVarName shouldBe "a"
-
-                    child<ASTName> { }
-                    it::getInitializerExpr shouldBe child<ASTNumericLiteral> { }
+                    it::getVarNameNode shouldBe simpleName("a")
+                    it::getInitializerExpr shouldBe int(1)
                 }
 
-                it::getBodyExpr shouldBe child<ASTVarRef> {
+                it::getBodyExpr shouldBe simpleVarRef("a") {
                     it::getBinding shouldBe sndABinding // ref to the second var
-                    child<ASTName> { }
                 }
 
                 it.bindings.toList().shouldContainExactly(sndABinding)

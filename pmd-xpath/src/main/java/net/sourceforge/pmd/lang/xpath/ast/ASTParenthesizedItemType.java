@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -22,13 +22,17 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
         super(XPathParserImplTreeConstants.JJTPARENTHESIZEDITEMTYPE);
     }
 
+    ASTParenthesizedItemType(int id) {
+        this();
+    }
+
 
     /**
      * Gets the expression wrapped in the parentheses.
      */
     @Override
     public ItemType getWrappedNode() {
-        return (ItemType) jjtGetChild(0);
+        return (ItemType) getChild(0);
     }
 
 
@@ -46,4 +50,3 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
 
 
 }
-/* JavaCC - OriginalChecksum=4d0e9b33e4c4e44319aeba3f167fb764 (do not edit this line) */

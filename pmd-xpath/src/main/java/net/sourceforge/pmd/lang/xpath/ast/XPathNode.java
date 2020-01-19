@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -45,7 +45,7 @@ public interface XPathNode extends Node {
 
 
     @Override
-    NodeStream<XPathNode> children();
+    NodeStream<? extends XPathNode> children();
 
 
     <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data);

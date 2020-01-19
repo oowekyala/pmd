@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -23,6 +23,10 @@ public final class ASTNamedFunctionRef extends AbstractXPathNode implements Func
     /** Constructor for synthetic node. */
     public ASTNamedFunctionRef() {
         super(XPathParserImplTreeConstants.JJTNAMEDFUNCTIONREF);
+    }
+
+    ASTNamedFunctionRef(int id) {
+        this();
     }
 
     private int arity = 0;
@@ -52,7 +56,7 @@ public final class ASTNamedFunctionRef extends AbstractXPathNode implements Func
      * Get the node representing the function name.
      */
     public ASTName getFunctionName() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -60,4 +64,3 @@ public final class ASTNamedFunctionRef extends AbstractXPathNode implements Func
         this.arity = arity;
     }
 }
-/* JavaCC - OriginalChecksum=ec8948cb98fce8414cc0bdb9249c4c98 (do not edit this line) */

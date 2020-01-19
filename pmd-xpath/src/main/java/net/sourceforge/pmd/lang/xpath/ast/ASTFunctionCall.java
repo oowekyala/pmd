@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -30,6 +30,10 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
         children[1] = Objects.requireNonNull(arguments);
     }
 
+    ASTFunctionCall(int id) {
+        super(XPathParserImplTreeConstants.JJTFUNCTIONCALL);
+    }
+
 
     /**
      * Returns true if this function call represents the true
@@ -37,8 +41,8 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      */
     public boolean isBooleanTrueLiteral() {
         return getFunctionNameNode().getLocalName().equals("true")
-                && getFunctionNameNode().getExplicitNamespacePrefix() == null
-                && getArguments().getArgumentNumber() == 0;
+            && getFunctionNameNode().getExplicitNamespacePrefix() == null
+            && getArguments().getArgumentNumber() == 0;
     }
 
 
@@ -70,7 +74,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      * Get the node representing the function name.
      */
     public ASTName getFunctionNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -78,7 +82,7 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
      * Gets the (possibly empty) argument list of the function.
      */
     public ASTArgumentList getArguments() {
-        return (ASTArgumentList) jjtGetChild(1);
+        return (ASTArgumentList) getChild(1);
     }
 
 
@@ -93,4 +97,3 @@ public final class ASTFunctionCall extends AbstractXPathNode implements PrimaryE
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=0aafee7da1d65c30d8e30966577689f4 (do not edit this line) */

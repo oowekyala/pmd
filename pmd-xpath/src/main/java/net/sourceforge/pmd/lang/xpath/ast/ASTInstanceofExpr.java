@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,14 +21,18 @@ public final class ASTInstanceofExpr extends AbstractXPathNode implements ExprSi
         super(XPathParserImplTreeConstants.JJTINSTANCEOFEXPR);
     }
 
+    ASTInstanceofExpr(int id) {
+        this();
+    }
+
 
     public ExprSingle getTestedExpr() {
-        return (ExprSingle) jjtGetChild(0);
+        return (ExprSingle) getChild(0);
     }
 
 
     public ASTSequenceType getTestedType() {
-        return (ASTSequenceType) jjtGetChild(1);
+        return (ASTSequenceType) getChild(1);
     }
 
 
@@ -43,4 +47,3 @@ public final class ASTInstanceofExpr extends AbstractXPathNode implements ExprSi
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=f02361df2713ede12c9748ebb3f67690 (do not edit this line) */

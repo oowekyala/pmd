@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -20,6 +20,10 @@ public final class ASTContextItemExpr extends AbstractXPathNode implements Prima
         super(XPathParserImplTreeConstants.JJTCONTEXTITEMEXPR);
     }
 
+    ASTContextItemExpr(int id) {
+        this();
+    }
+
 
     @Override
     public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
@@ -34,4 +38,3 @@ public final class ASTContextItemExpr extends AbstractXPathNode implements Prima
 
 
 }
-/* JavaCC - OriginalChecksum=f84ce10a4a9a29e0d18b17f6a11e34f8 (do not edit this line) */

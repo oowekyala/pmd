@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTPostfixExpr extends AbstractXPathNode implements ExprSingl
         super(XPathParserImplTreeConstants.JJTPOSTFIXEXPR);
     }
 
+    ASTPostfixExpr(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -42,4 +46,3 @@ public final class ASTPostfixExpr extends AbstractXPathNode implements ExprSingl
         return findChildrenOfType(ASTPredicate.class);
     }
 }
-/* JavaCC - OriginalChecksum=1cca783774867afa020917f496b7be7a (do not edit this line) */

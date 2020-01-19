@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTAnyFunctionTest extends AbstractXPathNode implements Funct
         super(XPathParserImplTreeConstants.JJTANYFUNCTIONTEST);
     }
 
+    ASTAnyFunctionTest(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -36,4 +40,3 @@ public final class ASTAnyFunctionTest extends AbstractXPathNode implements Funct
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=929b2e4e9c2ecfbb6d638230bd82a085 (do not edit this line) */

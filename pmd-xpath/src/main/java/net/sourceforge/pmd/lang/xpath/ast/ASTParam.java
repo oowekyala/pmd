@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -28,12 +28,16 @@ public final class ASTParam extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTPARAM);
     }
 
+    ASTParam(int id) {
+        this();
+    }
+
 
     /**
      * Gets the node representing the name of the variable.
      */
     public ASTName getNameNode() {
-        return (ASTName) jjtGetChild(0);
+        return (ASTName) getChild(0);
     }
 
 
@@ -42,7 +46,7 @@ public final class ASTParam extends AbstractXPathNode {
      * in which case {@code item()*} is assumed.
      */
     public boolean isDefaultType() {
-        return jjtGetNumChildren() == 1;
+        return getNumChildren() == 1;
     }
 
     // TODO synthesize default type node?
@@ -54,7 +58,7 @@ public final class ASTParam extends AbstractXPathNode {
      */
     @Nullable
     public ASTSequenceType getDeclaredType() {
-        return isDefaultType() ? null : (ASTSequenceType) jjtGetChild(1);
+        return isDefaultType() ? null : (ASTSequenceType) getChild(1);
     }
 
 
@@ -69,4 +73,3 @@ public final class ASTParam extends AbstractXPathNode {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=6b7690eb5f46d382c13c36defb497b11 (do not edit this line) */

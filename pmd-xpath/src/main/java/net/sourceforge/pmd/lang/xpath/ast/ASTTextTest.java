@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTTextTest extends AbstractXPathNode implements KindTest {
         super(XPathParserImplTreeConstants.JJTTEXTTEST);
     }
 
+    ASTTextTest(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -36,4 +40,3 @@ public final class ASTTextTest extends AbstractXPathNode implements KindTest {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=7a8ca09c25217e381bdc126c59b3eae6 (do not edit this line) */

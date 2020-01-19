@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTParamList extends AbstractXPathNode implements Iterable<AS
         super(XPathParserImplTreeConstants.JJTPARAMLIST);
     }
 
+    ASTParamList(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -39,7 +43,6 @@ public final class ASTParamList extends AbstractXPathNode implements Iterable<AS
 
     @Override
     public Iterator<ASTParam> iterator() {
-        return new NodeChildrenIterator<>(this, ASTParam.class);
+        return children(ASTParam.class).iterator();
     }
 }
-/* JavaCC - OriginalChecksum=ff1a41543bd1e7d1dfa727bb341faa09 (do not edit this line) */

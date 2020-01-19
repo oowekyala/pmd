@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -24,6 +24,10 @@ public final class ASTArgument extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTARGUMENT);
     }
 
+    ASTArgument(int id) {
+        this();
+    }
+
 
     private boolean isPlaceholder;
 
@@ -41,7 +45,7 @@ public final class ASTArgument extends AbstractXPathNode {
      */
     @Nullable
     public ExprSingle getExpression() {
-        return isPlaceholder ? null : (ExprSingle) jjtGetChild(0);
+        return isPlaceholder ? null : (ExprSingle) getChild(0);
     }
 
 
@@ -61,4 +65,3 @@ public final class ASTArgument extends AbstractXPathNode {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=12d47f9d14e8d353f8b969e52983c8c1 (do not edit this line) */

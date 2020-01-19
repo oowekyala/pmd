@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -34,6 +34,10 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
     /** Constructor for synthetic node. */
     public ASTPathExpr() {
         super(XPathParserImplTreeConstants.JJTPATHEXPR);
+    }
+
+    ASTPathExpr(int id) {
+        this();
     }
 
 
@@ -72,7 +76,7 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
      * Gets the first step.
      */
     public StepExpr getFirstStep() {
-        return (StepExpr) jjtGetChild(0);
+        return (StepExpr) getChild(0);
     }
 
 
@@ -90,7 +94,7 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
 
     @Override
     public Iterator<StepExpr> iterator() {
-        return new NodeChildrenIterator<>(this, StepExpr.class);
+        return children(StepExpr.class).iterator();
     }
 
 
@@ -123,4 +127,3 @@ public final class ASTPathExpr extends AbstractXPathNode implements Iterable<Ste
     }
 
 }
-/* JavaCC - OriginalChecksum=0abb4b09a09e05581510519abd0e66cc (do not edit this line) */

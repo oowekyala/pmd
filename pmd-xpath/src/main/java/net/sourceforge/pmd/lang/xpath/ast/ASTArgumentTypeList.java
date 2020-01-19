@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -23,6 +23,10 @@ public final class ASTArgumentTypeList extends AbstractXPathNode implements Iter
         super(XPathParserImplTreeConstants.JJTARGUMENTTYPELIST);
     }
 
+    ASTArgumentTypeList(int id) {
+        this();
+    }
+
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
@@ -38,7 +42,6 @@ public final class ASTArgumentTypeList extends AbstractXPathNode implements Iter
 
     @Override
     public Iterator<ASTSequenceType> iterator() {
-        return new NodeChildrenIterator<>(this, ASTSequenceType.class);
+        return children(ASTSequenceType.class).iterator();
     }
 }
-/* JavaCC - OriginalChecksum=275fa73d266d8c87073e31ffd8e85f3f (do not edit this line) */

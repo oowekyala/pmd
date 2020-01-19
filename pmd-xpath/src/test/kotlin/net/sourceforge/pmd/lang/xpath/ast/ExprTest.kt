@@ -16,7 +16,7 @@ class ExprTest : XPathParserTestSpec({
 
     parserTest("Test for expression") {
 
-        "for ${'$'}i in //i return ${'$'}i" should matchExpr<ASTForExpr> {
+        "for \$i in //i return \$i" should matchExpr<ASTForExpr> {
             val iBinding = child<ASTVarBinding> {
                 it::getVarName shouldBe "i"
 

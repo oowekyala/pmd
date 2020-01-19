@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -45,6 +45,10 @@ public final class ASTName extends AbstractXPathNode {
     public ASTName(String image) {
         super(XPathParserImplTreeConstants.JJTNAME);
         setImage(image);
+    }
+
+    ASTName(int id) {
+        super(XPathParserImplTreeConstants.JJTNAME);
     }
 
 
@@ -147,4 +151,3 @@ public final class ASTName extends AbstractXPathNode {
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=e907c6324ae85516eedeec168795d1c6 (do not edit this line) */

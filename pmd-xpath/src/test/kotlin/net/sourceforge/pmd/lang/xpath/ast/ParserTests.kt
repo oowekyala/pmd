@@ -34,14 +34,14 @@ class ParserTests : XPathParserTestSpec({
             }
         }
 
-        "foo -foo" should matchExpr<ASTAdditiveExpr> {
-            it.operator shouldBe "-"
+        "foo -foo" should matchExpr<ASTInfixExpr> {
+            it.operator shouldBe XpBinaryOp.SUB
             unspecifiedChild()
             unspecifiedChild()
         }
 
-        "foo(: This is a comment :)- foo" should matchExpr<ASTAdditiveExpr> {
-            it.operator shouldBe "-"
+        "foo(: This is a comment :)- foo" should matchExpr<ASTInfixExpr> {
+            it.operator shouldBe XpBinaryOp.SUB
             unspecifiedChild()
             unspecifiedChild()
         }

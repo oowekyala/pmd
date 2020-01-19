@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -21,6 +21,10 @@ public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSi
     /** Constructor for synthetic node. */
     public ASTQuantifiedExpr() {
         super(XPathParserImplTreeConstants.JJTQUANTIFIEDEXPR);
+    }
+
+    ASTQuantifiedExpr(int id) {
+        this();
     }
 
 
@@ -58,4 +62,3 @@ public final class ASTQuantifiedExpr extends AbstractXPathNode implements ExprSi
         return visitor.visit(this, data);
     }
 }
-/* JavaCC - OriginalChecksum=902143576c4105d769904438ccb7bced (do not edit this line) */

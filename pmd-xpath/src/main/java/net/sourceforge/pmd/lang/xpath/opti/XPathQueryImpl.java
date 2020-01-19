@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -10,9 +10,9 @@ import java.util.Objects;
 
 import net.sourceforge.pmd.lang.xpath.ast.ASTAxisStep;
 import net.sourceforge.pmd.lang.xpath.ast.ASTExactNameTest;
+import net.sourceforge.pmd.lang.xpath.ast.ASTInfixExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor;
-import net.sourceforge.pmd.lang.xpath.ast.ASTUnionExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTVarRef;
 import net.sourceforge.pmd.lang.xpath.ast.ASTWildcardNameTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
@@ -117,8 +117,8 @@ class XPathQueryImpl implements XPathQuery {
 
         Expr main = root.getMainExpr();
 
-        if (main instanceof ASTUnionExpr) {
-            for (ExprSingle expr : ((ASTUnionExpr) main).getAlternatives()) {
+        if (main instanceof ASTInfixExpr && ((ASTInfixExpr) main).getOperator().isUnion()) {
+            for (ExprSingle expr : ((ASTInfixExpr) main).children()) {
                 if (expr instanceof ASTPathExpr) {
 
                     StepExpr firstStep = ((ASTPathExpr) expr).getFirstStep();

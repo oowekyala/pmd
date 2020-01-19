@@ -1,6 +1,7 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
-import io.kotlintest.shouldBe
+import net.sourceforge.pmd.lang.ast.test.shouldBe
+
 
 /**
  * @author Clément Fournier
@@ -10,13 +11,19 @@ class UnaryExprTest : XPathParserTestSpec({
     parserTest("Test UnaryExpr") {
 
         "+1" should matchExpr<ASTUnaryExpr> {
-            it.operator shouldBe "+"
-            it.operand shouldBe child<ASTNumericLiteral> { }
+            it::getOperator shouldBe XpUnaryOp.PLUS
+            it::getOperand shouldBe int(1)
         }
 
         "-++1" should matchExpr<ASTUnaryExpr> {
-            it.operator shouldBe "-++"
-            it.operand shouldBe child<ASTNumericLiteral> { }
+            it::getOperator shouldBe XpUnaryOp.MINUS
+            child<ASTUnaryExpr> {
+                it::getOperator shouldBe XpUnaryOp.PLUS
+                child<ASTUnaryExpr> {
+                    it::getOperator shouldBe XpUnaryOp.PLUS
+                    it::getOperand shouldBe int(1)
+                }
+            }
         }
     }
 })
