@@ -37,7 +37,7 @@ public final class ASTNumericLiteral extends AbstractXPathExpr implements Primar
         setImage(image);
     }
 
-    ASTNumericLiteral(int id) {
+    ASTNumericLiteral() {
         super(XPathParserImplTreeConstants.JJTNUMERICLITERAL);
     }
 

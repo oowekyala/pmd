@@ -20,10 +20,6 @@ public final class ASTForExpr extends AbstractXPathExpr implements Expr, BinderE
         super(XPathParserImplTreeConstants.JJTFOREXPR);
     }
 
-    ASTForExpr(int id) {
-        this();
-    }
-
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {
         visitor.visit(this, data);

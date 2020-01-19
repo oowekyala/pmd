@@ -21,10 +21,6 @@ public final class ASTLetExpr extends AbstractXPathExpr implements Expr, BinderE
         super(XPathParserImplTreeConstants.JJTLETEXPR);
     }
 
-    ASTLetExpr(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

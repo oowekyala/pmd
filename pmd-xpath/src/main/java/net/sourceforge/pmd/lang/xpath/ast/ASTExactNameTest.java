@@ -25,10 +25,6 @@ public final class ASTExactNameTest extends AbstractXPathNode implements NameTes
         super(XPathParserImplTreeConstants.JJTEXACTNAMETEST);
     }
 
-    ASTExactNameTest(int id) {
-        this();
-    }
-
 
     /**
      * Returns the image of the name tested for.

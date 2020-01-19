@@ -102,6 +102,11 @@
                                   <property name="javacc.jar" value="${javacc.jar}" />
                               </ant>
                               <delete file="${javacc.outputDirectory}/net/sourceforge/pmd/lang/xpath/ast/XPathParserVisitor.java" />
+                              <replaceregexp flags="g">
+                                  <regexp pattern="new AST(\w+)\(JJT.*?\);" />
+                                  <substitution expression="new AST\1();" />
+                                  <fileset file="${javacc.outputDirectory}/net/sourceforge/pmd/lang/xpath/ast/XPathParserImpl.java" />
+                              </replaceregexp>
                             </target>
                         </configuration>
                         <goals>
@@ -188,6 +193,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -30,7 +30,7 @@ public final class ASTFunctionCall extends AbstractXPathExpr implements PrimaryE
         children[1] = Objects.requireNonNull(arguments);
     }
 
-    ASTFunctionCall(int id) {
+    ASTFunctionCall() {
         super(XPathParserImplTreeConstants.JJTFUNCTIONCALL);
     }
 

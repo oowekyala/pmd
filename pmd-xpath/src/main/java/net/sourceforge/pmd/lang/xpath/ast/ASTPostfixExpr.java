@@ -24,10 +24,6 @@ public final class ASTPostfixExpr extends AbstractXPathExpr implements Expr, Ste
         super(XPathParserImplTreeConstants.JJTPOSTFIXEXPR);
     }
 
-    ASTPostfixExpr(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

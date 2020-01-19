@@ -46,10 +46,6 @@ public final class ASTElementTest extends AbstractXPathNode implements KindTest,
         super(XPathParserImplTreeConstants.JJTELEMENTTEST);
     }
 
-    ASTElementTest(int id) {
-        this();
-    }
-
     // null means absent
     private Boolean isWildcard = null;
     private boolean isOptionalType;

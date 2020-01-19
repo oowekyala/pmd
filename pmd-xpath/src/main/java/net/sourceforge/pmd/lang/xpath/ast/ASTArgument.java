@@ -24,10 +24,6 @@ public final class ASTArgument extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTARGUMENT);
     }
 
-    ASTArgument(int id) {
-        this();
-    }
-
 
     private boolean isPlaceholder;
 

@@ -178,7 +178,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         appendToken(builder, node.getImage());
     }
 
- */
+    */
 
 
     @Override
@@ -358,14 +358,14 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         visit(node.getVarNameNode(), builder);
     }
 
-/* FIXME
-    @Override
-    public void visit(ASTParenthesizedExpr node, StringBuilder builder) {
-        appendToken(builder, "(");
-        visit(node.getWrappedNode(), builder);
-        appendToken(builder, ")");
-    }
-*/
+    /* FIXME
+        @Override
+        public void visit(ASTParenthesizedExpr node, StringBuilder builder) {
+            appendToken(builder, "(");
+            visit(node.getWrappedNode(), builder);
+            appendToken(builder, ")");
+        }
+    */
 
 
     private void enterExpr(Expr expr, StringBuilder b) {

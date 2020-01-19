@@ -24,10 +24,6 @@ public final class ASTAnyKindTest extends AbstractXPathNode implements KindTest 
         super(XPathParserImplTreeConstants.JJTANYKINDTEST);
     }
 
-    ASTAnyKindTest(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

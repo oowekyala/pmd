@@ -20,10 +20,6 @@ public final class ASTAnyItemType extends AbstractXPathNode implements ItemType 
         super(XPathParserImplTreeConstants.JJTANYITEMTYPE);
     }
 
-    ASTAnyItemType(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

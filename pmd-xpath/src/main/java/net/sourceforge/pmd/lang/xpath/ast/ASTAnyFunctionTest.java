@@ -24,10 +24,6 @@ public final class ASTAnyFunctionTest extends AbstractXPathNode implements Funct
         super(XPathParserImplTreeConstants.JJTANYFUNCTIONTEST);
     }
 
-    ASTAnyFunctionTest(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

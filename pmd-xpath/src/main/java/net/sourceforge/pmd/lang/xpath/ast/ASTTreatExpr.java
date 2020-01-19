@@ -27,10 +27,6 @@ public final class ASTTreatExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTTREATEXPR);
     }
 
-    ASTTreatExpr(int id) {
-        this();
-    }
-
 
     public Expr getCastedExpr() {
         return (Expr) getChild(0);

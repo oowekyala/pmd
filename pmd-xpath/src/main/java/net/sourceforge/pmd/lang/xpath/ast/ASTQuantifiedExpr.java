@@ -23,10 +23,6 @@ public final class ASTQuantifiedExpr extends AbstractXPathExpr implements Expr, 
         super(XPathParserImplTreeConstants.JJTQUANTIFIEDEXPR);
     }
 
-    ASTQuantifiedExpr(int id) {
-        this();
-    }
-
 
     void setUniversallyQuantified(boolean b) {
         isUniversallyQuantified = b;

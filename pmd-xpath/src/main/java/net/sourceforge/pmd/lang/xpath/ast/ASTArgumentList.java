@@ -25,10 +25,6 @@ public final class ASTArgumentList extends AbstractXPathNode implements Iterable
         super(XPathParserImplTreeConstants.JJTARGUMENTLIST);
     }
 
-    ASTArgumentList(int id) {
-        this();
-    }
-
     public int getArgumentNumber() {
         return getNumChildren();
     }

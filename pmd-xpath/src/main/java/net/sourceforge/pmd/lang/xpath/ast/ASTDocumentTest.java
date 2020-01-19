@@ -26,10 +26,6 @@ public final class ASTDocumentTest extends AbstractXPathNode implements KindTest
         super(XPathParserImplTreeConstants.JJTDOCUMENTTEST);
     }
 
-    ASTDocumentTest(int id) {
-        this();
-    }
-
 
     /**
      * Returns the argument kind test, or null if there is none.

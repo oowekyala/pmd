@@ -21,10 +21,6 @@ public final class ASTPredicate extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTPREDICATE);
     }
 
-    ASTPredicate(int id) {
-        this();
-    }
-
 
     /**
      * Gets the expression wrapped in the predicate.

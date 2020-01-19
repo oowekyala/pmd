@@ -25,10 +25,6 @@ public final class ASTSchemaElementTest extends AbstractXPathNode implements Kin
         super(XPathParserImplTreeConstants.JJTSCHEMAELEMENTTEST);
     }
 
-    ASTSchemaElementTest(int id) {
-        this();
-    }
-
 
     /**
      * Gets the node representing the name of the tested element.

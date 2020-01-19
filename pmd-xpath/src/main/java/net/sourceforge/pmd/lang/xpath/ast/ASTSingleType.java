@@ -21,10 +21,6 @@ public final class ASTSingleType extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTSINGLETYPE);
     }
 
-    ASTSingleType(int id) {
-        this();
-    }
-
     private boolean optional;
 
 

@@ -24,10 +24,6 @@ public final class ASTNamespaceNodeTest extends AbstractXPathNode implements Kin
         super(XPathParserImplTreeConstants.JJTNAMESPACENODETEST);
     }
 
-    ASTNamespaceNodeTest(int id) {
-        this();
-    }
-
 
     @Override
     public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {

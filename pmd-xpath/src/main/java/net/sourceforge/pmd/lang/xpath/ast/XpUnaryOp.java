@@ -9,10 +9,10 @@ package net.sourceforge.pmd.lang.xpath.ast;
  */
 public enum XpUnaryOp {
     PLUS("+", XPathTokenKinds.PLUS),
-    MINUS("-", XPathTokenKinds.MINUS),
-    ;
+    MINUS("-", XPathTokenKinds.MINUS);
 
     private final String image;
+    @SuppressWarnings("PMD.SingularField")
     private final int tokenKind;
 
     XpUnaryOp(String image, int tokenKind) {

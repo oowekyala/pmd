@@ -26,8 +26,8 @@ public final class ASTInfixExpr extends AbstractXPathExpr implements Expr {
 
     private XpBinaryOp op;
 
-    protected ASTInfixExpr(int id) {
-        super(id);
+    protected ASTInfixExpr() {
+        super(XPathParserImplTreeConstants.JJTINFIXEXPR);
     }
 
 

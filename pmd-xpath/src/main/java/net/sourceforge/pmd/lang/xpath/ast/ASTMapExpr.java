@@ -23,10 +23,6 @@ public final class ASTMapExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTMAPEXPR);
     }
 
-    ASTMapExpr(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

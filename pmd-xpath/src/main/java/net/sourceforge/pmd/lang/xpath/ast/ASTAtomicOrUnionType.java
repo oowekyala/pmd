@@ -20,10 +20,6 @@ public final class ASTAtomicOrUnionType extends AbstractXPathNode implements Ite
         super(XPathParserImplTreeConstants.JJTATOMICORUNIONTYPE);
     }
 
-    ASTAtomicOrUnionType(int id) {
-        this();
-    }
-
 
     /**
      * Returns the type name.

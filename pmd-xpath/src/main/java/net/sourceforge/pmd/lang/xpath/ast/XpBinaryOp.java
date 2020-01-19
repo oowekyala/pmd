@@ -52,10 +52,10 @@ public enum XpBinaryOp {
     VAL_GE("ge", XPathTokenKinds.GE),
 
     RANGE("to", XPathTokenKinds.TO),
-    STRING_CONCAT("||", XPathTokenKinds.DOUBLE_PIPE),
-    ;
+    STRING_CONCAT("||", XPathTokenKinds.DOUBLE_PIPE);
 
     private final String image;
+    @SuppressWarnings("PMD.SingularField")
     private final int tokenKind;
 
     XpBinaryOp(String image, int tokenKind) {

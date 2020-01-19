@@ -21,10 +21,6 @@ public final class ASTUnaryExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTUNARYEXPR);
     }
 
-    ASTUnaryExpr(int id) {
-        this();
-    }
-
     private XpUnaryOp operator;
 
 

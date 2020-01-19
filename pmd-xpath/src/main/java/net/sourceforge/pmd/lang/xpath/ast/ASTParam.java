@@ -28,10 +28,6 @@ public final class ASTParam extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTPARAM);
     }
 
-    ASTParam(int id) {
-        this();
-    }
-
 
     /**
      * Gets the node representing the name of the variable.

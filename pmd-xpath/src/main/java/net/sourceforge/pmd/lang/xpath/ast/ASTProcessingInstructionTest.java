@@ -24,10 +24,6 @@ public final class ASTProcessingInstructionTest extends AbstractXPathNode implem
         super(XPathParserImplTreeConstants.JJTPROCESSINGINSTRUCTIONTEST);
     }
 
-    ASTProcessingInstructionTest(int id) {
-        this();
-    }
-
 
     /**
      * Returns true if test specifies the name of a specific PI.

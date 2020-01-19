@@ -30,7 +30,7 @@ public final class ASTStringLiteral extends AbstractXPathExpr implements Primary
         setImage(image);
     }
 
-    ASTStringLiteral(int id) {
+    ASTStringLiteral() {
         super(XPathParserImplTreeConstants.JJTSTRINGLITERAL);
     }
 

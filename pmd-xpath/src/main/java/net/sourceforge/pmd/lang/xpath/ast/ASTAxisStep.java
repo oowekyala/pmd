@@ -49,10 +49,6 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
         super(XPathParserImplTreeConstants.JJTAXISSTEP);
     }
 
-    ASTAxisStep(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

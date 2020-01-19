@@ -26,10 +26,6 @@ public final class ASTVarBinding extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTVARBINDING);
     }
 
-    ASTVarBinding(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

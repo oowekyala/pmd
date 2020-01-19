@@ -25,6 +25,7 @@ import net.sourceforge.pmd.properties.PropertyDescriptor;
 /**
  *
  */
+@SuppressWarnings("PMD")
 class XPathQueryImpl implements XPathQuery {
 
     private final ASTXPathRoot root;

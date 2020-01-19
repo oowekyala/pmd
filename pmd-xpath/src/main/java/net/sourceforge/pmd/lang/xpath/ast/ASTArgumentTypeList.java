@@ -23,10 +23,6 @@ public final class ASTArgumentTypeList extends AbstractXPathNode implements Iter
         super(XPathParserImplTreeConstants.JJTARGUMENTTYPELIST);
     }
 
-    ASTArgumentTypeList(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

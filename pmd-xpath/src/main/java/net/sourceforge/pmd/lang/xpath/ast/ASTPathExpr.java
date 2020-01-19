@@ -36,10 +36,6 @@ public final class ASTPathExpr extends AbstractXPathExpr implements Iterable<Ste
         super(XPathParserImplTreeConstants.JJTPATHEXPR);
     }
 
-    ASTPathExpr(int id) {
-        this();
-    }
-
 
     void setRootAnchor() {
         this.pathAnchor = PathAnchor.ROOT;

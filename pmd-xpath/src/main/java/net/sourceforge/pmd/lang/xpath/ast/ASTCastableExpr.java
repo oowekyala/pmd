@@ -21,10 +21,6 @@ public final class ASTCastableExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTCASTABLEEXPR);
     }
 
-    ASTCastableExpr(int id) {
-        this();
-    }
-
 
     public Expr getTestedExpr() {
         return (Expr) getChild(0);

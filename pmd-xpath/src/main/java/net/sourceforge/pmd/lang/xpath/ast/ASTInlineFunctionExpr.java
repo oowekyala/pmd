@@ -35,10 +35,6 @@ public final class ASTInlineFunctionExpr extends AbstractXPathExpr implements Fu
         super(XPathParserImplTreeConstants.JJTINLINEFUNCTIONEXPR);
     }
 
-    ASTInlineFunctionExpr(int id) {
-        this();
-    }
-
 
     /**
      * Returns the parameter list.

@@ -28,10 +28,6 @@ public final class ASTWildcardNameTest extends AbstractXPathNode implements Name
         super(XPathParserImplTreeConstants.JJTWILDCARDNAMETEST);
     }
 
-    ASTWildcardNameTest(int id) {
-        this();
-    }
-
     // they don't have the same name as the getters because kotlin gets
     // confused with properties since they're package private
     private String expectedLocalName = null;

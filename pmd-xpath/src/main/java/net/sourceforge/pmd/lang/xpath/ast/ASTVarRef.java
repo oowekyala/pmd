@@ -27,10 +27,6 @@ public final class ASTVarRef extends AbstractXPathExpr implements PrimaryExpr {
         super(XPathParserImplTreeConstants.JJTVARREF);
     }
 
-    ASTVarRef(int id) {
-        this();
-    }
-
 
     /**
      * Gets the node representing the name of

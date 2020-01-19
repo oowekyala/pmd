@@ -22,10 +22,6 @@ public final class ASTParenthesizedItemType extends AbstractXPathNode implements
         super(XPathParserImplTreeConstants.JJTPARENTHESIZEDITEMTYPE);
     }
 
-    ASTParenthesizedItemType(int id) {
-        this();
-    }
-
 
     /**
      * Gets the expression wrapped in the parentheses.

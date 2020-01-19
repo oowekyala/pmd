@@ -30,10 +30,6 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
         super(XPathParserImplTreeConstants.JJTXPATHROOT);
     }
 
-    ASTXPathRoot(int id) {
-        this();
-    }
-
 
     /**
      * Returns the toplevel expression of the XPath tree.

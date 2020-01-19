@@ -47,7 +47,7 @@ public final class ASTName extends AbstractXPathNode {
         setImage(image);
     }
 
-    ASTName(int id) {
+    ASTName() {
         super(XPathParserImplTreeConstants.JJTNAME);
     }
 

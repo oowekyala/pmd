@@ -24,10 +24,6 @@ public final class ASTParamList extends AbstractXPathNode implements Iterable<AS
         super(XPathParserImplTreeConstants.JJTPARAMLIST);
     }
 
-    ASTParamList(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

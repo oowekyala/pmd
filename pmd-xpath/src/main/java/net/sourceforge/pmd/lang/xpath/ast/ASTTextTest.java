@@ -24,10 +24,6 @@ public final class ASTTextTest extends AbstractXPathNode implements KindTest {
         super(XPathParserImplTreeConstants.JJTTEXTTEST);
     }
 
-    ASTTextTest(int id) {
-        this();
-    }
-
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

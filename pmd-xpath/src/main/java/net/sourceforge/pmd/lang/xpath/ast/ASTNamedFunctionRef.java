@@ -25,10 +25,6 @@ public final class ASTNamedFunctionRef extends AbstractXPathExpr implements Func
         super(XPathParserImplTreeConstants.JJTNAMEDFUNCTIONREF);
     }
 
-    ASTNamedFunctionRef(int id) {
-        this();
-    }
-
     private int arity = 0;
 
 

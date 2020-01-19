@@ -21,10 +21,6 @@ public final class ASTInstanceofExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTINSTANCEOFEXPR);
     }
 
-    ASTInstanceofExpr(int id) {
-        this();
-    }
-
 
     public Expr getTestedExpr() {
         return (Expr) getChild(0);

@@ -26,7 +26,7 @@ public final class ASTSequenceExpr extends AbstractXPathExpr implements Iterable
 
     /** Constructor for synthetic node. */
     public ASTSequenceExpr(List<? extends Expr> elts) {
-        super(XPathParserImplTreeConstants.JJTSEQUENCEEXPR);
+        this();
 
         if (elts.isEmpty()) {
             throw new IllegalArgumentException("ASTSequenceExpr cannot represent empty sequence");
@@ -40,11 +40,9 @@ public final class ASTSequenceExpr extends AbstractXPathExpr implements Iterable
         }
     }
 
-    public ASTSequenceExpr(int id) {
+    public ASTSequenceExpr() {
         super(XPathParserImplTreeConstants.JJTSEQUENCEEXPR);
-
     }
-
 
     @Override
     public int getSize() {

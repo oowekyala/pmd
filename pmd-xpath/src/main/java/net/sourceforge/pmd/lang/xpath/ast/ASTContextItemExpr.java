@@ -20,10 +20,6 @@ public final class ASTContextItemExpr extends AbstractXPathExpr implements Prima
         super(XPathParserImplTreeConstants.JJTCONTEXTITEMEXPR);
     }
 
-    ASTContextItemExpr(int id) {
-        this();
-    }
-
 
     @Override
     public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {

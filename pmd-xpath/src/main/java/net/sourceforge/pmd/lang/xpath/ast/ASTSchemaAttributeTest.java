@@ -25,10 +25,6 @@ public final class ASTSchemaAttributeTest extends AbstractXPathNode implements K
         super(XPathParserImplTreeConstants.JJTSCHEMAATTRIBUTETEST);
     }
 
-    ASTSchemaAttributeTest(int id) {
-        this();
-    }
-
 
     /**
      * Gets the node representing the name of the tested attribute.

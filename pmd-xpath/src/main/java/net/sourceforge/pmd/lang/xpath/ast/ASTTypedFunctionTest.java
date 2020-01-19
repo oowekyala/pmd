@@ -23,10 +23,6 @@ public final class ASTTypedFunctionTest extends AbstractXPathNode implements Fun
         super(XPathParserImplTreeConstants.JJTTYPEDFUNCTIONTEST);
     }
 
-    ASTTypedFunctionTest(int id) {
-        this();
-    }
-
 
     /**
      * Returns the parameter list.

@@ -26,10 +26,6 @@ public final class ASTEmptySequenceExpr extends AbstractXPathExpr implements Exp
         super(XPathParserImplTreeConstants.JJTEMPTYSEQUENCEEXPR);
     }
 
-    ASTEmptySequenceExpr(int id) {
-        this();
-    }
-
 
     @Override
     public int getSize() {

@@ -20,10 +20,6 @@ public final class ASTIfExpr extends AbstractXPathExpr implements Expr {
         super(XPathParserImplTreeConstants.JJTIFEXPR);
     }
 
-    ASTIfExpr(int id) {
-        this();
-    }
-
 
     /**
      * Returns the node that represents the guard of this conditional.

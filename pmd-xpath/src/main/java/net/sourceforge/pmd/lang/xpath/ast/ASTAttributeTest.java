@@ -43,10 +43,6 @@ public final class ASTAttributeTest extends AbstractXPathNode implements KindTes
         super(XPathParserImplTreeConstants.JJTATTRIBUTETEST);
     }
 
-    ASTAttributeTest(int id) {
-        this();
-    }
-
 
     void setIsWildcard(boolean value) {
         isWildcard = value;

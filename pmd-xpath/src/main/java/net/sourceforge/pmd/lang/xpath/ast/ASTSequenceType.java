@@ -31,10 +31,6 @@ public final class ASTSequenceType extends AbstractXPathNode {
         super(XPathParserImplTreeConstants.JJTSEQUENCETYPE);
     }
 
-    ASTSequenceType(int id) {
-        this();
-    }
-
     // the setter is called on ?+*, so this is the default
     private Cardinality cardinality = Cardinality.EXACTLY_ONE;
 
