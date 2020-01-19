@@ -76,38 +76,8 @@ class XPathQueryImpl implements XPathQuery {
     }
 
 
-    /**
-     * Expand a union in the first step of a PathExpr starting with //.
-     *
-     * <p>e.g. {@code //(A|B)/C} can be expanded to {@code //A/C | //B/C},
-     * exposing different rulechain queries.
-     */
-    // TODO
-    private void floatUnions() {
-        //        Expr main = root.getMainExpr();
-        //        if (main instanceof ASTUnionExpr) {
-        //            ASTUnionExpr toplevelUnion = (ASTUnionExpr) main;
-        //            List<ASTPathExpr> pathExprs = toplevelUnion.getAlternatives().stream()
-        //                                                       .filter(e -> e instanceof ASTPathExpr)
-        //                                                       .map(e -> (ASTPathExpr) e)
-        //                                                       .filter(e -> e.getPathAnchor() == PathAnchor.DESCENDANT_OR_ROOT)
-        //                                                       .filter(e -> e.getFirstStep() instanceof ASTParenthesizedExpr
-        //                                                               && ((ASTParenthesizedExpr) e.getFirstStep()).getWrappedNode() instanceof ASTUnionExpr)
-        //                                                       .collect(Collectors.toList());
-        //
-        //            for (ASTPathExpr pathExpr : pathExprs) {
-        //                pathExpr.
-        //
-        //            }
-        //
-        //        } else if (main instanceof ASTPathExpr) {
-        //
-        //        }
-    }
-
     @Override
-    public Map<String/*TODO NodeIdentifier*/, String> getRulechainQueries() {
-        floatUnions();
+    public Map<String, String> getRulechainQueries() {
         // From now on, we assume:
         // * all rulechain queries have been floated to the top level UnionExpr
         // * every alternative of the top level union is a PathExpr starting with a nametest
@@ -119,7 +89,6 @@ class XPathQueryImpl implements XPathQuery {
         if (main instanceof ASTInfixExpr && ((ASTInfixExpr) main).getOperator().isUnion()) {
             for (Expr expr : ((ASTInfixExpr) main).children()) {
                 if (expr instanceof ASTPathExpr) {
-
                     StepExpr firstStep = ((ASTPathExpr) expr).getFirstStep();
                     if (firstStep.isAxisStep()) {
                         ASTAxisStep axisStep = (ASTAxisStep) firstStep;
@@ -140,11 +109,6 @@ class XPathQueryImpl implements XPathQuery {
         }
 
         return null;
-    }
-
-
-    public Map<PropertyDescriptor<?>, Object> getPropertyValues() {
-        return propertyValues;
     }
 
 
