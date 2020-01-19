@@ -4,7 +4,6 @@ import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 
 /**
- * @author Clément Fournier
  * @since 7.0.0
  */
 class UnaryExprTest : XPathParserTestSpec({

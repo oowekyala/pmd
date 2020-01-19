@@ -15,9 +15,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * NodeTest ::= {@link NameTest} | {@link KindTest}
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface NodeTest extends XPathNode {
 

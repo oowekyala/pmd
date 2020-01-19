@@ -5,8 +5,6 @@ import io.kotlintest.shouldBe
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class PathExprTest : XPathParserTestSpec({
 

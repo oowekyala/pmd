@@ -5,8 +5,6 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.DESCENDANT_OR_R
 import java.util.*
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class ExprTest : XPathParserTestSpec({
 

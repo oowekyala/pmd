@@ -13,7 +13,6 @@ import io.kotlintest.should as ktShould
  * then xpath version, then test case. Test cases are "should" assertions matching
  * a string against a matcher defined in [ParserTestCtx], e.g. [ParserTestCtx.matchExpr].
  *
- * @author Clément Fournier
  */
 abstract class XPathParserTestSpec(body: XPathParserTestSpec.() -> Unit = {}) : AbstractSpec(), IntelliMarker {
 

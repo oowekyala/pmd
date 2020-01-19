@@ -14,9 +14,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *                    | {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface FunctionItemExpr extends PrimaryExpr {
 }

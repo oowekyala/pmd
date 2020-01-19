@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Interface for nodes that represent operators.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface BinaryOperatorNode extends XPathNode {
 

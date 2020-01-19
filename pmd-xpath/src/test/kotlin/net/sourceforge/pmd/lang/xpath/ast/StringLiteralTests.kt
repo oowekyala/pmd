@@ -5,8 +5,6 @@ import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class StringLiteralTests : XPathParserTestSpec({
 

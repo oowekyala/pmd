@@ -5,8 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.opti;
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
+ *
  */
 public interface NodeIdentifier {
 

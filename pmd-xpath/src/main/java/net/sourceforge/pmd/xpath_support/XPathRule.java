@@ -8,7 +8,6 @@ import net.sourceforge.pmd.Rule;
 
 
 /**
- * @author Clément Fournier
  * @since 7.0.0
  */
 public interface XPathRule extends Rule {

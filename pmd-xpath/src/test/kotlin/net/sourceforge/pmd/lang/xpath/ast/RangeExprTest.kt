@@ -3,8 +3,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class RangeExprTest : XPathParserTestSpec({
 

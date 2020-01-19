@@ -13,14 +13,12 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
  * For parsing simplicity, they're parsed left-associatively. Examples:
  * <ul>
  *     <li>{@code 1 + 2 - 3 * 4 + 5} is parsed as {@code (((1 + 2) - (3 * 4)) + 5)}</li>
- *     <li>{@code 1 + 2 + 5} is parsed as {@code 1 + 2 + 5}, not {@code 1 + (2 + 5)}</li>
- *     <li>{@code 1 - 2 + 5} is parsed as {@code 1 - (2 + 5)}</li>
+ *     <li>{@code 1 + 2 + 5} is parsed as {@code (1 + 2) + 5}</li>
  * </ul>
- *
  *
  * <pre>
  *
- * InfixExpr ::= {@link Expr} ("+" | "-") {@link Expr}
+ * InfixExpr ::= {@link Expr} {@link XpBinaryOp} {@link Expr}
  *
  * </pre>
  */

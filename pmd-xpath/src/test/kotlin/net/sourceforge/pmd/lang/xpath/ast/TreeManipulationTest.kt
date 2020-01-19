@@ -4,8 +4,6 @@ import io.kotlintest.should
 import net.sourceforge.pmd.lang.ast.test.matchNode
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class TreeManipulationTest : XPathParserTestSpec({
 

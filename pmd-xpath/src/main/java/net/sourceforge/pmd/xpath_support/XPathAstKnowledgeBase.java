@@ -16,7 +16,6 @@ import net.sourceforge.pmd.lang.ast.Node;
  * instance to this framework to preprocess XPath
  * queries.
  *
- * @author Clément Fournier
  * @since 6.10.0
  */
 public interface XPathAstKnowledgeBase {

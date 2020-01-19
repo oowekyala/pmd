@@ -4,8 +4,6 @@ import io.kotlintest.matchers.collections.shouldContainAll
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class InlineFunctionExprTest : XPathParserTestSpec({
 

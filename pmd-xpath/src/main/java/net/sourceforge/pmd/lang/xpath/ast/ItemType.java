@@ -24,9 +24,6 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  *            | {@linkplain ASTParenthesizedItemType ParenthesizedItemType}
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface ItemType extends XPathNode {
 

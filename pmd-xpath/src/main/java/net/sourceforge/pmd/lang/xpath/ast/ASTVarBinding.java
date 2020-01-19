@@ -7,7 +7,8 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Binding of a name to an expression, occurring in a {@linkplain BinderExpr binder expressions}.
- * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, which is a {@linkplain PrimaryExpr primary expression}.
+ * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, which is a {@linkplain PrimaryExpr primary
+ * expression}.
  *
  * <p>Bindings have a different syntax depending on where they occur. In let-expressions, the symbol
  * {@code :=} is used, whereas in other expressions it's the keyword {@code in}.

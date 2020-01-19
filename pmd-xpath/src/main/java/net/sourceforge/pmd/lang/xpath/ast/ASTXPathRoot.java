@@ -61,7 +61,6 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
     }
 
 
-
     @Override
     public <R, T> R jjtAccept(XPathVisitor<R, T> visitor, T data) {
         return visitor.visit(this, data);
@@ -71,9 +70,6 @@ public final class ASTXPathRoot extends AbstractXPathNode implements RootNode {
     /**
      * Populates {@link ASTVarRef} with their corresponding {@link ASTVarBinding}.
      * This visitor is single use, and must be started on an XPathRoot node.
-     *
-     * @author Clément Fournier
-     * @since 6.7.0
      */
     private static class FreeVarsResolver implements XPathSideEffectingVisitor<Void> {
 

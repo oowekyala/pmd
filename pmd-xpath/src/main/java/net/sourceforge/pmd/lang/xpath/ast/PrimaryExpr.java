@@ -18,9 +18,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *               | {@link FunctionItemExpr} )
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface PrimaryExpr extends Expr, StepExpr {
 }

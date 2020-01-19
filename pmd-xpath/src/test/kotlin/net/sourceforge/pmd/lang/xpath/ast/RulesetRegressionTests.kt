@@ -14,8 +14,6 @@ import java.time.Duration
 import kotlin.system.measureNanoTime
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class RulesetRegressionTests : XPathParserTestSpec(){
     init {

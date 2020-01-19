@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Binary operator for {@link ASTInfixExpr}.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public enum XpBinaryOp {
 

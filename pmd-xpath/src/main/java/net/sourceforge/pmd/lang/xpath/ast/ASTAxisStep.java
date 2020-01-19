@@ -102,7 +102,7 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
             // if it's an instance of AttributeTest we already handle that in the parser
             // and this method is not visited
             if (getNodeTest() instanceof ASTAttributeTest
-                    || getNodeTest() instanceof ASTSchemaAttributeTest) {
+                || getNodeTest() instanceof ASTSchemaAttributeTest) {
                 this.axis = Axis.ATTRIBUTE;
             } else if (getNodeTest() instanceof ASTNamespaceNodeTest) {
                 throw new ParseException("Namespace tests are illegal when not mentioning an axis.");

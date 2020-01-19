@@ -9,9 +9,6 @@ import java.util.Map;
 
 /**
  * Wrapper for an XPath query.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface XPathQuery {
 

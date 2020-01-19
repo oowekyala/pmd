@@ -4,8 +4,6 @@ import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.RELATIVE
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class WildcardTest : XPathParserTestSpec({
 

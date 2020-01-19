@@ -7,8 +7,6 @@ import io.kotlintest.should
 /**
  * Tests the xpath expression dumping.
  *
- * @author Clément Fournier
- * @since 6.7.0
  */
 class ExpressionMakerVisitorTest : XPathParserTestSpec({
 

@@ -15,9 +15,6 @@ import java.util.Optional;
  *
  * <p>The corresponding public API is provided by {@link AbstractXPathNode#toExpressionString()},
  * this class is private though.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBuilder> {
 
@@ -108,8 +105,6 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         appendToken(builder, " else ");
         visit(node.getFalseAlternative(), builder);
     }
-
-
 
 
     @Override
@@ -249,7 +244,9 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
         appendToken(builder, node.getPathAnchor().getPrefix());
 
         Iterator<StepExpr> steps = node.iterator();
-        if (!steps.hasNext()) return; // just a root selector "/"
+        if (!steps.hasNext()) {
+            return; // just a root selector "/"
+        }
 
         StepExpr prev = steps.next();
 
@@ -624,7 +621,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
             return;
         }
         if (builder.length() > 0 && isDelimitingChar(builder.charAt(builder.length() - 1))
-                || isDelimitingChar(token.charAt(0))) {
+            || isDelimitingChar(token.charAt(0))) {
             // No need to insert a delimiting space
             builder.append(token);
         } else {
@@ -675,6 +672,7 @@ final class ExpressionMakerVisitor implements XPathSideEffectingVisitor<StringBu
 
 
     private static class ChildrenIterator implements Iterator<XPathNode> {
+
         private final XPathNode parent;
         private int current;
 

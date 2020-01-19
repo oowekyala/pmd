@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Node kinds defined by the XQuery and XPath data model.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public enum XmdNodeKind {
     DOCUMENT,

@@ -11,7 +11,6 @@ import net.sourceforge.pmd.lang.ast.SimpleCharStream;
 
 /**
  * @author sergey.gorbaty
- *
  */
 public class XPathSimpleCharStream extends SimpleCharStream {
 

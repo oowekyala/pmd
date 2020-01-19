@@ -7,8 +7,6 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor.ROOT
 /**
  * https://www.w3.org/TR/xpath-30/#doc-xpath30-RelativePathExpr
  *
- * @author Clément Fournier
- * @since 6.7.0
  */
 class LoneSingleSlashConstraintTest : XPathParserTestSpec({
 

@@ -11,7 +11,6 @@
  *
  * <p>The XPath AST is supposed to be modifiable, in order to replace nodes
  * or rewrite the expression.
- *
  */
 
 package net.sourceforge.pmd.lang.xpath.ast;

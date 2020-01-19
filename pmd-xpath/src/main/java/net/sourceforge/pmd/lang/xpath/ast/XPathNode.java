@@ -12,9 +12,6 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
 
 /**
  * Root interface for all nodes of the XPath language.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface XPathNode extends Node {
 

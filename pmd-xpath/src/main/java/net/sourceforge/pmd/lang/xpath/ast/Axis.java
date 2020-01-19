@@ -29,9 +29,6 @@ import java.util.Map;
  *        | "preceding-sibling"
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public enum Axis {
     SELF("self", true),
@@ -63,11 +60,13 @@ public enum Axis {
 
     private static final Map<String, Axis> NAMES_TO_AXES = new HashMap<>();
 
+
     static {
         for (Axis axis : values()) {
             NAMES_TO_AXES.put(axis.getAxisName(), axis);
         }
     }
+
 
     private final String name;
     private final boolean isForward;

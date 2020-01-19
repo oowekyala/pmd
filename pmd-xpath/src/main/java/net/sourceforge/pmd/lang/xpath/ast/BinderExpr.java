@@ -17,9 +17,6 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
  * BinderExpr ::= {@linkplain ASTForExpr ForExpr} | {@linkplain ASTLetExpr LetExpr} | {@linkplain ASTQuantifiedExpr QuantifiedExpr}
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface BinderExpr extends Expr {
 

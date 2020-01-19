@@ -12,9 +12,6 @@ import java.util.stream.Collectors;
 
 /**
  * Synthesises nodes.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public final class SyntheticNodeFactory {
 
@@ -48,7 +45,8 @@ public final class SyntheticNodeFactory {
             return convertListToSequence((List<?>) value);
         } else {
             // We could maybe use UntypedAtomicValue
-            throw new IllegalArgumentException("Unable to create ValueRepresentation for value of type: " + value.getClass());
+            throw new IllegalArgumentException(
+                "Unable to create ValueRepresentation for value of type: " + value.getClass());
         }
 
 

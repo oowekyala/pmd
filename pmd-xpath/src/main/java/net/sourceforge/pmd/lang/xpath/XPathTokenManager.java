@@ -15,6 +15,7 @@ import net.sourceforge.pmd.lang.xpath.ast.XPathParserTokenManager;
  * VF Token Manager implementation.
  */
 public class XPathTokenManager implements TokenManager {
+
     private final XPathParserTokenManager tokenManager;
 
 

@@ -7,8 +7,6 @@ import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class SequenceExprTest : XPathParserTestSpec({
 

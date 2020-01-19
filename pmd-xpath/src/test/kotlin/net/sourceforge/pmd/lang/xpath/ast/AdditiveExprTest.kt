@@ -3,8 +3,6 @@ package net.sourceforge.pmd.lang.xpath.ast
 import io.kotlintest.shouldBe
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class AdditiveExprTest : XPathParserTestSpec({
 //

@@ -17,8 +17,7 @@ import net.sourceforge.pmd.lang.xpath.ast.XPathNode;
 
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
+ *
  */
 public class XPathRuleChainVisitor extends AbstractRuleChainVisitor {
 

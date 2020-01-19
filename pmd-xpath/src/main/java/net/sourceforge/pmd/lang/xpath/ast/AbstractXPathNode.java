@@ -10,9 +10,6 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode;
 
 /**
  * Base class for XPath nodes.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implements XPathNode {
 

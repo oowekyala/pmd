@@ -6,8 +6,6 @@ import net.sourceforge.pmd.lang.ast.test.shouldBe
 /**
  * Tests about BinderExpr and scope/VarRef resolution
  *
- * @author Clément Fournier
- * @since 6.7.0
  */
 class BinderExprTest : XPathParserTestSpec({
 

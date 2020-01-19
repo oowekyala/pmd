@@ -6,9 +6,6 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Cardinality of a {@linkplain ASTSequenceType sequence type}.
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 enum Cardinality {
     /** Cardinality marked by the "?" occurrence indicator. */

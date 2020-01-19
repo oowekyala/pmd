@@ -11,8 +11,6 @@ import net.sourceforge.pmd.properties.IntegerProperty
 import net.sourceforge.pmd.properties.PropertyDescriptor
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
  */
 class PropertyInliningTest : XPathParserTestSpec({
 

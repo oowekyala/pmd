@@ -15,8 +15,7 @@ import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
+ *
  */
 public class XPathOptimisationFacade {
 

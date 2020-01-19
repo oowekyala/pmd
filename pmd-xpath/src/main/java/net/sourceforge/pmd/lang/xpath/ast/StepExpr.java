@@ -25,9 +25,6 @@ import java.util.List;
  * AbbrevDescendantOrSelfStep ::= "//"
  *
  * </pre>
- *
- * @author Clément Fournier
- * @since 6.7.0
  */
 public interface StepExpr extends XPathNode {
 

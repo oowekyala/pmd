@@ -17,15 +17,13 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTVarRef;
 import net.sourceforge.pmd.lang.xpath.ast.ASTWildcardNameTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.ast.Expr;
-import net.sourceforge.pmd.lang.xpath.ast.Expr;
 import net.sourceforge.pmd.lang.xpath.ast.StepExpr;
 import net.sourceforge.pmd.lang.xpath.ast.SyntheticNodeFactory;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 
 /**
- * @author Clément Fournier
- * @since 6.7.0
+ *
  */
 class XPathQueryImpl implements XPathQuery {
 
