@@ -249,23 +249,24 @@ import net.sourceforge.pmd.lang.ast.Node;
 
 class JavaParserImpl {
 
-  private int jdkVersion = 0;
-  private boolean preview = false;
+  private int jdkVersion;
+  private boolean preview;
 
-  public void setJdkVersion(int jdkVersion) {
-   this.jdkVersion = jdkVersion;
-  }
-
-  public void setPreview(boolean preview) {
-    this.preview = preview;
+  /** The default lexical state is a function of the jdk version: above jdk 4/5
+   * we enable the keywords "assert" and "enum", respectively.
+   */
+  JavaParserImpl(CharStream cs, int jdkVersion, boolean preview) {
+      this(new JavaParserImplTokenManager(cs, jdkVersion, preview));
+      this.jdkVersion = jdkVersion;
+      this.preview = preview;
   }
 
   private void throwParseException(String message) {
     int line = -1;
     int col = -1;
     if (jj_lastpos != null) {
-      line = jj_lastpos.beginLine;
-      col = jj_lastpos.beginColumn;
+      line = jj_lastpos.getBeginLine();
+      col = jj_lastpos.getBeginColumn();
     }
     throw new ParseException("Line " + line + ", Column " + col + ": " + message);
   }
@@ -295,17 +296,6 @@ class JavaParserImpl {
   private boolean inSwitchLabel = false;
 
 
-  // This is a semantic LOOKAHEAD to determine if we're dealing with an assert
-  // Note that this can't be replaced with a syntactic lookahead
-  // since "assert" isn't a string literal token
-  private boolean isAssertStart() {
-    if (jdkVersion <= 3) {
-      return false;
-    }
-
-    return getToken(1).getImage().equals("assert");
-  }
-
   private boolean isRecordStart() {
     return isRecordTypeSupported() && isKeyword("record");
   }
@@ -321,8 +311,7 @@ class JavaParserImpl {
    * <p>Restricted keywords are:
    * var, yield, record, sealed, permits, "non" + "-" + "sealed"
    *
-   * <p>enum and assert is used like restricted keywords, as they were not keywords
-   * in the early java versions.
+   * <p>enum and assert are implemented through lexical states and have their own token;
    */
   private boolean isKeyword(String image) {
     return isKeyword(1, image);
@@ -374,17 +363,29 @@ class JavaParserImpl {
       return next.kind == CLASS
         || localTypesSupported() && (
               next.kind == INTERFACE
+           || next.kind == ENUM
            || next.kind == AT && isToken(2, INTERFACE)
-           || next.kind == IDENTIFIER && next.getImage().equals("enum")
-           ||
-           next.kind == IDENTIFIER && next.image.equals("record")
+           || next.kind == IDENTIFIER && next.image.equals("record")
       );
   }
 
   private boolean localTypeDeclGivenNextIsIdent() {
       return localTypesSupported() && (
-          isNonSealedModifier() || isRecordStart() || isEnumStart()
+          isNonSealedModifier() || isRecordStart()
       );
+  }
+
+  /** This is used for context-sensitive keywords. It asserts that the identifier
+   * has the expected image. This should have been asserted by a lookahead guarding the expansion,
+   * so it's a bug if we reach here with the improper image.
+   *
+   * Importantly it's not a parse exception, which would indicate the source is
+   * malformed, this is a bug in the parser implementation, so we can throw an
+   * AssertionError.
+   */
+  private void requireIdentImage(String image) {
+      assert image.equals(getToken(0).getImage())
+      : "Lookahead failure, should not have gone into this branch (expected an ident with image " + image + ", got " + getToken(0);
   }
 
   /**
@@ -519,10 +520,24 @@ PARSER_END(JavaParserImpl)
 TOKEN_MGR_DECLS :
 {
     protected List<Comment> comments = new ArrayList<Comment>();
+
+    JavaParserImplTokenManager(CharStream cs, int jdkVersion, boolean preview) {
+       this(cs);
+
+       if (jdkVersion >= 5) this.defaultLexState = OVER_J5;
+       else if (jdkVersion == 4) this.defaultLexState = OVER_J4;
+       SwitchTo(defaultLexState);
+    }
+
+    void finishComment(Comment c) {
+       comments.add(c);
+       SwitchTo(defaultLexState);
+    }
 }
 
 /* WHITE SPACE */
 
+<OVER_J5, OVER_J4, DEFAULT>
 SPECIAL_TOKEN :
 {
  // those are private, just for code organisation
@@ -536,6 +551,7 @@ SPECIAL_TOKEN :
 /* COMMENTS */
 
 
+<OVER_J5, OVER_J4, DEFAULT>
 SPECIAL_TOKEN :
 {
   < SINGLE_LINE_COMMENT: "//"(~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
@@ -549,6 +565,7 @@ SPECIAL_TOKEN :
 }
 
 
+<OVER_J5, OVER_J4, DEFAULT>
 MORE :
 {
   <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
@@ -559,16 +576,16 @@ MORE :
 <IN_FORMAL_COMMENT>
 SPECIAL_TOKEN :
 {
-  <FORMAL_COMMENT: "*/" > { comments.add(new FormalComment(matchedToken)); } : DEFAULT
+  <FORMAL_COMMENT: "*/" > { finishComment(new FormalComment(matchedToken)); }
 }
 
 <IN_MULTI_LINE_COMMENT>
 SPECIAL_TOKEN :
 {
-  <MULTI_LINE_COMMENT: "*/" > { comments.add(new MultiLineComment(matchedToken)); } : DEFAULT
+  <MULTI_LINE_COMMENT: "*/" > { finishComment(new MultiLineComment(matchedToken)); }
 }
 
-<IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+<IN_FORMAL_COMMENT, IN_MULTI_LINE_COMMENT>
 MORE :
 {
   < ~[] >
@@ -576,6 +593,7 @@ MORE :
 
 /* RESERVED WORDS AND LITERALS */
 
+<OVER_J5, OVER_J4, DEFAULT>
 TOKEN :
 {
   < ABSTRACT: "abstract" >
@@ -631,6 +649,18 @@ TOKEN :
 | < STRICTFP: "strictfp" >
 }
 
+<OVER_J5>
+TOKEN: {
+  <ENUM: "enum">
+}
+
+
+<OVER_J5, OVER_J4>
+TOKEN: {
+  <ASSERT: "assert">
+}
+
+
 
 /* Restricted Keywords */
 // Note: These are commented out, since these keywords
@@ -654,6 +684,7 @@ TOKEN :
 
 /* LITERALS */
 
+<OVER_J5, OVER_J4, DEFAULT>
 TOKEN :
 {
   < INTEGER_LITERAL:
@@ -704,15 +735,12 @@ TOKEN :
         | ["0"-"3"] ["0"-"7"] ["0"-"7"]
         )
   >
-}
 
 /* IDENTIFIERS */
 
-TOKEN :
-{
-   < IDENTIFIER : <LETTER> ( <PART_LETTER> )* >
- // all chars for which Character.isJavaIdentifierStart is true
- | < #LETTER : ["$","A"-"Z","_","a"-"z","\u00a2"-"\u00a5","\u00aa","\u00b5","\u00ba",
+| < IDENTIFIER : <LETTER> ( <PART_LETTER> )* >
+// all chars for which Character.isJavaIdentifierStart is true
+| < #LETTER : ["$","A"-"Z","_","a"-"z","\u00a2"-"\u00a5","\u00aa","\u00b5","\u00ba",
    "\u00c0"-"\u00d6","\u00d8"-"\u00f6","\u00f8"-"\u021f","\u0222"-"\u0233","\u0250"-"\u02ad",
    "\u02b0"-"\u02b8","\u02bb"-"\u02c1","\u02d0"-"\u02d1","\u02e0"-"\u02e4","\u02ee","\u037a",
    "\u0386","\u0388"-"\u038a","\u038c","\u038e"-"\u03a1","\u03a3"-"\u03ce","\u03d0"-"\u03d7",
@@ -834,13 +862,11 @@ TOKEN :
    "\ufe76"-"\ufefc","\ufeff","\uff04","\uff10"-"\uff19","\uff21"-"\uff3a","\uff3f",
    "\uff41"-"\uff5a","\uff65"-"\uffbe","\uffc2"-"\uffc7","\uffca"-"\uffcf","\uffd2"-"\uffd7",
    "\uffda"-"\uffdc","\uffe0"-"\uffe1","\uffe5"-"\uffe6","\ufff9"-"\ufffb"]>
-}
+
 
 /* SEPARATORS */
 
-TOKEN :
-{
-  < LPAREN: "(" >
+| < LPAREN: "(" >
 | < RPAREN: ")" >
 | < LBRACE: "{" >
 | < RBRACE: "}" >
@@ -850,13 +876,11 @@ TOKEN :
 | < COMMA: "," >
 | < DOT: "." >
 | < AT: "@" >
-}
+
 
 /* OPERATORS */
 
-TOKEN :
-{
-  < ASSIGN: "=" >
+| < ASSIGN: "=" >
 | < LT: "<" >
 | < BANG: "!" >
 | < TILDE: "~" >
@@ -894,12 +918,9 @@ TOKEN :
 | < ELLIPSIS: "..." >
 | < LAMBDA: "->" >
 | < METHOD_REF: "::" >
-}
 
 /* >'s need special attention due to generics syntax. */
-TOKEN :
-{
-  < RUNSIGNEDSHIFT: ">>>" > { input_stream.backup(2); }
+| < RUNSIGNEDSHIFT: ">>>" > { input_stream.backup(2); }
 | < RSIGNEDSHIFT: ">>" > { input_stream.backup(1); }
 | < GT: ">" >
 }
@@ -922,8 +943,6 @@ ASTCompilationUnit CompilationUnit() :
   // a module (most common case)
   [ LOOKAHEAD(ModuleDeclLahead()) ModuleDeclaration() ( EmptyDeclaration() )* ]
   ( TypeDeclaration() ( EmptyDeclaration() )* )*
-  ( < "\u001a" > )?
-  ( < "~[]" > )? // what's this for? Do you mean ( < ~[] > )*, i.e. "any character"?
   <EOF>
   {
      jjtThis.setComments(token_source.comments);
@@ -996,7 +1015,7 @@ void TypeDeclaration() #void:
   (
      ClassOrInterfaceDeclaration()
    | AnnotationTypeDeclaration()
-   | LOOKAHEAD({isKeyword("enum")}) EnumDeclaration()
+   | EnumDeclaration()
    | LOOKAHEAD({isKeyword("record")}) RecordDeclaration()
 
   )
@@ -1029,30 +1048,18 @@ void ImplementsList():
 }
 
 void PermittedSubclasses() #PermitsList:
+{}
 {
-    Token t;
-}
-{
-    t = <IDENTIFIER> {
-        if (!"permits".equals(t.image)) {
-          throw new ParseException("ERROR: expecting permits");
-        }
-    }
+    <IDENTIFIER> { requireIdentImage("permits"); }
     (TypeAnnotation())* ClassOrInterfaceType()
     ( "," (TypeAnnotation())* ClassOrInterfaceType() )*
 }
 
 void EnumDeclaration():
+{}
 {
-  JavaccToken t;
-}
-{
-  t = <IDENTIFIER> {
-    if (!"enum".equals(t.image)) {
-      throw new ParseException("ERROR: expecting enum");
-    }
-  }
-  t=<IDENTIFIER> {jjtThis.setImage(t.image);}
+  <ENUM>
+  <IDENTIFIER> {setLastTokenImage(jjtThis);}
   [ ImplementsList() ]
   EnumBody()
 }
@@ -1074,16 +1081,10 @@ void EnumConstant():
 }
 
 void RecordDeclaration():
+{}
 {
-    JavaccToken t;
-}
-{
-  t = <IDENTIFIER> {
-    if (!"record".equals(t.image)) {
-      throw new ParseException("ERROR: expecting record");
-    }
-  }
-  t=<IDENTIFIER> {jjtThis.setImage(t.image);}
+  <IDENTIFIER> { requireIdentImage("record"); }
+  <IDENTIFIER> { setLastTokenImage(jjtThis); }
   [ TypeParameters() ]
   RecordComponentList()
   [ ImplementsList() ]
@@ -1154,18 +1155,19 @@ void ClassOrInterfaceBody():
 
 void ClassOrInterfaceBodyDeclaration() #void:
 {}
-{ LOOKAHEAD(["static"] "{" ) Initializer()
-|  ModifierList()
-  ( LOOKAHEAD(3) ClassOrInterfaceDeclaration()
-    | LOOKAHEAD({isKeyword("enum")}) EnumDeclaration()
+{
+   ";" #EmptyDeclaration
+|  LOOKAHEAD(2, ["static"] "{" ) Initializer()
+|  LOOKAHEAD({true}) ModifierList() // this parses all annotations
+  ( ClassOrInterfaceDeclaration()
+    | EnumDeclaration()
+    | AnnotationTypeDeclaration()
     | LOOKAHEAD({isKeyword("record")}) RecordDeclaration()
     | LOOKAHEAD( [ TypeParameters() ] <IDENTIFIER> "(" ) ConstructorDeclaration()
-    | LOOKAHEAD( Type() <IDENTIFIER> (AnnotationList() "[" "]")* ( "," | "=" | ";" ) )  FieldDeclaration()
-    | LOOKAHEAD(2) MethodDeclaration()
-    | LOOKAHEAD(2) AnnotationTypeDeclaration()
+    | LOOKAHEAD(1, "<" | "void")  MethodDeclaration()
+    | LOOKAHEAD( Type() <IDENTIFIER> "(" )  MethodDeclaration()
+    | LOOKAHEAD({true}) FieldDeclaration()
   )
-|
-  ";" #EmptyDeclaration
 }
 
 
@@ -2159,7 +2161,6 @@ void Statement() #void:
 // all the previous cases are trivial for the parser
 // because they start with a different token
 | LOOKAHEAD( { isYieldStart() } ) YieldStatement()
-| LOOKAHEAD( { isAssertStart() } ) AssertStatement()
 | LOOKAHEAD(2) LabeledStatement()
 | ( StatementExpression() ";" ) #ExpressionStatement
 }
@@ -2180,6 +2181,7 @@ void StatementNoIdent() #void:
 | ThrowStatement()
 | SynchronizedStatement()
 | TryStatement()
+| AssertStatement()
 }
 
 void LabeledStatement() :
@@ -2211,7 +2213,6 @@ void BlockStatement() #void:
 | LOOKAHEAD(1, <IDENTIFIER>)
  (
       LOOKAHEAD({ localTypeDeclGivenNextIsIdent() }) ModifierList() LocalTypeDecl()
-    | LOOKAHEAD({ isAssertStart() })                 AssertStatement()
     | LOOKAHEAD({ isYieldStart() })                  YieldStatement()
     | LOOKAHEAD({ getToken(2).kind == COLON })       LabeledStatement()
     | LOOKAHEAD(ReferenceType() <IDENTIFIER>)        LocalVariableDeclaration() ";"  { fixLastToken(); }
@@ -2230,7 +2231,7 @@ private void LocalTypeStartNoIdent() #void: // A lookahead
   | "abstract" | "native" | "transient"
   | "volatile" | "strictfp"
 
-  | "class" | "interface"
+  | "class" | "interface" | <ENUM>
 }
 
 void LocalTypeDecl() #void:
@@ -2239,8 +2240,8 @@ void LocalTypeDecl() #void:
    // not the wrapper statement node.
   ( ClassOrInterfaceDeclaration()
   | AnnotationTypeDeclaration()
+  | EnumDeclaration()
   | LOOKAHEAD({isKeyword("record")}) RecordDeclaration()
-  | LOOKAHEAD({isKeyword("enum")}) EnumDeclaration()
   ) {
     // Wrap the type decl into a statement
     // This can't be done with regular jjtree constructs, as the ModifierList
@@ -2521,7 +2522,7 @@ void FinallyClause() :
 void AssertStatement() :
 {}
 {
-  <IDENTIFIER> Expression() [ ":" Expression() ] ";"
+  <ASSERT> Expression() [ ":" Expression() ] ";"
 }
 
 /* We use productions to match >>>, >> and > so that we can keep the

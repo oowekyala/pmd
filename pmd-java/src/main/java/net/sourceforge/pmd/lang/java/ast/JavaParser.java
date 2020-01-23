@@ -40,13 +40,11 @@ public class JavaParser extends JjtreeParserAdapter<ASTCompilationUnit> {
 
     @Override
     protected ASTCompilationUnit parseImpl(CharStream cs, ParserOptions options) throws ParseException {
-        JavaParserImpl parser = new JavaParserImpl(cs);
+        JavaParserImpl parser = new JavaParserImpl(cs, checker.getJdkVersion(), checker.isPreviewEnabled());
         String suppressMarker = options.getSuppressMarker();
         if (suppressMarker != null) {
             parser.setSuppressMarker(suppressMarker);
         }
-        parser.setJdkVersion(checker.getJdkVersion());
-        parser.setPreview(checker.isPreviewEnabled());
 
         ASTCompilationUnit acu = parser.CompilationUnit();
         acu.setNoPmdComments(parser.getSuppressMap());
