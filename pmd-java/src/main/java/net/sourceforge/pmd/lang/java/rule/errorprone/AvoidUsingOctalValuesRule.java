@@ -36,7 +36,7 @@ public class AvoidUsingOctalValuesRule extends AbstractJavaRule {
 
         String img = node.getImage();
         if (img != null && p.matcher(img).matches()) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
 
         return data;

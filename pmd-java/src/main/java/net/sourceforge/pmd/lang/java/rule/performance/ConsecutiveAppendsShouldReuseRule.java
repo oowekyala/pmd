@@ -34,7 +34,7 @@ public class ConsecutiveAppendsShouldReuseRule extends AbstractJavaRule {
             if (nextSibling != null) {
                 String nextVariable = getVariableAppended(nextSibling);
                 if (nextVariable != null && nextVariable.equals(variable)) {
-                    addViolation(data, node);
+                    reportViolation(data, node);
                 }
             }
         }

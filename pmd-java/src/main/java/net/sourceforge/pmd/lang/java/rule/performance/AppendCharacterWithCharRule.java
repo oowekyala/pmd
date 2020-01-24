@@ -34,7 +34,7 @@ public class AppendCharacterWithCharRule extends AbstractJavaRule {
             if (!InefficientStringBufferingRule.isInStringBufferOperation(node, 8, "append")) {
                 return data;
             }
-            addViolation(data, node);
+            reportViolation(data, node);
         }
         return data;
     }

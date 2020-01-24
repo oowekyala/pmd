@@ -237,8 +237,9 @@ public class CyclomaticComplexityRule extends AbstractPLSQLRule {
         }
         if (showClassesComplexity) {
             if (classEntry.getComplexityAverage() >= reportLevel || classEntry.highestDecisionPoints >= reportLevel) {
-                addViolation(data, node, new String[] { "class", node.getImage(),
-                    classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')', });
+                reportViolation(data, node,
+                                "class", node.getImage(),
+                                classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')');
             }
         }
         LOGGER.exiting(CLASS_NAME, "visit(ASTPackageBody)");
@@ -258,8 +259,9 @@ public class CyclomaticComplexityRule extends AbstractPLSQLRule {
         }
         if (showClassesComplexity) {
             if (classEntry.getComplexityAverage() >= reportLevel || classEntry.highestDecisionPoints >= reportLevel) {
-                addViolation(data, node, new String[] { "class", node.getImage(),
-                    classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')', });
+                reportViolation(data, node,
+                                "class", node.getImage(),
+                                classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')');
             }
         }
         LOGGER.exiting(CLASS_NAME, "visit(ASTTriggerUnit)");
@@ -313,9 +315,9 @@ public class CyclomaticComplexityRule extends AbstractPLSQLRule {
             }
 
             if (methodEntry.decisionPoints >= reportLevel) {
-                addViolation(data, node,
-                        new String[] { "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
-                            String.valueOf(methodEntry.decisionPoints), });
+                reportViolation(data, node,
+                                "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
+                                String.valueOf(methodEntry.decisionPoints));
             }
         }
         LOGGER.exiting(CLASS_NAME, "visit(ASTProgramUnit)");
@@ -360,9 +362,9 @@ public class CyclomaticComplexityRule extends AbstractPLSQLRule {
             }
 
             if (methodEntry.decisionPoints >= reportLevel) {
-                addViolation(data, node,
-                        new String[] { "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
-                            String.valueOf(methodEntry.decisionPoints), });
+                reportViolation(data, node,
+                                "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
+                                String.valueOf(methodEntry.decisionPoints));
             }
         }
         LOGGER.exiting(CLASS_NAME, "visit(ASTTypeMethod)");
@@ -399,9 +401,9 @@ public class CyclomaticComplexityRule extends AbstractPLSQLRule {
             }
 
             if (methodEntry.decisionPoints >= reportLevel) {
-                addViolation(data, node,
-                        new String[] { "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
-                            String.valueOf(methodEntry.decisionPoints), });
+                reportViolation(data, node,
+                                "method", methodDeclarator == null ? "" : methodDeclarator.getImage(),
+                                String.valueOf(methodEntry.decisionPoints));
             }
         }
         LOGGER.exiting(CLASS_NAME, "visit(ASTTriggerTimingPointSection)");

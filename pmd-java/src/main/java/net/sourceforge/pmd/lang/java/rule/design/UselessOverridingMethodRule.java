@@ -192,7 +192,7 @@ public class UselessOverridingMethodRule extends AbstractJavaRule {
         }
 
         if (arguments.getNumChildren() == 0) {
-            addViolation(data, node, getMessage());
+            reportViolation(data, node, getMessage());
         } else {
             ASTArgumentList argumentList = (ASTArgumentList) arguments.getChild(0);
             for (int i = 0; i < argumentList.getNumChildren(); i++) {
@@ -229,7 +229,7 @@ public class UselessOverridingMethodRule extends AbstractJavaRule {
 
             }
             // All arguments are passed through directly
-            addViolation(data, node, getMessage());
+            reportViolation(data, node, getMessage());
         }
         return super.visit(node, data);
     }

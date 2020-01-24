@@ -82,13 +82,13 @@ public class HardCodedCryptoKeyRule extends AbstractJavaRule {
         // hard coded array
         ASTArrayInitializer arrayInit = firstArgumentExpression.getFirstDescendantOfType(ASTArrayInitializer.class);
         if (arrayInit != null) {
-            addViolation(data, arrayInit);
+            reportViolation(data, arrayInit);
         }
 
         // string literal
         ASTLiteral literal = firstArgumentExpression.getFirstDescendantOfType(ASTLiteral.class);
         if (literal != null && literal.isStringLiteral()) {
-            addViolation(data, literal);
+            reportViolation(data, literal);
         }
     }
 }

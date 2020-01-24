@@ -56,12 +56,11 @@ public class UnnecessaryModifierRule extends AbstractJavaRule {
         if (unnecessaryModifiers.isEmpty()) {
             return;
         }
-        super.addViolation(data, node, new String[]{
-                formatUnnecessaryModifiers(unnecessaryModifiers),
-                getPrintableNodeKind(node),
-                getNodeName(node),
-                explanation.isEmpty() ? "" : ": " + explanation,
-        });
+        super.reportViolation(data, node,
+                              formatUnnecessaryModifiers(unnecessaryModifiers),
+                              getPrintableNodeKind(node),
+                              getNodeName(node),
+                              explanation.isEmpty() ? "" : ": " + explanation);
     }
 
 

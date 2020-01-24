@@ -80,8 +80,7 @@ public class InsufficientStringBufferDeclarationRule extends AbstractJavaRule {
                 }
                 if (constructorLength != -1 && anticipatedLength > constructorLength) {
                     anticipatedLength += processBlocks(blocks);
-                    String[] param = { String.valueOf(constructorLength), String.valueOf(anticipatedLength) };
-                    addViolation(data, rootNode, param);
+                    reportViolation(data, rootNode, String.valueOf(constructorLength), String.valueOf(anticipatedLength));
                 }
                 constructorLength = getConstructorLength(n, constructorLength);
                 rootNode = n;
@@ -110,8 +109,7 @@ public class InsufficientStringBufferDeclarationRule extends AbstractJavaRule {
         }
         anticipatedLength += processBlocks(blocks);
         if (constructorLength != -1 && anticipatedLength > constructorLength) {
-            String[] param = { String.valueOf(constructorLength), String.valueOf(anticipatedLength) };
-            addViolation(data, rootNode, param);
+            reportViolation(data, rootNode, String.valueOf(constructorLength), String.valueOf(anticipatedLength));
         }
         return data;
     }

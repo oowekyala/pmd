@@ -63,7 +63,7 @@ public class Foo {
 
     <rule name="ApexUnitTestMethodShouldHaveIsTestAnnotation"
           since="6.13.0"
-          message="Apex test methods should have @isTest annotation."
+          message="The method ''{0}'' should have an @isTest annotation."
           class="net.sourceforge.pmd.lang.apex.rule.bestpractices.ApexUnitTestMethodShouldHaveIsTestAnnotationRule"
           externalInfoUrl="${pmd.website.baseurl}/pmd_rules_apex_bestpractices.html#apexunittestmethodshouldhaveistestannotation">
         <description>

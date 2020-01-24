@@ -111,7 +111,7 @@ public class ApexXSSFromURLParamRule extends AbstractApexRule {
 
         for (ASTVariableExpression varExpression : nodes) {
             if (urlParameterStrings.contains(Helper.getFQVariableName(varExpression))) {
-                addViolation(data, nodes.get(0));
+                reportViolation(data, nodes.get(0));
             }
         }
 
@@ -158,7 +158,7 @@ public class ApexXSSFromURLParamRule extends AbstractApexRule {
 
         if (Helper.isMethodCallChain(methodNode, URL_PARAMETER_METHOD)) {
             if (isNested) {
-                addViolation(data, methodNode);
+                reportViolation(data, methodNode);
             }
         }
 
@@ -202,7 +202,7 @@ public class ApexXSSFromURLParamRule extends AbstractApexRule {
         if (variable != null) {
             if (urlParameterStrings.contains(Helper.getFQVariableName(variable))) {
                 if (!isEscapingMethod(methodNode)) {
-                    addViolation(data, variable);
+                    reportViolation(data, variable);
                 }
             }
         }
@@ -242,7 +242,7 @@ public class ApexXSSFromURLParamRule extends AbstractApexRule {
             final ASTVariableExpression right = reverseOrder ? nodes.get(0) : nodes.get(1);
 
             if (urlParameterStrings.contains(Helper.getFQVariableName(right))) {
-                addViolation(data, right);
+                reportViolation(data, right);
             }
         }
             break;
@@ -267,7 +267,7 @@ public class ApexXSSFromURLParamRule extends AbstractApexRule {
         for (ASTVariableExpression n : nodes) {
 
             if (urlParameterStrings.contains(Helper.getFQVariableName(n))) {
-                addViolation(data, n);
+                reportViolation(data, n);
             }
         }
     }

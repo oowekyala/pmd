@@ -31,7 +31,7 @@ public class TestClassWithoutTestCasesRule extends AbstractJUnitRule {
         }
 
         if (!testsFound) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
 
         return data;

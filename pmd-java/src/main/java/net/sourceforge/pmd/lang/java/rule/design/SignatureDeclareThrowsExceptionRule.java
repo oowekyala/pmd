@@ -177,7 +177,7 @@ public class SignatureDeclareThrowsExceptionRule extends AbstractJavaRule {
     private void evaluateExceptions(List<ASTName> exceptionList, Object context) {
         for (ASTName exception : exceptionList) {
             if (hasDeclaredExceptionInSignature(exception)) {
-                addViolation(context, exception);
+                reportViolation(context, exception);
             }
         }
     }

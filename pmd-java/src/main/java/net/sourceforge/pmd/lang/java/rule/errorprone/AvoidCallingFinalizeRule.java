@@ -34,7 +34,7 @@ public class AvoidCallingFinalizeRule extends AbstractJavaRule {
         if (!checkForViolation(name)) {
             return ctx;
         }
-        addViolation(ctx, name);
+        reportViolation(ctx, name);
         return ctx;
     }
 
@@ -51,7 +51,7 @@ public class AvoidCallingFinalizeRule extends AbstractJavaRule {
         if (!checkForViolation(pp)) {
             return super.visit(pp, ctx);
         }
-        addViolation(ctx, pp);
+        reportViolation(ctx, pp);
         return super.visit(pp, ctx);
     }
 

@@ -182,23 +182,23 @@ public class VariableNamingConventionsRule extends AbstractApexRule {
         // Static finals should be uppercase
         if (isStatic && isFinal) {
             if (!varName.equals(varName.toUpperCase(Locale.ROOT))) {
-                addViolationWithMessage(data, node,
-                        "Variables that are final and static should be all capitals, ''{0}'' is not all capitals.",
-                        new Object[] { varName });
+                reportWithMessage(data, node,
+                                  "Variables that are final and static should be all capitals, ''{0}'' is not all capitals.",
+                                  varName);
             }
             return data;
         } else if (!isFinal) {
             String normalizedVarName = normalizeVariableName(varName, prefixes, suffixes);
 
             if (normalizedVarName.indexOf('_') >= 0) {
-                addViolationWithMessage(data, node,
-                        "Only variables that are final should contain underscores (except for underscores in standard prefix/suffix), ''{0}'' is not final.",
-                        new Object[] { varName });
+                reportWithMessage(data, node,
+                                  "Only variables that are final should contain underscores (except for underscores in standard prefix/suffix), ''{0}'' is not final.",
+                                  varName);
             }
             if (Character.isUpperCase(varName.charAt(0))) {
-                addViolationWithMessage(data, node,
-                        "Variables should start with a lowercase character, ''{0}'' starts with uppercase character.",
-                        new Object[] { varName });
+                reportWithMessage(data, node,
+                                  "Variables should start with a lowercase character, ''{0}'' starts with uppercase character.",
+                                  varName);
             }
         }
         return data;

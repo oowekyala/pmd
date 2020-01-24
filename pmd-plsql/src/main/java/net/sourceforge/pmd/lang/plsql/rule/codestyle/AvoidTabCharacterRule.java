@@ -35,8 +35,7 @@ public class AvoidTabCharacterRule extends AbstractPLSQLRule {
             while ((line = in.readLine()) != null) {
                 lineNumber++;
                 if (line.indexOf('\t') != -1) {
-                    addViolationWithMessage(data, null, "Tab characters are not allowed. Use spaces for indentation",
-                            lineNumber, lineNumber);
+                    reportAtLine(data, node, lineNumber);
 
                     if (!eachLine) {
                         break;

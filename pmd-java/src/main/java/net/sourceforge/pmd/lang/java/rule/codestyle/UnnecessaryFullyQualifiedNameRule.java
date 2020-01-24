@@ -183,9 +183,9 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
 
         if (matches.isEmpty()) {
             if (isJavaLangImplicit(node)) {
-                addViolation(data, node, new Object[] { node.getImage(), "java.lang.*", "implicit "});
+                reportViolation(data, node, node.getImage(), "java.lang.*", "implicit ");
             } else if (isSamePackage(node, name)) {
-                addViolation(data, node, new Object[] { node.getImage(), currentPackage + ".*", "same package "});
+                reportViolation(data, node, node.getImage(), currentPackage + ".*", "same package ");
             }
         } else {
             ASTImportDeclaration firstMatch = findFirstMatch(matches);
@@ -196,7 +196,7 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
                 String importStr = firstMatch.getImportedName() + (firstMatch.isImportOnDemand() ? ".*" : "");
                 String type = firstMatch.isStatic() ? "static " : "";
 
-                addViolation(data, node, new Object[] { node.getImage(), importStr, type });
+                reportViolation(data, node, node.getImage(), importStr, type);
             }
         }
     }

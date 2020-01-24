@@ -31,7 +31,7 @@ public class MethodWithSameNameAsEnclosingClassRule extends AbstractApexRule {
             String methodName = m.getImage();
 
             if (!m.isConstructor() && methodName.equalsIgnoreCase(className)) {
-                addViolation(data, m);
+                reportViolation(data, m);
             }
         }
 

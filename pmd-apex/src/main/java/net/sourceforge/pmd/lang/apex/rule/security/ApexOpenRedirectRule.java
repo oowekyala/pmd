@@ -152,7 +152,7 @@ public class ApexOpenRedirectRule extends AbstractApexRule {
         for (ASTVariableExpression variable : variableExpressions) {
             if (variable.getIndexInParent() == 0
                     && !listOfStringLiteralVariables.contains(Helper.getFQVariableName(variable))) {
-                addViolation(data, variable);
+                reportViolation(data, variable);
             }
         }
 

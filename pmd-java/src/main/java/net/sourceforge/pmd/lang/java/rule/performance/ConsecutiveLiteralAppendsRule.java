@@ -381,8 +381,7 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      */
     private void checkForViolation(Node node, Object data, int concurrentCount) {
         if (concurrentCount > threshold) {
-            String[] param = { String.valueOf(concurrentCount) };
-            addViolation(data, node, param);
+            reportViolation(data, node, String.valueOf(concurrentCount));
         }
     }
 

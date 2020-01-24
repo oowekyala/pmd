@@ -478,11 +478,11 @@ public class CloseResourceRule extends AbstractJavaRule {
             ASTLocalVariableDeclaration localVarDecl = id.getFirstParentOfType(ASTLocalVariableDeclaration.class);
             Class<?> typeClass = type.getType();
             if (typeClass != null) {
-                addViolation(data, id, typeClass.getSimpleName());
+                reportViolation(data, id, typeClass.getSimpleName());
             } else if (localVarDecl != null && localVarDecl.getTypeNode() != null) {
-                addViolation(data, id, localVarDecl.getTypeNode().getTypeImage());
+                reportViolation(data, id, localVarDecl.getTypeNode().getTypeImage());
             } else {
-                addViolation(data, id, id.getVariableName());
+                reportViolation(data, id, id.getVariableName());
             }
         }
     }

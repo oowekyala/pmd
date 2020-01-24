@@ -143,7 +143,7 @@ public abstract class AbstractApexMetricTestRule extends AbstractApexRule {
                 valueReport += " highest " + highest;
             }
             if (classValue >= reportLevel) {
-                addViolation(data, node, new String[] {node.getQualifiedName().toString(), valueReport});
+                reportViolation(data, node, node.getQualifiedName().toString(), valueReport);
             }
         }
         return super.visit(node, data);
@@ -155,7 +155,7 @@ public abstract class AbstractApexMetricTestRule extends AbstractApexRule {
         if (opKey != null && reportMethods && opKey.supports(node)) {
             int methodValue = (int) ApexMetrics.get(opKey, node, metricOptions);
             if (methodValue >= reportLevel) {
-                addViolation(data, node, new String[] {node.getQualifiedName().toString(), "" + methodValue});
+                reportViolation(data, node, node.getQualifiedName().toString(), methodValue);
             }
         }
         return data;

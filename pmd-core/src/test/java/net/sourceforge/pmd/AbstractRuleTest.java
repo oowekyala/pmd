@@ -114,7 +114,7 @@ public class AbstractRuleTest {
         s.testingOnlySetBeginColumn(5);
         s.testingOnlySetBeginLine(5);
         s.setImage("TestImage");
-        r.addViolation(ctx, s);
+        r.reportViolation((Object) ctx, (Node) s);
         RuleViolation rv = ctx.getReport().getViolationTree().iterator().next();
         assertEquals("Message foo    10 ${noSuchProperty}", rv.getDescription());
     }

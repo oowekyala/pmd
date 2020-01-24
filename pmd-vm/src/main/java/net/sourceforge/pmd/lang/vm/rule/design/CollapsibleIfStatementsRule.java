@@ -66,7 +66,7 @@ public class CollapsibleIfStatementsRule extends AbstractVmRule {
                 }
             }
             if (violationFound && ifCounter == 1) {
-                addViolation(data, node);
+                reportViolation(data, node);
             }
         }
     }

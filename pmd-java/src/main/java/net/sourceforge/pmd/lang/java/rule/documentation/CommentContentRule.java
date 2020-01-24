@@ -137,7 +137,7 @@ public class CommentContentRule extends AbstractCommentRule {
                 continue;
             }
 
-            addViolationWithMessage(data, cUnit, errorMsgFor(badWords), comment.getBeginLine(), comment.getEndLine());
+            reportWithMessage(data, comment, errorMsgFor(badWords));
         }
 
         return super.visit(cUnit, data);

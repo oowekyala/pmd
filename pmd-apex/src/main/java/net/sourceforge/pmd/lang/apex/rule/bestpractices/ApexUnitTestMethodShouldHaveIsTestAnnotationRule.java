@@ -37,9 +37,7 @@ public class ApexUnitTestMethodShouldHaveIsTestAnnotationRule extends AbstractAp
         for (ASTMethodCallExpression assertMethodCall : methodCallList) {
             assertMethodName = assertMethodCall.getFullMethodName().toLowerCase(Locale.ROOT);
             if (ASSERT_METHODS.contains(assertMethodName)) {
-                addViolationWithMessage(data, testMethod,
-                        "''{0}'' method should have @IsTest annotation.",
-                        new Object[] { testMethod.getImage() });
+                reportViolation(data, testMethod, testMethod.getImage());
                 return data;
             }
         }

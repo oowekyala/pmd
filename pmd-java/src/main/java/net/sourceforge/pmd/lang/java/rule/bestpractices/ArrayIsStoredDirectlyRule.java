@@ -138,7 +138,7 @@ public class ArrayIsStoredDirectlyRule extends AbstractSunSecureRule {
                             md = pe.getFirstParentOfType(ASTConstructorDeclaration.class);
                         }
                         if (!isLocalVariable(varName, md)) {
-                            addViolation(ctx, parameter, varName);
+                            reportViolation(ctx, parameter, varName);
                         }
                     }
                 }

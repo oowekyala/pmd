@@ -69,7 +69,7 @@ public class BooleanInstantiationRule extends AbstractJavaRule {
 
             Node n1 = node.getFirstChildOfType(ASTClassOrInterfaceType.class);
             if (TypeHelper.isA((ASTClassOrInterfaceType) n1, Boolean.class)) {
-                super.addViolation(data, node);
+                reportViolation(data, node);
                 return data;
             }
         }
@@ -97,13 +97,13 @@ public class BooleanInstantiationRule extends AbstractJavaRule {
                 }
 
                 if (prefix.hasDescendantOfType(ASTBooleanLiteral.class)) {
-                    super.addViolation(data, node);
+                    reportViolation(data, node);
                     return data;
                 }
                 ASTLiteral literal = prefix.getFirstDescendantOfType(ASTLiteral.class);
                 if (literal != null
                         && ("\"true\"".equals(literal.getImage()) || "\"false\"".equals(literal.getImage()))) {
-                    super.addViolation(data, node);
+                    reportViolation(data, node);
                     return data;
                 }
             }

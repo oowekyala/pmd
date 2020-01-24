@@ -41,7 +41,7 @@ public class CompareObjectsWithEqualsRule extends AbstractJavaRule {
         // If either side is allocating a new object, there's no way an
         // equals expression is correct
         if (isAllocation(c0) || isAllocation(c1)) {
-            addViolation(data, node);
+            reportViolation(data, node);
             return data;
         }
 
@@ -91,7 +91,7 @@ public class CompareObjectsWithEqualsRule extends AbstractJavaRule {
                     return data;
                 }
 
-                addViolation(data, node);
+                reportViolation(data, node);
             }
         }
 

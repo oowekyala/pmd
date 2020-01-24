@@ -109,7 +109,7 @@ public class ApexBadCryptoRule extends AbstractApexRule {
         if (potentialIV instanceof ASTVariableExpression) {
             ASTVariableExpression variable = (ASTVariableExpression) potentialIV;
             if (potentiallyStaticBlob.contains(Helper.getFQVariableName(variable))) {
-                addViolation(data, variable);
+                reportViolation(data, variable);
             }
         }
     }

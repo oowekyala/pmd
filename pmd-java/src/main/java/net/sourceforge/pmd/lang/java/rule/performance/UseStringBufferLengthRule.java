@@ -70,7 +70,7 @@ public class UseStringBufferLengthRule extends AbstractJavaRule {
         alreadySeen.add(nd);
 
         if (isViolation(decl)) {
-            addViolation(data, decl);
+            reportViolation(data, decl);
         }
 
         return data;

@@ -28,7 +28,7 @@ public class ConsistentReturnRule extends AbstractEcmascriptRule {
                 } else {
                     // Return has different result from previous return?
                     if (hasResult.booleanValue() != returnStatement.hasResult()) {
-                        addViolation(data, functionNode);
+                        reportViolation(data, functionNode);
                         break;
                     }
                 }

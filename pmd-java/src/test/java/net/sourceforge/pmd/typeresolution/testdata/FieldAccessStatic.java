@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.typeresolution.testdata;
 
 
-import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.*;
+import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.staticGeneric;
 import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.staticPrimitive;
 
 import net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers;

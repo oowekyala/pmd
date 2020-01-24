@@ -59,7 +59,7 @@ public class ApexUnitTestClassShouldHaveAssertsRule extends AbstractApexUnitTest
         }
 
         if (!isAssertFound) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
 
         return data;

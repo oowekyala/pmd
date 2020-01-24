@@ -48,7 +48,7 @@ public class JUnitTestsShouldIncludeAssertRule extends AbstractJUnitRule {
                 Map<String, List<NameOccurrence>> expectables = getRuleAnnotatedExpectedExceptions(classScope);
 
                 if (!containsExpectOrAssert(method.getBody(), expectables, variables)) {
-                    addViolation(data, method);
+                    reportViolation(data, method);
                 }
             }
         }

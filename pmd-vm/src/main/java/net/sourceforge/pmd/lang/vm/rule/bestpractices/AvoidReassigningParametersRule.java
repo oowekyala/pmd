@@ -27,7 +27,7 @@ public class AvoidReassigningParametersRule extends AbstractVmRule {
             for (final ASTSetDirective assignment : assignments) {
                 final ASTReference ref = assignment.getFirstChildOfType(ASTReference.class);
                 if (ref != null && paramNames.contains(ref.getFirstToken().toString())) {
-                    addViolation(data, node, ref.getFirstToken().toString());
+                    reportViolation(data, node, ref.getFirstToken().toString());
                 }
             }
         }

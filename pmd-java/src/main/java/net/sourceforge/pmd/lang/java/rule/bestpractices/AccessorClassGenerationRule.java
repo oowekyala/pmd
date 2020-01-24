@@ -85,7 +85,7 @@ public class AccessorClassGenerationRule extends AbstractJavaRule {
 
                         if (cd.getArity() == callArguments.getArgumentCount()) {
                             // TODO : Check types
-                            addViolation(data, node);
+                            reportViolation(data, node);
                             break;
                         }
                     }

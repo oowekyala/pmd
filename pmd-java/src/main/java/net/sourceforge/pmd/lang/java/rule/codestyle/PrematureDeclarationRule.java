@@ -44,7 +44,7 @@ public class PrematureDeclarationRule extends AbstractJavaRule {
                 }
 
                 if (hasExit(block)) {
-                    addViolation(data, node);
+                    reportViolation(data, node);
                     break;
                 }
             }

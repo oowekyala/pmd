@@ -27,7 +27,7 @@ public class UnnecessaryAnnotationValueElementRule extends AbstractJavaRule {
         // all that needs to be done is check to if there's a single property in the annotation and if if that property is value
         // then it's a violation and it should be resolved.
         if (annotationProperties.size() == 1 && "value".equals(annotationProperties.get(0).getImage())) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
 
         return data;

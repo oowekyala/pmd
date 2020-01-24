@@ -43,8 +43,6 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     private static final PropertyDescriptor<Boolean> TOP_LEVEL_TYPES = PropertyFactory.booleanProperty("checkTopLevelTypes")
             .desc("Check for default access modifier in top-level classes, annotations, and enums")
             .defaultValue(false).build();
-    private static final String MESSAGE = "To avoid mistakes add a comment "
-            + "at the beginning of the %s %s if you want a default access modifier";
     private final Set<Integer> interestingLineNumberComments = new HashSet<>();
 
     public CommentDefaultAccessModifierRule() {
@@ -75,8 +73,7 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTMethodDeclaration decl, final Object data) {
         if (shouldReport(decl)) {
-            addViolationWithMessage(data, decl,
-                    String.format(MESSAGE, decl.getFirstChildOfType(ASTMethodDeclarator.class).getImage(), "method"));
+            reportViolation(data, decl, decl.getFirstChildOfType(ASTMethodDeclarator.class).getImage(), "method");
         }
         return super.visit(decl, data);
     }
@@ -84,8 +81,7 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTFieldDeclaration decl, final Object data) {
         if (shouldReport(decl)) {
-            addViolationWithMessage(data, decl, String.format(MESSAGE,
-                    decl.getFirstDescendantOfType(ASTVariableDeclaratorId.class).getImage(), "field"));
+            reportViolation(data, decl, decl.getFirstDescendantOfType(ASTVariableDeclaratorId.class).getImage(), "field");
         }
         return super.visit(decl, data);
     }
@@ -93,7 +89,7 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTAnnotationTypeDeclaration decl, final Object data) {
         if (!decl.isNested() && shouldReportTypeDeclaration(decl)) { // check for top-level annotation declarations
-            addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), "top-level annotation"));
+            reportViolation(data, decl, decl.getSimpleName(), "top-level annotation");
         }
         return super.visit(decl, data);
     }
@@ -101,7 +97,7 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTEnumDeclaration decl, final Object data) {
         if (!decl.isNested() && shouldReportTypeDeclaration(decl)) { // check for top-level enums
-            addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), "top-level enum"));
+            reportViolation(data, decl, decl.getImage(), "top-level enum");
         }
         return super.visit(decl, data);
     }
@@ -109,9 +105,9 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTClassOrInterfaceDeclaration decl, final Object data) {
         if (decl.isNested() && shouldReport(decl)) { // check for nested classes
-            addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), "nested class"));
+            reportViolation(data, decl, decl.getImage(), "nested class");
         } else if (!decl.isNested() && shouldReportTypeDeclaration(decl)) { // and for top-level ones
-            addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), "top-level class"));
+            reportViolation(data, decl, decl.getImage(), "top-level class");
         }
         return super.visit(decl, data);
     }
@@ -119,7 +115,7 @@ public class CommentDefaultAccessModifierRule extends AbstractIgnoredAnnotationR
     @Override
     public Object visit(final ASTConstructorDeclaration decl, Object data) {
         if (shouldReport(decl)) {
-            addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), "constructor"));
+            reportViolation(data, decl, decl.getImage(), "constructor");
         }
         return super.visit(decl, data);
     }

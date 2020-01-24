@@ -43,7 +43,7 @@ public class DuplicateJspImportsRule extends AbstractJspRule {
             String token = st.nextToken();
             ImportWrapper wrapper = new ImportWrapper(token, token, node);
             if (imports.contains(wrapper)) {
-                addViolation(data, node, node.getImage());
+                reportViolation(data, node, node.getImage());
             } else {
                 imports.add(wrapper);
             }

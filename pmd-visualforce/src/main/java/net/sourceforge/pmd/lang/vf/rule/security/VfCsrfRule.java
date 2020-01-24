@@ -51,7 +51,7 @@ public class VfCsrfRule extends AbstractVfRule {
             }
 
             if (controller && isEl && valToReport != null) {
-                addViolation(data, valToReport);
+                reportViolation(data, valToReport);
             }
 
         }

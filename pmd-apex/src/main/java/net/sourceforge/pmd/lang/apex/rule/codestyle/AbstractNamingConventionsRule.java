@@ -27,7 +27,7 @@ abstract class AbstractNamingConventionsRule extends AbstractApexRule {
         String name = node.getImage();
         if (!regex.matcher(name).matches()) {
             String displayName = displayName(propertyDescriptor.name());
-            addViolation(data, node, new Object[] { displayName, name, regex.toString() });
+            reportViolation(data, node, displayName, name, regex.toString());
         }
     }
 
@@ -35,7 +35,7 @@ abstract class AbstractNamingConventionsRule extends AbstractApexRule {
         String name = node.getImage();
         if (!overridePattern.matcher(name).matches()) {
             String displayName = displayName(propertyDescriptor.name());
-            addViolation(data, node, new Object[] { displayName, name, overridePattern.toString() });
+            reportViolation(data, node, displayName, name, overridePattern.toString());
         }
     }
 

@@ -21,7 +21,7 @@ public class SuppressWarningsTest extends RuleTst {
         @Override
         public Object visit(ASTUserClass clazz, Object ctx) {
             if (clazz.getImage().equalsIgnoreCase("bar")) {
-                addViolation(ctx, clazz);
+                reportViolation(ctx, clazz);
             }
             return super.visit(clazz, ctx);
         }

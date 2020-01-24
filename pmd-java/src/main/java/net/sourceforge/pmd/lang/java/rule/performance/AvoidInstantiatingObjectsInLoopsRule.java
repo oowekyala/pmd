@@ -18,7 +18,7 @@ public class AvoidInstantiatingObjectsInLoopsRule extends AbstractOptimizationRu
     @Override
     public Object visit(ASTAllocationExpression node, Object data) {
         if (insideLoop(node) && fourthParentNotThrow(node) && fourthParentNotReturn(node)) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
         return data;
     }

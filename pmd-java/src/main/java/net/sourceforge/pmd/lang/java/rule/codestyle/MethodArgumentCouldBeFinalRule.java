@@ -33,7 +33,7 @@ public class MethodArgumentCouldBeFinalRule extends AbstractOptimizationRule {
             VariableNameDeclaration var = entry.getKey();
             AccessNode node = var.getAccessNodeParent();
             if (!node.isFinal() && node instanceof ASTFormalParameter && !assigned(entry.getValue())) {
-                addViolation(data, node, var.getImage());
+                reportViolation(data, node, var.getImage());
             }
         }
     }

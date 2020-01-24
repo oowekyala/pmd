@@ -4,8 +4,10 @@
 
 package net.sourceforge.pmd.lang.rule;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
@@ -24,6 +26,8 @@ import net.sourceforge.pmd.properties.PropertyDescriptor;
  * @author pieter_van_raemdonck - Application Engineers NV/SA - www.ae.be
  */
 public abstract class AbstractRule extends AbstractPropertySource implements Rule {
+
+    private static final Object[] EMPTY_ARGS = {};
 
     private Language language;
     private LanguageVersion minimumLanguageVersion;
@@ -342,8 +346,10 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     * Object[])
+     *     Object[])
+     * @deprecated Use {@link #reportViolation(Object, Node)}
      */
+    @Deprecated
     public void addViolation(Object data, Node node) {
         RuleContext ruleContext = (RuleContext) data;
         ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
@@ -353,7 +359,9 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
      * Object[])
+     * @deprecated Use {@link #reportViolation(Object, Node, Object...)}
      */
+    @Deprecated
     public void addViolation(Object data, Node node, String arg) {
         RuleContext ruleContext = (RuleContext) data;
         ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
@@ -363,7 +371,10 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
      * Object[])
+     *
+     * @deprecated Use {@link #reportViolation(Object, Node, Object...)}
      */
+    @Deprecated
     public void addViolation(Object data, Node node, Object[] args) {
         RuleContext ruleContext = (RuleContext) data;
         ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
@@ -372,8 +383,11 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     * Object[])
+     *     Object[])
+     *
+     * @deprecated Use {@link #reportWithMessage(Object, Node, String, Object...)}
      */
+    @Deprecated
     public void addViolationWithMessage(Object data, Node node, String message) {
         RuleContext ruleContext = (RuleContext) data;
         ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
@@ -382,22 +396,103 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     * Object[])
+     *     Object[])
+     * @deprecated Use {@link #reportAtLine(Object, Node, int, Object...)}
      */
+    @Deprecated
     public void addViolationWithMessage(Object data, Node node, String message, int beginLine, int endLine) {
         RuleContext ruleContext = (RuleContext) data;
-        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
-                this, node, message, beginLine, endLine, null);
+        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext, this, node, message, beginLine, endLine, null);
     }
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     * Object[])
+     *     Object[])
      */
     public void addViolationWithMessage(Object data, Node node, String message, Object[] args) {
         RuleContext ruleContext = (RuleContext) data;
         ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,
-                this, node, message, args);
+                                                                                                            this, node, message, args);
+    }
+
+    /**
+     * Report a violation at the position of the given node. The message
+     * is the message of this rule, formatted with the given arguments
+     * using a {@link MessageFormat}.
+     *
+     * @param data       Rule context
+     * @param node       Node on which to report the violation
+     *
+     * @throws NullPointerException If any argument is null
+     * @throws ClassCastException   If the data parameter is not a rule context
+     */
+    protected void reportViolation(Object data, Node node) {
+        reportViolation(data, node, EMPTY_ARGS);
+    }
+
+    /**
+     * Report a violation at the position of the given node. The message
+     * is the message of this rule, formatted with the given arguments
+     * using a {@link MessageFormat}.
+     *
+     * @param data       Rule context
+     * @param node       Node on which to report the violation
+     * @param formatArgs Format arguments
+     *
+     * @throws NullPointerException If any argument is null
+     * @throws ClassCastException   If the data parameter is not a rule context
+     */
+    protected void reportViolation(Object data, Node node, Object... formatArgs) {
+        reportWithMessage(data, node, getMessage(), formatArgs);
+    }
+
+
+    /**
+     * Report a violation at the position of the given node. This overrides
+     * this message with the given message, formatted with the given arguments
+     * using a {@link MessageFormat}.
+     *
+     * @param data       Rule context
+     * @param node       Node on which to report the violation
+     * @param message    Message template
+     * @param formatArgs Format arguments
+     *
+     * @throws NullPointerException If any argument is null
+     * @throws ClassCastException   If the data parameter is not a rule context
+     */
+    protected void reportWithMessage(Object data, Node node, String message, Object... formatArgs) {
+        Objects.requireNonNull(node);
+        Objects.requireNonNull(formatArgs);
+        Objects.requireNonNull(message);
+        RuleContext ruleContext = (RuleContext) data;
+        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory()
+                   .addViolation(ruleContext, this, node, message, formatArgs);
+    }
+
+
+    /**
+     * Adds a violation at a specific line number within the given node.
+     * This uses the message of this rule, formatted with the given arguments
+     * using a {@link MessageFormat}.
+     *
+     * @param data       Rule context
+     * @param node       Node on which to report the violation
+     * @param line       Line at which the violation will be reported
+     * @param formatArgs Format arguments
+     *
+     * @throws NullPointerException     If any argument is null
+     * @throws ClassCastException       If the data parameter is not a rule context
+     * @throws IllegalArgumentException If the line is not contained within the text range of the node
+     */
+    protected void reportAtLine(Object data, Node node, int line, Object... formatArgs) {
+        Objects.requireNonNull(node);
+        Objects.requireNonNull(formatArgs);
+        if (line > node.getEndLine() || line < node.getBeginLine()) {
+            throw new IllegalArgumentException("Line " + line + " is not contained within " + node);
+        }
+        RuleContext ruleContext = (RuleContext) data;
+        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory()
+                   .addViolation(ruleContext, this, node, getMessage(), line, line, formatArgs);
     }
 
     /**

@@ -39,7 +39,7 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRule {
     public Object visit(ASTIfStatement node, Object data) {
         // that's the case: if..then..return; return;
         if (!node.hasElse() && isIfJustReturnsBoolean(node) && isJustReturnsBooleanAfter(node)) {
-            addViolation(data, node);
+            reportViolation(data, node);
             return super.visit(node, data);
         }
 
@@ -60,7 +60,7 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRule {
             Node expression1 = returnStatement1.getChild(0).getChild(0);
             Node expression2 = returnStatement2.getChild(0).getChild(0);
             if (terminatesInBooleanLiteral(returnStatement1) && terminatesInBooleanLiteral(returnStatement2)) {
-                addViolation(data, node);
+                reportViolation(data, node);
             } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus
                     ^ expression2 instanceof ASTUnaryExpressionNotPlusMinus) {
                 // We get the nodes under the '!' operator
@@ -81,7 +81,7 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRule {
                     // return !a;
                     // else
                     // return a;
-                    addViolation(data, node);
+                    reportViolation(data, node);
                 }
             }
         } else if (hasOneBlockStmt(node.getChild(1)) && hasOneBlockStmt(node.getChild(2))) {
@@ -111,13 +111,13 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRule {
                 // } else {
                 // return false;
                 // }
-                addViolation(data, node);
+                reportViolation(data, node);
             } else {
                 Node expression1 = getDescendant(returnStatement1, 4);
                 Node expression2 = getDescendant(returnStatement2, 4);
                 if (terminatesInBooleanLiteral(node.getChild(1).getChild(0))
                         && terminatesInBooleanLiteral(node.getChild(2).getChild(0))) {
-                    addViolation(data, node);
+                    reportViolation(data, node);
                 } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus
                         ^ expression2 instanceof ASTUnaryExpressionNotPlusMinus) {
                     // We get the nodes under the '!' operator
@@ -145,7 +145,7 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRule {
                         // } else {
                         // return a;
                         // }
-                        addViolation(data, node);
+                        reportViolation(data, node);
                     }
                 }
             }

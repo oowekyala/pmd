@@ -26,7 +26,7 @@ public class AvoidSoslInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTSoslExpression node, Object data) {
         if (insideLoop(node) && parentNotReturn(node) && parentNotForEach(node)) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
         return data;
     }

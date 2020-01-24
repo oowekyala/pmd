@@ -78,7 +78,7 @@ public class UselessAssignment extends AbstractJavaRule implements Executable {
                     // FIXME need to check for assignment as well!
                     if (va.isDefinition() && va.accessTypeMatches(u.accessType)) {
                         // System.out.println(va.getVariableName() + ":" + u);
-                        addViolation(rc, u.node.getNode(), va.getVariableName());
+                        reportViolation(rc, u.node.getNode(), va.getVariableName());
                     }
                     /*
                      * // UR - ?? else if (last == VariableAccess.UNDEFINITION

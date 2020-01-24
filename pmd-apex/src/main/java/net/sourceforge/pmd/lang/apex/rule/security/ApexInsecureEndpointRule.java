@@ -105,14 +105,14 @@ public class ApexInsecureEndpointRule extends AbstractApexRule {
         if (literalNode != null && literalNode.isString()) {
             String literal = literalNode.getImage();
             if (PATTERN.matcher(literal).matches()) {
-                addViolation(data, literalNode);
+                reportViolation(data, literalNode);
             }
         }
 
         ASTVariableExpression variableNode = node.getFirstChildOfType(ASTVariableExpression.class);
         if (variableNode != null) {
             if (httpEndpointStrings.contains(Helper.getFQVariableName(variableNode))) {
-                addViolation(data, variableNode);
+                reportViolation(data, variableNode);
             }
 
         }

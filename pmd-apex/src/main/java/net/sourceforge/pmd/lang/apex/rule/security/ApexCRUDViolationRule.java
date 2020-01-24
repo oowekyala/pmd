@@ -506,7 +506,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
             final String typeCheck) {
         if (!typeToDMLOperationMapping.containsKey(typeCheck)) {
             if (!isProperESAPICheckForDML(typeCheck, crudMethod)) {
-                addViolation(data, node);
+                reportViolation(data, node);
             }
         } else {
             boolean properChecksHappened = false;
@@ -524,7 +524,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
             }
 
             if (!properChecksHappened) {
-                addViolation(data, node);
+                reportViolation(data, node);
             }
         }
     }

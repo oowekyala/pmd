@@ -35,7 +35,7 @@ public class UnusedMacroParameterRule extends AbstractVmRule {
                 }
             }
             if (!paramNames.isEmpty()) {
-                addViolation(data, node, paramNames.toString());
+                reportViolation(data, node, paramNames.toString());
             }
         }
         return super.visit(node, data);

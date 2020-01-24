@@ -84,7 +84,7 @@ public class SingletonClassReturningNewInstanceRule extends AbstractJavaRule {
             }
         }
         if (violation) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
         return super.visit(node, data);
     }

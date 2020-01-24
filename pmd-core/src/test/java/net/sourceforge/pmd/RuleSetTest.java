@@ -562,7 +562,7 @@ public class RuleSetTest {
             @Override
             public void apply(List<? extends Node> nodes, RuleContext ctx) {
                 for (Node node : nodes) {
-                    addViolationWithMessage(ctx, node, "Test violation of the second rule in the ruleset");
+                    reportWithMessage(ctx, node, "Test violation of the second rule in the ruleset");
                 }
             }
         }).build();
@@ -601,7 +601,7 @@ public class RuleSetTest {
             @Override
             public void apply(List<? extends Node> nodes, RuleContext ctx) {
                 for (Node node : nodes) {
-                    addViolationWithMessage(ctx, node, "Test violation of the second rule in the ruleset");
+                    reportWithMessage(ctx, node, "Test violation of the second rule in the ruleset");
                 }
             }
         }).build();

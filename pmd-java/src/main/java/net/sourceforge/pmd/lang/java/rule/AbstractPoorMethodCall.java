@@ -109,7 +109,7 @@ public abstract class AbstractPoorMethodCall extends AbstractJavaRule {
                     for (int l = 0; l < literals.size(); l++) {
                         ASTLiteral literal = literals.get(l);
                         if (isViolationArgument(literal)) {
-                            addViolation(data, jocc.getLocation());
+                            reportViolation(data, jocc.getLocation());
                         }
                     }
                 }

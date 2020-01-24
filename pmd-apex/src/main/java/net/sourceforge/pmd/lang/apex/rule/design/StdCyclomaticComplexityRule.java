@@ -98,8 +98,8 @@ public class StdCyclomaticComplexityRule extends AbstractApexRule {
         Entry classEntry = entryStack.pop();
         if (showClassesComplexity) {
             if (classEntry.getComplexityAverage() >= reportLevel || classEntry.highestDecisionPoints >= reportLevel) {
-                addViolation(data, node, new String[] { "class", node.getImage(),
-                    classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')', });
+                reportViolation(data, node, "class", node.getImage(),
+                                classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')');
             }
         }
         return data;
@@ -115,8 +115,8 @@ public class StdCyclomaticComplexityRule extends AbstractApexRule {
         Entry classEntry = entryStack.pop();
         if (showClassesComplexity) {
             if (classEntry.getComplexityAverage() >= reportLevel || classEntry.highestDecisionPoints >= reportLevel) {
-                addViolation(data, node, new String[] { "trigger", node.getImage(),
-                    classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')', });
+                reportViolation(data, node, "trigger", node.getImage(),
+                                classEntry.getComplexityAverage() + " (Highest = " + classEntry.highestDecisionPoints + ')');
             }
         }
         return data;
@@ -133,8 +133,8 @@ public class StdCyclomaticComplexityRule extends AbstractApexRule {
         super.visit(node, data);
         Entry classEntry = entryStack.pop();
         if (classEntry.getComplexityAverage() >= reportLevel || classEntry.highestDecisionPoints >= reportLevel) {
-            addViolation(data, node, new String[] { "class", node.getImage(),
-                classEntry.getComplexityAverage() + "(Highest = " + classEntry.highestDecisionPoints + ')', });
+            reportViolation(data, node, "class", node.getImage(),
+                            classEntry.getComplexityAverage() + "(Highest = " + classEntry.highestDecisionPoints + ')');
         }
         return data;
     }
@@ -156,8 +156,8 @@ public class StdCyclomaticComplexityRule extends AbstractApexRule {
 
             if (showMethodsComplexity && methodEntry.decisionPoints >= reportLevel) {
                 String methodType = node.isConstructor() ? "constructor" : "method";
-                addViolation(data, node,
-                        new String[] { methodType, node.getImage(), String.valueOf(methodEntry.decisionPoints) });
+                reportViolation(data, node,
+                                methodType, node.getImage(), String.valueOf(methodEntry.decisionPoints));
             }
         }
         return data;

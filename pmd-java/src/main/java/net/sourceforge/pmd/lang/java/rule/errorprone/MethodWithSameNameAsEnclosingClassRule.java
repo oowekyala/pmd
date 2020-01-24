@@ -17,7 +17,7 @@ public class MethodWithSameNameAsEnclosingClassRule extends AbstractJavaRule {
         List<ASTMethodDeclarator> methods = node.findDescendantsOfType(ASTMethodDeclarator.class);
         for (ASTMethodDeclarator m : methods) {
             if (m.hasImageEqualTo(node.getImage())) {
-                addViolation(data, m);
+                reportViolation(data, m);
             }
         }
         return super.visit(node, data);

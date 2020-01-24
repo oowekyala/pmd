@@ -679,7 +679,7 @@ public final class ConstructorCallsOverridableMethodRule extends AbstractJavaRul
                         List<String> parameterTypes = getMethodDeclaratorParameterTypes(h.getASTMethodDeclaration());
                         if (methName.equals(meth.getName()) && meth.getArgumentCount() == count
                                 && parameterTypes.equals(meth.getArgumentTypes())) {
-                            addViolation(data, meth.getASTPrimaryExpression(), "method '" + h.getCalled() + "'");
+                            reportViolation(data, meth.getASTPrimaryExpression(), "method '" + h.getCalled() + "'");
                         }
                     }
                 }
@@ -698,7 +698,7 @@ public final class ConstructorCallsOverridableMethodRule extends AbstractJavaRul
                     for (ConstructorInvocation ci : getCurrentEvalPackage().calledConstructors) {
                         if (ci.getArgumentCount() == paramCount) {
                             // match name super / this !?
-                            addViolation(data, ci.getASTExplicitConstructorInvocation(), "constructor");
+                            reportViolation(data, ci.getASTExplicitConstructorInvocation(), "constructor");
                         }
                     }
                 }

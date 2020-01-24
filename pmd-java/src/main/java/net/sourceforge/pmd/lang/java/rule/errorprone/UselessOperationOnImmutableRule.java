@@ -82,7 +82,7 @@ public class UselessOperationOnImmutableRule extends AbstractJavaRule {
                 ASTType nodeType = node.getTypeNode();
                 if (nodeType != null) {
                     if (MAP_CLASSES.get(nodeType.getTypeImage()).contains(methodCall)) {
-                        addViolation(data, sn);
+                        reportViolation(data, sn);
                     }
                 }
             }

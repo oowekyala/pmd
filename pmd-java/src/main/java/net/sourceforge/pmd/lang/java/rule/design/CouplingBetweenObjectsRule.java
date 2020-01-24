@@ -57,8 +57,8 @@ public class CouplingBetweenObjectsRule extends AbstractJavaRule {
         Object returnObj = cu.childrenAccept(this, data);
 
         if (couplingCount > getProperty(THRESHOLD_DESCRIPTOR)) {
-            addViolation(data, cu,
-                    "A value of " + couplingCount + " may denote a high amount of coupling within the class");
+            reportViolation(data, cu,
+                            "A value of " + couplingCount + " may denote a high amount of coupling within the class");
         }
 
         return returnObj;

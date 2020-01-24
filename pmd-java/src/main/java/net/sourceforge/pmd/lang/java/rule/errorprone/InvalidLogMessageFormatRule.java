@@ -105,10 +105,10 @@ public class InvalidLogMessageFormatRule extends AbstractJavaRule {
         }
 
         if (argumentList.size() < expectedArguments) {
-            addViolationWithMessage(data, node,
+            reportWithMessage(data, node,
                     "Missing arguments," + getExpectedMessage(argumentList, expectedArguments));
         } else if (argumentList.size() > expectedArguments) {
-            addViolationWithMessage(data, node,
+            reportWithMessage(data, node,
                     "Too many arguments," + getExpectedMessage(argumentList, expectedArguments));
         }
 

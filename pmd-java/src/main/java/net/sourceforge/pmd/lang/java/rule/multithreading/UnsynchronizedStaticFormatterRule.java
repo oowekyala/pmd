@@ -97,7 +97,7 @@ public class UnsynchronizedStaticFormatterRule extends AbstractJavaRule {
                 }
             }
 
-            addViolation(data, n);
+            reportViolation(data, n);
         }
         return data;
     }

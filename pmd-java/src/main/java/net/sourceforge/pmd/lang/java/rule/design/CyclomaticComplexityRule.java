@@ -129,12 +129,11 @@ public class CyclomaticComplexityRule extends AbstractJavaMetricsRule {
             if (classWmc >= classReportLevel) {
                 int classHighest = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, node, cycloOptions, ResultOption.HIGHEST);
 
-                String[] messageParams = {PrettyPrintingUtil.kindName(node),
-                                          node.getSimpleName(),
-                                          " total",
-                                          classWmc + " (highest " + classHighest + ")", };
-
-                addViolation(data, node, messageParams);
+                reportViolation(data, node,
+                                PrettyPrintingUtil.kindName(node),
+                                node.getSimpleName(),
+                                " total",
+                                classWmc + " (highest " + classHighest + ")");
             }
         }
         return data;
@@ -157,10 +156,11 @@ public class CyclomaticComplexityRule extends AbstractJavaMetricsRule {
                               : "lambda";
 
 
-            addViolation(data, node, new String[] {kindname,
-                                                   opname,
-                                                   "",
-                                                   "" + cyclo, });
+            reportViolation(data, node,
+                            kindname,
+                            opname,
+                            "",
+                            "" + cyclo);
         }
 
         return data;

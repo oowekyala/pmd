@@ -35,7 +35,7 @@ public class UnnecessaryConstructorRule extends AbstractIgnoredAnnotationRule {
         ASTConstructorDeclaration cons = node.getFirstDescendantOfType(ASTConstructorDeclaration.class);
         if (isExplicitDefaultConstructor(node)
             && haveSameAccessModifier(node, cons)) {
-            addViolation(data, cons);
+            reportViolation(data, cons);
         }
 
         return super.visit(node, data);
@@ -46,7 +46,7 @@ public class UnnecessaryConstructorRule extends AbstractIgnoredAnnotationRule {
 
         ASTConstructorDeclaration cons = node.getFirstDescendantOfType(ASTConstructorDeclaration.class);
         if (isExplicitDefaultConstructor(node) && cons.isPrivate()) {
-            addViolation(data, cons);
+            reportViolation(data, cons);
         }
 
         return super.visit(node, data);

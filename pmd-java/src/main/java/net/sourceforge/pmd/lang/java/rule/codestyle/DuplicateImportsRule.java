@@ -38,7 +38,7 @@ public class DuplicateImportsRule extends AbstractJavaRule {
 
                 if (thisImportOnDemand.getName().equals(singleTypePkg)
                         && !isDisambiguationImport(node, singleTypePkg, singleTypeName)) {
-                    addViolation(data, thisSingleTypeImport.getNode(), singleTypeFullName);
+                    reportViolation(data, thisSingleTypeImport.getNode(), singleTypeFullName);
                 }
             }
         }
@@ -92,16 +92,12 @@ public class DuplicateImportsRule extends AbstractJavaRule {
         // blahhhh... this really wants to be ASTImportDeclaration to be
         // polymorphic...
         if (node.isImportOnDemand()) {
-            if (importOnDemandImports.contains(wrapper)) {
-                addViolation(data, node, node.getImportedName());
-            } else {
-                importOnDemandImports.add(wrapper);
+            if (!importOnDemandImports.add(wrapper)) {
+                reportViolation(data, node, node.getImportedName());
             }
         } else {
-            if (singleTypeImports.contains(wrapper)) {
-                addViolation(data, node, node.getImportedName());
-            } else {
-                singleTypeImports.add(wrapper);
+            if (!singleTypeImports.add(wrapper)) {
+                reportViolation(data, node, node.getImportedName());
             }
         }
         return data;

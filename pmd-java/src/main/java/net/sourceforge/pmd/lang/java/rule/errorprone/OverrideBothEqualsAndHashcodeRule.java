@@ -35,7 +35,7 @@ public class OverrideBothEqualsAndHashcodeRule extends AbstractJavaRule {
             if (nodeFound == null) {
                 nodeFound = node;
             }
-            addViolation(data, nodeFound);
+            reportViolation(data, nodeFound);
         }
         implementsComparable = false;
         containsEquals = false;

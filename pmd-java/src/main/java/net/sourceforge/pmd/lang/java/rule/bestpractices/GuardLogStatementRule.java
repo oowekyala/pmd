@@ -118,7 +118,7 @@ public class GuardLogStatementRule extends AbstractJavaRule implements Rule {
                     && primary.getChild(1).hasDescendantOfType(ASTAdditiveExpression.class)) {
 
                 if (!hasGuard(primary, methodCall, logLevel)) {
-                    super.addViolation(data, node);
+                    reportViolation(data, node);
                 }
             }
         }

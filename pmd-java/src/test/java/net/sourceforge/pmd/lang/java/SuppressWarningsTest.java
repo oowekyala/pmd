@@ -25,7 +25,7 @@ public class SuppressWarningsTest extends RuleTst {
             // ASTCompilationUnit node
             for (ASTClassOrInterfaceDeclaration c : cu.findDescendantsOfType(ASTClassOrInterfaceDeclaration.class)) {
                 if (c.getImage().equalsIgnoreCase("bar")) {
-                    addViolation(ctx, cu);
+                    reportViolation(ctx, cu);
                 }
             }
             return super.visit(cu, ctx);

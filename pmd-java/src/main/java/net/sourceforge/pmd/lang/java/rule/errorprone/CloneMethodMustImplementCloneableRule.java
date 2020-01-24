@@ -134,7 +134,7 @@ public class CloneMethodMustImplementCloneableRule extends AbstractJavaRule {
         }
 
         // Nothing can save us now
-        addViolation(data, node);
+        reportViolation(data, node);
         return data;
     }
 

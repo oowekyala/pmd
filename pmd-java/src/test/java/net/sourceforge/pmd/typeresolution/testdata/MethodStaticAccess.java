@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd.typeresolution.testdata;
 
-import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.*;
 import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.primitiveStaticMethod;
+import static net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers.staticInstanceMethod;
 
 import net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticMembers;
 import net.sourceforge.pmd.typeresolution.testdata.dummytypes.StaticSuper;

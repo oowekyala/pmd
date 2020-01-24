@@ -55,7 +55,7 @@ public class UnusedPrivateFieldRule extends AbstractLombokAwareRule {
             }
             if (!actuallyUsed(entry.getValue())) {
                 if (!usedInOuterClass(node, decl) && !usedInOuterEnum(node, decl)) {
-                    addViolation(data, decl.getNode(), decl.getImage());
+                    reportViolation(data, decl.getNode(), decl.getImage());
                 }
             }
         }

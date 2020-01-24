@@ -199,7 +199,7 @@ END;
     <rule name="LineLength"
           language="plsql"
           since="6.13.0"
-          message="The line is too long."
+          message="The line is too long. Only ${maxLineLength} characters are allowed."
           class="net.sourceforge.pmd.lang.plsql.rule.codestyle.LineLengthRule"
           externalInfoUrl="${pmd.website.baseurl}/pmd_rules_plsql_codestyle.html#linelength">
         <description>

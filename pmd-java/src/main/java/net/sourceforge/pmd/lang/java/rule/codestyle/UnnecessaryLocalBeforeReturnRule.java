@@ -83,7 +83,7 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
                     // Is the variable initialized with another member that is later used?
                     if (!isInitDataModifiedAfterInit(variableDeclaration, rtn)
                             && !statementsBeforeReturn(variableDeclaration, rtn)) {
-                        addViolation(data, rtn, var);
+                        reportViolation(data, rtn, var);
                     }
                 }
             }

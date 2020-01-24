@@ -38,7 +38,7 @@ public class OnlyOneReturnRule extends AbstractJavaRule {
                 if (!i.hasNext()) {
                     continue;
                 }
-                addViolation(data, problem);
+                reportViolation(data, problem);
             }
         }
         return data;

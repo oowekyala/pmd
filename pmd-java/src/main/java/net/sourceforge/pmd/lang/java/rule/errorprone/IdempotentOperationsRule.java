@@ -79,7 +79,7 @@ public class IdempotentOperationsRule extends AbstractJavaRule {
             }
         }
 
-        addViolation(data, node);
+        reportViolation(data, node);
         return super.visit(node, data);
     }
 }

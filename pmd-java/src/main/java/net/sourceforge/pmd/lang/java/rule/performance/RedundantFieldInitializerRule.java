@@ -141,6 +141,6 @@ public class RedundantFieldInitializerRule extends AbstractJavaRule {
     }
 
     private void addViolation(Object data, ASTVariableDeclarator variableDeclarator) {
-        super.addViolation(data, variableDeclarator, variableDeclarator.getChild(0).getImage());
+        super.reportViolation(data, variableDeclarator, variableDeclarator.getChild(0).getImage());
     }
 }

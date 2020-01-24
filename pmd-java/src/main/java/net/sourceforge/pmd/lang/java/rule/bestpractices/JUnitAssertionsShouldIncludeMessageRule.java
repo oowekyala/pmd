@@ -38,7 +38,7 @@ public class JUnitAssertionsShouldIncludeMessageRule extends AbstractJUnitRule {
                         if (isException(node)) {
                             return;
                         }
-                        JUnitAssertionsShouldIncludeMessageRule.this.addViolation(ctx, name);
+                        reportViolation(ctx, name);
                     }
                 }
             }

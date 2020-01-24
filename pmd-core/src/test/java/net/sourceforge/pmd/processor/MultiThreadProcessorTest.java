@@ -125,7 +125,7 @@ public class MultiThreadProcessorTest {
 
             letTheOtherThreadRun(100);
             if (hasViolation) {
-                addViolation(ctx, nodes.get(0));
+                reportViolation(ctx, nodes.get(0));
             }
         }
 

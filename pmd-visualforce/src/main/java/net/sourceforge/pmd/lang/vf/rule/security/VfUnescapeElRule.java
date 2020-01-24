@@ -90,7 +90,7 @@ public class VfUnescapeElRule extends AbstractVfRule {
             if (!(jsonParse || startsWithSafeResource(elExpression) || containsSafeFields(elExpression))) {
                 if (doesElContainAnyUnescapedIdentifiers(elExpression,
                         EnumSet.of(Escaping.JSENCODE, Escaping.JSINHTMLENCODE))) {
-                    addViolation(data, elExpression);
+                    reportViolation(data, elExpression);
                 }
             }
         } else {
@@ -98,7 +98,7 @@ public class VfUnescapeElRule extends AbstractVfRule {
                 final boolean hasUnscaped = doesElContainAnyUnescapedIdentifiers(elExpression,
                         EnumSet.of(Escaping.JSENCODE, Escaping.JSINHTMLENCODE));
                 if (!(jsonParse && !hasUnscaped)) {
-                    addViolation(data, elExpression);
+                    reportViolation(data, elExpression);
                 }
             }
         }
@@ -197,7 +197,7 @@ public class VfUnescapeElRule extends AbstractVfRule {
 
         if (isEL) {
             for (ASTElExpression expr : toReport) {
-                addViolation(data, expr);
+                reportViolation(data, expr);
             }
         }
 
@@ -231,7 +231,7 @@ public class VfUnescapeElRule extends AbstractVfRule {
 
         if (isEL) {
             for (ASTElExpression expr : toReport) {
-                addViolation(data, expr);
+                reportViolation(data, expr);
             }
         }
 
@@ -377,13 +377,13 @@ public class VfUnescapeElRule extends AbstractVfRule {
 
         if (hasPlaceholders && isUnescaped) {
             for (ASTElExpression expr : hasELInInnerElements(node)) {
-                addViolation(data, expr);
+                reportViolation(data, expr);
             }
         }
 
         if (isEL && isUnescaped) {
             for (ASTElExpression expr : toReport) {
-                addViolation(data, expr);
+                reportViolation(data, expr);
             }
         }
     }

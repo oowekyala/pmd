@@ -62,20 +62,20 @@ public class ApexDocRule extends AbstractApexRule {
         ApexDocComment comment = getApexDocComment(node);
         if (comment == null) {
             if (shouldHaveApexDocs(node)) {
-                addViolationWithMessage(data, node, MISSING_COMMENT_MESSAGE);
+                reportWithMessage(data, node, MISSING_COMMENT_MESSAGE);
             }
         } else {
             if (!comment.hasDescription) {
-                addViolationWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
+                reportWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
             }
 
             String returnType = node.getReturnType();
             boolean shouldHaveReturn = !(returnType.isEmpty() || "void".equalsIgnoreCase(returnType));
             if (comment.hasReturn != shouldHaveReturn) {
                 if (shouldHaveReturn) {
-                    addViolationWithMessage(data, node, MISSING_RETURN_MESSAGE);
+                    reportWithMessage(data, node, MISSING_RETURN_MESSAGE);
                 } else {
-                    addViolationWithMessage(data, node, UNEXPECTED_RETURN_MESSAGE);
+                    reportWithMessage(data, node, UNEXPECTED_RETURN_MESSAGE);
                 }
             }
 
@@ -84,7 +84,7 @@ public class ApexDocRule extends AbstractApexRule {
                     .stream().map(p -> p.getImage()).collect(Collectors.toList());
 
             if (!comment.params.equals(params)) {
-                addViolationWithMessage(data, node, MISMATCHED_PARAM_MESSAGE);
+                reportWithMessage(data, node, MISMATCHED_PARAM_MESSAGE);
             }
         }
 
@@ -96,11 +96,11 @@ public class ApexDocRule extends AbstractApexRule {
         ApexDocComment comment = getApexDocComment(node);
         if (comment == null) {
             if (shouldHaveApexDocs(node)) {
-                addViolationWithMessage(data, node, MISSING_COMMENT_MESSAGE);
+                reportWithMessage(data, node, MISSING_COMMENT_MESSAGE);
             }
         } else {
             if (!comment.hasDescription) {
-                addViolationWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
+                reportWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
             }
         }
 
@@ -111,11 +111,11 @@ public class ApexDocRule extends AbstractApexRule {
         ApexDocComment comment = getApexDocComment(node);
         if (comment == null) {
             if (shouldHaveApexDocs(node)) {
-                addViolationWithMessage(data, node, MISSING_COMMENT_MESSAGE);
+                reportWithMessage(data, node, MISSING_COMMENT_MESSAGE);
             }
         } else {
             if (!comment.hasDescription) {
-                addViolationWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
+                reportWithMessage(data, node, MISSING_DESCRIPTION_MESSAGE);
             }
         }
     }

@@ -22,7 +22,7 @@ public class AvoidCatchingThrowableRule extends AbstractJavaRule {
         ASTType type = node.getFirstDescendantOfType(ASTType.class);
         ASTClassOrInterfaceType name = type.getFirstDescendantOfType(ASTClassOrInterfaceType.class);
         if (name.hasImageEqualTo("Throwable")) {
-            addViolation(data, name);
+            reportViolation(data, name);
         }
         return super.visit(node, data);
     }

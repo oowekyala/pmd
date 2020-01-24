@@ -96,7 +96,8 @@ public class BrokenNullCheckRule extends AbstractJavaRule {
             }
 
             if (primaryExpressionsAreEqual(nullCompareExpression, conditionalPrimaryExpression)) {
-                addViolation(data, node); // We have a match
+                // We have a match
+                reportViolation(data, node);
             }
 
         }

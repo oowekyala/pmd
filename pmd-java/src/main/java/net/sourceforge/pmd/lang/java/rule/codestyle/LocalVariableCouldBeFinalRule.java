@@ -42,7 +42,7 @@ public class LocalVariableCouldBeFinalRule extends AbstractOptimizationRule {
                 continue;
             }
             if (!assigned(entry.getValue())) {
-                addViolation(data, var.getAccessNodeParent(), var.getImage());
+                reportViolation(data, var.getAccessNodeParent(), var.getImage());
             }
         }
         return data;

@@ -601,7 +601,7 @@ public class Designer implements ClipboardOwner {
             try {
                 XPathRule xpathRule = new XPathRule() {
                     @Override
-                    public void addViolation(Object data, Node node, String arg) {
+                    public void reportViolation(Object data, Node node, Object... arg) {
                         xpathResults.addElement(node);
                     }
                 };

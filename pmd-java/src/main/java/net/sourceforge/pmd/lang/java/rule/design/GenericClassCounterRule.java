@@ -168,7 +168,7 @@ public class GenericClassCounterRule extends AbstractJavaRule {
         // Do we have a violation ?
         if (total.get() > this.threshold) {
             for (Node node : this.matches) {
-                addViolation(ctx, node, new Object[] { total });
+                reportViolation(ctx, node, total);
             }
             // Cleaning the context for the others rules
             ctx.removeAttribute(counterLabel);

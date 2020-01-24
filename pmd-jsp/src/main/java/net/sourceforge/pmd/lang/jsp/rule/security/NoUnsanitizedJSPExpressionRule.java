@@ -18,7 +18,7 @@ public class NoUnsanitizedJSPExpressionRule extends AbstractJspRule {
     @Override
     public Object visit(ASTElExpression node, Object data) {
         if (elOutsideTaglib(node)) {
-            addViolation(data, node);
+            reportViolation(data, node);
         }
 
         return super.visit(node, data);

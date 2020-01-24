@@ -74,12 +74,11 @@ public class CyclomaticComplexityRule extends AbstractApexRule {
             if (classWmc >= getProperty(CLASS_LEVEL_DESCRIPTOR)) {
                 int classHighest = (int) ApexMetrics.get(ApexOperationMetricKey.CYCLO, node, ResultOption.HIGHEST);
 
-                String[] messageParams = {"class",
-                                          node.getImage(),
-                                          " total",
-                                          classWmc + " (highest " + classHighest + ")", };
-
-                addViolation(data, node, messageParams);
+                reportViolation(data, node,
+                                "class",
+                                node.getImage(),
+                                " total",
+                                classWmc + " (highest " + classHighest + ")");
             }
         }
         return data;
@@ -95,10 +94,11 @@ public class CyclomaticComplexityRule extends AbstractApexRule {
                                       : node.getImage().equals(classNames.peek()) ? "constructor"
                                                                                   : "method";
 
-            addViolation(data, node, new String[]{opType,
-                                                  node.getQualifiedName().getOperation(),
-                                                  "",
-                                                  "" + cyclo, });
+            reportViolation(data, node,
+                            opType,
+                            node.getQualifiedName().getOperation(),
+                            "",
+                            "" + cyclo);
         }
 
         return data;

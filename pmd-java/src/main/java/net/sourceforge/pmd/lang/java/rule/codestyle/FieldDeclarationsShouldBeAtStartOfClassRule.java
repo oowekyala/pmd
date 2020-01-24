@@ -70,7 +70,7 @@ public class FieldDeclarationsShouldBeAtStartOfClassRule extends AbstractJavaRul
             }
             if (child instanceof ASTMethodDeclaration || child instanceof ASTConstructorDeclaration
                     || child instanceof ASTAnnotationTypeDeclaration) {
-                addViolation(data, node);
+                reportViolation(data, node);
                 break;
             }
             if (child instanceof ASTClassOrInterfaceDeclaration) {
@@ -78,12 +78,12 @@ public class FieldDeclarationsShouldBeAtStartOfClassRule extends AbstractJavaRul
                 if (declaration.isInterface() && getProperty(ignoreInterfaceDeclarations)) {
                     continue;
                 } else {
-                    addViolation(data, node);
+                    reportViolation(data, node);
                     break;
                 }
             }
             if (child instanceof ASTEnumDeclaration && !getProperty(ignoreEnumDeclarations)) {
-                addViolation(data, node);
+                reportViolation(data, node);
                 break;
             }
         }

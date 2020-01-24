@@ -102,8 +102,7 @@ public class CommentSizeRule extends AbstractCommentRule {
 
         for (Comment comment : cUnit.getComments()) {
             if (hasTooManyLines(comment)) {
-                addViolationWithMessage(data, cUnit, this.getMessage() + ": Too many lines", comment.getBeginLine(),
-                        comment.getEndLine());
+                reportViolation(data, comment, "Too many lines");
             }
 
             List<Integer> lineNumbers = overLengthLineIndicesIn(comment);
@@ -112,7 +111,7 @@ public class CommentSizeRule extends AbstractCommentRule {
             }
 
             for (Integer lineNum : lineNumbers) {
-                addViolationWithMessage(data, cUnit, this.getMessage() + ": Line too long", lineNum, lineNum);
+                reportAtLine(data, comment, lineNum, "Line too long");
             }
         }
 

@@ -80,13 +80,13 @@ public class InsecureCryptoIvRule extends AbstractJavaRule {
         // hard coded array
         ASTArrayInitializer arrayInit = firstArgumentExpression.getFirstDescendantOfType(ASTArrayInitializer.class);
         if (arrayInit != null) {
-            addViolation(data, firstArgumentExpression);
+            reportViolation(data, firstArgumentExpression);
         }
 
         // string literal
         ASTLiteral literal = firstArgumentExpression.getFirstDescendantOfType(ASTLiteral.class);
         if (literal != null && literal.isStringLiteral()) {
-            addViolation(data, firstArgumentExpression);
+            reportViolation(data, firstArgumentExpression);
         }
     }
 }
