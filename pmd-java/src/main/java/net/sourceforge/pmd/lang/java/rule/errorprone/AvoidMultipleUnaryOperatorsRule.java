@@ -66,7 +66,7 @@ public class AvoidMultipleUnaryOperatorsRule extends AbstractJavaRule {
         }
 
         if (match) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
     }
 }

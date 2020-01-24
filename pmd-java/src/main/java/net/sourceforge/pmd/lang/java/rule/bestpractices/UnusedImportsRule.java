@@ -67,7 +67,7 @@ public class UnusedImportsRule extends AbstractJavaRule {
             visit((ASTPackageDeclaration) node.getChild(0), data);
         }
         for (ImportWrapper wrapper : imports) {
-            reportViolation(data, wrapper.getNode(), wrapper.getFullName());
+            addViolation(data, wrapper.getNode(), wrapper.getFullName());
         }
         return data;
     }

@@ -73,7 +73,7 @@ public class ConfusingTernaryRule extends AbstractJavaRule {
                     if (!getProperty(ignoreElseIfProperty)
                             || !(node.getChild(2).getChild(0) instanceof ASTIfStatement)
                                     && !(node.getParent().getParent() instanceof ASTIfStatement)) {
-                        reportViolation(data, node);
+                        addViolation(data, node);
                     }
                 }
             }
@@ -87,7 +87,7 @@ public class ConfusingTernaryRule extends AbstractJavaRule {
         if (node.getNumChildren() > 0) {
             Node inode = node.getChild(0);
             if (isMatch(inode)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return super.visit(node, data);

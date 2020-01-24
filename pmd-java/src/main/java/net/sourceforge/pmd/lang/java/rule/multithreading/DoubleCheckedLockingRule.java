@@ -143,7 +143,7 @@ public class DoubleCheckedLockingRule extends AbstractJavaRule {
                                         ASTPrimaryExpression pe = (ASTPrimaryExpression) se.getChild(0);
                                         if (matchName(pe, returnVariableName)) {
                                             if (se.getChild(1) instanceof ASTAssignmentOperator) {
-                                                reportViolation(data, node);
+                                                addViolation(data, node);
                                             }
                                         }
                                     }

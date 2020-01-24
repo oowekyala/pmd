@@ -36,7 +36,7 @@ public class AvoidGlobalModifierRule extends AbstractApexRule {
         ASTModifierNode modifierNode = node.getFirstChildOfType(ASTModifierNode.class);
 
         if (isGlobal(modifierNode) && !hasRestAnnotation(modifierNode) && !hasWebServices(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return data;

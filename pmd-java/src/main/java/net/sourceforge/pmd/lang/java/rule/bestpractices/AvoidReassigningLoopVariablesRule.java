@@ -311,7 +311,7 @@ public class AvoidReassigningLoopVariablesRule extends AbstractOptimizationRule 
      */
     private void checkVariable(Object data, Set<String> loopVariables, AbstractNode node) {
         if (node != null && loopVariables.contains(node.getImage())) {
-            reportViolation(data, node, node.getImage());
+            addViolation(data, node, node.getImage());
         }
     }
 

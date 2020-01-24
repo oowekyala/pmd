@@ -30,7 +30,7 @@ public class UnusedLocalVariableRule extends AbstractJavaRule {
             // need to add DFAish code to determine if an array
             // is initialized locally or gotten from somewhere else
             if (!node.getNameDeclaration().isArray() && !actuallyUsed(node.getUsages())) {
-                reportViolation(data, node, node.getNameDeclaration().getImage());
+                addViolation(data, node, node.getNameDeclaration().getImage());
             }
         }
         return data;

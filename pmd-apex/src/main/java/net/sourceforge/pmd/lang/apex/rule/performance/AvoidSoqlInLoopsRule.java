@@ -26,7 +26,7 @@ public class AvoidSoqlInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTSoqlExpression node, Object data) {
         if (insideLoop(node) && parentNotReturn(node) && parentNotForEach(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

@@ -37,7 +37,7 @@ public class SingleMethodSingletonRule extends AbstractJavaRule {
             if (method.getName().equals("getInstance")) {
                 count++;
                 if (count > 1) {
-                    reportViolation(data, node);
+                    addViolation(data, node);
                     break;
                 }
             }

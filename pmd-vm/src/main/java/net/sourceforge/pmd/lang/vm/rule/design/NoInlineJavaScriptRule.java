@@ -19,7 +19,7 @@ public class NoInlineJavaScriptRule extends AbstractVmRule {
         while (matcher.find()) {
             final String currentMatch = matcher.group();
             if (!srcPattern.matcher(currentMatch).find()) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return super.visit(node, data);

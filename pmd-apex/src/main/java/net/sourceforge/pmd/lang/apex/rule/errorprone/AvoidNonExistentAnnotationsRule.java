@@ -61,7 +61,7 @@ public class AvoidNonExistentAnnotationsRule extends AbstractApexRule {
     private Object checkForNonExistentAnnotation(final ApexNode<?> node, final ASTModifierNode modifierNode, final Object data) {
         for (ASTAnnotation annotation : modifierNode.findChildrenOfType(ASTAnnotation.class)) {
             if (!annotation.isResolved()) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return data;

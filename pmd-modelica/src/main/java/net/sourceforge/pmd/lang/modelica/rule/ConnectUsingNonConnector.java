@@ -25,14 +25,14 @@ public class ConnectUsingNonConnector extends AbstractModelicaRule {
                         ModelicaClassType classDecl = (ModelicaClassType) componentTypes.getBestCandidates().get(0);
                         ModelicaClassSpecialization restriction = classDecl.getSpecialization();
                         if (!classDecl.isConnectorLike()) {
-                            reportViolation(data, ref, restriction.toString());
+                            addViolation(data, ref, restriction.toString());
                         }
                     } else {
-                        reportViolation(data, ref, firstDecl.getDescriptiveName());
+                        addViolation(data, ref, firstDecl.getDescriptiveName());
                     }
                 }
             } else {
-                reportViolation(data, ref, firstDecl.getDescriptiveName());
+                addViolation(data, ref, firstDecl.getDescriptiveName());
             }
         }
     }

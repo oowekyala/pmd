@@ -36,10 +36,10 @@ public class EmptyIfStmtRule extends AbstractVmRule {
     private void handleIf(final AbstractVmNode node, final Object data) {
         final ASTBlock block = node.getFirstChildOfType(ASTBlock.class);
         if (block.getNumChildren() == 0) {
-            reportViolation(data, node);
+            addViolation(data, node);
         } else if (block.getNumChildren() == 1 && block.getChild(0) instanceof ASTText
                 && StringUtils.isBlank(((AbstractVmNode) block.getChild(0)).getFirstToken().toString())) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
     }
 }

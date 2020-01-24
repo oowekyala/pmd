@@ -61,7 +61,7 @@ public class UselessStringValueOfRule extends AbstractJavaRule {
                     }
                 }
                 if (ok) {
-                    reportViolation(data, node);
+                    addViolation(data, node);
                     return data;
                 }
             }

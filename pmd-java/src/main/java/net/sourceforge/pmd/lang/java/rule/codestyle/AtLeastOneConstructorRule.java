@@ -49,7 +49,7 @@ public class AtLeastOneConstructorRule extends AbstractIgnoredAnnotationRule {
         // Do we have any non-static methods?
         for (final ASTMethodDeclaration m : node.findDescendantsOfType(ASTMethodDeclaration.class)) {
             if (!m.isStatic()) {
-                reportViolation(data, node);
+                addViolation(data, node);
                 return data;
             }
             atLeastOneMember = true;
@@ -58,7 +58,7 @@ public class AtLeastOneConstructorRule extends AbstractIgnoredAnnotationRule {
         // .. or fields?
         for (final ASTFieldDeclaration f : node.findDescendantsOfType(ASTFieldDeclaration.class)) {
             if (!f.isStatic()) {
-                reportViolation(data, node);
+                addViolation(data, node);
                 return data;
             }
             atLeastOneMember = true;
@@ -66,7 +66,7 @@ public class AtLeastOneConstructorRule extends AbstractIgnoredAnnotationRule {
 
         // Class has no declared members
         if (!atLeastOneMember) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return data;

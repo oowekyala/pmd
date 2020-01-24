@@ -65,7 +65,7 @@ public class ImmutableFieldRule extends AbstractLombokAwareRule {
                 continue;
             }
             if (type == FieldImmutabilityType.IMMUTABLE || type == FieldImmutabilityType.CHECKDECL && initializedWhenDeclared(field)) {
-                reportViolation(data, field.getNode(), field.getImage());
+                addViolation(data, field.getNode(), field.getImage());
             }
         }
         return result;

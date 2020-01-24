@@ -106,7 +106,7 @@ public class BeanMembersShouldSerializeRule extends AbstractLombokAwareRule {
             // Note that a Setter method is not applicable to a final
             // variable...
             if (!hasGetMethod || !accessNodeParent.isFinal() && !hasSetMethod) {
-                reportViolation(data, decl.getNode(), decl.getImage());
+                addViolation(data, decl.getNode(), decl.getImage());
             }
         }
         return super.visit(node, data);

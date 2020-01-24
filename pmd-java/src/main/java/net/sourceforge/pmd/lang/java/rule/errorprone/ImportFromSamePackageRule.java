@@ -17,12 +17,12 @@ public class ImportFromSamePackageRule extends AbstractJavaRule {
         String packageName = importDecl.getScope().getEnclosingScope(SourceFileScope.class).getPackageName();
 
         if (packageName != null && packageName.equals(importDecl.getPackageName())) {
-            reportViolation(data, importDecl);
+            addViolation(data, importDecl);
         }
 
         // special case
         if (packageName == null && StringUtils.isBlank(importDecl.getPackageName())) {
-            reportViolation(data, importDecl);
+            addViolation(data, importDecl);
         }
         return data;
     }

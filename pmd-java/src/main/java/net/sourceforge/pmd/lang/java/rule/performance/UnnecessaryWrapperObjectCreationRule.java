@@ -48,7 +48,7 @@ public class UnnecessaryWrapperObjectCreationRule extends AbstractJavaRule {
                     image = suffix.getImage();
 
                     if (SUFFIX_SET.contains(image) || checkBoolean && "booleanValue".equals(image)) {
-                        reportViolation(data, node);
+                        addViolation(data, node);
                         return data;
                     }
                 }

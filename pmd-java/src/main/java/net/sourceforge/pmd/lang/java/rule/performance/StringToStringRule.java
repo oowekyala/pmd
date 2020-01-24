@@ -28,9 +28,9 @@ public class StringToStringRule extends AbstractJavaRule {
             NameOccurrence qualifier = jocc.getNameForWhichThisIsAQualifier();
             if (qualifier != null) {
                 if (!isArray && isNotAMethodReference(qualifier) && qualifier.getImage().indexOf("toString") != -1) {
-                    reportViolation(data, jocc.getLocation());
+                    addViolation(data, jocc.getLocation());
                 } else if (isArray && isNotAName(qualifier) && qualifier.getImage().equals("toString")) {
-                    reportViolation(data, jocc.getLocation());
+                    addViolation(data, jocc.getLocation());
                 }
             }
         }

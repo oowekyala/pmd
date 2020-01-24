@@ -17,7 +17,7 @@ public class FooRule extends AbstractJavaRule {
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration c, Object ctx) {
         if (c.getImage().equalsIgnoreCase("Foo")) {
-            reportViolation(ctx, c);
+            addViolation(ctx, c);
         }
         return super.visit(c, ctx);
     }
@@ -25,7 +25,7 @@ public class FooRule extends AbstractJavaRule {
     @Override
     public Object visit(ASTVariableDeclaratorId c, Object ctx) {
         if (c.getImage().equalsIgnoreCase("Foo")) {
-            reportViolation(ctx, c);
+            addViolation(ctx, c);
         }
         return super.visit(c, ctx);
     }

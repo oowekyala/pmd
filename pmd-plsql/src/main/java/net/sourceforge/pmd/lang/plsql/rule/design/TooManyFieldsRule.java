@@ -62,7 +62,7 @@ public class TooManyFieldsRule extends AbstractPLSQLRule {
             int val = stats.get(k);
             Node n = nodes.get(k);
             if (val > maxFields) {
-                reportViolation(data, n);
+                addViolation(data, n);
             }
         }
         return data;
@@ -82,7 +82,7 @@ public class TooManyFieldsRule extends AbstractPLSQLRule {
             int val = stats.get(k);
             Node n = nodes.get(k);
             if (val > maxFields) {
-                reportViolation(data, n);
+                addViolation(data, n);
             }
         }
         return data;

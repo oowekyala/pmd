@@ -38,7 +38,7 @@ public class DuplicateImportsRule extends AbstractJavaRule {
 
                 if (thisImportOnDemand.getName().equals(singleTypePkg)
                         && !isDisambiguationImport(node, singleTypePkg, singleTypeName)) {
-                    reportViolation(data, thisSingleTypeImport.getNode(), singleTypeFullName);
+                    addViolation(data, thisSingleTypeImport.getNode(), singleTypeFullName);
                 }
             }
         }
@@ -93,11 +93,11 @@ public class DuplicateImportsRule extends AbstractJavaRule {
         // polymorphic...
         if (node.isImportOnDemand()) {
             if (!importOnDemandImports.add(wrapper)) {
-                reportViolation(data, node, node.getImportedName());
+                addViolation(data, node, node.getImportedName());
             }
         } else {
             if (!singleTypeImports.add(wrapper)) {
-                reportViolation(data, node, node.getImportedName());
+                addViolation(data, node, node.getImportedName());
             }
         }
         return data;

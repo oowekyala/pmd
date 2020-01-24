@@ -22,7 +22,7 @@ public class AvoidFieldNameMatchingTypeNameRule extends AbstractJavaRule {
     public Object visit(ASTFieldDeclaration node, Object data) {
         ASTClassOrInterfaceDeclaration cl = node.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);
         if (cl != null && node.getVariableName().equalsIgnoreCase(cl.getImage())) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

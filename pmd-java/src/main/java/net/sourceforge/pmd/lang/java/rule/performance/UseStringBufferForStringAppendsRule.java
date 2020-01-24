@@ -66,13 +66,13 @@ public class UseStringBufferForStringAppendsRule extends AbstractJavaRule {
                         ASTAssignmentOperator assignmentOperator = statement
                                 .getFirstDescendantOfType(ASTAssignmentOperator.class);
                         if (assignmentOperator != null && assignmentOperator.isCompound()) {
-                            reportViolation(data, assignmentOperator);
+                            addViolation(data, assignmentOperator);
                         }
                     } else if (astName.getImage().equals(name.getImage())) {
                         ASTAssignmentOperator assignmentOperator = statement
                                 .getFirstDescendantOfType(ASTAssignmentOperator.class);
                         if (assignmentOperator != null && !assignmentOperator.isCompound()) {
-                            reportViolation(data, astName);
+                            addViolation(data, astName);
                         }
                     }
                 }

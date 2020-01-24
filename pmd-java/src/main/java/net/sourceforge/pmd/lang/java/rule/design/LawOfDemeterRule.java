@@ -74,7 +74,7 @@ public class LawOfDemeterRule extends AbstractJavaRule {
     private void addViolations(List<MethodCall> calls, RuleContext ctx) {
         for (MethodCall method : calls) {
             if (method.isViolation()) {
-                reportViolation(ctx, method.getExpression(), method.getViolationReason());
+                addViolation(ctx, method.getExpression(), method.getViolationReason());
             }
         }
     }

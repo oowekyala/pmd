@@ -19,7 +19,7 @@ public class AmbiguousResolutionRule extends AbstractModelicaRule {
                 sb.append(candidate.getDescriptiveName());
                 sb.append(", ");
             }
-            reportViolation(data, node, sb.substring(0, sb.length() - 2));
+            addViolation(data, node, sb.substring(0, sb.length() - 2));
         }
         return super.visit(node, data);
     }

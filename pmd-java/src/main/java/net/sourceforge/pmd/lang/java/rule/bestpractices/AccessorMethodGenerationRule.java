@@ -97,7 +97,7 @@ public class AccessorMethodGenerationRule extends AbstractJavaRule {
 
             // Are we within the same class that defines the field / method?
             if (!classScope.equals(usedAtScope)) {
-                reportViolation(data, no.getLocation());
+                addViolation(data, no.getLocation());
             }
         }
     }

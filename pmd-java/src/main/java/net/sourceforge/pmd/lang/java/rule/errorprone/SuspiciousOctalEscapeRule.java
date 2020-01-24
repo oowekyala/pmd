@@ -43,7 +43,7 @@ public class SuspiciousOctalEscapeRule extends AbstractJavaRule {
                                         // escape followed by
                                         // an octal digit -- legal but very
                                         // confusing!
-                                        reportViolation(data, node);
+                                        addViolation(data, node);
                                     } else {
                                         // if there is a 4th decimal digit, it
                                         // could never be part of
@@ -52,7 +52,7 @@ public class SuspiciousOctalEscapeRule extends AbstractJavaRule {
                                         if (escapeSequence.length() > 3) {
                                             char fourth = escapeSequence.charAt(3);
                                             if (isDecimal(fourth)) {
-                                                reportViolation(data, node);
+                                                addViolation(data, node);
                                             }
                                         }
                                     }
@@ -61,14 +61,14 @@ public class SuspiciousOctalEscapeRule extends AbstractJavaRule {
                                     // this is a two-digit octal escape followed
                                     // by a decimal digit
                                     // legal but very confusing
-                                    reportViolation(data, node);
+                                    addViolation(data, node);
                                 }
                             }
                         } else if (isDecimal(second)) {
                             // this is a one-digit octal escape followed by a
                             // decimal digit
                             // legal but very confusing
-                            reportViolation(data, node);
+                            addViolation(data, node);
                         }
                     }
                 } else if (first == '\\') {

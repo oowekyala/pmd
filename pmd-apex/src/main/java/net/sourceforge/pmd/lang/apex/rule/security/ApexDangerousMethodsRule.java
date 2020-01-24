@@ -58,7 +58,7 @@ public class ApexDangerousMethodsRule extends AbstractApexRule {
         List<ASTMethodCallExpression> methodCalls = node.findDescendantsOfType(ASTMethodCallExpression.class);
         for (ASTMethodCallExpression methodCall : methodCalls) {
             if (Helper.isMethodName(methodCall, CONFIGURATION, DISABLE_CRUD)) {
-                reportViolation(data, methodCall);
+                addViolation(data, methodCall);
             }
 
             if (Helper.isMethodName(methodCall, SYSTEM, DEBUG)) {
@@ -94,7 +94,7 @@ public class ApexDangerousMethodsRule extends AbstractApexRule {
         for (ASTVariableExpression var : variables) {
             if (REGEXP.matcher(var.getImage()).matches()) {
                 if (!whiteListedVariables.contains(Helper.getFQVariableName(var))) {
-                    reportViolation(data, methodCall);
+                    addViolation(data, methodCall);
                 }
             }
         }

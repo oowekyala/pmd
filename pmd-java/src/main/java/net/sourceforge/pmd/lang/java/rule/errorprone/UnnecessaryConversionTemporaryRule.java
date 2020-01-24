@@ -55,7 +55,7 @@ public class UnnecessaryConversionTemporaryRule extends AbstractJavaRule {
         if (inPrimaryExpressionContext && usingPrimitiveWrapperAllocation) {
             if (node.hasImageEqualTo("toString")) {
                 if (node.getParent() == primary) {
-                    reportViolation(data, node);
+                    addViolation(data, node);
                 }
             }
         }

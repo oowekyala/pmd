@@ -37,7 +37,7 @@ public class ExceptionAsFlowControlRule extends AbstractJavaRule {
                 ASTClassOrInterfaceType name = type.getFirstDescendantOfType(ASTClassOrInterfaceType.class);
                 if (node.getFirstClassOrInterfaceTypeImage() != null
                         && node.getFirstClassOrInterfaceTypeImage().equals(name.getImage())) {
-                    reportViolation(data, name);
+                    addViolation(data, name);
                 }
             }
         }

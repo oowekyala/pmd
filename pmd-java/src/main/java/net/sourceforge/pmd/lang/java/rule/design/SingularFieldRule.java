@@ -162,7 +162,7 @@ public class SingularFieldRule extends AbstractLombokAwareRule {
                 }
 
                 if (violation && !usages.isEmpty()) {
-                    reportViolation(data, node, declaration.getImage());
+                    addViolation(data, node, declaration.getImage());
                 }
             }
         }

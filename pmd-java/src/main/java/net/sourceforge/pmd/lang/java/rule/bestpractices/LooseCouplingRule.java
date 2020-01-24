@@ -39,7 +39,7 @@ public class LooseCouplingRule extends AbstractJavaRule {
         boolean isType = CollectionUtil.isCollectionType(clazzType, false);
         if (isType && (parent instanceof ASTFieldDeclaration || parent instanceof ASTFormalParameter
                 || parent instanceof ASTResultType)) {
-            reportViolation(data, node, node.getImage());
+            addViolation(data, node, node.getImage());
         }
         return data;
     }

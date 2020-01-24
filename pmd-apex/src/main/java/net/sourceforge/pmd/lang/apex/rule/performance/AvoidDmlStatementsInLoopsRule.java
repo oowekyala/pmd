@@ -31,7 +31,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlDeleteStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
@@ -39,7 +39,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlInsertStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
@@ -47,7 +47,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlMergeStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
@@ -55,7 +55,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlUndeleteStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
@@ -63,7 +63,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlUpdateStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
@@ -71,7 +71,7 @@ public class AvoidDmlStatementsInLoopsRule extends AbstractApexRule {
     @Override
     public Object visit(ASTDmlUpsertStatement node, Object data) {
         if (insideLoop(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

@@ -77,15 +77,15 @@ public class AvoidBranchingStatementAsLastInLoopRule extends AbstractJavaRule {
         Node parent = node.getNthParent(5);
         if (parent instanceof ASTForStatement) {
             if (hasPropertyValue(property, CHECK_FOR)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         } else if (parent instanceof ASTWhileStatement) {
             if (hasPropertyValue(property, CHECK_WHILE)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         } else if (parent instanceof ASTDoStatement) {
             if (hasPropertyValue(property, CHECK_DO)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return data;

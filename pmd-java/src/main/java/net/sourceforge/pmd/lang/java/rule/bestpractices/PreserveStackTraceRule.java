@@ -47,7 +47,7 @@ public class PreserveStackTraceRule extends AbstractJavaRule {
                 ASTPrimaryExpression expr = (ASTPrimaryExpression) n.getChild(1);
                 if (expr.getNumChildren() > 1 && expr.getChild(1) instanceof ASTPrimaryPrefix) {
                     RuleContext ctx = (RuleContext) data;
-                    reportViolation(ctx, throwStatement);
+                    addViolation(ctx, throwStatement);
                 }
                 continue;
             }
@@ -87,14 +87,14 @@ public class PreserveStackTraceRule extends AbstractJavaRule {
                                             // constructor with args?
                                             ck(data, target, throwStatement, args);
                                         } else if (!isFillInStackTraceCalled(target, initializer)) {
-                                            reportViolation(data, throwStatement);
+                                            addViolation(data, throwStatement);
                                         }
                                     }
                                 }
                             }
                         }
                     } else if (child instanceof ASTClassOrInterfaceType) {
-                        reportViolation(data, throwStatement);
+                        addViolation(data, throwStatement);
                     }
                 }
             }
@@ -173,7 +173,7 @@ public class PreserveStackTraceRule extends AbstractJavaRule {
     private void ck(Object data, String target, ASTThrowStatement throwStatement, Node baseNode) {
         if (!checkForTargetUsage(target, baseNode)) {
             RuleContext ctx = (RuleContext) data;
-            reportViolation(ctx, throwStatement);
+            addViolation(ctx, throwStatement);
         }
     }
 }

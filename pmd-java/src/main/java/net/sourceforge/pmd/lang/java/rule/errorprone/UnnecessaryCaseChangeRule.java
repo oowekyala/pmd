@@ -38,7 +38,7 @@ public class UnnecessaryCaseChangeRule extends AbstractJavaRule {
             return data;
         }
 
-        reportViolation(data, exp);
+        addViolation(data, exp);
         return data;
     }
 

@@ -102,14 +102,14 @@ public class ApexSuggestUsingNamedCredRule extends AbstractApexRule {
         ASTLiteralExpression literalNode = node.getFirstChildOfType(ASTLiteralExpression.class);
         if (literalNode != null) {
             if (isAuthorizationLiteral(literalNode)) {
-                reportViolation(data, literalNode);
+                addViolation(data, literalNode);
             }
         }
 
         final ASTVariableExpression varNode = node.getFirstChildOfType(ASTVariableExpression.class);
         if (varNode != null) {
             if (listOfAuthorizationVariables.contains(Helper.getFQVariableName(varNode))) {
-                reportViolation(data, varNode);
+                addViolation(data, varNode);
             }
         }
     }

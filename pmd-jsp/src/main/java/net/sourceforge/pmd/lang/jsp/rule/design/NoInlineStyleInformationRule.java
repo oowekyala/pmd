@@ -44,7 +44,7 @@ public class NoInlineStyleInformationRule extends AbstractJspRule {
     @Override
     public Object visit(ASTAttribute node, Object data) {
         if (isStyleAttribute(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return super.visit(node, data);
@@ -53,7 +53,7 @@ public class NoInlineStyleInformationRule extends AbstractJspRule {
     @Override
     public Object visit(ASTElement node, Object data) {
         if (isStyleElement(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return super.visit(node, data);

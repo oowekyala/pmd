@@ -36,7 +36,7 @@ public class AssignmentToNonFinalStaticRule extends AbstractJavaRule {
 
             final List<Node> locations = initializedInConstructor(entry.getValue());
             for (final Node location : locations) {
-                reportViolation(data, location, decl.getImage());
+                addViolation(data, location, decl.getImage());
             }
         }
         return super.visit(node, data);

@@ -110,7 +110,7 @@ public class NonThreadSafeSingletonRule extends AbstractJavaRule {
                     }
                 }
                 if (violation) {
-                    reportViolation(data, ifStatement);
+                    addViolation(data, ifStatement);
                 }
             }
         }

@@ -64,7 +64,7 @@ public class TooManyFieldsRule extends AbstractApexRule {
             int val = entry.getValue();
             Node n = nodes.get(entry.getKey());
             if (val > maxFields) {
-                reportViolation(data, n);
+                addViolation(data, n);
             }
         }
         return data;

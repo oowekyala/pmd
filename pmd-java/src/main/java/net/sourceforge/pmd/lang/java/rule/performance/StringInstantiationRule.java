@@ -39,7 +39,7 @@ public class StringInstantiationRule extends AbstractJavaRule {
         }
 
         if (isArrayAccess(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
             return data;
         }
 
@@ -55,7 +55,7 @@ public class StringInstantiationRule extends AbstractJavaRule {
         ASTName name = node.getFirstDescendantOfType(ASTName.class);
         // Literal, i.e., new String("foo")
         if (name == null) {
-            reportViolation(data, node);
+            addViolation(data, node);
             return data;
         }
 
@@ -65,7 +65,7 @@ public class StringInstantiationRule extends AbstractJavaRule {
         }
 
         if (nd instanceof TypedNameDeclaration && TypeHelper.isExactlyAny((TypedNameDeclaration) nd, String.class)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

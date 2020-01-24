@@ -54,7 +54,7 @@ public class GenericLiteralCheckerRule extends AbstractJavaRule {
         init();
         String image = node.getImage();
         if (image != null && image.length() > 0 && RegexHelper.isMatch(this.pattern, image)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

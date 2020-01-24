@@ -25,7 +25,7 @@ public class DontImportJavaLangRule extends AbstractJavaRule {
                     return data;
                 }
             }
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

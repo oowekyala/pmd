@@ -98,7 +98,7 @@ public class IdenticalCatchBranchesRule extends AbstractJavaRule {
                 // By convention, lower catch blocks are collapsed into the highest one
                 // The first node of the equivalence class is thus the block that should be transformed
                 for (int i = 1; i < identicalStmts.size(); i++) {
-                    reportViolation(data, identicalStmts.get(i), identicalBranchName);
+                    addViolation(data, identicalStmts.get(i), identicalBranchName);
                 }
             }
         }

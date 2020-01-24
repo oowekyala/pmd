@@ -46,7 +46,7 @@ public class AvoidDeeplyNestedIfStmtsRule extends AbstractApexRule {
 
         super.visit(node, data);
         if (depth == depthLimit) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         depth--;
 

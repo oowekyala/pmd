@@ -115,7 +115,7 @@ public class XPathRule extends AbstractRule {
 
         List<Node> nodesWithViolation = xpathRuleQuery.evaluate(node, data);
         for (Node nodeWithViolation : nodesWithViolation) {
-            reportViolation(data, nodeWithViolation, nodeWithViolation.getImage());
+            addViolation(data, nodeWithViolation, nodeWithViolation.getImage());
         }
     }
 

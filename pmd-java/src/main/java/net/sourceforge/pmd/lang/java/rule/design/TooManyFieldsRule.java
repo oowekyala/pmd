@@ -46,7 +46,7 @@ public class TooManyFieldsRule extends AbstractJavaRule {
         }
 
         if (counter > maxFields) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return data;

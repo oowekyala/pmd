@@ -47,19 +47,19 @@ public class ApexCSRFRule extends AbstractApexRule {
     @Override
     public Object visit(ASTBlockStatement node, Object data) {
         if (node.getParent() instanceof ASTUserClass && Helper.foundAnyDML(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }
 
     private void checkForCSRF(ASTMethod node, Object data) {
         if (node.isConstructor() && Helper.foundAnyDML(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         String name = node.getImage();
         if (isInitializerMethod(name) && Helper.foundAnyDML(node)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
     }
 

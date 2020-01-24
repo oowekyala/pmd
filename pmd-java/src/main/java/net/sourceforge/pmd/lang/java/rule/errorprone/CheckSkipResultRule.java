@@ -37,7 +37,7 @@ public class CheckSkipResultRule extends AbstractJavaRule {
                         if (exp.getParent() instanceof ASTStatementExpression) {
                             // if exp is in a bare statement,
                             // the returned value is not used
-                            reportViolation(data, occ.getLocation());
+                            addViolation(data, occ.getLocation());
                             break;
                         } else if (exp.getParent() instanceof ASTExpression
                                 && exp.getParent().getParent() instanceof ASTPrimaryPrefix) {

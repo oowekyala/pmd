@@ -67,7 +67,7 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRule {
             Entry<VariableNameDeclaration, List<NameOccurrence>> iterableInfo = getIterableDeclOfIteratorLoop(index, node.getScope());
 
             if (iterableInfo != null && isReplaceableIteratorLoop(indexDecl, guardCondition, iterableInfo, node)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
             return data;
         }
@@ -94,11 +94,11 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRule {
         }
 
         if (iterableDeclaration.isArray() && isReplaceableArrayLoop(node, occurrences, iterableDeclaration)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         } else if (iterableDeclaration.getTypeImage() != null && iterableDeclaration.getTypeImage()
                                                                                     .matches("List|ArrayList|LinkedList")
             && isReplaceableListLoop(node, occurrences, iterableDeclaration)) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return data;

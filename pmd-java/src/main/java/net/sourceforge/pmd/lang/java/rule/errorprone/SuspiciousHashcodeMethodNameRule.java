@@ -29,7 +29,7 @@ public class SuspiciousHashcodeMethodNameRule extends AbstractJavaRule {
                 && decl.getChild(0).getNumChildren() == 0 && type.getNumChildren() != 0) {
             Node t = type.getChild(0).getChild(0);
             if (t instanceof ASTPrimitiveType && "int".equals(t.getImage())) {
-                reportViolation(data, node);
+                addViolation(data, node);
                 return data;
             }
         }

@@ -59,10 +59,10 @@ public class UnusedPrivateMethodRule extends AbstractIgnoredAnnotationRule {
                 continue;
             }
             if (occs.isEmpty()) {
-                reportViolation(data, mnd.getNode(), mnd.getImage() + mnd.getParameterDisplaySignature());
+                addViolation(data, mnd.getNode(), mnd.getImage() + mnd.getParameterDisplaySignature());
             } else {
                 if (calledFromOutsideItself(occs, mnd)) {
-                    reportViolation(data, mnd.getNode(), mnd.getImage() + mnd.getParameterDisplaySignature());
+                    addViolation(data, mnd.getNode(), mnd.getImage() + mnd.getParameterDisplaySignature());
                 }
 
             }

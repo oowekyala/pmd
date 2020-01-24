@@ -91,7 +91,7 @@ public class UseUtilityClassRule extends AbstractLombokAwareRule {
                 }
             }
             if (!isOK && methodCount > 0) {
-                reportViolation(data, decl);
+                addViolation(data, decl);
             }
         }
         return result;

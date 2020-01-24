@@ -97,10 +97,10 @@ public class InefficientStringBufferingRule extends AbstractJavaRule {
             }
 
             if (isAllocatedStringBuffer(node)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         } else if (isInStringBufferOperation(node, 6, "append")) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

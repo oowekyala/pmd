@@ -24,7 +24,7 @@ public class AvoidLogicInTriggerRule extends AbstractApexRule {
         List<ASTBlockStatement> blockStatements = node.findDescendantsOfType(ASTBlockStatement.class);
 
         if (!blockStatements.isEmpty()) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
 
         return data;

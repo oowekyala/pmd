@@ -68,14 +68,14 @@ public class MethodReturnsInternalArrayRule extends AbstractSunSecureRule {
                 continue;
             }
             if (!isLocalVariable(vn, method)) {
-                reportViolation(data, ret, vn);
+                addViolation(data, ret, vn);
             } else {
                 // This is to handle field hiding
                 final ASTPrimaryPrefix pp = ret.getFirstDescendantOfType(ASTPrimaryPrefix.class);
                 if (pp != null && pp.usesThisModifier()) {
                     final ASTPrimarySuffix ps = ret.getFirstDescendantOfType(ASTPrimarySuffix.class);
                     if (ps.hasImageEqualTo(vn)) {
-                        reportViolation(data, ret, vn);
+                        addViolation(data, ret, vn);
                     }
                 }
             }

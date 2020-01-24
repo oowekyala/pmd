@@ -31,7 +31,7 @@ public class PositionalIteratorRule extends AbstractJavaRule {
                 }
 
                 if (nextCount > 1) {
-                    reportViolation(data, node);
+                    addViolation(data, node);
                 }
 
             }

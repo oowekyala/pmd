@@ -75,7 +75,7 @@ public class CheckResultSetRule extends AbstractJavaRule {
                 && node.getFirstParentOfType(ASTWhileStatement.class) == null
                 && node.getFirstParentOfType(ASTReturnStatement.class) == null) {
 
-            reportViolation(data, resultSetVariables.get(var));
+            addViolation(data, resultSetVariables.get(var));
         }
         return super.visit(node, data);
     }

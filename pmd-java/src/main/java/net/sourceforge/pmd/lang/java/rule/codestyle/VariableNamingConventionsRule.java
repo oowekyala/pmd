@@ -182,23 +182,23 @@ public class VariableNamingConventionsRule extends AbstractJavaRule {
         // Static finals should be uppercase
         if (isStatic && isFinal) {
             if (!varName.equals(varName.toUpperCase(Locale.ROOT))) {
-                reportWithMessage(data, variableDeclaratorId,
-                                  "Variables that are final and static should be all capitals, ''{0}'' is not all capitals.",
-                                  varName);
+                addViolationWithMessage(data, variableDeclaratorId,
+                        "Variables that are final and static should be all capitals, ''{0}'' is not all capitals.",
+                        new Object[] { varName });
             }
             return data;
         } else if (!isFinal) {
             String normalizedVarName = normalizeVariableName(varName, prefixes, suffixes);
 
             if (normalizedVarName.indexOf('_') >= 0) {
-                reportWithMessage(data, variableDeclaratorId,
-                                  "Only variables that are final should contain underscores (except for underscores in standard prefix/suffix), ''{0}'' is not final.",
-                                  varName);
+                addViolationWithMessage(data, variableDeclaratorId,
+                        "Only variables that are final should contain underscores (except for underscores in standard prefix/suffix), ''{0}'' is not final.",
+                        new Object[] { varName });
             }
             if (Character.isUpperCase(varName.charAt(0))) {
-                reportWithMessage(data, variableDeclaratorId,
-                                  "Variables should start with a lowercase character, ''{0}'' starts with uppercase character.",
-                                  varName);
+                addViolationWithMessage(data, variableDeclaratorId,
+                        "Variables should start with a lowercase character, ''{0}'' starts with uppercase character.",
+                        new Object[] { varName });
             }
         }
         return data;

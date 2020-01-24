@@ -61,7 +61,7 @@ public class JUnitUseExpectedRule extends AbstractJUnitRule {
                     List<Node> found = new ArrayList<>();
                     found.addAll((List<Node>) visit((ASTMethodDeclaration) child, data));
                     for (Node name : found) {
-                        reportViolation(data, name);
+                        addViolation(data, name);
                     }
                 }
             }

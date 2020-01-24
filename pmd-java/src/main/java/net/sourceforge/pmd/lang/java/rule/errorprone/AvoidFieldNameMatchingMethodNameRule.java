@@ -47,7 +47,7 @@ public class AvoidFieldNameMatchingMethodNameRule extends AbstractJavaRule {
         for (ASTFieldDeclaration field : fields) {
             String varName = field.getVariableName().toLowerCase(Locale.ROOT);
             if (methodNames.contains(varName)) {
-                reportViolation(data, field, field.getVariableName());
+                addViolation(data, field, field.getVariableName());
             }
         }
         return super.visit(node, data);

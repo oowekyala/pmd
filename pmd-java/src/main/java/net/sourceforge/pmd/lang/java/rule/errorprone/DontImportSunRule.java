@@ -13,7 +13,7 @@ public class DontImportSunRule extends AbstractJavaRule {
     public Object visit(ASTImportDeclaration node, Object data) {
         String img = node.getChild(0).getImage();
         if (img.startsWith("sun.") && !img.startsWith("sun.misc.Signal")) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

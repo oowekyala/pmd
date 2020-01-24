@@ -91,7 +91,7 @@ public abstract class AbstractInefficientZeroCheck extends AbstractJavaRule {
         if ((expr instanceof ASTEqualityExpression
                 || expr instanceof ASTRelationalExpression && getComparisonTargets().containsKey(expr.getImage()))
                 && isCompare(expr)) {
-            reportViolation(data, location);
+            addViolation(data, location);
         }
     }
 

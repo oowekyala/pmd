@@ -72,7 +72,7 @@ public class InefficientEmptyStringCheckRule extends AbstractInefficientZeroChec
             Node prevCall = node.getChild(node.getNumChildren() - 4);
             String target = prevCall.getNumChildren() > 0 ? prevCall.getChild(0).getImage() : prevCall.getImage();
             if (target != null && ("trim".equals(target) || target.endsWith(".trim"))) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return data;

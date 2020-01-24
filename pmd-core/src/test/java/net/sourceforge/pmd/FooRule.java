@@ -47,7 +47,7 @@ public class FooRule extends AbstractRule {
             apply(node.getChild(i), ctx);
         }
         if ("Foo".equals(node.getImage())) {
-            reportViolation(ctx, node);
+            addViolation(ctx, node);
         }
     }
 }

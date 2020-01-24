@@ -18,11 +18,11 @@ public class ApexAssertionsShouldIncludeMessageRule extends AbstractApexUnitTest
         String methodName = node.getFullMethodName();
 
         if (ASSERT.equalsIgnoreCase(methodName) && node.getNumChildren() == 2) {
-            reportViolation(data, node);
+            addViolation(data, node);
         } else if ((ASSERT_EQUALS.equalsIgnoreCase(methodName)
                 || ASSERT_NOT_EQUALS.equalsIgnoreCase(methodName))
                 && node.getNumChildren() == 3) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         return data;
     }

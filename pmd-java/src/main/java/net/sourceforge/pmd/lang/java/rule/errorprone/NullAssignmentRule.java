@@ -36,18 +36,18 @@ public class NullAssignmentRule extends AbstractJavaRule {
             }
 
             if (n.getNumChildren() > 2 && n.getChild(1) instanceof ASTAssignmentOperator) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         } else if (node.getNthParent(4) instanceof ASTConditionalExpression) {
             // "false" expression of ternary
             if (isBadTernary((ASTConditionalExpression) node.getNthParent(4))) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         } else if (node.getNthParent(5) instanceof ASTConditionalExpression
                 && node.getNthParent(4) instanceof ASTExpression) {
             // "true" expression of ternary
             if (isBadTernary((ASTConditionalExpression) node.getNthParent(5))) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
 

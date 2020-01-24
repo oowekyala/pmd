@@ -52,7 +52,7 @@ public class MoreThanOneLoggerRule extends AbstractJavaRule {
         node.childrenAccept(this, data);
 
         if (count > 1) {
-            reportViolation(data, node);
+            addViolation(data, node);
         }
         count = stack.pop();
 

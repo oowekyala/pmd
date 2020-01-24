@@ -97,7 +97,7 @@ public class AvoidUsingHardCodedIPRule extends AbstractJavaRule {
         if (image.length() > 0) {
             final char firstChar = Character.toUpperCase(image.charAt(0));
             if (checkIPv4 && isIPv4(firstChar, image) || isIPv6(firstChar, image, checkIPv6, checkIPv4MappedIPv6)) {
-                reportViolation(data, node);
+                addViolation(data, node);
             }
         }
         return data;

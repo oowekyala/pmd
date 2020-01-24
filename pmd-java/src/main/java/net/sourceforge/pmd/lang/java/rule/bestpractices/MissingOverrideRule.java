@@ -223,7 +223,7 @@ public class MissingOverrideRule extends AbstractJavaRule {
         try {
             boolean overridden = currentLookup.peek().isOverridden(node.getName(), node.getFormalParameters());
             if (overridden) {
-                reportViolation(data, node, PrettyPrintingUtil.displaySignature(node));
+                addViolation(data, node, PrettyPrintingUtil.displaySignature(node));
             }
         } catch (NoSuchMethodException e) {
             // may happen in the body of an enum constant,
