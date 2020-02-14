@@ -10,6 +10,7 @@ import java.util.Set;
 
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument;
+import net.sourceforge.pmd.util.document.TextDocument;
 
 /**
  * Acts as a bridge between outer parts (e.g. symbol table) and the restricted
@@ -115,7 +116,7 @@ public final class InternalApiBridge {
         return prefix;
     }
 
-    public static JavaccTokenDocument javaTokenDoc(String fullText) {
+    public static JavaccTokenDocument javaTokenDoc(TextDocument fullText) {
         return new JavaTokenDocument(fullText);
     }
 

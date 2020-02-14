@@ -14,13 +14,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.ast.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument;
+import net.sourceforge.pmd.util.document.TextDocument;
 
 /**
  * {@link JavaccTokenDocument} for Java.
  */
 final class JavaTokenDocument extends JavaccTokenDocument {
 
-    JavaTokenDocument(String fullText) {
+    JavaTokenDocument(TextDocument fullText) {
         super(fullText);
     }
 
@@ -73,7 +74,7 @@ final class JavaTokenDocument extends JavaccTokenDocument {
 
         @Override
         public String getImage() {
-            return document.getFullText().substring(getStartInDocument(), getEndInDocument());
+            return document.getTextDocument().subSequence(getRegion()).toString();
         }
     }
 
