@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
  *
  * <pre>
  *
- * BinderExpr ::= {@linkplain ASTForExpr ForExpr} | {@linkplain ASTLetExpr LetExpr} | {@linkplain ASTQuantifiedExpr QuantifiedExpr}
+ * BinderExpr ::= {@link ASTForExpr ForExpr} | {@link ASTLetExpr LetExpr} | {@link ASTQuantifiedExpr QuantifiedExpr}
  *
  * </pre>
  */

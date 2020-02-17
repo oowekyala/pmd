@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 
 /**
- * A predicate occurring in a {@linkplain StepExpr StepExpr}.
+ * A predicate occurring in a {@link StepExpr StepExpr}.
  *
  * <pre>
  *

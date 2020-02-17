@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * InstanceofExpr ::=  {@linkplain ASTTreatExpr TreatExpr} "instance" "of" {@linkplain ASTSequenceType SequenceType}
+ * InstanceofExpr ::=  {@link ASTTreatExpr TreatExpr} "instance" "of" {@link ASTSequenceType SequenceType}
  *
  * </pre>
  */

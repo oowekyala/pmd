@@ -22,7 +22,7 @@ import java.util.Iterator;
  *            | RelativePathExpr
  *
  * (: Not a node :)
- * RelativePathExpr ::= {@link StepExpr} (("/" || {@linkplain StepExpr AbbrevDescendantOrSelfStep}) {@link StepExpr})*
+ * RelativePathExpr ::= {@link StepExpr} (("/" || {@link StepExpr AbbrevDescendantOrSelfStep}) {@link StepExpr})*
  *
  * </pre>
  */

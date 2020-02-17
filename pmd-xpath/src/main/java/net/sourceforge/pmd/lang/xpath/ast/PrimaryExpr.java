@@ -10,11 +10,11 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * PrimaryExpr ::= {@linkplain ASTNumericLiteral NumericLiteral}
- *               | {@linkplain ASTStringLiteral StringLiteral}
- *               | {@linkplain ASTVarRef VarRef}
- *               | {@linkplain ASTContextItemExpr ContextItemExpr}
- *               | {@linkplain ASTFunctionCall FunctionCall}
+ * PrimaryExpr ::= {@link ASTNumericLiteral NumericLiteral}
+ *               | {@link ASTStringLiteral StringLiteral}
+ *               | {@link ASTVarRef VarRef}
+ *               | {@link ASTContextItemExpr ContextItemExpr}
+ *               | {@link ASTFunctionCall FunctionCall}
  *               | {@link FunctionItemExpr} )
  *
  * </pre>

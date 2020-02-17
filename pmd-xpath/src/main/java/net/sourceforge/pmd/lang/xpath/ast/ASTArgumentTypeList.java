@@ -8,11 +8,11 @@ import java.util.Iterator;
 
 
 /**
- * Argument type list occurring in a {@linkplain ASTTypedFunctionTest TypedFunctionTest}.
+ * Argument type list occurring in a {@link ASTTypedFunctionTest TypedFunctionTest}.
  *
  * <pre>
  *
- * ArgumentTypeList ::=  "(" ( {@linkplain ASTSequenceType SequenceType} ( "," {@linkplain ASTSequenceType SequenceType} )* )? ")"
+ * ArgumentTypeList ::=  "(" ( {@link ASTSequenceType SequenceType} ( "," {@link ASTSequenceType SequenceType} )* )? ")"
  *
  * </pre>
  */

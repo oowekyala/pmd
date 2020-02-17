@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <pre>
  *
- * VarRef ::= "$" {@linkplain ASTName VarName}
+ * VarRef ::= "$" {@link ASTName VarName}
  *
  * </pre>
  */

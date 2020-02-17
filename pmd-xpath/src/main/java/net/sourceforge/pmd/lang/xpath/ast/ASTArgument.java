@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
- * Argument of a {@linkplain ASTFunctionCall}.
+ * Argument of a {@link ASTFunctionCall}.
  *
  * <pre>
  *

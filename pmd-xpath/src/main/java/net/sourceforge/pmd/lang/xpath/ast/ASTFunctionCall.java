@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.ast.Node;
  *
  * <pre>
  *
- * FunctionCall ::= {@linkplain ASTName EQName} {@linkplain ASTArgumentList ArgumentList}
+ * FunctionCall ::= {@link ASTName EQName} {@link ASTArgumentList ArgumentList}
  *
  * </pre>
  */

@@ -25,8 +25,8 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  * <pre>
  *
  * AttributeTest ::= "attribute" "(" (
- *                                     ( {@linkplain ASTName AttributeName} | "*" )
- *                                     ( "," {@linkplain ASTName TypeName})?
+ *                                     ( {@link ASTName AttributeName} | "*" )
+ *                                     ( "," {@link ASTName TypeName})?
  *                                   )?
  *                                ")"
  *

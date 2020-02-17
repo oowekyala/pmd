@@ -16,7 +16,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * TreatExpr ::= {@linkplain ASTCastableExpr CastableExpr} "treat" "as" {@linkplain ASTSequenceType SequenceType}
+ * TreatExpr ::= {@link ASTCastableExpr CastableExpr} "treat" "as" {@link ASTSequenceType SequenceType}
  *
  * </pre>
  */

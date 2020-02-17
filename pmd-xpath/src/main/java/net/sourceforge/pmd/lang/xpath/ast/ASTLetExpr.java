@@ -10,7 +10,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * LetExpr ::= "let" {@linkplain ASTVarBinding VarBinding} ( "," {@linkplain ASTVarBinding VarBinding} )* "return" {@link Expr}
+ * LetExpr ::= "let" {@link ASTVarBinding VarBinding} ( "," {@link ASTVarBinding VarBinding} )* "return" {@link Expr}
  *
  * </pre>
  */

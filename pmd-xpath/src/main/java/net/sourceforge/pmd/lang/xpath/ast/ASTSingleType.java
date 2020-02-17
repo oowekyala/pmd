@@ -10,7 +10,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * SingleType ::= {@linkplain ASTName SimpleTypeName} ("?")?
+ * SingleType ::= {@link ASTName SimpleTypeName} ("?")?
  *
  * </pre>
  */

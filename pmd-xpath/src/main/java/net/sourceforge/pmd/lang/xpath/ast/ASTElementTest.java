@@ -30,8 +30,8 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaE
  * <pre>
  *
  * ElementTest ::=  "element" "(" (
- *                                ( {@linkplain ASTName ElementName} | "*" )
- *                                ( "," {@linkplain ASTName TypeName} ("?")? )?
+ *                                ( {@link ASTName ElementName} | "*" )
+ *                                ( "," {@link ASTName TypeName} ("?")? )?
  *                                )?
  *                            ")"
  *

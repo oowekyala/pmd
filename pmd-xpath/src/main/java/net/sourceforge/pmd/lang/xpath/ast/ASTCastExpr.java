@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * CastExpr ::= {@linkplain ASTUnaryExpr UnaryExpr} "cast" "as" {@linkplain ASTSingleType SingleType}
+ * CastExpr ::= {@link ASTUnaryExpr UnaryExpr} "cast" "as" {@link ASTSingleType SingleType}
  *
  * </pre>
  */

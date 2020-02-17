@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * QuantifiedExpr ::= ("some" | "every") {@linkplain ASTVarBinding VarBinding}  ( "," {@linkplain ASTVarBinding VarBinding} )* "satisfies" {@link Expr}
+ * QuantifiedExpr ::= ("some" | "every") {@link ASTVarBinding VarBinding}  ( "," {@link ASTVarBinding VarBinding} )* "satisfies" {@link Expr}
  *
  * </pre>
  */

@@ -9,7 +9,7 @@ import java.util.List;
 
 
 /**
- * Step of a {@linkplain ASTPathExpr path expression}.
+ * Step of a {@link ASTPathExpr path expression}.
  *
  * <p>The syntax "//" to separate steps is actually shorthand for the
  * axis step "descendant-or-self::node()". The AST for this production
@@ -17,9 +17,9 @@ import java.util.List;
  *
  * <pre>
  *
- * StepExpr ::= {@linkplain ASTPostfixExpr PostfixExpr}
- *            | {@linkplain ASTAxisStep AxisStep}
- *            | {@linkplain PrimaryExpr}
+ * StepExpr ::= {@link ASTPostfixExpr PostfixExpr}
+ *            | {@link ASTAxisStep AxisStep}
+ *            | {@link PrimaryExpr}
  *
  * (: This production produces an AxisStep equivalent to "descendant-or-self::node()" :)
  * AbbrevDescendantOrSelfStep ::= "//"

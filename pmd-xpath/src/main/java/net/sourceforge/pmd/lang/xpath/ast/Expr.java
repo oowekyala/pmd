@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
  * Root interface for all expressions. Groups {@link Expr}
- * and {@linkplain ASTSequenceExpr SequenceExpr} together.
+ * and {@link ASTSequenceExpr SequenceExpr} together.
  */
 public interface Expr extends XPathNode {
 

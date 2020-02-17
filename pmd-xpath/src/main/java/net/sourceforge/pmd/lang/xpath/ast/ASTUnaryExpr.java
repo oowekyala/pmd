@@ -10,7 +10,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * UnaryExpr ::= ("+" | "-")+  {@linkplain ASTMapExpr MapExpr}
+ * UnaryExpr ::= ("+" | "-")+  {@link ASTMapExpr MapExpr}
  *
  * </pre>
  */

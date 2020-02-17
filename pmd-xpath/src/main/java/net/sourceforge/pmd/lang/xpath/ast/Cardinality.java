@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Cardinality of a {@linkplain ASTSequenceType sequence type}.
+ * Cardinality of a {@link ASTSequenceType sequence type}.
  */
 enum Cardinality {
     /** Cardinality marked by the "?" occurrence indicator. */

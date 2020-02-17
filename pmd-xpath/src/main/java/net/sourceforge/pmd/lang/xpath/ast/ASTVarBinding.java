@@ -6,8 +6,8 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 
 /**
- * Binding of a name to an expression, occurring in a {@linkplain BinderExpr binder expressions}.
- * Bound variables may be referred to by {@linkplain ASTVarRef VarRef}, which is a {@linkplain PrimaryExpr primary
+ * Binding of a name to an expression, occurring in a {@link BinderExpr binder expressions}.
+ * Bound variables may be referred to by {@link ASTVarRef VarRef}, which is a {@link PrimaryExpr primary
  * expression}.
  *
  * <p>Bindings have a different syntax depending on where they occur. In let-expressions, the symbol
@@ -15,7 +15,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * VarBinding ::= "$" {@linkplain ASTName VarName} ("in" | ":=") {@link Expr}
+ * VarBinding ::= "$" {@link ASTName VarName} ("in" | ":=") {@link Expr}
  *
  * </pre>
  */

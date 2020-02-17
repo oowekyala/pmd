@@ -9,11 +9,11 @@ import java.util.Iterator;
 
 
 /**
- * Parameter list of an {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}.
+ * Parameter list of an {@link ASTInlineFunctionExpr InlineFunctionExpr}.
  *
  * <pre>
  *
- * ParamList ::= "(" ( {@linkplain ASTParam Param} ("," {@linkplain ASTParam Param} )* )? ")"
+ * ParamList ::= "(" ( {@link ASTParam Param} ("," {@link ASTParam Param} )* )? ")"
  *
  * </pre>
  */

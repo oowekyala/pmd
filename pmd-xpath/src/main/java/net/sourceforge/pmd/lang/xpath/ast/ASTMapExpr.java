@@ -12,7 +12,7 @@ import java.util.List;
  *
  * <pre>
  *
- * MapExpr ::= {@linkplain ASTPathExpr PathExpr} ( "!" {@linkplain ASTPathExpr PathExpr} )+
+ * MapExpr ::= {@link ASTPathExpr PathExpr} ( "!" {@link ASTPathExpr PathExpr} )+
  *
  * </pre>
  */

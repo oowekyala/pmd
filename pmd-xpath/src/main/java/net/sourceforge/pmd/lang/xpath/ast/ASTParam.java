@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
- * Parameter of an {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}.
+ * Parameter of an {@link ASTInlineFunctionExpr InlineFunctionExpr}.
  * Wrapped in a {@link ASTParamList}.
  *
  * <p>Each parameter has a name and an optional type. If no type is specified,
@@ -17,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <pre>
  *
- * Param ::= "$" {@linkplain ASTName EQName} ( "as" {@linkplain ASTSequenceType SequenceType} )?
+ * Param ::= "$" {@link ASTName EQName} ( "as" {@link ASTSequenceType SequenceType} )?
  *
  * </pre>
  */

@@ -10,7 +10,7 @@ import net.sourceforge.pmd.lang.ast.ParseException;
 
 // @formatter:off
 /**
- * An axis step of a {@linkplain ASTPathExpr path expression}. One of the concrete types
+ * An axis step of a {@link ASTPathExpr path expression}. One of the concrete types
  * of {@link StepExpr}.
  *
  * <p>The following shorthand notations are specified:
@@ -29,9 +29,9 @@ import net.sourceforge.pmd.lang.ast.ParseException;
  *
  * (: Note that Axis is not a node and is not present in the children. :)
  * (: Note that NodeTest is an interface and the child is a concrete instance of an implementor. :)
- * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} ({@linkplain ASTPredicate Predicate})*
- *            | ".." ({@linkplain ASTPredicate Predicate})*
- *            | "@" {@link NodeTest} ({@linkplain ASTPredicate Predicate})*
+ * AxisStep ::= ({@link Axis} "::")? {@link NodeTest} ({@link ASTPredicate Predicate})*
+ *            | ".." ({@link ASTPredicate Predicate})*
+ *            | "@" {@link NodeTest} ({@link ASTPredicate Predicate})*
  *
  * </pre>
  */

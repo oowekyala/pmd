@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 
 /**
- * A string literal, one of the {@linkplain PrimaryExpr primary expressions}.
+ * A string literal, one of the {@link PrimaryExpr primary expressions}.
  * Strings may be delimited by either single or double quotes. Within a literal,
  * the delimiter may be escaped by doubling it.
  *
@@ -83,7 +83,7 @@ public final class ASTStringLiteral extends AbstractXPathExpr implements Primary
 
 
     /**
-     * Returns the {@linkplain #getUnescapedValue() unescaped value} with
+     * Returns the {@link #getUnescapedValue() unescaped value} with
      * additional XML unescaping.
      */
     public String getXmlUnescapedValue() {

@@ -9,12 +9,12 @@ package net.sourceforge.pmd.lang.xpath.ast;
  * context for the expression. To uniquely identify a particular named function, both
  * its name as an expanded QName and its arity are required.
  *
- * <p>The arity is not denoted by a {@linkplain ASTNumericLiteral NumericLiteral} child.
+ * <p>The arity is not denoted by a {@link ASTNumericLiteral NumericLiteral} child.
  * Instead, it's available through {@link #getArity()}.
  *
  * <pre>
  *
- * NamedFunctionRef ::= {@linkplain ASTName EQName} "#" &lt;INTEGER_LITERAL&gt;
+ * NamedFunctionRef ::= {@link ASTName EQName} "#" &lt;INTEGER_LITERAL&gt;
  *
  * </pre>
  */

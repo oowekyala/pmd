@@ -8,20 +8,20 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
 
 
 /**
- * Type of an item of a {@linkplain ASTSequenceType SequenceType}.
- * Apart from the item type {@linkplain ASTAnyItemType item()},
- * which permits any kind of item, item types divide into {@linkplain KindTest node types}
- * (such as {@linkplain ASTElementTest element()}), {@linkplain ASTAtomicOrUnionType generalized atomic types}
- * (such as {@code xs:integer}) and {@linkplain FunctionTest function types} (such as {@code function() as item()*}).
+ * Type of an item of a {@link ASTSequenceType SequenceType}.
+ * Apart from the item type {@link ASTAnyItemType item()},
+ * which permits any kind of item, item types divide into {@link KindTest node types}
+ * (such as {@link ASTElementTest element()}), {@link ASTAtomicOrUnionType generalized atomic types}
+ * (such as {@code xs:integer}) and {@link FunctionTest function types} (such as {@code function() as item()*}).
  *
  *
  * <pre>
  *
  * ItemType ::= {@link KindTest KindTest}
- *            | {@linkplain ASTAnyItemType AnyItemType}
+ *            | {@link ASTAnyItemType AnyItemType}
  *            | {@link FunctionTest}
- *            | {@linkplain ASTAtomicOrUnionType AtomicOrUnionType}
- *            | {@linkplain ASTParenthesizedItemType ParenthesizedItemType}
+ *            | {@link ASTAtomicOrUnionType AtomicOrUnionType}
+ *            | {@link ASTParenthesizedItemType ParenthesizedItemType}
  *
  * </pre>
  */
@@ -33,8 +33,8 @@ public interface ItemType extends XPathNode {
      *
      * <pre>
      *
-     * FunctionTest ::= {@linkplain ASTAnyFunctionTest AnyFunctionTest}
-     *                | {@linkplain ASTTypedFunctionTest TypedFunctionTest}
+     * FunctionTest ::= {@link ASTAnyFunctionTest AnyFunctionTest}
+     *                | {@link ASTTypedFunctionTest TypedFunctionTest}
      *
      * </pre>
      */

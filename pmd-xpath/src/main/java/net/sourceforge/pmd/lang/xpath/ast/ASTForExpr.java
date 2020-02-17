@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * ForExpr ::= "for" {@linkplain ASTVarBinding VarBinding} ( "," {@linkplain ASTVarBinding VarBinding} )* "return" {@link Expr}
+ * ForExpr ::= "for" {@link ASTVarBinding VarBinding} ( "," {@link ASTVarBinding VarBinding} )* "return" {@link Expr}
  *
  * </pre>
  */

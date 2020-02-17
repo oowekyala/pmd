@@ -9,7 +9,7 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * AtomicOrUnionType ::= {@linkplain ASTName EQName}
+ * AtomicOrUnionType ::= {@link ASTName EQName}
  *
  * </pre>
  */

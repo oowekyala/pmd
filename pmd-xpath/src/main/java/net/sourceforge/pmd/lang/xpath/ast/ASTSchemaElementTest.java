@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest.ElementTestOrSchemaE
  *
  * <pre>
  *
- * SchemaElementTest ::= "schema-element" "(" {@linkplain ASTName ElementName} ")"
+ * SchemaElementTest ::= "schema-element" "(" {@link ASTName ElementName} ")"
  *
  * </pre>
  */

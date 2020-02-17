@@ -13,7 +13,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  *
  * <pre>
  *
- * ProcessingInstructionTest ::= "processing-instruction" "(" ({@linkplain ASTName NcName} | {@linkplain ASTStringLiteral StringLiteral})? ")"
+ * ProcessingInstructionTest ::= "processing-instruction" "(" ({@link ASTName NcName} | {@link ASTStringLiteral StringLiteral})? ")"
  *
  * </pre>
  */

@@ -24,7 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <pre>
  *
- * InlineFunctionExpr ::= "function" {@linkplain ASTParamList ParamList} ("as" {@linkplain ASTSequenceType SequenceType})? "{" {@link Expr} "}"
+ * InlineFunctionExpr ::= "function" {@link ASTParamList ParamList} ("as" {@link ASTSequenceType SequenceType})? "{" {@link Expr} "}"
  *
  * </pre>
  */

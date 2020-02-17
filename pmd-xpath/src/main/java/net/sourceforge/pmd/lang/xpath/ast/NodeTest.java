@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * A node test. A node test is a condition on the name, {@linkplain XmdNodeKind kind},
+ * A node test. A node test is a condition on the name, {@link XmdNodeKind kind},
  * and/or type annotation of a node. A node test determines which nodes
  * contained by an axis are selected by a step.
  *
@@ -24,24 +24,24 @@ public interface NodeTest extends XPathNode {
      *
      * <pre>
      *
-     * KindTest ::= {@linkplain ASTDocumentTest DocumentTest}
-     *            | {@linkplain ASTElementTest ElementTest}
-     *            | {@linkplain ASTAttributeTest AttributeTest}
-     *            | {@linkplain ASTSchemaElementTest SchemaElementTest}
-     *            | {@linkplain ASTSchemaAttributeTest SchemaAttributeTest}
-     *            | {@linkplain ASTProcessingInstructionTest ProcessingInstructionTest}
-     *            | {@linkplain ASTCommentTest CommentTest}
-     *            | {@linkplain ASTTextTest TextTest}
-     *            | {@linkplain ASTNamespaceNodeTest NamespaceNodeTest}
-     *            | {@linkplain ASTAnyKindTest AnyKindTest}
+     * KindTest ::= {@link ASTDocumentTest DocumentTest}
+     *            | {@link ASTElementTest ElementTest}
+     *            | {@link ASTAttributeTest AttributeTest}
+     *            | {@link ASTSchemaElementTest SchemaElementTest}
+     *            | {@link ASTSchemaAttributeTest SchemaAttributeTest}
+     *            | {@link ASTProcessingInstructionTest ProcessingInstructionTest}
+     *            | {@link ASTCommentTest CommentTest}
+     *            | {@link ASTTextTest TextTest}
+     *            | {@link ASTNamespaceNodeTest NamespaceNodeTest}
+     *            | {@link ASTAnyKindTest AnyKindTest}
      *
      * </pre>
      */
     interface KindTest extends NodeTest, ItemType {
 
         /**
-         * Groups {@linkplain ASTSchemaElementTest SchemaElementTest}
-         * and {@linkplain ASTElementTest ElementTest} under a common interface.
+         * Groups {@link ASTSchemaElementTest SchemaElementTest}
+         * and {@link ASTElementTest ElementTest} under a common interface.
          */
         interface ElementTestOrSchemaElementTest extends KindTest {
 
@@ -54,8 +54,8 @@ public interface NodeTest extends XPathNode {
      *
      * <pre>
      *
-     * NameTest ::= {@linkplain ASTExactNameTest ExactNameTest}
-     *            | {@linkplain ASTWildcardNameTest WildcardNameTest}
+     * NameTest ::= {@link ASTExactNameTest ExactNameTest}
+     *            | {@link ASTWildcardNameTest WildcardNameTest}
      *
      * </pre>
      */

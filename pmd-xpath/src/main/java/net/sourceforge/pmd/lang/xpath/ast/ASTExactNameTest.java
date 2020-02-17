@@ -9,12 +9,12 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.NameTest;
 
 
 /**
- * A {@linkplain NameTest name test} that matches nodes having
+ * A {@link NameTest name test} that matches nodes having
  * exactly a certain name.
  *
  * <pre>
  *
- * ExactNameTest ::= {@linkplain ASTName Name}
+ * ExactNameTest ::= {@link ASTName Name}
  *
  * </pre>
  */

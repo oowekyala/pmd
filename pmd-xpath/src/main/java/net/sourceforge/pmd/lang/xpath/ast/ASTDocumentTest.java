@@ -15,7 +15,7 @@ import net.sourceforge.pmd.lang.xpath.ast.NodeTest.KindTest;
  *
  * <pre>
  *
- * DocumentTest ::= "document-node" "(" ({@linkplain ASTElementTest ElementTest} | {@linkplain ASTSchemaElementTest SchemaElementTest})? ")"
+ * DocumentTest ::= "document-node" "(" ({@link ASTElementTest ElementTest} | {@link ASTSchemaElementTest SchemaElementTest})? ")"
  *
  * </pre>
  */

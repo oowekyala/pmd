@@ -13,7 +13,7 @@ import java.util.List;
  *
  * <pre>
  *
- * PostfixExpr ::= {@link PrimaryExpr} ({@linkplain ASTPredicate Predicate} | {@linkplain ASTArgumentList ArgumentList})+
+ * PostfixExpr ::= {@link PrimaryExpr} ({@link ASTPredicate Predicate} | {@link ASTArgumentList ArgumentList})+
  *
  * </pre>
  */

@@ -12,7 +12,7 @@ import net.sourceforge.pmd.lang.xpath.ast.ItemType.FunctionTest;
  *
  * <pre>
  *
- * TypedFunctionTest ::= "function" {@linkplain ASTArgumentTypeList ArgumentTypeList} "as" {@linkplain ASTSequenceType SequenceType}
+ * TypedFunctionTest ::= "function" {@link ASTArgumentTypeList ArgumentTypeList} "as" {@link ASTSequenceType SequenceType}
  *
  * </pre>
  */

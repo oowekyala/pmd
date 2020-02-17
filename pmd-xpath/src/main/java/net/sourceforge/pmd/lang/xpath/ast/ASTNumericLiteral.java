@@ -76,7 +76,7 @@ public final class ASTNumericLiteral extends AbstractXPathExpr implements Primar
 
 
     /**
-     * Returns the {@linkplain #getDoubleValue() double value} coerced
+     * Returns the {@link #getDoubleValue() double value} coerced
      * into an int.
      */
     public int getIntValue() {

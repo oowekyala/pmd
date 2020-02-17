@@ -10,11 +10,11 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
- * List of arguments of a {@linkplain ASTFunctionCall function call}.
+ * List of arguments of a {@link ASTFunctionCall function call}.
  *
  * <pre>
  *
- * ArgumentsList ::= "(" ({@linkplain ASTArgument Argument} ("," {@linkplain ASTArgument Argument} )*)? ")"
+ * ArgumentsList ::= "(" ({@link ASTArgument Argument} ("," {@link ASTArgument Argument} )*)? ")"
  *
  * </pre>
  */

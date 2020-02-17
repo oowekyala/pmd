@@ -5,8 +5,8 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 /**
- * Sequence expression, grouping {@linkplain ASTSequenceExpr SequenceExpr}
- * and {@linkplain ASTEmptySequenceExpr EmptySequenceExpr} under a common type.
+ * Sequence expression, grouping {@link ASTSequenceExpr SequenceExpr}
+ * and {@link ASTEmptySequenceExpr EmptySequenceExpr} under a common type.
  */
 public interface SequenceExpr extends Expr, Iterable<Expr> {
 

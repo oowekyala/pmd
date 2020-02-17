@@ -10,8 +10,8 @@ package net.sourceforge.pmd.lang.xpath.ast;
  *
  * <pre>
  *
- * FunctionItemExpr ::= {@linkplain ASTNamedFunctionRef NamedFunctionRef}
- *                    | {@linkplain ASTInlineFunctionExpr InlineFunctionExpr}
+ * FunctionItemExpr ::= {@link ASTNamedFunctionRef NamedFunctionRef}
+ *                    | {@link ASTInlineFunctionExpr InlineFunctionExpr}
  *
  * </pre>
  */

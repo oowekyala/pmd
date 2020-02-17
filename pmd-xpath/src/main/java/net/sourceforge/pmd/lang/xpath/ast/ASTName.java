@@ -103,7 +103,7 @@ public final class ASTName extends AbstractXPathNode {
 
     /**
      * Returns the namespace prefix if it is explicitly specified,
-     * e.g. with the syntax "prefix:local". If this is {@linkplain #isUriLiteral() a URI literal},
+     * e.g. with the syntax "prefix:local". If this is {@link #isUriLiteral() a URI literal},
      * then returns the full URI.
      */
     @Nullable
