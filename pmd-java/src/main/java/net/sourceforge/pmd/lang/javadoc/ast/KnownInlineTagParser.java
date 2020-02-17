@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocInheritDoc;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
@@ -31,15 +30,14 @@ enum KnownInlineTagParser implements InlineTagParser {
     LINK("@link") {
         @Override
         public JdocInlineTag parse(String name, MainJdocParser parser) {
-            parser.advance();
-            parser.skipWhitespace();
+            parser.nextNonWs();
             JdocToken firstTok = parser.head().getPrevious();
             assert firstTok != null;
 
             JdocLink tag = new JdocLink(name);
             JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
             if (firstLabelTok != null) {
-                while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
+                while (!parser.tokIsAny(INLINE_TAG_ENDERS) && parser.advance()) {
                     // skip
                 }
                 JdocCommentData label = new JdocCommentData(firstLabelTok, parser.head().prev);
@@ -73,24 +71,23 @@ enum KnownInlineTagParser implements InlineTagParser {
         }
     },
 
-    // TODO
-    //  Displays constant values. When the {@value} tag is used without
-    //  an argument in the documentation comment of a static field, it
-    //  displays the value of that constant
+    /*
+     TODO
+      Displays constant values. When the {@value} tag is used without
+      an argument in the documentation comment of a static field, it
+      displays the value of that constant
+    */
 
     VALUE("@value") {
         @Override
         public JdocInlineTag parse(String name, MainJdocParser parser) {
-            parser.advance();
-            parser.skipWhitespace();
+            parser.nextNonWs();
             JdocToken firstTok = parser.head().getPrevious();
             assert firstTok != null;
 
             JdocValue tag = new JdocValue(name);
-            JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
-            if (firstLabelTok != null) {
-                expectInlineTagEnd(parser, tag);
-            }
+            parser.parseReference(firstTok, tag);
+            expectInlineTagEnd(parser, tag);
             return tag;
         }
 
@@ -154,9 +151,9 @@ enum KnownInlineTagParser implements InlineTagParser {
 
     private static void expectInlineTagEnd(MainJdocParser parser, JdocInlineTag tag) {
         parser.skipWhitespace();
-        if (!parser.tokIs(INLINE_TAG_ENDERS)) {
-            tag.appendChild(new JdocMalformed(JdocTokenType.EMPTY_SET, parser.head()));
-            while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
+        if (!parser.tokIsAny(INLINE_TAG_ENDERS)) {
+            tag.newError(EnumSet.of(INLINE_TAG_END), parser.head());
+            while (!parser.tokIsAny(INLINE_TAG_ENDERS) && parser.advance()) {
                 // skip
             }
         }

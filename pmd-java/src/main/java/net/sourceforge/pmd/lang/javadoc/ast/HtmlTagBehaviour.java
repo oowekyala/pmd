@@ -28,7 +28,6 @@ import net.sourceforge.pmd.lang.javadoc.ast.HtmlTagBehaviour.TagBehaviourImpl.Vo
 enum HtmlTagBehaviour {
     UNKNOWN(autoclosedBy(false)),
 
-
     AREA(voidElement()),
     BASE(voidElement()),
     BR(voidElement()),

@@ -65,7 +65,7 @@ class JdocRefParser extends BaseJavadocParser {
             classRef = new JdocClassRef(JdocToken.implicitBefore(TYPE_REFERENCE, head()));
         }
 
-        if (tokIs(REF_POUND)) {
+        if (tokIs(REF_POUND)) { // #
 
             if (advance() && tokIs(MEMBER_REFERENCE)) {
                 JdocToken nametok = head();
@@ -92,7 +92,7 @@ class JdocRefParser extends BaseJavadocParser {
         final EnumSet<JdocTokenType> skipped = EnumSet.of(WHITESPACE, REF_COMMA, BAD_CHAR);
 
         while (advance()) {
-            while (tokIs(skipped) && advance()) {
+            while (tokIsAny(skipped) && advance()) {
                 // skip
             }
 
@@ -100,7 +100,7 @@ class JdocRefParser extends BaseJavadocParser {
                 method.jjtAddChild(new JdocClassRef(head()), method.jjtGetNumChildren() + 1);
             }
             advance();
-            while (tokIs(skipped) && advance()) {
+            while (tokIsAny(skipped) && advance()) {
                 ;  // skip
             }
             if (tokIs(REF_RPAREN)) {

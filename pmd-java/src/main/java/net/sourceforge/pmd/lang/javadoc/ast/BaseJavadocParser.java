@@ -36,7 +36,7 @@ class BaseJavadocParser {
         return tokens.head() != null && tokens.head().getKind() == ttype;
     }
 
-    protected boolean tokIs(EnumSet<JdocTokenType> ttype) {
+    protected boolean tokIsAny(EnumSet<JdocTokenType> ttype) {
         return tokens.head() != null && ttype.contains(tokens.head().getKind());
     }
 

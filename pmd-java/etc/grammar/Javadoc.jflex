@@ -59,9 +59,10 @@ ENTITY=                 "&" [:jletter:]+ ";"        // named
 // Distinction is semantic
 HTML_TAG_NAME=          [^\s\"\'<>/=]+
 HTML_ATTR_NAME=         [^\s\"\'<>/=]+
-UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
+UNQUOTED_ATTR_VALUE=    [^\s\"\'`<>/=]+
 
 JAVA_IDENT=[.[:jletter:]]+
+IDENT_START=[:jletter:]
 
 %%
 
@@ -92,6 +93,7 @@ JAVA_IDENT=[.[:jletter:]]+
 
 <HTML_ATTR_VAL_DQ>      [\"]                   { yybegin(HTML_ATTRS);        return JdocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL_SQ>      [\']                   { yybegin(HTML_ATTRS);        return JdocTokenType.HTML_SQUOTE; }
+// TODO attribute may span several lines, may contain inline tag
 <HTML_ATTR_VAL_DQ>      [^\"&\R]+              {                             return JdocTokenType.HTML_ATTR_VAL; }
 <HTML_ATTR_VAL_SQ>      [^\'&\R]+              {                             return JdocTokenType.HTML_ATTR_VAL; }
 
@@ -164,7 +166,7 @@ JAVA_IDENT=[.[:jletter:]]+
 
 <REF_START> {
                         {JAVA_IDENT}           {                              return JdocTokenType.TYPE_REFERENCE; }
-                        "#" / {JAVA_IDENT}     { yybegin(REF_MEMBER);         return JdocTokenType.REF_POUND;      }
+                        "#" / {IDENT_START}    { yybegin(REF_MEMBER);         return JdocTokenType.REF_POUND;      }
                         {WS_CHAR}+             { yybegin(REF_REST);           return JdocTokenType.WHITESPACE;     }
                         [^]                    { yybegin(REF_REST_WS);        return JdocTokenType.BAD_CHAR;       }
 }

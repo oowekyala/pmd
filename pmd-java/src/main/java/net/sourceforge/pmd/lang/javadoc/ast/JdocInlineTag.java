@@ -83,8 +83,8 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         }
 
         /**
-         * Returns true if this is an {@code {@literal }} tag, false if this
-         * is an {@code {@code }} tag.
+         * Returns true if this is an {@code {@literal }} tag, false if
+         * this is an {@code {@code }} tag.
          */
         public boolean isLiteral() {
             return !isCode();
@@ -97,12 +97,10 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     }
 
     /**
-     * A {@code {@link }} or {@code {@linkplain }} tag.
-     * Whether this is one or the other can be queried with
-     * {@link #isPlain()}. The only
-     * difference is that {@code {@link }} is rendered
-     * with a monospace font, while {@code {@linkplain }} is
-     * not.
+     * A {@code {@link }} or {@code {@linkplain }} tag. Whether this is
+     * one or the other can be queried with {@link #isPlain()}. The only
+     * difference is that {@code {@link }} is rendered with a monospace
+     * font, while {@code {@linkplain }} is not.
      */
     public static class JdocLink extends JdocInlineTag {
 
@@ -138,7 +136,15 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     }
 
     /**
-     * A {@code {@value }} tag.
+     * A {@code {@value }} tag displays constant values. When the
+     * tag is used without an argument in the documentation
+     * comment of a static field, it displays the value of that constant.
+     *
+     * <p>Semantic errors:
+     * <ul>
+     * <li>Tag does not refer to a field of this compilation unit
+     * <li>Tag has no ref and is not on a constant field
+     * </ul>
      */
     public static class JdocValue extends JdocInlineTag {
 
@@ -147,8 +153,8 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         }
 
         /**
-         * Returns the ref, or null if this node has none and is thus
-         * invalid wrt to javadoc spec. This should always be a {@link JdocFieldRef}.
+         * Returns the ref, or null if this node has none.
+         * This should always be a {@link JdocFieldRef}.
          */
         @Nullable
         JdocRef getRef() {
