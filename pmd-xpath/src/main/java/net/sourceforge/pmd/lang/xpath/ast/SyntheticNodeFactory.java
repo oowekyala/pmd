@@ -15,12 +15,6 @@ import java.util.stream.Collectors;
  */
 public final class SyntheticNodeFactory {
 
-
-    private SyntheticNodeFactory() {
-
-    }
-
-
     /**
      * Converts the given java value to an AST node if possible and returns it.
      *
@@ -30,13 +24,13 @@ public final class SyntheticNodeFactory {
      *
      * @throws IllegalArgumentException If the value type is not supported
      */
-    public static Expr getNodeForValue(Object value) {
+    public Expr getNodeForValue(Object value) {
         if (value == null) {
             return new ASTEmptySequenceExpr();
         } else if (value instanceof String || value instanceof Character) {
             return new ASTStringLiteral(String.valueOf(value));
         } else if (value instanceof Boolean) {
-            return SyntheticNodeFactory.synthesizeBooleanLiteral((Boolean) value);
+            return synthesizeBooleanLiteral((Boolean) value);
         } else if (value instanceof Number) {
             return new ASTNumericLiteral(value.toString());
         } else if (value instanceof Pattern) {
@@ -48,29 +42,21 @@ public final class SyntheticNodeFactory {
             throw new IllegalArgumentException(
                 "Unable to create ValueRepresentation for value of type: " + value.getClass());
         }
-
-
     }
 
 
-    /**
-     * Returns a synthesized node representing a boolean value.
-     * These are function calls.
-     *
-     * @param value Boolean value to represent
-     */
-    private static PrimaryExpr synthesizeBooleanLiteral(boolean value) {
+    private PrimaryExpr synthesizeBooleanLiteral(boolean value) {
         return new ASTFunctionCall(new ASTName(String.valueOf(value)), new ASTArgumentList());
     }
 
 
-    public static Expr convertListToSequence(List<?> value) {
+    public Expr convertListToSequence(List<?> value) {
         if (value.isEmpty()) {
             return new ASTEmptySequenceExpr();
         } else if (value.size() == 1) {
             return getNodeForValue(value.get(0));
         } else {
-            List<Expr> elts = value.stream().map(SyntheticNodeFactory::getNodeForValue).collect(Collectors.toList());
+            List<Expr> elts = value.stream().map(this::getNodeForValue).collect(Collectors.toList());
             ASTSequenceExpr seq = new ASTSequenceExpr(elts);
             seq.bumpParenDepth();
             return seq;

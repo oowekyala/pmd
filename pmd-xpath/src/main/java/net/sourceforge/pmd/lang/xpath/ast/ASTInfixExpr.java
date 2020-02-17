@@ -43,7 +43,6 @@ public final class ASTInfixExpr extends AbstractXPathExpr implements Expr {
         return op;
     }
 
-
     @Override
     public NodeStream<Expr> children() {
         return (NodeStream<Expr>) super.children();

@@ -33,6 +33,17 @@ public interface XPathNode extends Node {
     }
 
 
+    /**
+     * Dumps this tree to a parsable expression string.
+     * Parsing the result should produce an equivalent tree.
+     */
+    default String toExpressionString() {
+        StringBuilder sb = new StringBuilder();
+        this.jjtAccept(new ExpressionMakerVisitor(), sb);
+        return sb.toString();
+    }
+
+
     @Override
     XPathNode getParent();
 

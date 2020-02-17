@@ -12,11 +12,6 @@ import java.util.Map;
  */
 public interface XPathQuery {
 
-    /**
-     * Returns a parsable string representing this expression.
-     */
-    String toParsableString();
-
 
     /**
      * Retrieves the queries to be used by a rulechain pass.

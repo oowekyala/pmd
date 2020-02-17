@@ -1,11 +1,8 @@
 package net.sourceforge.pmd.lang.xpath.opti
 
-import io.kotlintest.should
 import io.kotlintest.shouldBe
-import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.Assertions
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.matchNode
 import net.sourceforge.pmd.lang.xpath.ast.*
 import net.sourceforge.pmd.properties.IntegerProperty
 import net.sourceforge.pmd.properties.PropertyDescriptor
@@ -17,21 +14,19 @@ class PropertyInliningTest : XPathParserTestSpec({
 
     parserTest("Test IntProperty") {
 
-        fun matcherWithHole(hole: NodeSpec<ASTInfixExpr>): Assertions<Node?> = matchNode<ASTXPathRoot> {
-            child<ASTPathExpr> {
+        fun matcherWithHole(hole: NodeSpec<ASTInfixExpr>): Assertions<String> = matchExpr<ASTPathExpr> {
 
-                child<ASTAxisStep> {
-                    child<ASTExactNameTest> {
-                        it.nameImage shouldBe "abc"
-                        child<ASTName> { }
-                    }
-                    child<ASTPredicate> {
-                        infixExpr(XpBinaryOp.EQ) {
+            child<ASTAxisStep> {
+                child<ASTExactNameTest> {
+                    it.nameImage shouldBe "abc"
+                    child<ASTName> { }
+                }
+                child<ASTPredicate> {
+                    infixExpr(XpBinaryOp.EQ) {
 
-                            child<ASTPathExpr>(ignoreChildren = true) {}
+                        child<ASTPathExpr>(ignoreChildren = true) {}
 
-                            hole() // This node is replaced
-                        }
+                        hole() // This node is replaced
                     }
                 }
             }
@@ -39,7 +34,7 @@ class PropertyInliningTest : XPathParserTestSpec({
 
         val expr = "//abc[@Size=\$int]"
 
-        parseXPathRoot(expr) should matcherWithHole {
+        expr should matcherWithHole {
             child<ASTVarRef> {
                 it.varName shouldBe "int"
                 child<ASTName> { }
@@ -53,7 +48,7 @@ class PropertyInliningTest : XPathParserTestSpec({
         val query = XPathOptimisationFacade().makeQuery(expr, pMap) as XPathQueryImpl
         query.optimise()
 
-        query.root should matcherWithHole {
+        query.root.toExpressionString() should matcherWithHole {
             child<ASTNumericLiteral> {
                 it.intValue shouldBe 2
                 it.isIntegerLiteral shouldBe true

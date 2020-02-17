@@ -4,8 +4,7 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.List;
-
+import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.ParseException;
 
 // @formatter:off
@@ -78,6 +77,10 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
         return axis;
     }
 
+    public void setAxis(Axis axis) {
+        this.axis = axis;
+    }
+
 
     /**
      * Returns true if this step uses the shorthand "..".
@@ -148,8 +151,8 @@ public final class ASTAxisStep extends AbstractXPathNode implements StepExpr {
      * Gets the list of predicates of this step.
      */
     @Override
-    public List<ASTPredicate> getPredicates() {
-        return findChildrenOfType(ASTPredicate.class);
+    public NodeStream<ASTPredicate> getPredicates() {
+        return children(ASTPredicate.class);
     }
 
 

@@ -34,7 +34,6 @@ public class XPathParser extends AbstractParser {
         return new XPathTokenManager(source);
     }
 
-
     @Override
     public Node parse(String fileName, Reader source) throws ParseException {
         AbstractTokenManager.setFileName(fileName);

@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.xpath.ast;
 
 
-import java.util.List;
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
@@ -38,7 +38,7 @@ public final class ASTPostfixExpr extends AbstractXPathExpr implements Expr, Ste
 
 
     @Override
-    public List<ASTPredicate> getPredicates() {
-        return findChildrenOfType(ASTPredicate.class);
+    public NodeStream<ASTPredicate> getPredicates() {
+        return children(ASTPredicate.class);
     }
 }

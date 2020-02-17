@@ -170,7 +170,7 @@ class PathExprTest : XPathParserTestSpec({
                     }
                 }
 
-                it.predicates.shouldContainExactly(pred)
+                it.predicates.toList().shouldContainExactly(pred)
             }
         }
     }

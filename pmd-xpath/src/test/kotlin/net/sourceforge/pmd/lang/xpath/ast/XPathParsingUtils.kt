@@ -1,5 +1,8 @@
 package net.sourceforge.pmd.lang.xpath.ast
 
+import com.github.oowekyala.treeutils.matchers.MatchingConfig
+import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
+import com.github.oowekyala.treeutils.printers.KotlintestBeanTreePrinter
 import io.kotlintest.Failures
 import io.kotlintest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.LanguageRegistry
@@ -8,8 +11,8 @@ import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.Assertions
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
+import net.sourceforge.pmd.lang.ast.test.NodeTreeLikeAdapter
 import net.sourceforge.pmd.lang.ast.test.matchNode
-import net.sourceforge.pmd.lang.ast.test.shouldMatchNode
 import net.sourceforge.pmd.lang.xpath.XPathLanguageModule
 import java.io.StringReader
 import kotlin.reflect.KClass
@@ -47,6 +50,13 @@ inline infix fun <T> (() -> T).catchAnyParserError(handler: (Exception) -> T): T
             handler(ex)
         }
 
+
+val XPathMatchingConfig = MatchingConfig(
+        adapter = NodeTreeLikeAdapter,
+        errorPrinter = KotlintestBeanTreePrinter(NodeTreeLikeAdapter),
+        implicitAssertions = { /* disable text range assertions, don't play well with synthetic nodes */ }
+)
+
 open class ParserTestCtx(private val xpathVersion: XPathVersion = XPathVersion.Latest) {
 
     /**
@@ -55,7 +65,7 @@ open class ParserTestCtx(private val xpathVersion: XPathVersion = XPathVersion.L
      */
     inline fun <reified N : XPathNode> matchExpr(ignoreChildren: Boolean = false,
                                                  noinline nodeSpec: NodeSpec<N>): Assertions<String> =
-            { parseXPathRoot(it).lastChild.shouldMatchNode(ignoreChildren, nodeSpec) }
+            { parseXPathRoot(it).mainExpr.baseShouldMatchSubtree(XPathMatchingConfig, ignoreChildren, nodeSpec) }
 
     fun throwParseFailure(): Assertions<String> =
             {
@@ -118,9 +128,7 @@ open class ParserTestCtx(private val xpathVersion: XPathVersion = XPathVersion.L
 
     fun parseXPathRoot(expr: String): ASTXPathRoot {
         val lvh = getLangVersionHandler(xpathVersion)
-        val rootNode = lvh.getParser(lvh.defaultParserOptions).parse(":test:", StringReader(expr)) as ASTXPathRoot
-        lvh.symbolFacade.start(rootNode)
-        return rootNode
+        return lvh.getParser(lvh.defaultParserOptions).parse(":test:", StringReader(expr)) as ASTXPathRoot
     }
 }
 

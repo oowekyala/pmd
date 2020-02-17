@@ -4,6 +4,11 @@
 
 package net.sourceforge.pmd.lang.xpath.opti;
 
+import static net.sourceforge.pmd.lang.xpath.ast.Axis.CHILD;
+import static net.sourceforge.pmd.lang.xpath.ast.Axis.SELF;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -14,7 +19,6 @@ import net.sourceforge.pmd.lang.xpath.ast.ASTInfixExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr;
 import net.sourceforge.pmd.lang.xpath.ast.ASTPathExpr.PathAnchor;
 import net.sourceforge.pmd.lang.xpath.ast.ASTVarRef;
-import net.sourceforge.pmd.lang.xpath.ast.ASTWildcardNameTest;
 import net.sourceforge.pmd.lang.xpath.ast.ASTXPathRoot;
 import net.sourceforge.pmd.lang.xpath.ast.Expr;
 import net.sourceforge.pmd.lang.xpath.ast.StepExpr;
@@ -22,19 +26,19 @@ import net.sourceforge.pmd.lang.xpath.ast.SyntheticNodeFactory;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 
-/**
- *
- */
-@SuppressWarnings("PMD")
 class XPathQueryImpl implements XPathQuery {
 
+    private static final String ROOT_NAME = "";
     private final ASTXPathRoot root;
     private final Map<PropertyDescriptor<?>, Object> propertyValues;
+    private final SyntheticNodeFactory factory;
+    private Map<String, String> rulechains;
 
 
     XPathQueryImpl(ASTXPathRoot root, Map<PropertyDescriptor<?>, Object> propertyValues) {
         this.root = Objects.requireNonNull(root);
         this.propertyValues = Objects.requireNonNull(propertyValues);
+        this.factory = new SyntheticNodeFactory();
 
         optimise();
     }
@@ -64,51 +68,63 @@ class XPathQueryImpl implements XPathQuery {
 
         for (ASTVarRef ref : root.getFreeVarRefs()) {
             Object value = propNamesToValues.get(ref.getVarName());
-            Expr node = SyntheticNodeFactory.getNodeForValue(value);
+            Expr node = factory.getNodeForValue(value);
             ref.replaceWith(node);
         }
     }
 
 
     @Override
-    public String toParsableString() {
-        return root.toExpressionString();
+    public Map<String, String> getRulechainQueries() {
+        if (rulechains == null) {
+            rulechains = decomposeRulechain(root);
+        }
+        return rulechains;
     }
 
+    private Map<String, String> decomposeRulechain(ASTXPathRoot root) {
+        // root is ""
+        Map<String, String> queriesByName = new HashMap<>();
+        final Deque<Expr> pending = new ArrayDeque<>();
+        pending.push(root.getMainExpr());
 
-    @Override
-    public Map<String, String> getRulechainQueries() {
-        // From now on, we assume:
-        // * all rulechain queries have been floated to the top level UnionExpr
-        // * every alternative of the top level union is a PathExpr starting with a nametest
+        while (!pending.isEmpty()) {
+            final Expr node = pending.pop();
 
-        Map<String, String> rulechains = new HashMap<>();
+            // Must be a PathExpr... that is something like //Type
+            exprOk:
+            if (node instanceof ASTPathExpr) {
+                final ASTPathExpr pathExpr = (ASTPathExpr) node;
 
-        Expr main = root.getMainExpr();
-
-        if (main instanceof ASTInfixExpr && ((ASTInfixExpr) main).getOperator().isUnion()) {
-            for (Expr expr : ((ASTInfixExpr) main).children()) {
-                if (expr instanceof ASTPathExpr) {
-                    StepExpr firstStep = ((ASTPathExpr) expr).getFirstStep();
-                    if (firstStep.isAxisStep()) {
-                        ASTAxisStep axisStep = (ASTAxisStep) firstStep;
-                        if (axisStep.getNodeTest() instanceof ASTExactNameTest) {
-                            String nodeName = ((ASTExactNameTest) axisStep.getNodeTest()).getNameImage();
-                            ((ASTPathExpr) expr).setPathAnchor(PathAnchor.RELATIVE);
-
-                        } else if (axisStep.getNodeTest() instanceof ASTWildcardNameTest) {
-
-                        } else {
-                            // Not a NameTest
-                        }
-                    } else {
-
-                    }
+                if (pathExpr.getPathAnchor() != PathAnchor.DESCENDANT_OR_ROOT) {
+                    break exprOk;
                 }
-            }
-        }
+                StepExpr firstStep = pathExpr.getFirstStep();
+                if (!(firstStep instanceof ASTAxisStep)) {
+                    break exprOk;
+                }
+                ASTAxisStep firstAxis = (ASTAxisStep) firstStep;
+                if (firstAxis.getAxis() != CHILD || !(firstAxis.getNodeTest() instanceof ASTExactNameTest)) {
+                    break exprOk;
+                }
 
-        return null;
+                // alles gut
+                firstAxis.setAxis(SELF);
+                pathExpr.setPathAnchor(PathAnchor.RELATIVE);
+                ASTExactNameTest nameTest = (ASTExactNameTest) firstAxis.getNodeTest();
+                queriesByName.put(nameTest.getNameNode().getLocalName(), pathExpr.toExpressionString());
+                continue;
+            } else if (node instanceof ASTInfixExpr && ((ASTInfixExpr) node).getOperator().isUnion()) {
+                // Or a UnionExpr, that is
+                // something like //TypeA | //TypeB
+                ASTInfixExpr unionExpr = (ASTInfixExpr) node;
+                unionExpr.children().forEach(pending::push);
+                continue;
+            }
+
+            queriesByName.put(ROOT_NAME, node.toExpressionString());
+        }
+        return queriesByName;
     }
 
 

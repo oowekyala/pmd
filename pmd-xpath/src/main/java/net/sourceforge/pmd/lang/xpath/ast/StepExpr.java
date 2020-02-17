@@ -4,8 +4,7 @@
 
 package net.sourceforge.pmd.lang.xpath.ast;
 
-import java.util.Collections;
-import java.util.List;
+import net.sourceforge.pmd.lang.ast.NodeStream;
 
 
 /**
@@ -41,8 +40,8 @@ public interface StepExpr extends XPathNode {
     /**
      * Gets the predicates applying to this step.
      */
-    default List<ASTPredicate> getPredicates() {
-        return Collections.emptyList();
+    default NodeStream<ASTPredicate> getPredicates() {
+        return NodeStream.empty();
     }
 
 

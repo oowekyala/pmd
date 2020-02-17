@@ -6,6 +6,8 @@ package net.sourceforge.pmd.lang.xpath.ast;
 
 import java.util.Iterator;
 
+import net.sourceforge.pmd.lang.ast.NodeStream;
+
 
 /**
  * Path expression. A path is a sequence of step expressions.
@@ -75,6 +77,9 @@ public final class ASTPathExpr extends AbstractXPathExpr implements Iterable<Ste
         return (StepExpr) getChild(0);
     }
 
+    public NodeStream<StepExpr> getSteps() {
+        return children(StepExpr.class);
+    }
 
     @Override
     public <T> void jjtAccept(XPathSideEffectingVisitor<T> visitor, T data) {

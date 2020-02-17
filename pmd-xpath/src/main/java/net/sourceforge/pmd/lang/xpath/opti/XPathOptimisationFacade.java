@@ -21,7 +21,6 @@ public class XPathOptimisationFacade {
 
     private final LanguageVersion version;
 
-
     public XPathOptimisationFacade(LanguageVersion version) {
         this.version = version;
     }
@@ -30,18 +29,16 @@ public class XPathOptimisationFacade {
         version = LanguageRegistry.findLanguageByTerseName("xpath").getDefaultVersion();
     }
 
-    private ASTXPathRoot parse(String expression) {
-        LanguageVersionHandler lvh = version.getLanguageVersionHandler();
-        ASTXPathRoot root = (ASTXPathRoot) lvh.getParser(lvh.getDefaultParserOptions()).parse(":query:", new StringReader(expression));
-        lvh.getSymbolFacade().start(root);
-        return root;
-    }
-
-
     public XPathQuery makeQuery(String expression,
                                 Map<PropertyDescriptor<?>, Object> propertyMap) {
 
         return new XPathQueryImpl(parse(expression), propertyMap);
+    }
+
+    private ASTXPathRoot parse(String expression) {
+        LanguageVersionHandler lvh = version.getLanguageVersionHandler();
+
+        return (ASTXPathRoot) lvh.getParser(lvh.getDefaultParserOptions()).parse(":query:", new StringReader(expression));
     }
 
 

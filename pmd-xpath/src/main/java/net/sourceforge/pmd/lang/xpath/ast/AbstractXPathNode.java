@@ -18,6 +18,30 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
         super(id);
     }
 
+    @Override
+    public int getBeginLine() {
+        return firstToken == null ? 1 : super.getBeginLine();
+    }
+
+    @Override
+    public int getEndLine() {
+        return firstToken == null ? 1 : super.getEndLine();
+    }
+
+    @Override
+    public int getBeginColumn() {
+        return firstToken == null ? 1 : super.getBeginColumn();
+    }
+
+    @Override
+    public int getEndColumn() {
+        return firstToken == null ? 1 : super.getEndColumn();
+    }
+
+    void appendChild(XPathNode node) {
+        jjtAddChild(node, getNumChildren());
+    }
+
     /**
      * Replaces this node with the given node in the children of its parent.
      * This can lead to inconsistencies and runtime failures if the node is
@@ -87,16 +111,6 @@ abstract class AbstractXPathNode extends AbstractJjtreeNode<XPathNode> implement
         }
     }
 
-
-    /**
-     * Dumps this tree to a parsable expression string.
-     * Parsing the result should produce an equivalent tree.
-     */
-    public String toExpressionString() {
-        StringBuilder sb = new StringBuilder();
-        this.jjtAccept(new ExpressionMakerVisitor(), sb);
-        return sb.toString();
-    }
 
 
     @Override
