@@ -8,9 +8,12 @@ import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.dfa.DataFlowNode;
+import net.sourceforge.pmd.util.DataMap;
+import net.sourceforge.pmd.util.DataMap.DataKey;
 
 class AbstractJavadocNode implements JavadocNode {
+
+    private final DataMap<DataKey<?, ?>> userMap = DataMap.newDataMap();
 
     private static final AbstractJavadocNode[] EMPTY_ARRAY = new AbstractJavadocNode[0];
     private final JavadocNodeId id;
@@ -56,23 +59,29 @@ class AbstractJavadocNode implements JavadocNode {
         jjtAddChild(node, jjtGetNumChildren());
     }
 
+
     @Override
-    public void jjtSetChildIndex(int index) {
-        this.childIndex = index;
+    public AbstractJavadocNode getParent() {
+        return parent;
     }
 
     @Override
-    public int jjtGetChildIndex() {
+    public int getIndexInParent() {
         return childIndex;
     }
 
     @Override
-    public JavadocNode jjtGetChild(int index) {
+    public JavadocNode getChild(int index) {
         return children[index];
     }
 
     @Override
-    public int jjtGetNumChildren() {
+    public JavadocNode jjtGetChild(int index) {
+        return getChild(index);
+    }
+
+    @Override
+    public int getNumChildren() {
         return children.length;
     }
 
@@ -100,6 +109,11 @@ class AbstractJavadocNode implements JavadocNode {
     }
 
     @Override
+    public DataMap<DataKey<?, ?>> getUserMap() {
+        return userMap;
+    }
+
+    @Override
     public String getText() {
         return getFirstToken().rangeTo(getLastToken()).map(JdocToken::getImage).collect(Collectors.joining());
     }
@@ -124,12 +138,6 @@ class AbstractJavadocNode implements JavadocNode {
         return parent;
     }
 
-
-    @Override
-    public void jjtOpen() {
-
-    }
-
     @Override
     public void jjtClose() {
         if (lastToken == null && jjtGetNumChildren() > 0) {
@@ -152,56 +160,6 @@ class AbstractJavadocNode implements JavadocNode {
 
 
     // unsupported stuff, fuck those methods
-
-    @Override
-    public DataFlowNode getDataFlowNode() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setDataFlowNode(DataFlowNode dataFlowNode) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object getUserData() {
-        return this.userData;
-    }
-
-    @Override
-    public void setUserData(Object userData) {
-        this.userData = userData;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeChildAtIndex(int childIndex) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getImage() {
-        return null;
-    }
-
-    @Override
-    public int jjtGetId() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setImage(String image) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasImageEqualTo(String image) {
-        return false;
-    }
 
 
     @Override

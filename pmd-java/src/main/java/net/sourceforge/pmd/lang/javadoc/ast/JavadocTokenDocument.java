@@ -9,7 +9,7 @@ import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 /**
  * Token document for Javadoc.
  */
-public final class JavadocTokenDocument extends TokenDocument<JavadocToken> {
+public final class JavadocTokenDocument extends TokenDocument<JdocToken> {
 
     JavadocTokenDocument(String fullText) {
         super(fullText);
@@ -17,7 +17,7 @@ public final class JavadocTokenDocument extends TokenDocument<JavadocToken> {
 
 
     @Override
-    public JavadocToken getFirstToken() {
+    public JdocToken getFirstToken() {
         return null; // TODO
     }
 }
