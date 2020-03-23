@@ -57,28 +57,31 @@ it's not one of {% jdoc jast::ASTClassOrInterfaceDeclaration %}, {% jdoc jast::A
 
 ## For Java Rules
 
-The static façade class {% jdoc jmx::JavaMetrics %} is the single entry point to compute metrics in the Java framework.
+The static façade class {% jdoc coremx::MetricsUtil %} is the single entry point to compute metrics for all languages.
 
-This class provides the method `get` and its overloads. The following sections describes the interface of this class.
+This class provides the method `computeMetric` and other utility methods. The following sections describes the interface of this class.
 
 ### Basic usage
 
-The simplest overloads of `JavaMetrics.get` take two parameters: **a `MetricKey` and a node of the corresponding type.**
+The simplest overload of `MetricsUtil.computeMetric` take two parameters: **a `MetricKey` and a node of the corresponding type.**
 Say you want to write a rule to report methods that have a high cyclomatic complexity. In your rule's visitor, you
 can get the value of Cyclo for a method node like so:
 ```java
 public Object visit(ASTMethodDeclaration method, Object data) {
-  int cyclo = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, method);
-  if (cyclo > 10) {
-    // add violation
+  if (JavaOperationMetricKey.CYCLO.supports(node)) {
+    int cyclo = (int) MetricsUtil.computeMetric(JavaOperationMetricKey.CYCLO, method);
+    if (cyclo > 10) {
+      // add violation
+    }
+    return data;
   }
-  return data;
 }
 ```
 
 The same goes for class metrics: you select one among `JavaClassMetricKey`'s constants and pass it along with the node
-to `JavaMetrics.get`.
+to `MetricsUtil.computeMetric`.
 
+<!-- This visitor will be removed in 7.0.0 because delegating to supertypes will be made the default visitor behaviour. -->
 {%include tip.html
            content="A specific base rule class (`AbstractJavaMetricsRule`) exists
            to e.g. check constructors and method nodes completely alike. This comes
@@ -89,19 +92,8 @@ to `JavaMetrics.get`.
 Metrics are not necessarily computable on any node of the type they handle. For example, Cyclo cannot be computed on
 abstract methods. Metric keys provides a {% jdoc !a!coremx::MetricKey#supports(coreast::Node) %} boolean method
 to find out if the metric can be computed on
-the specified node. **If the metric cannot be computed on the given node, `JavaMetrics.get` will return `Double.NaN` .**
-If you're concerned about that, you can condition your call on whether the node is supported or not:
-```java
-public Object visit(ASTMethodDeclaration method, Object data) {
-  if (JavaOperationMetricKey.CYCLO.supports(node)) {
-    int cyclo = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, method);
-    if (cyclo > 10) {
-      // add violation
-    }
-    return data;
-  }
-}
-```
+the specified node. **If the metric cannot be computed on the given node, `MetricsUtil.computeMetric` will throw an exception.** You
+should check if the metric supports the node before calling the method.
 
 ### Metric options
 
@@ -114,10 +106,13 @@ utility method `ofOptions` to get a `MetricOptions` bundle from a collection or 
 pass this bundle as a parameter to `JavaMetrics.get`:
 ```java
 public Object visit(ASTMethodDeclaration method, Object data) {
-  int cyclo = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, method,
-                                    MetricOptions.ofOptions(CycloOptions.IGNORE_BOOLEAN_PATHS));
-  if (cyclo > 10) {
-      // add violation
+  if (JavaOperationMetricKey.CYCLO.supports(node)) {
+      int cyclo = (int) MetricsUtil.computeMetric(JavaOperationMetricKey.CYCLO,
+                                                  method,
+                                                  MetricOptions.ofOptions(CycloOptions.IGNORE_BOOLEAN_PATHS));
+      if (cyclo > 10) {
+          // add violation
+      }
   }
     return data;
 }
@@ -130,22 +125,19 @@ for an example usage.
 
 ### Result options
 
-The Metrics API also gives you the possibility to aggregate the result of an operation metric on all operations of a
-class very simply. You can for example get the highest value of the metric over a class that way:
-```java
-public Object visit(ASTClassOrInterfaceDeclaration clazz, Object data) {
-  int highest = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, clazz,
-                                      ResultOption.HIGHEST);
-  if (highest > 10) {
-      // add violation
-  }
-    return data;
-}
-```
 
-Notice that **we use an operation metric and a class node**. The `ResultOption` parameter controls what result will be
-computed: you can choose among `HIGHEST`, `SUM` and `AVERAGE`. You can use metric options together with a result
-option too.
+{%include warning.html
+           content="The API described in this section will change in PMD 7.0.0.
+                    ResultOption will be removed, and the method `MetricsUtil::computeAggregate`
+                    Will be renamed `computeStatistics`, returning a `DoubleSummaryStatistics`." %}
+
+The Metrics API also gives you the possibility to aggregate the result of a metric over a collection
+ of nodes very simply. You can for example get the highest value of the metric over a class that way:
+```java
+  int highest = (int) MetricsUtil.computeAggregate(JavaOperationMetricKey.CYCLO,
+                                                   listOfMethods,
+                                                   ResultOption.HIGHEST);
+```
 
 ### Complete use case
 
@@ -172,7 +164,7 @@ public class CycloRule extends AbstractJavaMetricsRule {
   }
 
   @Override
-  public Object visit(ASTCompilationUnit node, Object data) {
+  public void start(RuleContext context) {
     options = getProperty(COUNT_BOOLEAN_PATHS)
               ? MetricOptions.ofOptions(CycloOptions.IGNORE_BOOLEAN_PATHS)
               : MetricOptions.emptyOptions();
@@ -180,8 +172,10 @@ public class CycloRule extends AbstractJavaMetricsRule {
 
   @Override
   public Object visit(ASTAnyTypeDeclaration clazz, Object data) {
-    int total = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, clazz,
-                                      options, ResultOption.SUM);
+    int total = (int) MetricsUtil.computeAggregate(JavaOperationMetricKey.CYCLO,
+                                                   getMethodsAndCtors(clazz),
+                                                   options,
+                                                   ResultOption.SUM);
 
     if (total > 50) {
      // add violation
@@ -190,12 +184,22 @@ public class CycloRule extends AbstractJavaMetricsRule {
     return data;
   }
 
+  // note: in PMD 7.0.0, this will be a as simple as return clazz.getDeclarations().filterIs(ASTMethodOrConstructorDeclaration.class);
+  private static Iterable<ASTMethodOrConstructorDeclaration> getMethodsAndCtors(ASTAnyTypeDeclaration clazz) {
+    return clazz.getDeclarations().stream()
+                                  .map(ASTAnyTypeBodyDeclaration::getDeclarationNode)
+                                  .filter(it -> it instanceof ASTMethodOrConstructorDeclaration)
+                                  .map(it -> (ASTMethodOrConstructorDeclaration) it)
+                                  .collect(Collectors.toList());
+  }
+
   @Override
   public Object visit(ASTMethodDeclaration method, Object data) {
-    int cyclo = (int) JavaMetrics.get(JavaOperationMetricKey.CYCLO, method,
-                                      options);
-    if (cyclo > 10) { // this is safe if the node is not supported, as (Double.NaN > 10) == false
-      // add violation
+    if (JavaOperationMetricKey.CYCLO.supports(method)) {
+        int cyclo = (int) MetricsUtil.computeMetric(JavaOperationMetricKey.CYCLO, method, options);
+        if (cyclo > 10) {
+          // add violation
+        }
     }
     return data;
   }
