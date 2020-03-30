@@ -81,7 +81,9 @@ public class LanguageLevelChecker<T> {
 
     public void check(JavaNode node) {
         T accumulator = reportingStrategy.createAccumulator();
-        node.jjtAccept(visitor, accumulator);
+        for (Node n : node.descendants().crossFindBoundaries()) {
+            ((JavaNode) n).jjtAccept(visitor, accumulator);
+        }
         reportingStrategy.done(accumulator);
     }
 
@@ -248,6 +250,11 @@ public class LanguageLevelChecker<T> {
     private class CheckVisitor extends SideEffectingVisitorAdapter<T> {
 
         @Override
+        public void visit(JavaNode node, T data) {
+            // don't recurse
+        }
+
+        @Override
         public void visit(ASTStringLiteral node, T data) {
             if (node.isStringLiteral() && SPACE_ESCAPE_PATTERN.matcher(node.getImage()).find()) {
                 check(node, PreviewFeature.SPACE_STRING_ESCAPES, data);
@@ -255,7 +262,6 @@ public class LanguageLevelChecker<T> {
             if (node.isTextBlock()) {
                 check(node, PreviewFeature.TEXT_BLOCK_LITERALS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
@@ -263,13 +269,11 @@ public class LanguageLevelChecker<T> {
             if (node.isStatic()) {
                 check(node, RegularLanguageFeature.STATIC_IMPORT, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTYieldStatement node, T data) {
             check(node, PreviewFeature.YIELD_STATEMENTS, data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -277,19 +281,16 @@ public class LanguageLevelChecker<T> {
             if (node.getNumChildren() > 0) {
                 check(node, PreviewFeature.BREAK__WITH__VALUE_STATEMENTS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTSwitchExpression node, T data) {
             check(node, PreviewFeature.SWITCH_EXPRESSIONS, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTRecordDeclaration node, T data) {
             check(node, PreviewFeature.RECORD_DECLARATIONS, data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -299,19 +300,16 @@ public class LanguageLevelChecker<T> {
                     check(node, RegularLanguageFeature.DIAMOND_TYPE_ARGUMENTS_FOR_ANONYMOUS_CLASSES, data);
                 }
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTTypeArguments node, T data) {
             check(node, RegularLanguageFeature.GENERICS, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTTypeParameters node, T data) {
             check(node, RegularLanguageFeature.GENERICS, data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -319,7 +317,6 @@ public class LanguageLevelChecker<T> {
             if (node.isVarargs()) {
                 check(node, RegularLanguageFeature.VARARGS_PARAMETERS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
@@ -334,19 +331,16 @@ public class LanguageLevelChecker<T> {
             } else {
                 check(node, RegularLanguageFeature.ANNOTATIONS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTForeachStatement node, T data) {
             check(node, RegularLanguageFeature.FOREACH_LOOPS, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTEnumDeclaration node, T data) {
             check(node, RegularLanguageFeature.ENUMS, data);
-            super.visit(node, data);
         }
 
         @Override
@@ -359,19 +353,16 @@ public class LanguageLevelChecker<T> {
             } else if (node.getImage().indexOf('_') >= 0) {
                 check(node, RegularLanguageFeature.UNDERSCORES_IN_NUMERIC_LITERALS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTMethodReference node, T data) {
             check(node, RegularLanguageFeature.METHOD_REFERENCES, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTLambdaExpression node, T data) {
             check(node, RegularLanguageFeature.LAMBDA_EXPRESSIONS, data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -385,19 +376,16 @@ public class LanguageLevelChecker<T> {
             }
 
             checkIdent(node, node.getMethodName(), data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTAssertStatement node, T data) {
             check(node, RegularLanguageFeature.ASSERT_STATEMENTS, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTTypeTestPattern node, T data) {
             check(node, PreviewFeature.TYPE_TEST_PATTERNS_IN_INSTANCEOF, data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -412,7 +400,6 @@ public class LanguageLevelChecker<T> {
                     }
                 }
             }
-            visitChildren(node, data);
         }
 
         @Override
@@ -420,7 +407,6 @@ public class LanguageLevelChecker<T> {
             if (node.getParent() instanceof ASTCastExpression) {
                 check(node, RegularLanguageFeature.INTERSECTION_TYPES_IN_CASTS, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
@@ -428,7 +414,6 @@ public class LanguageLevelChecker<T> {
             if (node.getParameter().isMulticatch()) {
                 check(node, RegularLanguageFeature.COMPOSITE_CATCH_CLAUSES, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
@@ -436,25 +421,21 @@ public class LanguageLevelChecker<T> {
             if (IteratorUtil.count(node.iterator()) > 1) {
                 check(node, PreviewFeature.COMPOSITE_CASE_LABEL, data);
             }
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTModuleDeclaration node, T data) {
             check(node, RegularLanguageFeature.MODULE_DECLARATIONS, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTSwitchArrowBranch node, T data) {
             check(node, PreviewFeature.SWITCH_RULES, data);
-            visitChildren(node, data);
         }
 
         @Override
         public void visit(ASTVariableDeclaratorId node, T data) {
             checkIdent(node, node.getVariableName(), data);
-            visitChildren(node, data);
         }
 
         @Override
@@ -466,13 +447,6 @@ public class LanguageLevelChecker<T> {
                 check(node, ReservedIdentifiers.RECORD_AS_A_TYPE_NAME, data);
             }
             checkIdent(node, simpleName, data);
-            visitChildren(node, data);
-        }
-
-        private void visitChildren(JavaNode node, T data) {
-            for (int i = 0; i < node.getNumChildren(); i++) {
-                node.getChild(i).jjtAccept(visitor, data);
-            }
         }
 
         private void checkIdent(JavaNode node, String simpleName, T acc) {
