@@ -17,7 +17,24 @@ class ParserStressTest : ParserTestSpec({
     }.toString()
 
 
-    parserTest("Test very deep InfixExpression doesn't throw StackOverflowError") {
+    parserTest("Test very deep InfixExpression doesn't throw StackOverflowError (just parser + language feature checker)") {
+
+        inContext(ExpressionParsingCtx) {
+
+            doTest("Very big expr") {
+
+                doParse(exprString).shouldMatchN {
+                    infixExpr(BinaryOp.ADD) {
+                        unspecifiedChild()
+                        unspecifiedChild()
+                    }
+                }
+            }
+        }
+    }
+
+    parserTest("Test very deep InfixExpression doesn't throw StackOverflowError (with processing)") {
+        enableProcessing(false)
 
         inContext(ExpressionParsingCtx) {
 

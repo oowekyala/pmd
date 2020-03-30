@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.java.symbols.internal.impl.ast;
 
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.SymbolDeclaratorNode;
+import net.sourceforge.pmd.lang.java.ast.internal.TreeProcessor;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 
@@ -30,8 +31,8 @@ public final class SymbolResolutionPass {
      *     This is used to avoid hitting the classloader for local declarations.
      */
     public static SymbolResolver traverse(JavaAstProcessor processor, ASTCompilationUnit root) {
-        AstSymbolMakerVisitor visitor = new AstSymbolMakerVisitor(root);
-        root.jjtAccept(visitor, processor.getAstSymFactory());
+        AstSymbolMakerVisitor visitor = new AstSymbolMakerVisitor(root, processor.getAstSymFactory());
+        TreeProcessor.processTree(visitor, root);
         return visitor.makeKnownSymbolResolver();
     }
 }

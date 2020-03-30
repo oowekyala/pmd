@@ -38,7 +38,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTTryStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeBody;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
-import net.sourceforge.pmd.lang.java.ast.SideEffectingVisitorAdapter;
+import net.sourceforge.pmd.lang.java.ast.internal.TreeProcessor;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 
@@ -75,7 +75,7 @@ public final class SymbolTableResolver {
         AbstractSymbolTable createAndLink(JSymbolTable stackTop, SymbolTableHelper helper, T data);
     }
 
-    private static class MyVisitor extends SideEffectingVisitorAdapter<Void> {
+    private static class MyVisitor extends TreeProcessor {
 
         private final ASTCompilationUnit root;
         private final SymbolTableHelper myResolveHelper;
@@ -96,19 +96,20 @@ public final class SymbolTableResolver {
             assert myStackTop instanceof EmptySymbolTable
                 : "Top should be an empty symtable when starting the traversal";
 
-            root.jjtAccept(this, null);
+            TreeProcessor.processTree(this, root);
 
             assert myStackTop instanceof EmptySymbolTable
                 : "Unbalanced stack push/pop! Top is " + myStackTop;
         }
 
         @Override
-        public void visit(ASTModifierList node, Void data) {
+        public Object visit(ASTModifierList node, Object data) {
             // do nothing
+            return null;
         }
 
         @Override
-        public void visit(ASTCompilationUnit node, Void data) {
+        public Object visit(ASTCompilationUnit node, Object data) {
             Map<Boolean, List<ASTImportDeclaration>> isImportOnDemand = node.children(ASTImportDeclaration.class)
                                                                             .collect(Collectors.partitioningBy(ASTImportDeclaration::isImportOnDemand));
 
@@ -123,11 +124,12 @@ public final class SymbolTableResolver {
             // All of the header symbol tables belong to the CompilationUnit
             setTopSymbolTableAndRecurse(node);
             popStack(pushed);
+            return null;
         }
 
 
         @Override
-        public void visit(ASTAnyTypeDeclaration node, Void data) {
+        public Object visit(ASTAnyTypeDeclaration node, Object data) {
             setTopSymbolTable(node.getModifiers());
 
             int pushed = 0;
@@ -153,10 +155,11 @@ public final class SymbolTableResolver {
             setTopSymbolTableAndRecurse(node.getBody());
 
             popStack(pushed);
+            return null;
         }
 
         @Override
-        public void visit(ASTMethodOrConstructorDeclaration node, Void data) {
+        public Object visit(ASTMethodOrConstructorDeclaration node, Object data) {
             setTopSymbolTable(node.getModifiers());
 
             int pushed = 0;
@@ -165,38 +168,43 @@ public final class SymbolTableResolver {
 
             setTopSymbolTableAndRecurse(node);
             popStack(pushed);
+            return null;
         }
 
         @Override
-        public void visit(ASTLambdaExpression node, Void data) {
+        public Object visit(ASTLambdaExpression node, Object data) {
             int pushed = pushOnStack(VarOnlySymTable::new, formalsOf(node));
             setTopSymbolTableAndRecurse(node);
             popStack(pushed);
+            return null;
         }
 
         @Override
-        public void visit(ASTBlock node, Void data) {
-            visitBlockLike(node);
+        public Object visit(ASTBlock node, Object data) {
+            visitBlockLike(node, data);
+            return null;
         }
 
         @Override
-        public void visit(ASTSwitchStatement node, Void data) {
-            visitSwitch(node);
+        public Object visit(ASTSwitchStatement node, Object data) {
+            visitSwitch(node, data);
+            return null;
         }
 
         @Override
-        public void visit(ASTSwitchExpression node, Void data) {
-            visitSwitch(node);
+        public Object visit(ASTSwitchExpression node, Object data) {
+            visitSwitch(node, data);
+            return null;
         }
 
-        private void visitSwitch(ASTSwitchLike node) {
+        private void visitSwitch(ASTSwitchLike node, Object data) {
             setTopSymbolTable(node);
             visitSubtree(node.getTestedExpression());
-            visitBlockLike(stmtsOfSwitchBlock(node));
+            visitBlockLike(stmtsOfSwitchBlock(node), data);
         }
 
 
-        private void visitBlockLike(Iterable<? extends ASTStatement> node) {
+        private void visitBlockLike(Iterable<? extends ASTStatement> node, Object data) {
             /*
              * Process the statements of a block in a sequence. Each local
              * var/class declaration is only in scope for the following
@@ -212,31 +220,33 @@ public final class SymbolTableResolver {
 
 
                 setTopSymbolTable(st);
-                st.jjtAccept(this, null);
+                st.jjtAccept(this, data);
             }
 
             popStack(pushed);
         }
 
         @Override
-        public void visit(ASTForeachStatement node, Void data) {
+        public Object visit(ASTForeachStatement node, Object data) {
             // the varId is only in scope in the body and not the iterable expr
             setTopSymbolTableAndRecurse(node.getIterableExpr());
 
             int pushed = pushOnStack(VarOnlySymTable::new, node.getVarId());
             node.getBody().jjtAccept(this, data);
             popStack(pushed);
+            return null;
         }
 
         @Override
-        public void visit(ASTForStatement node, Void data) {
+        public Object visit(ASTForStatement node, Object data) {
             int pushed = pushOnStack(VarOnlySymTable::new, varsOfInit(node));
             setTopSymbolTableAndRecurse(node);
             popStack(pushed);
+            return null;
         }
 
         @Override
-        public void visit(ASTTryStatement node, Void data) {
+        public Object visit(ASTTryStatement node, Object data) {
 
             ASTResourceList resources = node.getResources();
             if (resources != null) {
@@ -247,7 +257,7 @@ public final class SymbolTableResolver {
                         // that it has the correct symbol table too
                         NodeStream.of(node.getBody())
                     );
-                visitBlockLike(union);
+                visitBlockLike(union, data);
 
                 for (Node child : node.getBody().asStream().followingSiblings()) {
                     ((JavaNode) child).jjtAccept(this, data);
@@ -255,13 +265,15 @@ public final class SymbolTableResolver {
             } else {
                 super.visit(node, data);
             }
+            return null;
         }
 
         @Override
-        public void visit(ASTCatchClause node, Void data) {
+        public Object visit(ASTCatchClause node, Object data) {
             int pushed = pushOnStack(VarOnlySymTable::new, node.getParameter().getVarId());
             setTopSymbolTableAndRecurse(node);
             popStack(pushed);
+            return null;
         }
 
 
@@ -275,14 +287,6 @@ public final class SymbolTableResolver {
             setTopSymbolTable(node);
             visitSubtree(node);
         }
-
-        private void visitSubtree(JavaNode node) {
-            for (JavaNode child : node.children()) {
-                child.jjtAccept(this, null);
-            }
-        }
-
-
 
         /**
          * Create a new symbol table using {@link TableLinker#createAndLink(JSymbolTable, SymbolTableHelper, Object)},
