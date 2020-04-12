@@ -27,7 +27,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
-import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -72,7 +71,7 @@ class MainJdocParser extends BaseJavadocParser {
             dispatch();
         }
 
-        finishStack(head());
+        finishStack(head(), false);
         return comment;
     }
 
@@ -81,12 +80,15 @@ class MainJdocParser extends BaseJavadocParser {
         case COMMENT_END:
         case WHITESPACE:
         case LINE_BREAK:
-            return;
+            break;
         case COMMENT_DATA:
             growDataLeaf(head(), head());
             break;
         case INLINE_TAG_START:
             inlineTag();
+            break;
+        case TAG_NAME:
+            blockTag();
             break;
         case HTML_LT:
             htmlStart();
@@ -104,18 +106,21 @@ class MainJdocParser extends BaseJavadocParser {
     }
 
     private void blockTag() {
+
         JdocToken tagname = head();
         assert tagname.getKind() == TAG_NAME;
+
+        finishStack(head().prev, true);
+
+        // this only parses the argument to the tag (eg the param name in @param name)
         JdocBlockTag tag = KnownBlockTagParser.selectAndParse(head().getImage(), this);
         tag.setFirstToken(tagname);
 
-        if (nodes.peek() instanceof JdocBlockTag) {
-            // close previous node
-            AbstractJavadocNode pop = nodes.pop();
-
-        }
-
-
+        linkLeaf(tag);
+        pushNode(tag);
+        // the next html leaves/inline tags/comment data will
+        // be added as children of the block tag
+        dispatch();
     }
 
     private void inlineTag() {
@@ -218,10 +223,16 @@ class MainJdocParser extends BaseJavadocParser {
         }
     }
 
-    private void finishStack(JdocToken lastToken) {
+    private void finishStack(JdocToken lastToken, boolean exceptLast) {
         JdocHtml html = null;
         while (!nodes.isEmpty()) {
             AbstractJavadocNode top = nodes.pop();
+
+            if (exceptLast && nodes.isEmpty()) {
+                assert top instanceof JdocComment;
+                nodes.push(top);
+                return;
+            }
             if (top instanceof JdocHtml) {
                 html = (JdocHtml) top;
                 html.setCloseSyntax(HtmlCloseSyntax.IMPLICIT);
@@ -356,8 +367,7 @@ class MainJdocParser extends BaseJavadocParser {
         if (node == null) {
             return;
         }
-        AbstractJavadocNode top = this.nodes.peek();
-        Objects.requireNonNull(top).jjtAddChild(node, top.jjtGetNumChildren());
+        this.nodes.getFirst().appendChild(node);
     }
 
     private void growDataLeaf(JdocToken first, JdocToken last) {

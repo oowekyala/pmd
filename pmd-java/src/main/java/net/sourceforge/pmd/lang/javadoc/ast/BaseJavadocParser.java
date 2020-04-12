@@ -67,4 +67,9 @@ class BaseJavadocParser {
     protected void consumeUntil(Predicate<JdocToken> stopCondition, Predicate<JdocToken> filter, Consumer<JdocToken> action) {
         tokens.consumeUntil(stopCondition, filter, action);
     }
+
+    @Override
+    public String toString() {
+        return "Parser at " + head();
+    }
 }
