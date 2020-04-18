@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.EscapeAwareReader;
-import net.sourceforge.pmd.lang.ast.impl.javacc.JavaInputReader;
+import net.sourceforge.pmd.lang.ast.impl.javacc.JavaEscapeReader;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument;
 import net.sourceforge.pmd.util.document.Chars;
@@ -30,7 +30,7 @@ final class JavaTokenDocument extends JavaccTokenDocument {
 
     @Override
     public EscapeAwareReader newReader(Chars text) {
-        return new JavaInputReader(text);
+        return new JavaEscapeReader(text);
     }
 
     @Override
