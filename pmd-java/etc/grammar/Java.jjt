@@ -297,6 +297,18 @@ class JavaParserImpl {
     return getToken(1).imageEquals(ASSERT_KW);
   }
 
+
+  private boolean isPrecededByComment(JavaccToken tok) {
+      boolean res = false;
+      while (!res && tok.specialToken != null) {
+          tok = tok.specialToken;
+          res = tok.kind == SINGLE_LINE_COMMENT ||
+                tok.kind == FORMAL_COMMENT ||
+                tok.kind == MULTI_LINE_COMMENT;
+      }
+      return res;
+  }
+
   /**
    * Semantic lookahead to check if the next identifier is a
    * specific restricted keyword.
@@ -2173,12 +2185,12 @@ void DefaultValue():
 void ModuleDeclaration():
 {
     StringBuilder s = new StringBuilder();
-    Token t;
+    JavaccToken t;
 }
 {
   ( Annotation() )* [LOOKAHEAD({isKeyword("open")}) <IDENTIFIER> {jjtThis.setOpen(true);}] LOOKAHEAD({isKeyword("module")}) <IDENTIFIER>
-  t=<IDENTIFIER> { s.append(t.image); }
-  ( "." t=<IDENTIFIER> { s.append('.').append(t.image); } )* { jjtThis.setImage(s.toString()); }
+  t=<IDENTIFIER> { s.append(t.getImage()); }
+  ( "." t=<IDENTIFIER> { s.append('.').append(t.getImage()); } )* { jjtThis.setImage(s.toString()); }
   "{" (ModuleDirective())* "}"
 }
 
@@ -2202,7 +2214,7 @@ void ModuleName():
   StringBuilder s = new StringBuilder(t.getImageCs().length());
 }
 {
-  t=<IDENTIFIER>                    { StringUtil.append(s, t.getImageCs()); }
+  t=<IDENTIFIER>       { StringUtil.append(s, t.getImageCs()); }
   ( "." t=<IDENTIFIER> { StringUtil.append(s.append('.'), t.getImageCs()); }
   )*
   {return s.toString();}
