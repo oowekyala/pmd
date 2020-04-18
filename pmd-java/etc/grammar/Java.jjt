@@ -243,6 +243,7 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.util.document.Chars;
 
 class JavaParserImpl {
 
@@ -277,6 +278,12 @@ class JavaParserImpl {
    */
   private boolean inSwitchLabel = false;
 
+  private static final Chars ASSERT_KW = Chars.wrap("assert", true);
+  private static final Chars YIELD_KW = Chars.wrap("yield", true);
+  private static final Chars ENUM_KW = Chars.wrap("enum", true);
+  private static final Chars VAR_KW = Chars.wrap("var", true);
+  private static final Chars RECORD_KW = Chars.wrap("record", true);
+
   // This is a semantic LOOKAHEAD to determine if we're dealing with an assert
   // Note that this can't be replaced with a syntactic lookahead
   // since "assert" isn't a string literal token
@@ -285,18 +292,7 @@ class JavaParserImpl {
       return false;
     }
 
-    return getToken(1).image.equals("assert");
-  }
-
-  private boolean isPrecededByComment(JavaccToken tok) {
-      boolean res = false;
-      while (!res && tok.specialToken != null) {
-          tok = tok.specialToken;
-          res = tok.kind == SINGLE_LINE_COMMENT ||
-                tok.kind == FORMAL_COMMENT ||
-                tok.kind == MULTI_LINE_COMMENT;
-      }
-      return res;
+    return getToken(1).imageEquals(ASSERT_KW);
   }
 
   /**
@@ -371,7 +367,7 @@ class JavaParserImpl {
 
   private boolean isYieldStart() {
     return inSwitchExprBlock
-    && isKeyword("yield")
+    && isKeyword(YIELD_KW)
     && mayStartExprAfterYield(2);
   }
 
@@ -926,11 +922,11 @@ void TypeDeclaration():
   (
      ClassOrInterfaceDeclaration(modifiers)
    |
-     LOOKAHEAD({isKeyword("enum")}) EnumDeclaration(modifiers)
+     LOOKAHEAD({isKeyword(ENUM_KW)}) EnumDeclaration(modifiers)
    |
      AnnotationTypeDeclaration(modifiers)
    |
-     LOOKAHEAD({isKeyword("record")}) RecordDeclaration(modifiers)
+     LOOKAHEAD({isKeyword(RECORD_KW)}) RecordDeclaration(modifiers)
   )
 }
 
@@ -1109,8 +1105,8 @@ void ClassOrInterfaceBodyDeclaration():
 { LOOKAHEAD(["static"] "{" ) Initializer()
 |  modifiers = Modifiers()
   ( LOOKAHEAD(3) ClassOrInterfaceDeclaration(modifiers)
-    | LOOKAHEAD({isKeyword("enum")}) EnumDeclaration(modifiers)
-    | LOOKAHEAD({isKeyword("record")}) RecordDeclaration(modifiers)
+    | LOOKAHEAD({isKeyword(ENUM_KW)}) EnumDeclaration(modifiers)
+    | LOOKAHEAD({isKeyword(RECORD_KW)}) RecordDeclaration(modifiers)
     | LOOKAHEAD( [ TypeParameters() ] <IDENTIFIER> "(" ) ConstructorDeclaration(modifiers)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) )  FieldDeclaration(modifiers)
     | LOOKAHEAD(2) MethodDeclaration(modifiers)
@@ -1591,7 +1587,7 @@ void LambdaParameter() #FormalParameter :
 void LambdaParameterType() #void :
 {}
 {
-    LOOKAHEAD( { jdkVersion >= 11 && isKeyword("var") } ) <IDENTIFIER>
+    LOOKAHEAD( { jdkVersion >= 11 && isKeyword(VAR_KW) } ) <IDENTIFIER>
     | Type()
 }
 
@@ -1786,7 +1782,7 @@ void LocalVariableDeclaration() :
 void LocalVariableType() #void :
 {}
 {
-  LOOKAHEAD( { jdkVersion >= 10 && isKeyword("var") } ) <IDENTIFIER>
+  LOOKAHEAD( { jdkVersion >= 10 && isKeyword(VAR_KW) } ) <IDENTIFIER>
   | Type()
 }
 
