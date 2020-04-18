@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java.ast;
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.GT;
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.RSIGNEDSHIFT;
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.RUNSIGNEDSHIFT;
-import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.WHITESPACE;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -52,19 +51,6 @@ final class JavaTokenDocument extends JavaccTokenDocument {
                 jcs.getEndOffset(),
                 jcs.getTokenDocument()
             );
-
-        case WHITESPACE:
-            // We don't create a new string for the image of whitespace tokens eagerly
-
-            // It's unlikely that anybody cares about that, and since
-            // they're still 30% of all tokens this is advantageous
-            return new LazyImageToken(
-                kind,
-                jcs.getStartOffset(),
-                jcs.getEndOffset(),
-                jcs.getTokenDocument()
-            );
-
         default:
             return super.createToken(kind, jcs, image);
         }
@@ -72,18 +58,6 @@ final class JavaTokenDocument extends JavaccTokenDocument {
 
     static int getRealKind(JavaccToken token) {
         return token instanceof GTToken ? ((GTToken) token).realKind : token.kind;
-    }
-
-    private static final class LazyImageToken extends JavaccToken {
-
-        LazyImageToken(int kind, int startInclusive, int endExclusive, JavaccTokenDocument document) {
-            super(kind, null, startInclusive, endExclusive, document);
-        }
-
-        @Override
-        public String getImage() {
-            return document.getTextDocument().slice(getRegion()).toString();
-        }
     }
 
     private static final class GTToken extends JavaccToken {
@@ -96,6 +70,4 @@ final class JavaTokenDocument extends JavaccTokenDocument {
         }
 
     }
-
-
 }
