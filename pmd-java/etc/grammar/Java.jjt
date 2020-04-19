@@ -280,11 +280,11 @@ class JavaParserImpl {
    */
   private boolean inSwitchLabel = false;
 
-  private static final Chars ASSERT_KW = Chars.wrap("assert");
-  private static final Chars YIELD_KW = Chars.wrap("yield");
-  private static final Chars ENUM_KW = Chars.wrap("enum");
-  private static final Chars VAR_KW = Chars.wrap("var");
-  private static final Chars RECORD_KW = Chars.wrap("record");
+  private static final String ASSERT_KW = "assert";
+  private static final String YIELD_KW = "yield";
+  private static final String ENUM_KW = "enum";
+  private static final String VAR_KW = "var";
+  private static final String RECORD_KW = "record";
 
   // This is a semantic LOOKAHEAD to determine if we're dealing with an assert
   // Note that this can't be replaced with a syntactic lookahead
