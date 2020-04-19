@@ -270,6 +270,15 @@ class JavaParserImpl {
   }
 
 
+  // reuse same string builder, it will be presized
+  private final StringBuilder strBuilder = new StringBuilder();
+
+  private StringBuilder getStrBuilder() {
+      strBuilder.setLength(0);
+      return strBuilder;
+  }
+
+
   /**
    * Keeps track during tree construction, whether we are currently building a switch label.
    * A switch label must not contain a LambdaExpression.
@@ -2210,7 +2219,7 @@ void ModuleDirective():
 // Similar to Name()
 void ModuleName():
 {
-  StringBuilder s = new StringBuilder();
+  StringBuilder s = getStrBuilder();
   Token t;
 }
 {
