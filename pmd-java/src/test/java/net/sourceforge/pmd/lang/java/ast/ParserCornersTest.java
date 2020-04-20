@@ -111,7 +111,7 @@ public class ParserCornersTest {
                        + "\n"
                        + "    /**\n"
                        + "     * The constant value of this field is the largest value of type\n"
-                       + "     * {@code char}, {@code '\\u005CuFFFF'}.\n"
+                       + "     * {@code char}, {@code '\\u005C\\uFFFF'}.\n"
                        + "     *\n"
                        + "     * @since   1.0.2\n"
                        + "     */\n"
