@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.GT;
+import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.IDENTIFIER;
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.RSIGNEDSHIFT;
 import static net.sourceforge.pmd.lang.java.ast.JavaTokenKinds.RUNSIGNEDSHIFT;
 
@@ -30,6 +31,11 @@ final class JavaTokenDocument extends JavaccTokenDocument {
     @Override
     public EscapeAwareReader newReader(Chars text) {
         return new JavaEscapeReader(text);
+    }
+
+    @Override
+    protected boolean isImagePooled(JavaccToken t) {
+        return t.kind == IDENTIFIER;
     }
 
     @Override
