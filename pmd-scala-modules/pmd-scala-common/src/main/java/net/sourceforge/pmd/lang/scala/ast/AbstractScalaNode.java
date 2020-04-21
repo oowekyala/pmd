@@ -61,24 +61,7 @@ abstract class AbstractScalaNode<T extends Tree> extends AbstractNode<AbstractSc
     }
 
     @Override
-    public int getBeginLine() {
-        return pos.startLine() + 1;
-    }
-
-    @Override
-    public int getBeginColumn() {
-        return pos.startColumn() + 1;
-    }
-
-    @Override
-    public int getEndLine() {
-        return pos.endLine() + 1;
-    }
-
-    @Override
-    public int getEndColumn() {
-        return pos.endColumn(); // no +1
-    }
+    public abstract <D, R> R accept(ScalaParserVisitor<D, R> visitor, D data);
 
     @Override
     @Deprecated
