@@ -11,6 +11,9 @@ import net.sourceforge.pmd.lang.ast.AstVisitor;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.util.document.SourceCodePositioner;
 import net.sourceforge.pmd.lang.ast.impl.AbstractNodeWithTextCoordinates;
+import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 import apex.jorje.data.Location;
 import apex.jorje.data.Locations;
@@ -20,6 +23,8 @@ import apex.jorje.semantic.exception.UnexpectedCodePathException;
 abstract class AbstractApexNode<T extends AstNode> extends AbstractNodeWithTextCoordinates<AbstractApexNode<?>, ApexNode<?>> implements ApexNode<T> {
 
     protected final T node;
+    private TextRegion region;
+    protected TextDocument textDocument;
 
     protected AbstractApexNode(T node) {
         this.node = node;
@@ -37,11 +42,6 @@ abstract class AbstractApexNode<T extends AstNode> extends AbstractNodeWithTextC
     }
 
     @Override
-    protected void setCoords(int bline, int bcol, int eline, int ecol) {
-        super.setCoords(bline, bcol, eline, ecol);
-    }
-
-    @Override
     public final <P, R> R acceptVisitor(AstVisitor<? super P, ? extends R> visitor, P data) {
         if (visitor instanceof ApexVisitor) {
             return this.acceptApexVisitor((ApexVisitor<? super P, ? extends R>) visitor, data);
@@ -56,67 +56,26 @@ abstract class AbstractApexNode<T extends AstNode> extends AbstractNodeWithTextC
         return getParent().getRoot();
     }
 
-    /* package */ void calculateLineNumbers(SourceCodePositioner positioner, int startOffset, int endOffset) {
-        // end column will be interpreted as inclusive, while endOffset/endIndex
-        // is exclusive
-        endOffset -= 1;
-
-        this.beginLine = positioner.lineNumberFromOffset(startOffset);
-        this.beginColumn = positioner.columnFromOffset(this.beginLine, startOffset);
-        this.endLine = positioner.lineNumberFromOffset(endOffset);
-        this.endColumn = positioner.columnFromOffset(this.endLine, endOffset);
-
-        if (this.endColumn < 0) {
-            this.endColumn = 0;
-        }
+    /* package */ void calculateLineNumbers(TextDocument positioner, int startOffset, int endOffset) {
+        textDocument = positioner;
+        region = TextRegion.fromBothOffsets(startOffset, endOffset);
     }
 
     @Override
-    public int getBeginLine() {
-        if (this.beginLine > 0) {
-            return this.beginLine;
-        }
-        Node parent = getParent();
-        if (parent != null) {
-            return parent.getBeginLine();
-        }
-        throw new RuntimeException("Unable to determine beginning line of Node.");
+    public FileLocation getReportLocation() {
+        return textDocument.toLocation(getRegion());
     }
 
-    @Override
-    public int getBeginColumn() {
-        if (this.beginColumn > 0) {
-            return this.beginColumn;
+    protected TextRegion getRegion() {
+        if (region == null) {
+            AbstractApexNode<?> parent = (AbstractApexNode<?>) getParent();
+            if (parent == null) {
+                throw new RuntimeException("Unable to determine location of " + this);
+            }
+            region = parent.getRegion();
+            return region;
         }
-        Node parent = getParent();
-        if (parent != null) {
-            return parent.getBeginColumn();
-        }
-        throw new RuntimeException("Unable to determine beginning column of Node.");
-    }
-
-    @Override
-    public int getEndLine() {
-        if (this.endLine > 0) {
-            return this.endLine;
-        }
-        Node parent = getParent();
-        if (parent != null) {
-            return parent.getEndLine();
-        }
-        throw new RuntimeException("Unable to determine ending line of Node.");
-    }
-
-    @Override
-    public int getEndColumn() {
-        if (this.endColumn > 0) {
-            return this.endColumn;
-        }
-        Node parent = getParent();
-        if (parent != null) {
-            return parent.getEndColumn();
-        }
-        throw new RuntimeException("Unable to determine ending column of Node.");
+        return region;
     }
 
     @Override
@@ -124,17 +83,15 @@ abstract class AbstractApexNode<T extends AstNode> extends AbstractNodeWithTextC
         return this.getClass().getSimpleName().replaceFirst("^AST", "");
     }
 
-    void calculateLineNumbers(SourceCodePositioner positioner) {
+    void calculateLineNumbers(TextDocument positioner) {
         if (!hasRealLoc()) {
+            // region is null
+            this.textDocument = positioner;
             return;
         }
 
         Location loc = node.getLoc();
         calculateLineNumbers(positioner, loc.getStartIndex(), loc.getEndIndex());
-    }
-
-    protected void handleSourceCode(String source) {
-        // default implementation does nothing
     }
 
     @Deprecated
