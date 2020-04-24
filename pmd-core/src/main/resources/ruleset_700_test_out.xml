@@ -91,7 +91,7 @@ public final class Bar {
 
     <rule-def>
       <name>AvoidProtectedMethodInFinalClassNotExtending</name>
-      <message>Avoid protected methods in a final class that doesn't extend anything other than Object. Change to private or package access.</message>
+      <message>Avoid protected methods in a final class that doesn't extend anything other than Object.  Change to private or package access.</message>
       <description>
             Do not use protected methods in most final classes since they cannot be subclassed. This should
             only be allowed in final classes that extend other classes with protected methods (whose
@@ -184,6 +184,7 @@ public class SomeJNIClass {
             <property-defs>
                <property-def name="checkParameterizedMethods">
                   <type>Boolean</type>
+                  <description>Check parameterized methods</description>
                   <default-value>
                      <value>false</value>
                   </default-value>
@@ -391,42 +392,49 @@ boolean bar(int x, int y) {
             <property-defs>
                <property-def name="checkIfElseStmt">
                   <type>Boolean</type>
+                  <description>Require that 'if ... else' statements use braces</description>
                   <default-value>
                      <value>true</value>
                   </default-value>
                </property-def>
                <property-def name="checkSingleIfStmt">
                   <type>Boolean</type>
+                  <description>Require that 'if' statements with a single branch use braces</description>
                   <default-value>
                      <value>true</value>
                   </default-value>
                </property-def>
                <property-def name="checkWhileStmt">
                   <type>Boolean</type>
+                  <description>Require that 'while' loops use braces</description>
                   <default-value>
                      <value>true</value>
                   </default-value>
                </property-def>
                <property-def name="checkForStmt">
                   <type>Boolean</type>
+                  <description>Require that 'for' loops should use braces</description>
                   <default-value>
                      <value>true</value>
                   </default-value>
                </property-def>
                <property-def name="checkDoWhileStmt">
                   <type>Boolean</type>
+                  <description>Require that 'do ... while' loops use braces</description>
                   <default-value>
                      <value>true</value>
                   </default-value>
                </property-def>
                <property-def name="checkCaseStmt">
                   <type>Boolean</type>
+                  <description>Require that cases of a switch have braces</description>
                   <default-value>
                      <value>false</value>
                   </default-value>
                </property-def>
                <property-def name="allowEmptyLoop">
                   <type>Boolean</type>
+                  <description>Allow loops with an empty statement, e.g. 'while(true);'</description>
                   <default-value>
                      <value>false</value>
                   </default-value>
@@ -1043,6 +1051,7 @@ public class Bar {
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
+                  <description>The variable length reporting threshold</description>
                   <default-value>
                      <value>17</value>
                   </default-value>
@@ -1229,6 +1238,7 @@ public class ClassInDefaultPackage {
             <property-defs>
                <property-def name="acceptableDecimalLength">
                   <type>Integer</type>
+                  <description>Length under which literals in base 10 are not required to have underscores</description>
                   <default-value>
                      <value>4</value>
                   </default-value>
@@ -1428,6 +1438,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-stand
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
+                  <description>Number of characters that are required as a minimum for a class name.</description>
                   <default-value>
                      <value>5</value>
                   </default-value>
@@ -1459,6 +1470,7 @@ public class Foo {
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
+                  <description>Number of characters that are required as a minimum for a method name.</description>
                   <default-value>
                      <value>3</value>
                   </default-value>
@@ -1504,6 +1516,7 @@ public class ShortMethod {
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
+                  <description>Number of characters that are required as a minimum for a variable name.</description>
                   <default-value>
                      <value>3</value>
                   </default-value>
@@ -1548,6 +1561,7 @@ public class Something {
             <property-defs>
                <property-def name="maximumStaticImports">
                   <type>Integer</type>
+                  <description>All static imports can be disallowed by setting this to 0</description>
                   <default-value>
                      <value>4</value>
                   </default-value>

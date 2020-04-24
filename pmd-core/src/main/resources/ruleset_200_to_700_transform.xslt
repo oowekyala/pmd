@@ -193,6 +193,7 @@
             <type>
                 <xsl:value-of select="@type"/>
             </type>
+            <description><xsl:value-of select="@description"/></description>
             <default-value>
                 <value>
                     <xsl:value-of select="mf:get-property-internal(.)"/>
