@@ -88,9 +88,9 @@
                 <xs:element name="xpath">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="version" type="xpath-version-id" maxOccurs="0" minOccurs="0"/>
+                            <xs:element name="version" type="xpath-version-id" minOccurs="0" maxOccurs="0"/>
                             <xs:element name="expr" type="xs:string"/>
-                            <xs:element name="property-defs" type="property-defs"/>
+                            <xs:element name="property-defs" type="property-defs" minOccurs="0"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

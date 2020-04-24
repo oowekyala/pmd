@@ -43,20 +43,144 @@ public class Foo {
     </rule-def>
 
     <rule-def language="java">
-        <name>AnXPathRule</name>
-        <message>Some message</message>
-        <description>TODO</description>
+        <name>AvoidProtectedFieldInFinalClass</name>
+        <message>Avoid protected fields in a final class. Change to private or package access.</message>
+        <description>
+            Do not use protected fields in final classes since they cannot be subclassed.
+            Clarify your intent by using private or package access modifiers instead.
+        </description>
+        <since>2.1</since>
+        <priority>medium</priority>
         <impl>
-            <class>Foo</class>
+            <xpath>
+                <expr>
+                    //ClassOrInterfaceDeclaration[@Final= true()]
+                    /ClassOrInterfaceBody/ClassOrInterfaceBodyDeclaration
+                    /FieldDeclaration[@Protected= true()]
+                </expr>
+            </xpath>
         </impl>
-        <properties>
-            <property name="foo">
-                <none/>
-            </property>
-            <property name="foo">
-                <none/>
-            </property>
-        </properties>
+        <examples>
+            <example>
+                <![CDATA[
+public final class Bar {
+  private int x;
+  protected int y;  // bar cannot be subclassed, so is y really private or package visible?
+  Bar() {}
+}
+]]>
+            </example>
+        </examples>
     </rule-def>
+
+
+    <rule-def language="java">
+        <name>ControlStatementBraces</name>
+        <message>This statement should have braces</message>
+        <description>
+            Enforce a policy for braces on control statements. It is recommended to use braces on 'if ... else'
+            statements and loop statements, even if they are optional. This usually makes the code clearer, and
+            helps prepare the future when you need to add another statement. That said, this rule lets you control
+            which statements are required to have braces via properties.
+
+            From 6.2.0 on, this rule supersedes WhileLoopMustUseBraces, ForLoopMustUseBraces, IfStmtMustUseBraces,
+            and IfElseStmtMustUseBraces.
+        </description>
+        <since>6.2.0</since>
+        <priority>3</priority>
+
+        <impl>
+            <xpath>
+                <expr><![CDATA[
+                //WhileStatement[$checkWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                //ForStatement[$checkForStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                //DoStatement[$checkDoWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                (: The violation is reported on the sub statement -- not the if statement :)
+                //Statement[$checkIfElseStmt and parent::IfStatement and not(child::Block or child::IfStatement)
+                            (: Whitelists single if statements :)
+                            and ($checkSingleIfStmt
+                                 (: Inside this not(...) is the definition of a "single if statement" :)
+                                 or not(count(../Statement) = 1 (: No else stmt :)
+                                        (: Not the last branch of an 'if ... else if' chain :)
+                                        and not(parent::IfStatement[parent::Statement[parent::IfStatement]])))]
+                |
+                (: Reports case labels if one of their subordinate statements is not braced :)
+                //SwitchLabel[$checkCaseStmt]
+                             [count(following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement) > 1
+                              or (some $stmt (: in only the block statements until the next label :)
+                                  in following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement
+                                  satisfies not($stmt/Statement/Block))]
+                ]]>
+                </expr>
+                <property-defs>
+                    <property-def name="checkIfElseStmt">
+                        <type>Boolean</type>
+                        <description>Require that 'if ... else' statements use braces</description>
+                        <default-value>
+                            <value>true</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="checkSingleIfStmt">
+                        <type>Boolean</type>
+                        <description>Require that 'if' statements with a single branch use braces</description>
+                        <default-value>
+                            <value>true</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="checkWhileStmt">
+                        <type>Boolean</type>
+                        <description>Require that 'while' loops use braces</description>
+                        <default-value>
+                            <value>true</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="checkForStmt">
+                        <type>Boolean</type>
+                        <description>Require that 'for' loops use braces</description>
+                        <default-value>
+                            <value>true</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="checkDoWhileStmt">
+                        <type>Boolean</type>
+                        <description>Require that 'do ... while' loops use braces</description>
+                        <default-value>
+                            <value>true</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="checkCaseStmt">
+                        <type>Boolean</type>
+                        <description>Require that cases of a switch have braces</description>
+                        <default-value>
+                            <value>false</value>
+                        </default-value>
+                    </property-def>
+                    <property-def name="allowEmptyLoop">
+                        <type>Boolean</type>
+                        <description>Allow loops with an empty statement, e.g. 'while(true);'</description>
+                        <default-value>
+                            <value>false</value>
+                        </default-value>
+                    </property-def>
+                </property-defs>
+            </xpath>
+        </impl>
+        <examples>
+            <example>
+                <![CDATA[
+while (true)    // not recommended
+  x++;
+
+while (true) {  // preferred approach
+  x++;
+}
+]]>
+            </example>
+        </examples>
+    </rule-def>
+
 
 </ruleset>
