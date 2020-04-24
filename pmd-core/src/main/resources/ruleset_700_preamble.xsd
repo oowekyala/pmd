@@ -4,19 +4,25 @@
            targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
            elementFormDefault="qualified">
 
+    <!-- Common type definitions, can be reused by the test schema later -->
+
     <xs:simpleType name="language-id">
         <xs:union>
             <xs:simpleType>
                 <xs:restriction base="xs:string">
                     <xs:enumeration value="apex"/>
                     <xs:enumeration value="java"/>
-                    <xs:enumeration value="swift"/>
                     <xs:enumeration value="scala"/>
+                    <xs:enumeration value="swift"/>
                     <xs:enumeration value="xml"/>
-                    <!-- etc -->
+                    <!-- TODO etc -->
                 </xs:restriction>
             </xs:simpleType>
             <xs:simpleType>
+                <!--
+                This is for forward compatibility, the constants
+                above just provide autocompletion in the IDE.
+                -->
                 <xs:restriction base="xs:string"/>
             </xs:simpleType>
         </xs:union>
@@ -24,7 +30,7 @@
 
     <xs:simpleType name="xpath-version-id">
         <xs:restriction base="xs:string">
-            <!-- accepts nothing for now -->
+            <xs:enumeration value="2.0" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -50,11 +56,18 @@
 
     <xs:simpleType name="class-qualified-name">
         <xs:restriction base="xs:string">
-            <xs:pattern value="[\w+$]++(\.[\w$]+)*"/>
+            <xs:pattern value="[\w_$]++(\.[\w_$]+)*"/>
         </xs:restriction>
     </xs:simpleType>
 
     <xs:simpleType name="priority">
+        <xs:annotation>
+            <xs:documentation>
+                Priority of the rule. You can specify an integer for compatibility,
+                but they're mapped to the symbolic names in reverse: the highest priority
+                is 1, the lowest is 5.
+            </xs:documentation>
+        </xs:annotation>
         <xs:union>
             <xs:simpleType>
                 <xs:restriction base="xs:integer">

@@ -31,14 +31,6 @@
 
     <xs:group name="optional-rule-elts">
         <xs:sequence>
-            <xs:element name="applicable-versions" minOccurs="0">
-                <xs:complexType>
-                    <xs:sequence maxOccurs="2">
-                        <xs:element name="min" type="version-id" minOccurs="0"/>
-                        <xs:element name="max" type="version-id" minOccurs="0"/>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
             <xs:element name="since" type="xs:string" minOccurs="0"/>
             <xs:element name="deprecated" type="deprecation-info" minOccurs="0"/>
             <xs:element name="priority" type="priority" minOccurs="0" default="medium"/>
@@ -78,24 +70,48 @@
                 <xs:element name="properties" type="property-overrides" minOccurs="0"/>
                 <xs:element name="examples" type="examples" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute name="language" type="language-id" use="required"/>
         </xs:complexType>
     </xs:element>
 
     <xs:element name="impl">
+        <xs:annotation>
+            <xs:documentation>
+                This is the implementation section of the rule. Things defined here
+                cannot be overridden by a client of the rule.
+
+                You must define a language (possibly with a specific version range),
+                and select either a Java class that implements the rule behavior,
+                or write an XPath rule in the XML.
+
+                XPath rules can declare properties in the XML, while Java rules do so
+                directly in Java.
+            </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
-            <xs:choice>
-                <xs:element name="xpath">
+            <xs:sequence>
+                <xs:element name="language">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="version" type="xpath-version-id" minOccurs="0" maxOccurs="0"/>
-                            <xs:element name="expr" type="xs:string"/>
-                            <xs:element name="property-defs" type="property-defs" minOccurs="0"/>
+                            <xs:element name="minVersion" type="version-id" minOccurs="0"/>
+                            <xs:element name="maxVersion" type="version-id" minOccurs="0"/>
                         </xs:sequence>
+                        <xs:attribute name="id" type="language-id" use="required"/>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="class" type="class-qualified-name"/>
-            </xs:choice>
+
+                <xs:choice>
+                    <xs:element name="xpath">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="version" type="xpath-version-id" minOccurs="0" maxOccurs="0"/>
+                                <xs:element name="expr" type="xs:string"/>
+                                <xs:element name="property-defs" type="property-defs" minOccurs="0"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="class" type="class-qualified-name"/>
+                </xs:choice>
+            </xs:sequence>
         </xs:complexType>
     </xs:element>
 

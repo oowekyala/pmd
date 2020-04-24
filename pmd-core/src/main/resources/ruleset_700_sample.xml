@@ -4,22 +4,7 @@
     <name>My ruleset</name>
     <description>smsms</description>
 
-    <rule-def language="java">
-        <name>MyRule</name>
-        <message>Some message</message>
-        <description>TODO</description>
-        <impl>
-            <class>Foo</class>
-        </impl>
-        <properties>
-            <property name="foo">
-                <none/>
-            </property>
-        </properties>
-    </rule-def>
-
-
-    <rule-def language="java">
+    <rule-def>
         <name>AtLeastOneConstructor</name>
         <message>Each class should declare at least one constructor</message>
         <description>
@@ -29,6 +14,10 @@
         <since>1.04</since>
         <priority>medium</priority>
         <impl>
+            <language id="java">
+                <!-- Language version range -->
+                <minVersion>3</minVersion>
+            </language>
             <class>net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule</class>
         </impl>
         <examples>
@@ -42,7 +31,7 @@ public class Foo {
         </examples>
     </rule-def>
 
-    <rule-def language="java">
+    <rule-def>
         <name>AvoidProtectedFieldInFinalClass</name>
         <message>Avoid protected fields in a final class. Change to private or package access.</message>
         <description>
@@ -52,6 +41,7 @@ public class Foo {
         <since>2.1</since>
         <priority>medium</priority>
         <impl>
+            <language id="java"/>
             <xpath>
                 <expr>
                     //ClassOrInterfaceDeclaration[@Final= true()]
@@ -74,7 +64,12 @@ public final class Bar {
     </rule-def>
 
 
-    <rule-def language="java">
+    <rule-import ref="rset.xml/SomeRule">
+
+    </rule-import>
+
+    <!-- An XPath rule def with properties -->
+    <rule-def>
         <name>ControlStatementBraces</name>
         <message>This statement should have braces</message>
         <description>
@@ -90,6 +85,7 @@ public final class Bar {
         <priority>3</priority>
 
         <impl>
+            <language id="java"/>
             <xpath>
                 <expr><![CDATA[
                 //WhileStatement[$checkWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
