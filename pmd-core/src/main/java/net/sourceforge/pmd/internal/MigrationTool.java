@@ -67,9 +67,6 @@ public class MigrationTool {
         }
 
         Serializer out = saxon.newSerializer(System.out);
-        out.setOutputProperty(Serializer.Property.METHOD, "xml");
-        out.setOutputProperty(Serializer.Property.INDENT, "yes");
-
         Xslt30Transformer transformer = compiled.load30();
 
         try (InputStream stream = Files.newInputStream(input)) {
