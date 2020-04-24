@@ -4,6 +4,19 @@
            targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
            elementFormDefault="qualified">
 
+    <xs:include schemaLocation="ruleset_700_preamble.xsd"/>
+
+    <xs:complexType name="property-overrides">
+        <xs:sequence>
+            <xs:element ref="property" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="property-defs">
+        <xs:sequence>
+            <xs:element ref="property-def" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
 
     <xs:element name="property-def">
         <xs:annotation>
@@ -27,7 +40,7 @@
                 <xs:element name="description" type="xs:string"/>
                 <xs:element name="default-value" type="property-val"/>
             </xs:sequence>
-            <xs:attribute name="name" type="xs:ID" use="required">
+            <xs:attribute name="name" type="property-name" use="required">
                 <xs:annotation>
                     <xs:documentation>
                         Name of the property being defined. This name must
@@ -51,7 +64,7 @@
         <xs:complexType>
             <xs:complexContent>
                 <xs:extension base="property-val">
-                    <xs:attribute name="name" type="xs:ID" use="required"/>
+                    <xs:attribute name="name" type="property-name" use="required"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>

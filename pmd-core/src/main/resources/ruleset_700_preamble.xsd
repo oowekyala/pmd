@@ -22,7 +22,29 @@
         </xs:union>
     </xs:simpleType>
 
+    <xs:simpleType name="xpath-version-id">
+        <xs:restriction base="xs:string">
+            <!-- accepts nothing for now -->
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:simpleType name="version-id">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="rule-name">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="property-name">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="rule-reference">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="ruleset-reference">
         <xs:restriction base="xs:string"/>
     </xs:simpleType>
 

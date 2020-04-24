@@ -7,8 +7,8 @@
     <!-- TODO use xsd:documentation and xsd:annotation to document the schema -->
 
 
-    <xs:include schemaLocation="properties_7_0_0.xsd"/>
-    <xs:include schemaLocation="schema_types_7_0_0.xsd"/>
+    <xs:include schemaLocation="ruleset_700_preamble.xsd"/>
+    <xs:include schemaLocation="ruleset_700_properties.xsd"/>
 
     <!-- Type allowing only valid values for a language name -->
 
@@ -22,11 +22,9 @@
                 <!-- Rule definitions and imports. This XSD allows an empty ruleset to be defined -->
                 <xs:choice maxOccurs="unbounded">
                     <xs:element ref="rule-def" minOccurs="0" maxOccurs="unbounded"/>
-                    <xs:element ref="xpath-rule-def" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="rule-import" type="rule-import" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="ruleset-import" type="ruleset-import" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:choice>
-                <xs:element ref="seq"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -35,7 +33,7 @@
         <xs:sequence>
             <xs:element name="applicable-versions" minOccurs="0">
                 <xs:complexType>
-                    <xs:sequence minOccurs="1" maxOccurs="2">
+                    <xs:sequence maxOccurs="2">
                         <xs:element name="min" type="version-id" minOccurs="0"/>
                         <xs:element name="max" type="version-id" minOccurs="0"/>
                     </xs:sequence>
@@ -48,27 +46,14 @@
                 <xs:complexType>
                     <xs:choice maxOccurs="unbounded">
                         <xs:element name="regex" type="xs:string"/>
-                        <xs:element name="xpath" type="xpath"/>
+                        <xs:element name="xpath" type="simple-xpath"/>
                     </xs:choice>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="examples" type="examples" minOccurs="0"/>
         </xs:sequence>
     </xs:group>
 
-    <xs:complexType name="rule-def-base" abstract="true">
-        <xs:sequence>
-            <!-- Made required               -->
-            <xs:element name="name" type="xs:string"/>
-            <xs:element name="message" type="xs:string"/>
-            <xs:element name="description" type="xs:string"/>
-            <xs:group ref="optional-rule-elts"/>
-        </xs:sequence>
-        <xs:attribute name="language" type="language-id" use="required"/>
-    </xs:complexType>
-
     <xs:complexType name="deprecation-info">
-        <!-- TODO -->
         <xs:sequence>
             <xs:element name="since" type="xs:string"/>
         </xs:sequence>
@@ -81,39 +66,43 @@
         </xs:sequence>
     </xs:complexType>
 
-    <!-- XPath rule def -->
-    <xs:element name="xpath-rule-def">
-        <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="rule-def-base">
-                    <xs:sequence>
-                        <xs:element name="xpath" type="xpath"/>
-                        <xs:element ref="property-defs" minOccurs="0"/>
-                    </xs:sequence>
-                </xs:extension>
-            </xs:complexContent>
-        </xs:complexType>
-    </xs:element>
-
-    <!-- Java rule def -->
     <xs:element name="rule-def">
         <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="rule-def-base">
-                    <xs:choice maxOccurs="unbounded">
-                        <xs:element name="class" type="class-qualified-name"/>
-                        <xs:element ref="properties" minOccurs="0"/>
-                    </xs:choice>
-                </xs:extension>
-            </xs:complexContent>
+            <xs:sequence>
+                <!-- Required               -->
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="description" type="xs:string"/>
+                <xs:group ref="optional-rule-elts"/>
+                <xs:element ref="impl"/>
+                <xs:element name="properties" type="property-overrides" minOccurs="0"/>
+                <xs:element name="examples" type="examples" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="language" type="language-id" use="required"/>
         </xs:complexType>
     </xs:element>
 
-    <xs:complexType name="xpath">
+    <xs:element name="impl">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element name="xpath">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="version" type="xpath-version-id" maxOccurs="0" minOccurs="0"/>
+                            <xs:element name="expr" type="xs:string"/>
+                            <xs:element name="property-defs" type="property-defs"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="class" type="class-qualified-name"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="simple-xpath">
         <xs:simpleContent>
             <xs:extension base="xs:string">
-                <!-- TODO version accepts anything for now-->
-                <xs:attribute name="version" type="xs:string"/>
+                <xs:attribute name="version" type="xpath-version-id"/>
             </xs:extension>
         </xs:simpleContent>
     </xs:complexType>
@@ -122,13 +111,9 @@
     <xs:complexType name="ruleset-import">
         <!-- Must be a reference to a ruleset/category -->
         <xs:sequence>
-            <xs:element name="exclude-rule" type="exclude"/>
+            <xs:element name="exclude-rule" type="rule-name" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="ref" type="xs:string" use="required"/>
-    </xs:complexType>
-
-    <xs:complexType name="exclude">
-        <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
     </xs:complexType>
 
     <!-- References a *single* rule. -->
@@ -138,48 +123,11 @@
             <xs:element name="message" type="xs:string" minOccurs="0"/>
             <xs:element name="description" type="xs:string" minOccurs="0"/>
             <xs:group ref="optional-rule-elts"/>
-            <xs:element ref="properties" minOccurs="0"/>
+            <xs:element name="properties" type="property-overrides" minOccurs="0"/>
             <xs:element name="examples" type="examples" minOccurs="0"/>
         </xs:sequence>
-        <!-- Must be a reference to a rule -->
-        <xs:attribute name="ref" type="xs:string" use="required"/>
-        <!-- Overridable elements: -->
-        <xs:attribute name="priority" type="priority" default="5"/>
-        <xs:attribute name="name" type="xs:ID"/>
-        <xs:attribute name="message" type="xs:string"/>
-        <xs:attribute name="deprecated" type="xs:boolean" default="false"/>
-        <!-- Forbidden -->
-        <xs:attribute name="language" type="xs:string" use="prohibited"/>
-        <!-- <xs:attribute name="minimumLanguageVersion" type="xs:string" use="optional" /> -->
-        <!-- <xs:attribute name="maximumLanguageVersion" type="xs:string" use="optional" /> -->
-        <!-- <xs:attribute name="since" type="xs:string" use="optional" /> -->
+        <xs:attribute name="ref" type="rule-reference" use="required"/>
     </xs:complexType>
 
-    <xs:element name="impl">
-        <xs:complexType>
-            <xs:choice>
-                <xs:element name="xpath" type="xpath"/>
-                <xs:element name="class" type="class-qualified-name"/>
-            </xs:choice>
-        </xs:complexType>
-    </xs:element>
 
-    <!-- Property element forbidding new properties to be defined -->
-    <xs:element name="properties">
-        <xs:complexType>
-
-            <xs:sequence>
-                <xs:element ref="property" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
-    <!-- Only allowed on XPath rules -->
-    <xs:element name="property-defs">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="property-def" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
 </xs:schema>

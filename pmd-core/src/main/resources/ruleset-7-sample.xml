@@ -1,0 +1,62 @@
+<ruleset xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/7.0.0 ruleset_700.xsd">
+    <name>My ruleset</name>
+    <description>smsms</description>
+
+    <rule-def language="java">
+        <name>MyRule</name>
+        <message>Some message</message>
+        <description>TODO</description>
+        <impl>
+            <class>Foo</class>
+        </impl>
+        <properties>
+            <property name="foo">
+                <none/>
+            </property>
+        </properties>
+    </rule-def>
+
+
+    <rule-def language="java">
+        <name>AtLeastOneConstructor</name>
+        <message>Each class should declare at least one constructor</message>
+        <description>
+            Each non-static class should declare at least one constructor.
+            Classes with solely static members are ignored, refer to [UseUtilityClassRule](pmd_rules_java_design.html#useutilityclass) to detect those.
+        </description>
+        <since>1.04</since>
+        <priority>medium</priority>
+        <impl>
+            <class>net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule</class>
+        </impl>
+        <examples>
+            <example>
+public class Foo {
+   // missing constructor
+  public void doSomething() { ... }
+  public void doOtherThing { ... }
+}
+            </example>
+        </examples>
+    </rule-def>
+
+    <rule-def language="java">
+        <name>AnXPathRule</name>
+        <message>Some message</message>
+        <description>TODO</description>
+        <impl>
+            <class>Foo</class>
+        </impl>
+        <properties>
+            <property name="foo">
+                <none/>
+            </property>
+            <property name="foo">
+                <none/>
+            </property>
+        </properties>
+    </rule-def>
+
+</ruleset>
