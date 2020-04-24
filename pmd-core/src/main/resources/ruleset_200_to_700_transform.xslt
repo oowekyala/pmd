@@ -1,6 +1,6 @@
 <!-- MIGRATION STYLESHEET -->
 <!-- Converts an old ruleset v2.0.0 to the new schema -->
-<!-- Currently maps XPath rules to a new representation -->
+<!-- Doesn't handle rule refs yet -->
 
 <xsl:stylesheet version="2.0"
                 xmlns="https://pmd-code.org/ruleset/7.0.0"

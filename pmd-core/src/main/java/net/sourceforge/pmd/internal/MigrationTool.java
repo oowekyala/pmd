@@ -10,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
-
-import org.xml.sax.InputSource;
 
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -26,25 +23,12 @@ public class MigrationTool {
 
     private static final String STYLESHEET_PATH = "/ruleset_200_to_700_transform.xslt";
 
-    private static final XsltExecutable XSLT;
-
-
-    static {
-
-        Processor saxon = new Processor(false);
-        XsltCompiler compiler = saxon.newXsltCompiler();
-        XsltExecutable compiled;
-        try (InputStream in = MigrationTool.class.getResourceAsStream(STYLESHEET_PATH)) {
-            Source xsltSource = new SAXSource(new InputSource(in));
-            compiled = compiler.compile(xsltSource);
-        } catch (IOException | SaxonApiException e) {
-            e.printStackTrace();
-            compiled = null;
-        }
-        XSLT = compiled;
-    }
-
-
+    /**
+     * Converts a ruleset to the new schema by applying the stylesheet,
+     * prints the conversion result to stdout.
+     *
+     * @param args A file name to an XML in schema 2.0 version
+     */
     public static void main(String[] args) {
         Path input;
         if (args.length == 0) {

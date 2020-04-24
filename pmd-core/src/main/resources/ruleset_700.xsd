@@ -4,6 +4,9 @@
            targetNamespace="https://pmd-code.org/ruleset/7.0.0"
            elementFormDefault="qualified">
 
+    <!-- This is the main document for the schema -->
+    <!-- This draft version converts most attributes to nested elements -->
+
     <!-- TODO use xsd:documentation and xsd:annotation to document the schema -->
 
 
