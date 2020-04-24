@@ -1,6 +1,6 @@
-<ruleset xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+<ruleset xmlns="https://pmd-code.org/ruleset/7.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/7.0.0 ruleset_700.xsd">
+         xsi:schemaLocation="https://pmd-code.org/ruleset/7.0.0 ruleset_700.xsd">
     <name>My ruleset</name>
     <description>smsms</description>
 

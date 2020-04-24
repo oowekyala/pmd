@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
-           targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
+           xmlns="https://pmd-code.org/ruleset/7.0.0"
+           targetNamespace="https://pmd-code.org/ruleset/7.0.0"
            elementFormDefault="qualified">
 
     <!-- Common type definitions, can be reused by the test schema later -->

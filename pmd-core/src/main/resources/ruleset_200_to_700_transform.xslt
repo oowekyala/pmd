@@ -3,7 +3,7 @@
 <!-- Currently maps XPath rules to a new representation -->
 
 <xsl:stylesheet version="2.0"
-                xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+                xmlns="https://pmd-code.org/ruleset/7.0.0"
                 xmlns:m="http://pmd.sourceforge.net/ruleset/2.0.0"
                 xmlns:mf="localFunctions"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -14,7 +14,7 @@
     <xsl:output cdata-section-elements="m:xpath"/>
     <xsl:output method="xml" indent="yes"/>
 
-    <xsl:variable name="newNs">http://pmd.sourceforge.net/ruleset/7.0.0</xsl:variable>
+    <xsl:variable name="newNs">https://pmd-code.org/ruleset/7.0.0</xsl:variable>
 
     <!-- Local function definitions -->
 
@@ -216,7 +216,7 @@
         <xsl:element name="ruleset"
                      namespace="{$newNs}">
 
-            <xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance"><![CDATA[http://pmd.sourceforge.net/ruleset/7.0.0 file:///home/clifrr/Documents/Git/pmd/pmd-core/src/main/resources/ruleset_700.xsd]]></xsl:attribute>
+            <xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance"><![CDATA[https://pmd-code.org/ruleset/7.0.0 file:///home/clifrr/Documents/Git/pmd/pmd-core/src/main/resources/ruleset_700.xsd]]></xsl:attribute>
 
             <name>
                 <xsl:value-of select="@name"/>
