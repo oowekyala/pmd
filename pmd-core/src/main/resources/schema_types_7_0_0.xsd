@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+           targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="language-id">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="apex"/>
+                    <xs:enumeration value="java"/>
+                    <xs:enumeration value="swift"/>
+                    <xs:enumeration value="scala"/>
+                    <xs:enumeration value="xml"/>
+                    <!-- etc -->
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:string"/>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+
+    <xs:simpleType name="version-id">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="class-qualified-name">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[\w+$]++(\.[\w$]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="priority">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="1"/>
+                    <xs:maxInclusive value="5"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="lowest"/>
+                    <xs:enumeration value="low"/>
+                    <xs:enumeration value="medium"/>
+                    <xs:enumeration value="high"/>
+                    <xs:enumeration value="highest"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+
+</xs:schema>

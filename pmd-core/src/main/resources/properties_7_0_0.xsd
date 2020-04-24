@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+           targetNamespace="http://pmd.sourceforge.net/ruleset/7.0.0"
+           elementFormDefault="qualified">
+
+
+    <xs:element name="property-def">
+        <xs:annotation>
+            <xs:documentation>
+                Define a new property using its name, type, description, and default value.
+
+                Specifying a default value is not optional. If you have a hard time finding one, maybe the
+                property is very abstract, in which case consider using a blank property.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="type" type="property-type-id">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Type of values this property can take. Values of the
+                            property will be type-checked with specific rules.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="default-value" type="property-val"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:ID" use="required">
+                <xs:annotation>
+                    <xs:documentation>
+                        Name of the property being defined. This name must
+                        be unique among the other properties of this rule,
+                        or a construction exception will be thrown.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+
+    <!-- Property value override. Overriding anything else makes no sense. -->
+    <xs:element name="property">
+        <xs:annotation>
+            <xs:documentation>
+                Override the value of a pre-existing property.
+                The property is identified by its name.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="property-val">
+                    <xs:attribute name="name" type="xs:ID" use="required"/>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:simpleType name="property-type-id">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Integer"/>
+            <xs:enumeration value="String"/>
+            <xs:enumeration value="Boolean"/>
+            <xs:enumeration value="Double"/>
+            <!-- todo etc -->
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Property values subschema (recursive) -->
+
+    <xs:complexType name="property-val">
+        <xs:choice>
+            <xs:element ref="seq"/>
+            <xs:element ref="value"/>
+            <xs:element ref="none"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:element name="seq">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="seq"/>
+                <xs:element ref="value"/>
+                <xs:element ref="none"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="value" type="xs:string"/>
+    <xs:element name="none" fixed="" type="xs:string"/>
+
+</xs:schema>

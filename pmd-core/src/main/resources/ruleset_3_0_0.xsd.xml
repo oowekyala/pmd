@@ -5,48 +5,44 @@
     <!--Zero or more repetitions:-->
     <include-pattern>string</include-pattern>
     <!--Zero or more repetitions:-->
-    <java-rule name="stringy"
-               class="string"
-               message="string"
-               language="java"
-               priority="5"
-               minimumLanguageVersion="string"
-               maximumLanguageVersion="string"
-               since="string"
-               externalInfoUrl="string"
-               deprecated="false">
-        <!--Optional:-->
+    <java-rule language="swift">
+        <name>stringy</name>
+        <message>string</message>
         <description>string</description>
-        <!--Optional:-->
+        <priority>5</priority>
+        <class>string</class>
+        <class>string</class>
+        <since>6.0</since>
+        <applicable-versions>
+            <min>6</min>
+            <max>14-preview</max>
+        </applicable-versions>
         <properties>
-            <!--1 or more repetitions:-->
             <property name="string">
-                <!--Zero or more repetitions:-->
                 <value>string</value>
             </property>
         </properties>
-        <!--Optional:-->
         <examples>
             <!--Zero or more repetitions:-->
             <example>string</example>
         </examples>
     </java-rule>
     <!--Zero or more repetitions:-->
-    <xpath-rule name="stringx"
-                language="apex"
-                message="string"
-                priority="5"
-                minimumLanguageVersion="string"
-                maximumLanguageVersion="string"
-                since="string"
-                externalInfoUrl="string"
-                deprecated="false">
+    <xpath-rule language="apex">
+        <name>stringx</name>
+        <message>string</message>
         <description>string</description>
-        <xpath version="2.0"><![CDATA[
+
+        <suppressions>
+            <xpath>
+                ./FooB
+            </xpath>
+        </suppressions>
 
 
-
-        ]]></xpath>
+        <xpath version="2.0">
+            //Foo
+        </xpath>
 
 
         <!--Optional:-->
@@ -89,4 +85,18 @@
     <ruleset-import ref="string">
         <exclude-rule name="string"/>
     </ruleset-import>
+    <seq>
+        <seq>
+            <value>
+
+            </value>
+        </seq>
+        <value>
+            <value>
+                <seq>
+                    <
+                </seq>
+            </value>
+        </value>
+    </seq>
 </ruleset>
