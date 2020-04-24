@@ -8,8 +8,7 @@
         Rules which enforce a specific coding style.
     </description>
 
-    <rule-def>
-      <name>AtLeastOneConstructor</name>
+    <rule-def name="AvoidDollarSigns">
       <message>Each class should declare at least one constructor</message>
       <description>
 
@@ -23,7 +22,7 @@
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
    // missing constructor
@@ -31,12 +30,11 @@ public class Foo {
   public void doOtherThing { ... }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>AvoidDollarSigns</name>
+    <rule-def name="AvoidDollarSigns">
       <message>Avoid using dollar signs in variable/method/class/interface names</message>
       <description>
             Avoid using dollar signs in variable/method/class/interface names.
@@ -47,17 +45,16 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.AvoidDollarSignsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Fo$o {  // not a recommended name
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>AvoidProtectedFieldInFinalClass</name>
+    <rule-def name="AvoidProtectedFieldInFinalClass">
       <message>Avoid protected fields in a final class.  Change to private or package access.</message>
       <description>
             Do not use protected fields in final classes since they cannot be subclassed.
@@ -67,17 +64,17 @@ public class Fo$o {  // not a recommended name
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration[@Final= true()]
 /ClassOrInterfaceBody/ClassOrInterfaceBodyDeclaration
 /FieldDeclaration[@Protected= true()]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public final class Bar {
   private int x;
@@ -85,12 +82,11 @@ public final class Bar {
   Bar() {}
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>AvoidProtectedMethodInFinalClassNotExtending</name>
+    <rule-def name="AvoidProtectedMethodInFinalClassNotExtending">
       <message>Avoid protected methods in a final class that doesn't extend anything other than Object.  Change to private or package access.</message>
       <description>
             Do not use protected methods in most final classes since they cannot be subclassed. This should
@@ -101,29 +97,28 @@ public final class Bar {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration[@Final= true() and not(ExtendsList)]
 /ClassOrInterfaceBody/ClassOrInterfaceBodyDeclaration
 /MethodDeclaration[@Protected=true() and @Name != 'finalize']
  
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public final class Foo {
   private int bar() {}
   protected int baz() {} // Foo cannot be subclassed, and doesn't extend anything, so is baz() really private or package visible?
 }
  
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>AvoidUsingNativeCode</name>
+    <rule-def name="AvoidUsingNativeCode">
       <message>The use of native code is not recommended.</message>
       <description>
             Unnecessary reliance on Java Native Interface (JNI) calls directly reduces application portability
@@ -133,11 +128,11 @@ public final class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//Name[starts-with(@Image,'System.loadLibrary')]</expr>
+            <expr><![CDATA[//Name[starts-with(@Image,'System.loadLibrary')]]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class SomeJNIClass {
 
@@ -154,12 +149,11 @@ public class SomeJNIClass {
      }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>BooleanGetMethodName</name>
+    <rule-def name="BooleanGetMethodName">
       <message>A 'getX()' method which returns a boolean should be named 'isX()'</message>
       <description>
             Methods that return boolean results should be named as predicate statements to denote this.
@@ -170,7 +164,7 @@ public class SomeJNIClass {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //MethodDeclaration
     [starts-with(@Name, 'get')]
@@ -180,7 +174,7 @@ public class SomeJNIClass {
         and not(../Annotation//Name[@Image = 'Override'])
     ]
 
-                </expr>
+                ]]></expr>
             <property-defs>
                <property-def name="checkParameterizedMethods">
                   <type>Boolean</type>
@@ -193,18 +187,17 @@ public class SomeJNIClass {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public boolean getFoo();            // bad
 public boolean isFoo();             // ok
 public boolean getFoo(boolean bar); // ok, unless checkParameterizedMethods=true
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>CallSuperInConstructor</name>
+    <rule-def name="CallSuperInConstructor">
       <message>It is a good practice to call super() in a constructor</message>
       <description>
             It is a good practice to call super() in a constructor. If super() is not called but
@@ -214,18 +207,18 @@ public boolean getFoo(boolean bar); // ok, unless checkParameterizedMethods=true
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration[ExtendsList/*]
 /ClassOrInterfaceBody
  /ClassOrInterfaceBodyDeclaration
  /ConstructorDeclaration[ not(.//ExplicitConstructorInvocation) ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo extends Bar{
   public Foo() {
@@ -239,12 +232,11 @@ public class Foo extends Bar{
   }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ClassNamingConventions</name>
+    <rule-def name="ClassNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for type declarations. This rule reports
@@ -261,7 +253,7 @@ public class Foo extends Bar{
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.ClassNamingConventionsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 // This is Pascal case, the recommended naming convention in Java
 // Note that the default values of this rule don't allow underscores
@@ -276,12 +268,11 @@ public abstract class Thing {}
 // This class doesn't respect the convention, and will be flagged
 public class Éléphant {}
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>CommentDefaultAccessModifier</name>
+    <rule-def name="CommentDefaultAccessModifier">
       <message>Missing commented default access modifier</message>
       <description>
             To avoid mistakes if we want that an Annotation, Class, Enum, Method, Constructor or Field have a default access modifier
@@ -296,7 +287,7 @@ public class Éléphant {}
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.CommentDefaultAccessModifierRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     final String stringValue = "some string";
@@ -319,12 +310,11 @@ public class Foo {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ConfusingTernary</name>
+    <rule-def name="ConfusingTernary">
       <message>Avoid if (x != y) ..; else ..;</message>
       <description>
             Avoid negation within an "if" expression with an "else" clause.  For example, rephrase:
@@ -340,18 +330,17 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.ConfusingTernaryRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 boolean bar(int x, int y) {
     return (x != y) ? diff : same;
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ControlStatementBraces</name>
+    <rule-def name="ControlStatementBraces">
       <message>This statement should have braces</message>
       <description>
             Enforce a policy for braces on control statements. It is recommended to use braces on 'if ... else'
@@ -366,7 +355,7 @@ boolean bar(int x, int y) {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                 //WhileStatement[$checkWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
                 |
                 //ForStatement[$checkForStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
@@ -384,11 +373,11 @@ boolean bar(int x, int y) {
                 |
                 (: Reports case labels if one of their subordinate statements is not braced :)
                 //SwitchLabel[$checkCaseStmt]
-                             [count(following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement) &gt; 1
+                             [count(following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement) > 1
                               or (some $stmt (: in only the block statements until the next label :)
                                   in following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement
                                   satisfies not($stmt/Statement/Block))]
-                </expr>
+                ]]></expr>
             <property-defs>
                <property-def name="checkIfElseStmt">
                   <type>Boolean</type>
@@ -443,7 +432,7 @@ boolean bar(int x, int y) {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 while (true)    // not recommended
   x++;
@@ -452,12 +441,11 @@ while (true) {  // preferred approach
   x++;
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>DefaultPackage</name>
+    <rule-def name="DefaultPackage">
       <message>Use explicit scoping instead of the default package private level</message>
       <description>
             Use explicit scoping instead of accidental usage of default package private level.
@@ -467,7 +455,7 @@ while (true) {  // preferred approach
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration[@Interface= false()]
 /ClassOrInterfaceBody
@@ -478,13 +466,12 @@ FieldDeclaration[@PackagePrivate= true()]
 or MethodDeclaration[@PackagePrivate= true()]
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
    </rule-def>
 
-    <rule-def>
-      <name>DontImportJavaLang</name>
+    <rule-def name="DontImportJavaLang">
       <message>Avoid importing anything from the package 'java.lang'</message>
       <description>
             Avoid importing anything from the package 'java.lang'.  These classes are automatically imported (JLS 7.5.3).
@@ -495,7 +482,7 @@ or MethodDeclaration[@PackagePrivate= true()]
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.DontImportJavaLangRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 import java.lang.String;    // this is unnecessary
 
@@ -507,12 +494,11 @@ import java.lang.*;         // this is bad
 
 public class Foo {}
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>DuplicateImports</name>
+    <rule-def name="DuplicateImports">
       <message>Avoid duplicate imports such as ''{0}''</message>
       <description>
             Duplicate or overlapping import statements should be avoided.
@@ -523,18 +509,17 @@ public class Foo {}
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.DuplicateImportsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 import java.lang.String;
 import java.lang.*;
 public class Foo {}
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>EmptyMethodInAbstractClassShouldBeAbstract</name>
+    <rule-def name="EmptyMethodInAbstractClassShouldBeAbstract">
       <message>An empty method in an abstract class should be abstract instead</message>
       <description>
             Empty or auto-generated methods in an abstract class should be tagged as abstract. This helps to remove their inapproprate
@@ -544,7 +529,7 @@ public class Foo {}
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration[@Abstract = true()]
     /ClassOrInterfaceBody
@@ -562,11 +547,11 @@ public class Foo {}
         ( not (./Block/*) )
     ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public abstract class ShouldBeAbstract {
     public Object couldBeAbstract() {
@@ -578,33 +563,31 @@ public abstract class ShouldBeAbstract {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ExtendsObject</name>
+    <rule-def name="ExtendsObject">
       <message>No need to explicitly extend Object.</message>
       <description>No need to explicitly extend Object.</description>
       <since>5.0</since>
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//ExtendsList/ClassOrInterfaceType[@Image='Object' or @Image='java.lang.Object']</expr>
+            <expr><![CDATA[//ExtendsList/ClassOrInterfaceType[@Image='Object' or @Image='java.lang.Object']]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo extends Object {     // not required
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>FieldDeclarationsShouldBeAtStartOfClass</name>
+    <rule-def name="FieldDeclarationsShouldBeAtStartOfClass">
       <message>Fields should be declared at the top of the class, before any method declarations, constructors, initializers or inner classes.</message>
       <description>
             Fields should be declared at the top of the class, before any method declarations, constructors, initializers or inner classes.
@@ -615,7 +598,7 @@ public class Foo extends Object {     // not required
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FieldDeclarationsShouldBeAtStartOfClassRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class HelloWorldBean {
 
@@ -630,13 +613,12 @@ public class HelloWorldBean {
   private String _fieldInWrongLocation;
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
 
-    <rule-def>
-      <name>FieldNamingConventions</name>
+    <rule-def name="FieldNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for field declarations. This rule reports variable declarations
@@ -652,7 +634,7 @@ public class HelloWorldBean {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FieldNamingConventionsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
             class Foo {
                 int myField = 1; // This is in camel case, so it's ok
@@ -671,12 +653,11 @@ public class HelloWorldBean {
                 }
             }
             
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ForLoopShouldBeWhileLoop</name>
+    <rule-def name="ForLoopShouldBeWhileLoop">
       <message>This for loop could be simplified to a while loop</message>
       <description>
             Some for loops can be simplified to while loops, this makes them more concise.
@@ -685,7 +666,7 @@ public class HelloWorldBean {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ForStatement
   [not(LocalVariableDeclaration)]
@@ -693,11 +674,11 @@ public class HelloWorldBean {
   [not(ForUpdate)]
   [Expression]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     void bar() {
@@ -705,12 +686,11 @@ public class Foo {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>FormalParameterNamingConventions</name>
+    <rule-def name="FormalParameterNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for formal parameters of methods and lambdas.
@@ -726,7 +706,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FormalParameterNamingConventionsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
             class Foo {
 
@@ -739,21 +719,20 @@ public class Foo {
                 void lambdas() {
 
                     // lambdas parameters can be configured separately
-                    Consumer&lt;String&gt; lambda1 = s_str -&gt; { };
+                    Consumer<String> lambda1 = s_str -> { };
 
                     // lambda parameters with an explicit type can be configured separately
-                    Consumer&lt;String&gt; lambda1 = (String str) -&gt; { };
+                    Consumer<String> lambda1 = (String str) -> { };
 
                 }
 
             }
             
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>GenericsNaming</name>
+    <rule-def name="GenericsNaming">
       <message>Generics names should be a one letter long and upper case.</message>
       <description>
             Names for references to generic values should be limited to a single uppercase letter.
@@ -762,43 +741,42 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //TypeDeclaration/ClassOrInterfaceDeclaration/TypeParameters/TypeParameter[
-  string-length(@Image) &gt; 1
+  string-length(@Image) > 1
   or
   upper-case(@Image) != @Image
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
-public interface GenericDao&lt;E extends BaseModel, K extends Serializable&gt; extends BaseDao {
+public interface GenericDao<E extends BaseModel, K extends Serializable> extends BaseDao {
     // This is ok...
 }
 
-public interface GenericDao&lt;E extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<E extends BaseModel, K extends Serializable> {
     // Also this
 }
 
-public interface GenericDao&lt;e extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<e extends BaseModel, K extends Serializable> {
     // 'e' should be an 'E'
 }
 
-public interface GenericDao&lt;EF extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<EF extends BaseModel, K extends Serializable> {
    // 'EF' is not ok.
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
 
-    <rule-def>
-      <name>IdenticalCatchBranches</name>
+    <rule-def name="IdenticalCatchBranches">
       <message>''catch'' branch identical to ''{0}'' branch</message>
       <description>
             Identical `catch` branches use up vertical space and increase the complexity of code without
@@ -811,7 +789,7 @@ public interface GenericDao&lt;EF extends BaseModel, K extends Serializable&gt; 
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.IdenticalCatchBranchesRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 try {
     // do something
@@ -827,12 +805,11 @@ try {
     throw e;
 }
             
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LinguisticNaming</name>
+    <rule-def name="LinguisticNaming">
       <message>Linguistics Antipattern - Method name and return type is inconsistent linguistically</message>
       <description>
             This rule finds Linguistic Naming Antipatterns. It checks for fields, that are named, as if they should
@@ -853,7 +830,7 @@ try {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LinguisticNamingRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class LinguisticNaming {
     int isValid;    // the field name indicates a boolean, but it is an int.
@@ -893,12 +870,11 @@ public class LinguisticNaming {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LocalHomeNamingConvention</name>
+    <rule-def name="LocalHomeNamingConvention">
       <message>The Local Home interface of a Session EJB should be suffixed by 'LocalHome'</message>
       <description>
             The Local Home interface of a Session EJB should be suffixed by 'LocalHome'.
@@ -907,7 +883,7 @@ public class LinguisticNaming {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration
 [
@@ -921,22 +897,21 @@ public class LinguisticNaming {
     )
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public interface MyBeautifulLocalHome extends javax.ejb.EJBLocalHome {} // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-standard name
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LocalInterfaceSessionNamingConvention</name>
+    <rule-def name="LocalInterfaceSessionNamingConvention">
       <message>The Local Interface of a Session EJB should be suffixed by 'Local'</message>
       <description>
             The Local Interface of a Session EJB should be suffixed by 'Local'.
@@ -945,7 +920,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-s
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration
 [
@@ -959,22 +934,21 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-s
     )
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public interface MyLocal extends javax.ejb.EJBLocalObject {}                // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBLocalObject {}    // non-standard name
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LocalVariableCouldBeFinal</name>
+    <rule-def name="LocalVariableCouldBeFinal">
       <message>Local variable ''{0}'' could be declared final</message>
       <description>
             A local variable assigned only once can be declared final.
@@ -985,7 +959,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalObject {}    // n
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LocalVariableCouldBeFinalRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Bar {
     public void foo () {
@@ -994,12 +968,11 @@ public class Bar {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LocalVariableNamingConventions</name>
+    <rule-def name="LocalVariableNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for local variable declarations and other locally-scoped
@@ -1015,7 +988,7 @@ public class Bar {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LocalVariableNamingConventionsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
             class Foo {
                 void bar() {
@@ -1033,12 +1006,11 @@ public class Bar {
                 }
             }
             
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>LongVariable</name>
+    <rule-def name="LongVariable">
       <message>Avoid excessively long variable names like {0}</message>
       <description>
             Fields, formal arguments, or local variable names that are too long can make the code difficult to follow.
@@ -1047,7 +1019,7 @@ public class Bar {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//VariableDeclaratorId[string-length(@Name) &gt; $minimum]</expr>
+            <expr><![CDATA[//VariableDeclaratorId[string-length(@Name) > $minimum]]]></expr>
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
@@ -1060,24 +1032,23 @@ public class Bar {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Something {
     int reallyLongIntName = -3;             // VIOLATION - Field
     public static void main( String argumentsList[] ) { // VIOLATION - Formal
         int otherReallyLongName = -5;       // VIOLATION - Local
         for (int interestingIntIndex = 0;   // VIOLATION - For
-             interestingIntIndex &lt; 10;
+             interestingIntIndex < 10;
              interestingIntIndex ++ ) {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>MDBAndSessionBeanNamingConvention</name>
+    <rule-def name="MDBAndSessionBeanNamingConvention">
       <message>SessionBean or MessageBean should be suffixed by Bean</message>
       <description>
             The EJB Specification states that any MessageDrivenBean or SessionBean should be suffixed by 'Bean'.
@@ -1086,7 +1057,7 @@ public class Something {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //TypeDeclaration/ClassOrInterfaceDeclaration
 [
@@ -1102,22 +1073,21 @@ public class Something {
     )
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class SomeBean implements SessionBean{}                  // proper name
 
 public class MissingTheProperSuffix implements SessionBean {}   // non-standard name
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>MethodArgumentCouldBeFinal</name>
+    <rule-def name="MethodArgumentCouldBeFinal">
       <message>Parameter ''{0}'' is not assigned and could be declared final</message>
       <description>
             A method argument that is never re-assigned within the method can be declared final.
@@ -1128,7 +1098,7 @@ public class MissingTheProperSuffix implements SessionBean {}   // non-standard 
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.MethodArgumentCouldBeFinalRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public void foo1 (String param) {       // do stuff with param never assigning it
 
@@ -1138,12 +1108,11 @@ public void foo2 (final String param) { // better, do stuff with param never ass
 
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>MethodNamingConventions</name>
+    <rule-def name="MethodNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for method declarations. This rule reports
@@ -1159,19 +1128,18 @@ public void foo2 (final String param) { // better, do stuff with param never ass
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.MethodNamingConventionsRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     public void fooStuff() {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>NoPackage</name>
+    <rule-def name="NoPackage">
       <message>All classes, interfaces, enums and annotations must belong to a named package</message>
       <description>
             Detects when a class, interface, enum or annotation does not have a package definition.
@@ -1180,22 +1148,21 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>/CompilationUnit[not(./PackageDeclaration)]/TypeDeclaration[1]</expr>
+            <expr><![CDATA[/CompilationUnit[not(./PackageDeclaration)]/TypeDeclaration[1]]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 // no package declaration
 public class ClassInDefaultPackage {
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UseUnderscoresInNumericLiterals</name>
+    <rule-def name="UseUnderscoresInNumericLiterals">
       <message>Number {0} should separate every third digit with an underscore</message>
       <description>
             Since Java 1.7, numeric literals can use underscores to separate digits. This rule enforces that
@@ -1209,7 +1176,7 @@ public class ClassInDefaultPackage {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //Literal[
      @IntLiteral = true()
@@ -1225,16 +1192,16 @@ public class ClassInDefaultPackage {
    some $num in tokenize(@Image, "[dDfFlLeE+\-]")
    satisfies not(
                   ( contains($num, ".")
-                    and string-length(substring-before($num, ".")) &lt;= $acceptableDecimalLength
-                    and string-length(substring-after($num, ".")) &lt;= $acceptableDecimalLength
-                    or string-length($num) &lt;= $acceptableDecimalLength
+                    and string-length(substring-before($num, ".")) <= $acceptableDecimalLength
+                    and string-length(substring-after($num, ".")) <= $acceptableDecimalLength
+                    or string-length($num) <= $acceptableDecimalLength
                   )
                   and not(contains($num,"_"))
                   or matches($num, "^[0-9]{1,3}(_[0-9]{3})*(\.([0-9]{3}_)*[0-9]{1,3})?$")
                 )
  ]
 
-                </expr>
+                ]]></expr>
             <property-defs>
                <property-def name="acceptableDecimalLength">
                   <type>Integer</type>
@@ -1247,18 +1214,17 @@ public class ClassInDefaultPackage {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     private int num = 1000000; // should be 1_000_000
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>OnlyOneReturn</name>
+    <rule-def name="OnlyOneReturn">
       <message>A method should have only one exit point, and that should be the last statement in the method</message>
       <description>
             A method should have only one exit point, and that should be the last statement in the method.
@@ -1269,23 +1235,22 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.OnlyOneReturnRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class OneReturnOnly1 {
   public void foo(int x) {
-    if (x &gt; 0) {
+    if (x > 0) {
       return "hey";   // first exit
     }
     return "hi";    // second exit
   }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>PackageCase</name>
+    <rule-def name="PackageCase">
       <message>Package name contains upper case characters</message>
       <description>
             Detects when a package definition contains uppercase characters.
@@ -1294,23 +1259,22 @@ public class OneReturnOnly1 {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//PackageDeclaration/Name[lower-case(@Image)!=@Image]</expr>
+            <expr><![CDATA[//PackageDeclaration/Name[lower-case(@Image)!=@Image]]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 package com.MyCompany;  // should be lowercase name
 
 public class SomeClass {
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>PrematureDeclaration</name>
+    <rule-def name="PrematureDeclaration">
       <message>Avoid declaring a variable if it is unreferenced before a possible exit point.</message>
       <description>
             Checks for variables that are defined before they might be used. A reference is deemed to be premature if it is created right before a block of code that doesn't use it that also has the ability to return or throw an exception.
@@ -1321,7 +1285,7 @@ public class SomeClass {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.PrematureDeclarationRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public int getLength(String[] strings) {
 
@@ -1336,12 +1300,11 @@ public int getLength(String[] strings) {
     return length;
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>RemoteInterfaceNamingConvention</name>
+    <rule-def name="RemoteInterfaceNamingConvention">
       <message>Remote Interface of a Session EJB should NOT be suffixed</message>
       <description>
             Remote Interface of a Session EJB should not have a suffix.
@@ -1350,7 +1313,7 @@ public int getLength(String[] strings) {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration
 [
@@ -1367,11 +1330,11 @@ public int getLength(String[] strings) {
     )
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 /* Poor Session suffix */
 public interface BadSuffixSession extends javax.ejb.EJBObject {}
@@ -1382,12 +1345,11 @@ public interface BadSuffixEJB extends javax.ejb.EJBObject {}
 /* Poor Bean suffix */
 public interface BadSuffixBean extends javax.ejb.EJBObject {}
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>RemoteSessionInterfaceNamingConvention</name>
+    <rule-def name="RemoteSessionInterfaceNamingConvention">
       <message>Remote Home interface of a Session EJB should be suffixed by 'Home'</message>
       <description>
             A Remote Home interface type of a Session EJB should be suffixed by 'Home'.
@@ -1396,7 +1358,7 @@ public interface BadSuffixBean extends javax.ejb.EJBObject {}
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //ClassOrInterfaceDeclaration
 [
@@ -1410,22 +1372,21 @@ public interface BadSuffixBean extends javax.ejb.EJBObject {}
     )
 ]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public interface MyBeautifulHome extends javax.ejb.EJBHome {}       // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-standard name
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ShortClassName</name>
+    <rule-def name="ShortClassName">
       <message>Avoid short class names like {0}</message>
       <description>
             Short Classnames with fewer than e.g. five characters are not recommended.
@@ -1434,7 +1395,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-stand
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//ClassOrInterfaceDeclaration[string-length(@SimpleName) &lt; $minimum]</expr>
+            <expr><![CDATA[//ClassOrInterfaceDeclaration[string-length(@SimpleName) < $minimum]]]></expr>
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
@@ -1447,17 +1408,16 @@ public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-stand
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ShortMethodName</name>
+    <rule-def name="ShortMethodName">
       <message>Avoid using short method names</message>
       <description>
             Method names that are very short are not helpful to the reader.
@@ -1466,7 +1426,7 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>//MethodDeclaration[string-length(@Name) &lt; $minimum]</expr>
+            <expr><![CDATA[//MethodDeclaration[string-length(@Name) < $minimum]]]></expr>
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
@@ -1479,19 +1439,18 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class ShortMethod {
     public void a( int i ) { // Violation
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>ShortVariable</name>
+    <rule-def name="ShortVariable">
       <message>Avoid variables with short names like {0}</message>
       <description>
             Fields, local variables, or parameter names that are very short are not helpful to the reader.
@@ -1500,9 +1459,9 @@ public class ShortMethod {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
-//VariableDeclaratorId[string-length(@Name) &lt; $minimum]
+//VariableDeclaratorId[string-length(@Name) < $minimum]
  (: ForStatement :)
  [not(../../..[self::ForInit])]
  (: Foreach statement :)
@@ -1512,7 +1471,7 @@ public class ShortMethod {
  (: Lambda expression parameter :)
  [not(parent::LambdaExpression or ../../..[self::LambdaExpression])]
 
-                </expr>
+                ]]></expr>
             <property-defs>
                <property-def name="minimum">
                   <type>Integer</type>
@@ -1525,13 +1484,13 @@ public class ShortMethod {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Something {
     private int q = 15;                         // field - too short
     public static void main( String as[] ) {    // formal arg - too short
         int r = 20 + q;                         // local var - too short
-        for (int i = 0; i &lt; 10; i++) {          // not a violation (inside 'for' loop)
+        for (int i = 0; i < 10; i++) {          // not a violation (inside 'for' loop)
             r += q;
         }
         for (Integer i : numbers) {             // not a violation (inside 'for-each' loop)
@@ -1540,12 +1499,11 @@ public class Something {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>TooManyStaticImports</name>
+    <rule-def name="TooManyStaticImports">
       <message>Too many static imports may lead to messy code</message>
       <description>
             If you overuse the static import feature, it can make your program unreadable and
@@ -1557,7 +1515,7 @@ public class Something {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>.[count(ImportDeclaration[@Static = true()]) &gt; $maximumStaticImports]</expr>
+            <expr><![CDATA[.[count(ImportDeclaration[@Static = true()]) > $maximumStaticImports]]]></expr>
             <property-defs>
                <property-def name="maximumStaticImports">
                   <type>Integer</type>
@@ -1570,7 +1528,7 @@ public class Something {
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 import static Lennon;
 import static Ringo;
@@ -1578,13 +1536,12 @@ import static George;
 import static Paul;
 import static Yoko; // Too much !
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
 
-    <rule-def>
-      <name>UnnecessaryAnnotationValueElement</name>
+    <rule-def name="UnnecessaryAnnotationValueElement">
       <message>Avoid the use of value in annotations when it's the only element</message>
       <description>
             Avoid the use of value in annotations when it's the only element.
@@ -1595,7 +1552,7 @@ import static Yoko; // Too much !
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryAnnotationValueElementRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 @TestClassAnnotation(value = "TEST")
 public class Foo {
@@ -1626,13 +1583,12 @@ public class Foo {
 }
 
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
 
-    <rule-def>
-      <name>UnnecessaryConstructor</name>
+    <rule-def name="UnnecessaryConstructor">
       <message>Avoid unnecessary constructors - the compiler will generate these for you</message>
       <description>
             This rule detects when a constructor is not necessary; i.e., when there is only one constructor and the
@@ -1645,18 +1601,17 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryConstructorRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
   public Foo() {}
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UnnecessaryFullyQualifiedName</name>
+    <rule-def name="UnnecessaryFullyQualifiedName">
       <message>Unnecessary use of fully qualified name ''{0}'' due to existing {2}import ''{1}''</message>
       <description>
             Import statements allow the use of non-fully qualified names.  The use of a fully qualified name
@@ -1668,7 +1623,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryFullyQualifiedNameRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 import java.util.List;
 
@@ -1677,12 +1632,11 @@ public class Foo {
     private List list2;             // More appropriate given import of 'java.util.List'
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UnnecessaryLocalBeforeReturn</name>
+    <rule-def name="UnnecessaryLocalBeforeReturn">
       <message>Consider simply returning the value vs storing it in local variable ''{0}''</message>
       <description>
             Avoid the creation of unnecessary local variables
@@ -1693,7 +1647,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryLocalBeforeReturnRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
    public int foo() {
@@ -1702,12 +1656,11 @@ public class Foo {
    }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UnnecessaryModifier</name>
+    <rule-def name="UnnecessaryModifier">
       <message>Unnecessary modifier{0} on {1} ''{2}''{3}</message>
       <description>
             Fields in interfaces and annotations are automatically `public static final`, and methods are `public abstract`.
@@ -1722,7 +1675,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryModifierRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public @interface Annotation {
     public abstract void bar();     // both abstract and public are ignored by the compiler
@@ -1743,12 +1696,11 @@ public class Bar {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UnnecessaryReturn</name>
+    <rule-def name="UnnecessaryReturn">
       <message>Avoid unnecessary return statements</message>
       <description>
             Avoid the use of unnecessary return statements.
@@ -1759,7 +1711,7 @@ public class Bar {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryReturnRule</class>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     public void bar() {
@@ -1768,12 +1720,11 @@ public class Foo {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UseDiamondOperator</name>
+    <rule-def name="UseDiamondOperator">
       <message>Explicit type arguments can be replaced by Diamond Operator</message>
       <description>
             Use the diamond operator to let the type be inferred automatically. With the Diamond operator it is possible
@@ -1785,7 +1736,7 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 (
 //VariableInitializer[preceding-sibling::VariableDeclaratorId[1]/@TypeInferred=false()]
@@ -1799,30 +1750,29 @@ public class Foo {
     [ClassOrInterfaceType/TypeArguments[@Diamond=false() and not(TypeArgument//TypeArguments)]]
     [not(ArrayDimsAndInits)]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
-List&lt;String&gt; strings = new ArrayList&lt;String&gt;(); // unnecessary duplication of type parameters
-List&lt;String&gt; stringsWithDiamond = new ArrayList&lt;&gt;(); // using the diamond operator is more concise
+List<String> strings = new ArrayList<String>(); // unnecessary duplication of type parameters
+List<String> stringsWithDiamond = new ArrayList<>(); // using the diamond operator is more concise
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UselessParentheses</name>
+    <rule-def name="UselessParentheses">
       <message>Useless parentheses.</message>
       <description>Useless parentheses should be removed.</description>
       <since>5.0</since>
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
-//Expression[not(parent::PrimaryPrefix)]/PrimaryExpression[count(*)&gt;1]
+//Expression[not(parent::PrimaryPrefix)]/PrimaryExpression[count(*)>1]
   /PrimaryPrefix/Expression
     [not(./CastExpression)]
     [not(./ConditionalExpression)]
@@ -1877,11 +1827,11 @@ List&lt;String&gt; stringsWithDiamond = new ArrayList&lt;&gt;(); // using the di
     not(./ConditionalOrExpression) and
     not(./EqualityExpression)]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
 
@@ -1894,12 +1844,11 @@ public class Foo {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UselessQualifiedThis</name>
+    <rule-def name="UselessQualifiedThis">
       <message>Useless qualified this usage in the same class.</message>
       <description>
             Reports qualified this usages in the same class.
@@ -1908,7 +1857,7 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
                     
 //PrimaryExpression
 [PrimaryPrefix/Name[@Image]]
@@ -1917,11 +1866,11 @@ public class Foo {
 [ancestor::ClassOrInterfaceBodyDeclaration[1][@AnonymousInnerClass= false()]]
 /PrimaryPrefix/Name[@Image = ancestor::ClassOrInterfaceDeclaration[1]/@SimpleName]
 
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 public class Foo {
     final Foo otherFoo = Foo.this;  // use "this" directly
@@ -1948,12 +1897,11 @@ public class Foo {
     }
 }
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 
-    <rule-def>
-      <name>UseShortArrayInitializer</name>
+    <rule-def name="UseShortArrayInitializer">
       <message>Array initialization can be written shorter</message>
       <description>
 
@@ -1967,20 +1915,20 @@ public class Foo {
       <impl>
          <language id="java"/>
          <xpath>
-            <expr>
+            <expr><![CDATA[
 //VariableDeclarator
     [VariableDeclaratorId[@ArrayType = true() and @TypeInferred = false()]]
     [VariableInitializer/Expression/PrimaryExpression/PrimaryPrefix/AllocationExpression/ArrayDimsAndInits/ArrayInitializer]
-                </expr>
+                ]]></expr>
          </xpath>
       </impl>
       <examples>
-         <example>
+         <example><![CDATA[
             
 Foo[] x = new Foo[] { ... }; // Overly verbose
 Foo[] x = { ... }; //Equivalent to above line
 
-        </example>
+        ]]></example>
       </examples>
    </rule-def>
 </ruleset>

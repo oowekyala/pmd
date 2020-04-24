@@ -30,6 +30,10 @@
                 </xs:choice>
             </xs:sequence>
         </xs:complexType>
+        <xs:unique name="ruleNamesMustBeUnique">
+            <xs:selector xpath="rule-def"/>
+            <xs:field xpath="@name"/>
+        </xs:unique>
     </xs:element>
 
     <xs:group name="optional-rule-elts">
@@ -65,7 +69,6 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- Required               -->
-                <xs:element name="name" type="xs:string"/>
                 <xs:element name="message" type="xs:string"/>
                 <xs:element name="description" type="xs:string"/>
                 <xs:group ref="optional-rule-elts"/>
@@ -73,6 +76,7 @@
                 <xs:element name="properties" type="property-overrides" minOccurs="0"/>
                 <xs:element name="examples" type="examples" minOccurs="0"/>
             </xs:sequence>
+            <xs:attribute name="name" type="rule-name"/>
         </xs:complexType>
     </xs:element>
 

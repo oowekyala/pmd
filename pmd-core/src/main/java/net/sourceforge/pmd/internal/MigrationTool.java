@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -30,15 +32,7 @@ public class MigrationTool {
      * @param args A file name to an XML in schema 2.0 version
      */
     public static void main(String[] args) {
-        Path input;
-        if (args.length == 0) {
-            bail("I need a filename");
-        }
-        input = Paths.get(args[0]);
-
-        if (!Files.exists(input) || Files.isDirectory(input)) {
-            bail("Not a regular file:" + input);
-        }
+        Path input = getInput(args);
 
 
         Processor saxon = new Processor(false);
@@ -62,7 +56,21 @@ public class MigrationTool {
 
     }
 
-    public static void bail(String s) {
+    @NonNull
+    static Path getInput(String[] args) {
+        Path input;
+        if (args.length == 0) {
+            bail("I need a filename");
+        }
+        input = Paths.get(args[0]);
+
+        if (!Files.exists(input) || Files.isDirectory(input)) {
+            bail("Not a regular file:" + input);
+        }
+        return input;
+    }
+
+    static void bail(String s) {
         System.err.println(s);
         System.exit(1);
     }

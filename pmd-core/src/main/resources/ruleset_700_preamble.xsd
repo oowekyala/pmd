@@ -56,7 +56,7 @@
 
     <xs:simpleType name="class-qualified-name">
         <xs:restriction base="xs:string">
-            <xs:pattern value="[\w_$]++(\.[\w_$]+)*"/>
+            <xs:pattern value="[\w_$]+(\.[\w_$]+)*"/>
         </xs:restriction>
     </xs:simpleType>
 
