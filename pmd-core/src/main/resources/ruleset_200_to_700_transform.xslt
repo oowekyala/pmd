@@ -21,6 +21,12 @@
         <xsl:sequence select="replace($str, '^\s*(.+?)\s*$', '$1')"/>
     </xsl:function>
 
+    <xsl:function name="mf:xpath_10_to_20_automigrate" as="xs:string">
+        <xsl:param name="str" as="xs:string"/>
+        <!-- TODO -->
+        <xsl:sequence select="$str"/>
+    </xsl:function>
+
     <xsl:function name="mf:get-property-internal" as="xs:string">
         <xsl:param name="prop" as="element(m:property)*"/>
         <xsl:choose>
@@ -45,41 +51,98 @@
         <xsl:value-of select="mf:trim(mf:get-property-internal($prop))"/>
     </xsl:function>
 
-    <!-- Match XPath rules  -->
-    <xsl:template match="m:rule[@class='net.sourceforge.pmd.lang.rule.XPathRule']">
-        <xsl:param name="xpath-text" select="mf:get-property(m:properties/m:property[@name='xpath'])"/>
-        <xsl:param name="xpath-version" select="mf:get-property(m:properties/m:property[@name='version'])"/>
+    <xsl:function name="mf:get-named-property" as="xs:string?">
+        <xsl:param name="name" as="xs:string"/>
+        <xsl:value-of select="mf:get-property(m:properties/m:property[@name=$name])"/>
+    </xsl:function>
 
-        <!-- The rule tag is replaced with this xpath-rule  -->
+    <xsl:function name="mf:is-ignored-xp" as="xs:string">
+        <xsl:param name="prop" as="element(m:property)*"/>
+        <xsl:value-of select="mf:trim(mf:get-property-internal($prop))"/>
+    </xsl:function>
+
+    <xsl:function name="mf:priority-to-symbolic" as="xs:string">
+        <xsl:param name="p" as="xs:integer?"/>
+        <xsl:choose>
+            <xsl:when test="$p=1">highest</xsl:when>
+            <xsl:when test="$p=2">high</xsl:when>
+            <xsl:when test="$p=3">medium</xsl:when>
+            <xsl:when test="$p=4">low</xsl:when>
+            <xsl:when test="$p=5">lowest</xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$p"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+
+    <!-- Match rule defs  -->
+    <xsl:template match="m:rule[@class]">
         <rule-def>
 
-            <!-- Copy attributes in standard order -->
-       
-            <xsl:copy-of select="@name"/>
-            <xsl:copy-of select="@language"/>
-            <xsl:copy-of select="@since"/>
-            <xsl:copy-of select="@message"/>
-            <xsl:copy-of select="@externalInfoUrl"/>
-            <xsl:copy-of select="@*[name()!=('name', 'language', 'since', 'message', 'externalInfoUrl')]"/>
+            <name>
+                <xsl:value-of select="@name"/>
+            </name>
+            <message>
+                <xsl:value-of select="@message"/>
+            </message>
+            <description>
+                <xsl:value-of select="@description"/>
+            </description>
+            <since>
+                <xsl:value-of select="@since"/>
+            </since>
+            <xsl:if test="@deprecated">
+                <deprecated/>
+            </xsl:if>
+            <xsl:if test="./priority/text()">
+                <priority>
+                    <xsl:value-of select="mf:priority-to-symbolic(priority/text())"/>
+                </priority>
+            </xsl:if>
 
-            <!-- Copy the description and priority elements -->
-            <xsl:apply-templates select="./*[not(self::m:example or self::m:properties)]"/>
+            <xsl:call-template name="suppression-props"/>
 
-            <!-- Add a new xpath tag -->
-            <xpath>
-                <!-- Add the version attribute if it was specified -->
-                <!-- This will need to be adjusted if we change the default XPath version -->
+            <impl>
+                <language>
+                    <xsl:attribute name="id">
+                        <xsl:choose>
+                            <xsl:when test="@language">
+                                <xsl:value-of select="@language"/>
+                            </xsl:when>
+                            <xsl:otherwise>java</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </language>
+
                 <xsl:choose>
-                    <xsl:when test="not($xpath-version)"/>
+                    <!-- XPath rules                   -->
+                    <xsl:when test="self::m:rule[@class='net.sourceforge.pmd.lang.rule.XPathRule']">
+                        <xsl:variable name="xpath-text"
+                                      select="mf:get-named-property('xpath')">
+                            <xsl:variable name="xpath-version" select="mf:get-named-property('version')">
+                                <xpath>
+                                    <expr>
+                                        <xsl:value-of select="$xpath-text"/>
+                                    </expr>
+
+                                    <!-- Property defs -->
+                                    <xsl:if test="some $p in ./m:properties/m:property satisfies $p/@type">
+                                        <property-defs>
+                                            <xsl:apply-templates select="./m:properties/m:property[@type]"/>
+                                        </property-defs>
+                                    </xsl:if>
+                                </xpath>
+                            </xsl:variable>
+                        </xsl:variable>
+                    </xsl:when>
                     <xsl:otherwise>
-                        <xsl:attribute name="version">
-                            <xsl:value-of select="$xpath-version"/>
-                        </xsl:attribute>
+                        <!-- A java rule -->
+                        <class>
+                            <xsl:value-of select="@class"/>
+                        </class>
                     </xsl:otherwise>
                 </xsl:choose>
-                <!-- Add the XPath expression as the child of this node -->
-                <xsl:value-of select="$xpath-text"/>
-            </xpath>
+            </impl>
 
             <!-- Add the other properties below the XPath expression -->
             <xsl:apply-templates select="./m:properties"/>
@@ -89,23 +152,81 @@
 
     </xsl:template>
 
-    <!-- Template for the properties of XPath rules -->
-    <xsl:template match="m:properties[../self::m:rule[@class='net.sourceforge.pmd.lang.rule.XPathRule']]">
-        <xsl:choose>
-            <!-- If the only properties are xpath and/or version, then remove the properties element altogether -->
-            <xsl:when test="every $p in ./m:property satisfies $p/@name='xpath' or $p/@name='version'"/>
-            <!-- Otherwise copy the properties, excluding these two -->
-            <xsl:otherwise>
+    <xsl:template name="suppression-props" match="m:rule">
+        <xsl:param name="vregex" select="mf:get-named-property('violationSuppressRegex')"/>
+        <xsl:param name="vxpath" select="mf:get-named-property('violationSuppressXPath')"/>
+        <xsl:if test="$vregex or $vxpath">
+            <suppressions>
+                <xsl:if test="$vregex">
+                    <regex>
+                        <xsl:value-of select="$vregex"/>
+                    </regex>
+                </xsl:if>
+                <xsl:if test="$vxpath">
+                    <xpath>
+                        <xsl:value-of select="$vxpath"/>
+                    </xpath>
+                </xsl:if>
+            </suppressions>
+        </xsl:if>
+    </xsl:template>
+
+    <xsl:template name="property-overrides" match="m:properties">
+        <xsl:param name="props"
+                   select="m:property[not(@type) and not(@name=('xpath', 'version', 'violationSuppressRegex', 'violationSuppressXPath'))]">
+            <xsl:if test="$props">
+                <!-- Otherwise nothing is output, no actual properties -->
                 <properties>
-                    <xsl:copy-of select="./m:property[@name!='xpath' and @name!='version']"/>
+                    <xsl:for-each select="$props">
+                        <xsl:call-template name="xp-rule-override"/>
+                    </xsl:for-each>
                 </properties>
-            </xsl:otherwise>
-        </xsl:choose>
+            </xsl:if>
+        </xsl:param>
+    </xsl:template>
+
+    <!-- XPath rule property def -->
+    <xsl:template name="xp-rule-def" match="m:property[@type]">
+        <property-def>
+            <xsl:copy-of select="@name"/>
+            <type>
+                <xsl:value-of select="@type"/>
+            </type>
+            <default-value>
+                <value>
+                    <xsl:value-of select="mf:get-property-internal(.)"/>
+                </value>
+            </default-value>
+        </property-def>
+    </xsl:template>
+
+    <!-- Rule override def -->
+    <xsl:template name="xp-rule-override" match="m:property">
+        <property>
+            <xsl:copy-of select="@name"/>
+            <value>
+                <xsl:value-of select="mf:get-property-internal(.)"/>
+            </value>
+        </property>
     </xsl:template>
 
     <!-- Keep the formatting of examples -->
     <xsl:template match="m:example/text()">
         <xsl:value-of select="."/>
+    </xsl:template>
+
+    <xsl:template match="m:ruleset">
+        <ruleset>
+            <!-- copy attributes -->
+            <!-- TODO replace schema loc -->
+            <xsl:copy-of select="@*[name() != 'name']"/>
+            <name>
+                <xsl:value-of select="@name"/>
+            </name>
+            <xsl:copy-of select="m:description"/>
+            <xsl:copy-of select="m:include-patterns | m:exclude-pattern"/>
+        </ruleset>
+        <xsl:apply-templates select="comment()|m:rule"/>
     </xsl:template>
 
     <!-- Identity for the rest of the nodes -->
