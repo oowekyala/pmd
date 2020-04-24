@@ -3,7 +3,7 @@
 <!-- Currently maps XPath rules to a new representation -->
 
 <xsl:stylesheet version="2.0"
-                xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+                xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
                 xmlns:m="http://pmd.sourceforge.net/ruleset/2.0.0"
                 xmlns:mf="localFunctions"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -13,6 +13,8 @@
     <xsl:output cdata-section-elements="m:example"/>
     <xsl:output cdata-section-elements="m:xpath"/>
     <xsl:output method="xml" indent="yes"/>
+
+    <xsl:variable name="newNs">http://pmd.sourceforge.net/ruleset/7.0.0</xsl:variable>
 
     <!-- Local function definitions -->
 
@@ -52,8 +54,9 @@
     </xsl:function>
 
     <xsl:function name="mf:get-named-property" as="xs:string?">
+        <xsl:param name="ctx" as="element(m:rule)"/>
         <xsl:param name="name" as="xs:string"/>
-        <xsl:value-of select="mf:get-property(m:properties/m:property[@name=$name])"/>
+        <xsl:value-of select="mf:get-property($ctx/m:properties/m:property[@name=$name])"/>
     </xsl:function>
 
     <xsl:function name="mf:is-ignored-xp" as="xs:string">
@@ -85,9 +88,7 @@
             <message>
                 <xsl:value-of select="@message"/>
             </message>
-            <description>
-                <xsl:value-of select="@description"/>
-            </description>
+            <xsl:apply-templates select="m:description"/>
             <since>
                 <xsl:value-of select="@since"/>
             </since>
@@ -117,23 +118,20 @@
                 <xsl:choose>
                     <!-- XPath rules                   -->
                     <xsl:when test="self::m:rule[@class='net.sourceforge.pmd.lang.rule.XPathRule']">
-                        <xsl:variable name="xpath-text"
-                                      select="mf:get-named-property('xpath')">
-                            <xsl:variable name="xpath-version" select="mf:get-named-property('version')">
-                                <xpath>
-                                    <expr>
-                                        <xsl:value-of select="$xpath-text"/>
-                                    </expr>
+                        <xsl:variable name="xpath-text" select="mf:get-named-property(., 'xpath')"/>
+                        <xsl:variable name="xpath-version" select="mf:get-named-property(., 'version')"/>
+                        <xpath>
+                            <expr>
+                                <xsl:value-of select="$xpath-text"/>
+                            </expr>
 
-                                    <!-- Property defs -->
-                                    <xsl:if test="some $p in ./m:properties/m:property satisfies $p/@type">
-                                        <property-defs>
-                                            <xsl:apply-templates select="./m:properties/m:property[@type]"/>
-                                        </property-defs>
-                                    </xsl:if>
-                                </xpath>
-                            </xsl:variable>
-                        </xsl:variable>
+                            <!-- Property defs -->
+                            <xsl:if test="some $p in ./m:properties/m:property satisfies $p/@type">
+                                <property-defs>
+                                    <xsl:apply-templates select="./m:properties/m:property[@type]"/>
+                                </property-defs>
+                            </xsl:if>
+                        </xpath>
                     </xsl:when>
                     <xsl:otherwise>
                         <!-- A java rule -->
@@ -146,15 +144,19 @@
 
             <!-- Add the other properties below the XPath expression -->
             <xsl:apply-templates select="./m:properties"/>
-            <!-- Finally add examples -->
-            <xsl:apply-templates select="./m:example"/>
+
+            <xsl:if test="m:example">
+                <examples>
+                    <xsl:apply-templates select="m:example"/>
+                </examples>
+            </xsl:if>
         </rule-def>
 
     </xsl:template>
 
     <xsl:template name="suppression-props" match="m:rule">
-        <xsl:param name="vregex" select="mf:get-named-property('violationSuppressRegex')"/>
-        <xsl:param name="vxpath" select="mf:get-named-property('violationSuppressXPath')"/>
+        <xsl:param name="vregex" select="mf:get-named-property(., 'violationSuppressRegex')"/>
+        <xsl:param name="vxpath" select="mf:get-named-property(., 'violationSuppressXPath')"/>
         <xsl:if test="$vregex or $vxpath">
             <suppressions>
                 <xsl:if test="$vregex">
@@ -173,16 +175,15 @@
 
     <xsl:template name="property-overrides" match="m:properties">
         <xsl:param name="props"
-                   select="m:property[not(@type) and not(@name=('xpath', 'version', 'violationSuppressRegex', 'violationSuppressXPath'))]">
-            <xsl:if test="$props">
-                <!-- Otherwise nothing is output, no actual properties -->
-                <properties>
-                    <xsl:for-each select="$props">
-                        <xsl:call-template name="xp-rule-override"/>
-                    </xsl:for-each>
-                </properties>
-            </xsl:if>
-        </xsl:param>
+                   select="m:property[not(@type) and not(@name=('xpath', 'version', 'violationSuppressRegex', 'violationSuppressXPath'))]"/>
+        <xsl:if test="$props">
+            <!-- Otherwise nothing is output, no actual properties -->
+            <properties>
+                <xsl:for-each select="$props">
+                    <xsl:call-template name="xp-rule-override"/>
+                </xsl:for-each>
+            </properties>
+        </xsl:if>
     </xsl:template>
 
     <!-- XPath rule property def -->
@@ -210,28 +211,31 @@
         </property>
     </xsl:template>
 
-    <!-- Keep the formatting of examples -->
-    <xsl:template match="m:example/text()">
-        <xsl:value-of select="."/>
-    </xsl:template>
 
     <xsl:template match="m:ruleset">
-        <ruleset>
-            <!-- copy attributes -->
-            <!-- TODO replace schema loc -->
-            <xsl:copy-of select="@*[name() != 'name']"/>
+        <xsl:element name="ruleset"
+                     namespace="{$newNs}">
+
+            <xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance"><![CDATA[http://pmd.sourceforge.net/ruleset/7.0.0 file:///home/clifrr/Documents/Git/pmd/pmd-core/src/main/resources/ruleset_700.xsd]]></xsl:attribute>
+
             <name>
                 <xsl:value-of select="@name"/>
             </name>
-            <xsl:copy-of select="m:description"/>
-            <xsl:copy-of select="m:include-patterns | m:exclude-pattern"/>
-        </ruleset>
-        <xsl:apply-templates select="comment()|m:rule"/>
+            <xsl:apply-templates/>
+        </xsl:element>
+
+    </xsl:template>
+
+    <!-- Identity for elements, which doesn't copy namespaces -->
+    <xsl:template match="m:*">
+        <xsl:element name="{local-name()}" namespace="{$newNs}">
+            <xsl:apply-templates select="node()" />
+        </xsl:element>
     </xsl:template>
 
     <!-- Identity for the rest of the nodes -->
     <xsl:template match="@*|node()">
-        <xsl:copy>
+        <xsl:copy copy-namespaces="no">
             <xsl:apply-templates select="@*|node()"/>
         </xsl:copy>
     </xsl:template>

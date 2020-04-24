@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset xmlns="http://pmd.sourceforge.net/ruleset/7.0.0"
+         xmlns:ns0="http://www.w3.org/2001/XMLSchema-instance"
+         ns0:schemaLocation="http://pmd.sourceforge.net/ruleset/7.0.0 file:///home/clifrr/Documents/Git/pmd/pmd-core/src/main/resources/ruleset_700.xsd">
+   <name>Code Style</name>
+
+    <description>
+        Rules which enforce a specific coding style.
+    </description>
+
+   <!-- Some comment? -->
+
+    <rule-def>
+      <name>AtLeastOneConstructor</name>
+      <message>Each class should declare at least one constructor</message>
+      <description>
+
+            Each non-static class should declare at least one constructor.
+            Classes with solely static members are ignored, refer to [UseUtilityClassRule](pmd_rules_java_design.html#useutilityclass) to detect those.
+            
+        </description>
+      <since>1.04</since>
+      <impl>
+         <language id="java"/>
+         <class>net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule</class>
+      </impl>
+      <examples>
+         <example>
+            
+public class Foo {
+   // missing constructor
+  public void doSomething() { ... }
+  public void doOtherThing { ... }
+}
+
+        </example>
+      </examples>
+   </rule-def>
+
+    <rule-def>
+      <name>AvoidDollarSigns</name>
+      <message>Avoid using dollar signs in variable/method/class/interface names</message>
+      <description>
+            Avoid using dollar signs in variable/method/class/interface names.
+        </description>
+      <since>1.5</since>
+      <impl>
+         <language id="java"/>
+         <class>net.sourceforge.pmd.lang.java.rule.codestyle.AvoidDollarSignsRule</class>
+      </impl>
+      <examples>
+         <example>
+            
+public class Fo$o {  // not a recommended name
+}
+
+        </example>
+      </examples>
+   </rule-def>
+
+    <rule-def>
+      <name>UseShortArrayInitializer</name>
+      <message>Array initialization can be written shorter</message>
+      <description>
+
+            When declaring and initializing array fields or variables, it is not necessary to explicitly create a new array
+            using `new`. Instead one can simply define the initial content of the array as a expression in curly braces.
+
+            E.g. `int[] x = new int[] { 1, 2, 3 };` can be written as `int[] x = { 1, 2, 3 };`.
+            
+        </description>
+      <since>6.15.0</since>
+      <impl>
+         <language id="java"/>
+         <xpath>
+            <expr>
+//VariableDeclarator
+    [VariableDeclaratorId[@ArrayType = true() and @TypeInferred = false()]]
+    [VariableInitializer/Expression/PrimaryExpression/PrimaryPrefix/AllocationExpression/ArrayDimsAndInits/ArrayInitializer]
+                </expr>
+         </xpath>
+      </impl>
+      <examples>
+         <example>
+            
+Foo[] x = new Foo[] { ... }; // Overly verbose
+Foo[] x = { ... }; //Equivalent to above line
+
+        </example>
+      </examples>
+   </rule-def>
+</ruleset>
