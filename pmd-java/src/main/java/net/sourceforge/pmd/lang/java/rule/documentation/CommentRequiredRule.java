@@ -23,7 +23,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTMarkerAnnotation;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTName;
 import net.sourceforge.pmd.lang.java.ast.AbstractJavaAccessNode;
-import net.sourceforge.pmd.lang.java.ast.AbstractJavaNode;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.multifile.signature.JavaOperationSignature;
 import net.sourceforge.pmd.properties.PropertyBuilder.GenericPropertyBuilder;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -108,18 +108,18 @@ public class CommentRequiredRule extends AbstractCommentRule {
         }
     }
 
-    private void checkCommentMeetsRequirement(Object data, AbstractJavaNode node,
+    private void checkCommentMeetsRequirement(Object data, JavaNode node,
                                               PropertyDescriptor<CommentRequirement> descriptor) {
         switch (propertyValues.get(descriptor)) {
         case Ignored:
             break;
         case Required:
-            if (node.comment() == null) {
+            if (getComment(node) == null) {
                 commentRequiredViolation(data, node, descriptor);
             }
             break;
         case Unwanted:
-            if (node.comment() != null) {
+            if (getComment(node) != null) {
                 commentRequiredViolation(data, node, descriptor);
             }
             break;
@@ -130,7 +130,7 @@ public class CommentRequiredRule extends AbstractCommentRule {
 
 
     // Adds a violation
-    private void commentRequiredViolation(Object data, AbstractJavaNode node,
+    private void commentRequiredViolation(Object data, JavaNode node,
                                           PropertyDescriptor<CommentRequirement> descriptor) {
 
 

@@ -16,7 +16,6 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
 public abstract class AbstractJavaNode extends AbstractJjtreeNode<AbstractJavaNode, JavaNode> implements JavaNode {
 
     private Scope scope;
-    private Comment comment;
     private ASTCompilationUnit root;
 
     @InternalApi
@@ -67,15 +66,6 @@ public abstract class AbstractJavaNode extends AbstractJjtreeNode<AbstractJavaNo
         this.scope = scope;
     }
 
-    @InternalApi
-    @Deprecated
-    public void comment(Comment theComment) {
-        comment = theComment;
-    }
-
-    public Comment comment() {
-        return comment;
-    }
 
     @Override
     @NonNull
