@@ -69,6 +69,7 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- Required               -->
+                <xs:element name="name" type="rule-name"/>
                 <xs:element name="message" type="xs:string"/>
                 <xs:element name="description" type="xs:string"/>
                 <xs:group ref="optional-rule-elts"/>
@@ -76,7 +77,6 @@
                 <xs:element name="properties" type="property-overrides" minOccurs="0"/>
                 <xs:element name="examples" type="examples" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute name="name" type="rule-name"/>
         </xs:complexType>
     </xs:element>
 
