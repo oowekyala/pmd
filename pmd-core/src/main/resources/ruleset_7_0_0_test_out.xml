@@ -6,8 +6,7 @@
    <description>
         Rules which enforce a specific coding style.
     </description>
-   <rule-def>
-      <name>AtLeastOneConstructor</name>
+   <rule-def id="AtLeastOneConstructor">
       <message>Each class should declare at least one constructor</message>
       <description>
 
@@ -32,8 +31,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>AvoidDollarSigns</name>
+   <rule-def id="AvoidDollarSigns">
       <message>Avoid using dollar signs in variable/method/class/interface names</message>
       <description>
             Avoid using dollar signs in variable/method/class/interface names.
@@ -52,8 +50,7 @@ public class Fo$o {  // not a recommended name
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>AvoidProtectedFieldInFinalClass</name>
+   <rule-def id="AvoidProtectedFieldInFinalClass">
       <message>Avoid protected fields in a final class.  Change to private or package access.</message>
       <description>
             Do not use protected fields in final classes since they cannot be subclassed.
@@ -84,8 +81,7 @@ public final class Bar {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>AvoidProtectedMethodInFinalClassNotExtending</name>
+   <rule-def id="AvoidProtectedMethodInFinalClassNotExtending">
       <message>Avoid protected methods in a final class that doesn't extend anything other than Object.  Change to private or package access.</message>
       <description>
             Do not use protected methods in most final classes since they cannot be subclassed. This should
@@ -116,8 +112,7 @@ public final class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>AvoidUsingNativeCode</name>
+   <rule-def id="AvoidUsingNativeCode">
       <message>The use of native code is not recommended.</message>
       <description>
             Unnecessary reliance on Java Native Interface (JNI) calls directly reduces application portability
@@ -151,8 +146,7 @@ public class SomeJNIClass {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>BooleanGetMethodName</name>
+   <rule-def id="BooleanGetMethodName">
       <message>A 'getX()' method which returns a boolean should be named 'isX()'</message>
       <description>
             Methods that return boolean results should be named as predicate statements to denote this.
@@ -195,8 +189,7 @@ public boolean getFoo(boolean bar); // ok, unless checkParameterizedMethods=true
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>CallSuperInConstructor</name>
+   <rule-def id="CallSuperInConstructor">
       <message>It is a good practice to call super() in a constructor</message>
       <description>
             It is a good practice to call super() in a constructor. If super() is not called but
@@ -234,8 +227,7 @@ public class Foo extends Bar{
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ClassNamingConventions</name>
+   <rule-def id="ClassNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for type declarations. This rule reports
@@ -270,8 +262,7 @@ public class Éléphant {}
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>CommentDefaultAccessModifier</name>
+   <rule-def id="CommentDefaultAccessModifier">
       <message>Missing commented default access modifier</message>
       <description>
             To avoid mistakes if we want that an Annotation, Class, Enum, Method, Constructor or Field have a default access modifier
@@ -312,8 +303,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ConfusingTernary</name>
+   <rule-def id="ConfusingTernary">
       <message>Avoid if (x != y) ..; else ..;</message>
       <description>
             Avoid negation within an "if" expression with an "else" clause.  For example, rephrase:
@@ -338,8 +328,7 @@ boolean bar(int x, int y) {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ControlStatementBraces</name>
+   <rule-def id="ControlStatementBraces">
       <message>This statement should have braces</message>
       <description>
             Enforce a policy for braces on control statements. It is recommended to use braces on 'if ... else'
@@ -443,8 +432,7 @@ while (true) {  // preferred approach
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>DefaultPackage</name>
+   <rule-def id="DefaultPackage">
       <message>Use explicit scoping instead of the default package private level</message>
       <description>
             Use explicit scoping instead of accidental usage of default package private level.
@@ -469,8 +457,7 @@ or MethodDeclaration[@PackagePrivate= true()]
          </xpath>
       </impl>
    </rule-def>
-   <rule-def>
-      <name>DontImportJavaLang</name>
+   <rule-def id="DontImportJavaLang">
       <message>Avoid importing anything from the package 'java.lang'</message>
       <description>
             Avoid importing anything from the package 'java.lang'.  These classes are automatically imported (JLS 7.5.3).
@@ -496,8 +483,7 @@ public class Foo {}
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>DuplicateImports</name>
+   <rule-def id="DuplicateImports">
       <message>Avoid duplicate imports such as ''{0}''</message>
       <description>
             Duplicate or overlapping import statements should be avoided.
@@ -517,8 +503,7 @@ public class Foo {}
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>EmptyMethodInAbstractClassShouldBeAbstract</name>
+   <rule-def id="EmptyMethodInAbstractClassShouldBeAbstract">
       <message>An empty method in an abstract class should be abstract instead</message>
       <description>
             Empty or auto-generated methods in an abstract class should be tagged as abstract. This helps to remove their inapproprate
@@ -565,8 +550,7 @@ public abstract class ShouldBeAbstract {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ExtendsObject</name>
+   <rule-def id="ExtendsObject">
       <message>No need to explicitly extend Object.</message>
       <description>No need to explicitly extend Object.</description>
       <since>5.0</since>
@@ -585,8 +569,7 @@ public class Foo extends Object {     // not required
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>FieldDeclarationsShouldBeAtStartOfClass</name>
+   <rule-def id="FieldDeclarationsShouldBeAtStartOfClass">
       <message>Fields should be declared at the top of the class, before any method declarations, constructors, initializers or inner classes.</message>
       <description>
             Fields should be declared at the top of the class, before any method declarations, constructors, initializers or inner classes.
@@ -615,8 +598,7 @@ public class HelloWorldBean {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>FieldNamingConventions</name>
+   <rule-def id="FieldNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for field declarations. This rule reports variable declarations
@@ -654,8 +636,7 @@ public class HelloWorldBean {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ForLoopShouldBeWhileLoop</name>
+   <rule-def id="ForLoopShouldBeWhileLoop">
       <message>This for loop could be simplified to a while loop</message>
       <description>
             Some for loops can be simplified to while loops, this makes them more concise.
@@ -687,8 +668,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>FormalParameterNamingConventions</name>
+   <rule-def id="FormalParameterNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for formal parameters of methods and lambdas.
@@ -729,8 +709,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>GenericsNaming</name>
+   <rule-def id="GenericsNaming">
       <message>Generics names should be a one letter long and upper case.</message>
       <description>
             Names for references to generic values should be limited to a single uppercase letter.
@@ -772,8 +751,7 @@ public interface GenericDao<EF extends BaseModel, K extends Serializable> {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>IdenticalCatchBranches</name>
+   <rule-def id="IdenticalCatchBranches">
       <message>''catch'' branch identical to ''{0}'' branch</message>
       <description>
             Identical `catch` branches use up vertical space and increase the complexity of code without
@@ -805,8 +783,7 @@ try {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LinguisticNaming</name>
+   <rule-def id="LinguisticNaming">
       <message>Linguistics Antipattern - Method name and return type is inconsistent linguistically</message>
       <description>
             This rule finds Linguistic Naming Antipatterns. It checks for fields, that are named, as if they should
@@ -870,8 +847,7 @@ public class LinguisticNaming {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LocalHomeNamingConvention</name>
+   <rule-def id="LocalHomeNamingConvention">
       <message>The Local Home interface of a Session EJB should be suffixed by 'LocalHome'</message>
       <description>
             The Local Home interface of a Session EJB should be suffixed by 'LocalHome'.
@@ -907,8 +883,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-s
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LocalInterfaceSessionNamingConvention</name>
+   <rule-def id="LocalInterfaceSessionNamingConvention">
       <message>The Local Interface of a Session EJB should be suffixed by 'Local'</message>
       <description>
             The Local Interface of a Session EJB should be suffixed by 'Local'.
@@ -944,8 +919,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalObject {}    // n
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LocalVariableCouldBeFinal</name>
+   <rule-def id="LocalVariableCouldBeFinal">
       <message>Local variable ''{0}'' could be declared final</message>
       <description>
             A local variable assigned only once can be declared final.
@@ -968,8 +942,7 @@ public class Bar {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LocalVariableNamingConventions</name>
+   <rule-def id="LocalVariableNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for local variable declarations and other locally-scoped
@@ -1006,8 +979,7 @@ public class Bar {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>LongVariable</name>
+   <rule-def id="LongVariable">
       <message>Avoid excessively long variable names like {0}</message>
       <description>
             Fields, formal arguments, or local variable names that are too long can make the code difficult to follow.
@@ -1044,8 +1016,7 @@ public class Something {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>MDBAndSessionBeanNamingConvention</name>
+   <rule-def id="MDBAndSessionBeanNamingConvention">
       <message>SessionBean or MessageBean should be suffixed by Bean</message>
       <description>
             The EJB Specification states that any MessageDrivenBean or SessionBean should be suffixed by 'Bean'.
@@ -1083,8 +1054,7 @@ public class MissingTheProperSuffix implements SessionBean {}   // non-standard 
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>MethodArgumentCouldBeFinal</name>
+   <rule-def id="MethodArgumentCouldBeFinal">
       <message>Parameter ''{0}'' is not assigned and could be declared final</message>
       <description>
             A method argument that is never re-assigned within the method can be declared final.
@@ -1108,8 +1078,7 @@ public void foo2 (final String param) { // better, do stuff with param never ass
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>MethodNamingConventions</name>
+   <rule-def id="MethodNamingConventions">
       <message>The {0} name ''{1}'' doesn''t match ''{2}''</message>
       <description>
             Configurable naming conventions for method declarations. This rule reports
@@ -1135,8 +1104,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>NoPackage</name>
+   <rule-def id="NoPackage">
       <message>All classes, interfaces, enums and annotations must belong to a named package</message>
       <description>
             Detects when a class, interface, enum or annotation does not have a package definition.
@@ -1158,8 +1126,7 @@ public class ClassInDefaultPackage {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UseUnderscoresInNumericLiterals</name>
+   <rule-def id="UseUnderscoresInNumericLiterals">
       <message>Number {0} should separate every third digit with an underscore</message>
       <description>
             Since Java 1.7, numeric literals can use underscores to separate digits. This rule enforces that
@@ -1220,8 +1187,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>OnlyOneReturn</name>
+   <rule-def id="OnlyOneReturn">
       <message>A method should have only one exit point, and that should be the last statement in the method</message>
       <description>
             A method should have only one exit point, and that should be the last statement in the method.
@@ -1246,8 +1212,7 @@ public class OneReturnOnly1 {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>PackageCase</name>
+   <rule-def id="PackageCase">
       <message>Package name contains upper case characters</message>
       <description>
             Detects when a package definition contains uppercase characters.
@@ -1270,8 +1235,7 @@ public class SomeClass {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>PrematureDeclaration</name>
+   <rule-def id="PrematureDeclaration">
       <message>Avoid declaring a variable if it is unreferenced before a possible exit point.</message>
       <description>
             Checks for variables that are defined before they might be used. A reference is deemed to be premature if it is created right before a block of code that doesn't use it that also has the ability to return or throw an exception.
@@ -1300,8 +1264,7 @@ public int getLength(String[] strings) {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>RemoteInterfaceNamingConvention</name>
+   <rule-def id="RemoteInterfaceNamingConvention">
       <message>Remote Interface of a Session EJB should NOT be suffixed</message>
       <description>
             Remote Interface of a Session EJB should not have a suffix.
@@ -1345,8 +1308,7 @@ public interface BadSuffixBean extends javax.ejb.EJBObject {}
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>RemoteSessionInterfaceNamingConvention</name>
+   <rule-def id="RemoteSessionInterfaceNamingConvention">
       <message>Remote Home interface of a Session EJB should be suffixed by 'Home'</message>
       <description>
             A Remote Home interface type of a Session EJB should be suffixed by 'Home'.
@@ -1382,8 +1344,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-stand
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ShortClassName</name>
+   <rule-def id="ShortClassName">
       <message>Avoid short class names like {0}</message>
       <description>
             Short Classnames with fewer than e.g. five characters are not recommended.
@@ -1413,8 +1374,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ShortMethodName</name>
+   <rule-def id="ShortMethodName">
       <message>Avoid using short method names</message>
       <description>
             Method names that are very short are not helpful to the reader.
@@ -1446,8 +1406,7 @@ public class ShortMethod {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>ShortVariable</name>
+   <rule-def id="ShortVariable">
       <message>Avoid variables with short names like {0}</message>
       <description>
             Fields, local variables, or parameter names that are very short are not helpful to the reader.
@@ -1499,8 +1458,7 @@ public class Something {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>TooManyStaticImports</name>
+   <rule-def id="TooManyStaticImports">
       <message>Too many static imports may lead to messy code</message>
       <description>
             If you overuse the static import feature, it can make your program unreadable and
@@ -1536,8 +1494,7 @@ import static Yoko; // Too much !
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryAnnotationValueElement</name>
+   <rule-def id="UnnecessaryAnnotationValueElement">
       <message>Avoid the use of value in annotations when it's the only element</message>
       <description>
             Avoid the use of value in annotations when it's the only element.
@@ -1582,8 +1539,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryConstructor</name>
+   <rule-def id="UnnecessaryConstructor">
       <message>Avoid unnecessary constructors - the compiler will generate these for you</message>
       <description>
             This rule detects when a constructor is not necessary; i.e., when there is only one constructor and the
@@ -1605,8 +1561,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryFullyQualifiedName</name>
+   <rule-def id="UnnecessaryFullyQualifiedName">
       <message>Unnecessary use of fully qualified name ''{0}'' due to existing {2}import ''{1}''</message>
       <description>
             Import statements allow the use of non-fully qualified names.  The use of a fully qualified name
@@ -1630,8 +1585,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryLocalBeforeReturn</name>
+   <rule-def id="UnnecessaryLocalBeforeReturn">
       <message>Consider simply returning the value vs storing it in local variable ''{0}''</message>
       <description>
             Avoid the creation of unnecessary local variables
@@ -1654,8 +1608,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryModifier</name>
+   <rule-def id="UnnecessaryModifier">
       <message>Unnecessary modifier{0} on {1} ''{2}''{3}</message>
       <description>
             Fields in interfaces and annotations are automatically `public static final`, and methods are `public abstract`.
@@ -1694,8 +1647,7 @@ public class Bar {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UnnecessaryReturn</name>
+   <rule-def id="UnnecessaryReturn">
       <message>Avoid unnecessary return statements</message>
       <description>
             Avoid the use of unnecessary return statements.
@@ -1718,8 +1670,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UseDiamondOperator</name>
+   <rule-def id="UseDiamondOperator">
       <message>Explicit type arguments can be replaced by Diamond Operator</message>
       <description>
             Use the diamond operator to let the type be inferred automatically. With the Diamond operator it is possible
@@ -1757,8 +1708,7 @@ List<String> stringsWithDiamond = new ArrayList<>(); // using the diamond operat
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UselessParentheses</name>
+   <rule-def id="UselessParentheses">
       <message>Useless parentheses.</message>
       <description>Useless parentheses should be removed.</description>
       <since>5.0</since>
@@ -1842,8 +1792,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UselessQualifiedThis</name>
+   <rule-def id="UselessQualifiedThis">
       <message>Useless qualified this usage in the same class.</message>
       <description>
             Reports qualified this usages in the same class.
@@ -1895,8 +1844,7 @@ public class Foo {
         ]]></example-code>
       </examples>
    </rule-def>
-   <rule-def>
-      <name>UseShortArrayInitializer</name>
+   <rule-def id="UseShortArrayInitializer">
       <message>Array initialization can be written shorter</message>
       <description>
 

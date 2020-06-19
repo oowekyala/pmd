@@ -70,7 +70,6 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- Required               -->
-                <xs:element name="name" type="rule-name"/>
                 <xs:element name="message" type="xs:string"/>
                 <xs:element name="description" type="xs:string"/>
                 <xs:group ref="optional-rule-elts"/>
@@ -78,6 +77,14 @@
                 <xs:element name="properties" type="property-overrides" minOccurs="0"/>
                 <xs:element name="examples" type="examples" minOccurs="0"/>
             </xs:sequence>
+            <xs:attribute name="id" type="rule-name">
+                <xs:annotation>
+                    <xs:documentation>
+                        The name of the rule. This will be used to refer to it from other rulesets.
+                        Should be unique within this ruleset.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 

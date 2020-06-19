@@ -78,10 +78,7 @@
 
     <!-- Match rule defs  -->
     <xsl:template match="m:rule[@class]">
-        <rule-def>
-            <name>
-                <xsl:value-of select="@name"/>
-            </name>
+        <rule-def id="{@name}">
             <message>
                 <xsl:value-of select="@message"/>
             </message>
