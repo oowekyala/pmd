@@ -10,7 +10,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 exclude-result-prefixes="m mf xs"> <!-- Excludes the xmlns declarations from the output -->
 
-    <xsl:output cdata-section-elements="example expr" method="xml" indent="yes"/>
+    <xsl:output cdata-section-elements="example-code expr" method="xml" indent="yes"/>
 
     <xsl:variable name="newNs">https://pmd-code.org/ruleset/7.0.0</xsl:variable>
 

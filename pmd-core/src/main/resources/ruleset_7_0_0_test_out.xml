@@ -21,7 +21,7 @@
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
    // missing constructor
@@ -29,7 +29,7 @@ public class Foo {
   public void doOtherThing { ... }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -44,12 +44,12 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.AvoidDollarSignsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Fo$o {  // not a recommended name
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -73,7 +73,7 @@ public class Fo$o {  // not a recommended name
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public final class Bar {
   private int x;
@@ -81,7 +81,7 @@ public final class Bar {
   Bar() {}
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -106,14 +106,14 @@ public final class Bar {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public final class Foo {
   private int bar() {}
   protected int baz() {} // Foo cannot be subclassed, and doesn't extend anything, so is baz() really private or package visible?
 }
  
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -131,7 +131,7 @@ public final class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class SomeJNIClass {
 
@@ -148,7 +148,7 @@ public class SomeJNIClass {
      }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -186,13 +186,13 @@ public class SomeJNIClass {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public boolean getFoo();            // bad
 public boolean isFoo();             // ok
 public boolean getFoo(boolean bar); // ok, unless checkParameterizedMethods=true
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -217,7 +217,7 @@ public boolean getFoo(boolean bar); // ok, unless checkParameterizedMethods=true
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo extends Bar{
   public Foo() {
@@ -231,7 +231,7 @@ public class Foo extends Bar{
   }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -252,7 +252,7 @@ public class Foo extends Bar{
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.ClassNamingConventionsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 // This is Pascal case, the recommended naming convention in Java
 // Note that the default values of this rule don't allow underscores
@@ -267,7 +267,7 @@ public abstract class Thing {}
 // This class doesn't respect the convention, and will be flagged
 public class Éléphant {}
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -286,7 +286,7 @@ public class Éléphant {}
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.CommentDefaultAccessModifierRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     final String stringValue = "some string";
@@ -309,7 +309,7 @@ public class Foo {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -329,13 +329,13 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.ConfusingTernaryRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 boolean bar(int x, int y) {
     return (x != y) ? diff : same;
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -431,7 +431,7 @@ boolean bar(int x, int y) {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 while (true)    // not recommended
   x++;
@@ -440,7 +440,7 @@ while (true) {  // preferred approach
   x++;
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -481,7 +481,7 @@ or MethodDeclaration[@PackagePrivate= true()]
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.DontImportJavaLangRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 import java.lang.String;    // this is unnecessary
 
@@ -493,7 +493,7 @@ import java.lang.*;         // this is bad
 
 public class Foo {}
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -508,13 +508,13 @@ public class Foo {}
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.DuplicateImportsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 import java.lang.String;
 import java.lang.*;
 public class Foo {}
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -550,7 +550,7 @@ public class Foo {}
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public abstract class ShouldBeAbstract {
     public Object couldBeAbstract() {
@@ -562,7 +562,7 @@ public abstract class ShouldBeAbstract {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -577,12 +577,12 @@ public abstract class ShouldBeAbstract {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo extends Object {     // not required
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -597,7 +597,7 @@ public class Foo extends Object {     // not required
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FieldDeclarationsShouldBeAtStartOfClassRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class HelloWorldBean {
 
@@ -612,7 +612,7 @@ public class HelloWorldBean {
   private String _fieldInWrongLocation;
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -632,7 +632,7 @@ public class HelloWorldBean {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FieldNamingConventionsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
             class Foo {
                 int myField = 1; // This is in camel case, so it's ok
@@ -651,7 +651,7 @@ public class HelloWorldBean {
                 }
             }
             
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -676,7 +676,7 @@ public class HelloWorldBean {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     void bar() {
@@ -684,7 +684,7 @@ public class Foo {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -704,7 +704,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.FormalParameterNamingConventionsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
             class Foo {
 
@@ -717,16 +717,16 @@ public class Foo {
                 void lambdas() {
 
                     // lambdas parameters can be configured separately
-                    Consumer&lt;String&gt; lambda1 = s_str -&gt; { };
+                    Consumer<String> lambda1 = s_str -> { };
 
                     // lambda parameters with an explicit type can be configured separately
-                    Consumer&lt;String&gt; lambda1 = (String str) -&gt; { };
+                    Consumer<String> lambda1 = (String str) -> { };
 
                 }
 
             }
             
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -751,25 +751,25 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
-public interface GenericDao&lt;E extends BaseModel, K extends Serializable&gt; extends BaseDao {
+public interface GenericDao<E extends BaseModel, K extends Serializable> extends BaseDao {
     // This is ok...
 }
 
-public interface GenericDao&lt;E extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<E extends BaseModel, K extends Serializable> {
     // Also this
 }
 
-public interface GenericDao&lt;e extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<e extends BaseModel, K extends Serializable> {
     // 'e' should be an 'E'
 }
 
-public interface GenericDao&lt;EF extends BaseModel, K extends Serializable&gt; {
+public interface GenericDao<EF extends BaseModel, K extends Serializable> {
    // 'EF' is not ok.
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -786,7 +786,7 @@ public interface GenericDao&lt;EF extends BaseModel, K extends Serializable&gt; 
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.IdenticalCatchBranchesRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 try {
     // do something
@@ -802,7 +802,7 @@ try {
     throw e;
 }
             
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -827,7 +827,7 @@ try {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LinguisticNamingRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class LinguisticNaming {
     int isValid;    // the field name indicates a boolean, but it is an int.
@@ -867,7 +867,7 @@ public class LinguisticNaming {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -898,13 +898,13 @@ public class LinguisticNaming {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public interface MyBeautifulLocalHome extends javax.ejb.EJBLocalHome {} // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-standard name
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -935,13 +935,13 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalHome {}  // non-s
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public interface MyLocal extends javax.ejb.EJBLocalObject {}                // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBLocalObject {}    // non-standard name
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -956,7 +956,7 @@ public interface MissingProperSuffix extends javax.ejb.EJBLocalObject {}    // n
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LocalVariableCouldBeFinalRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Bar {
     public void foo () {
@@ -965,7 +965,7 @@ public class Bar {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -985,7 +985,7 @@ public class Bar {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.LocalVariableNamingConventionsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
             class Foo {
                 void bar() {
@@ -1003,7 +1003,7 @@ public class Bar {
                 }
             }
             
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1029,19 +1029,19 @@ public class Bar {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Something {
     int reallyLongIntName = -3;             // VIOLATION - Field
     public static void main( String argumentsList[] ) { // VIOLATION - Formal
         int otherReallyLongName = -5;       // VIOLATION - Local
         for (int interestingIntIndex = 0;   // VIOLATION - For
-             interestingIntIndex &lt; 10;
+             interestingIntIndex < 10;
              interestingIntIndex ++ ) {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1074,13 +1074,13 @@ public class Something {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class SomeBean implements SessionBean{}                  // proper name
 
 public class MissingTheProperSuffix implements SessionBean {}   // non-standard name
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1095,7 +1095,7 @@ public class MissingTheProperSuffix implements SessionBean {}   // non-standard 
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.MethodArgumentCouldBeFinalRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public void foo1 (String param) {       // do stuff with param never assigning it
 
@@ -1105,7 +1105,7 @@ public void foo2 (final String param) { // better, do stuff with param never ass
 
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1125,14 +1125,14 @@ public void foo2 (final String param) { // better, do stuff with param never ass
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.MethodNamingConventionsRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     public void fooStuff() {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1149,13 +1149,13 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 // no package declaration
 public class ClassInDefaultPackage {
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1211,13 +1211,13 @@ public class ClassInDefaultPackage {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     private int num = 1000000; // should be 1_000_000
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1232,18 +1232,18 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.OnlyOneReturnRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class OneReturnOnly1 {
   public void foo(int x) {
-    if (x &gt; 0) {
+    if (x > 0) {
       return "hey";   // first exit
     }
     return "hi";    // second exit
   }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1260,14 +1260,14 @@ public class OneReturnOnly1 {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 package com.MyCompany;  // should be lowercase name
 
 public class SomeClass {
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1282,7 +1282,7 @@ public class SomeClass {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.PrematureDeclarationRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public int getLength(String[] strings) {
 
@@ -1297,7 +1297,7 @@ public int getLength(String[] strings) {
     return length;
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1331,7 +1331,7 @@ public int getLength(String[] strings) {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 /* Poor Session suffix */
 public interface BadSuffixSession extends javax.ejb.EJBObject {}
@@ -1342,7 +1342,7 @@ public interface BadSuffixEJB extends javax.ejb.EJBObject {}
 /* Poor Bean suffix */
 public interface BadSuffixBean extends javax.ejb.EJBObject {}
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1373,13 +1373,13 @@ public interface BadSuffixBean extends javax.ejb.EJBObject {}
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public interface MyBeautifulHome extends javax.ejb.EJBHome {}       // proper name
 
 public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-standard name
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1405,12 +1405,12 @@ public interface MissingProperSuffix extends javax.ejb.EJBHome {}   // non-stand
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1436,14 +1436,14 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class ShortMethod {
     public void a( int i ) { // Violation
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1481,13 +1481,13 @@ public class ShortMethod {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Something {
     private int q = 15;                         // field - too short
     public static void main( String as[] ) {    // formal arg - too short
         int r = 20 + q;                         // local var - too short
-        for (int i = 0; i &lt; 10; i++) {          // not a violation (inside 'for' loop)
+        for (int i = 0; i < 10; i++) {          // not a violation (inside 'for' loop)
             r += q;
         }
         for (Integer i : numbers) {             // not a violation (inside 'for-each' loop)
@@ -1496,7 +1496,7 @@ public class Something {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1525,7 +1525,7 @@ public class Something {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 import static Lennon;
 import static Ringo;
@@ -1533,7 +1533,7 @@ import static George;
 import static Paul;
 import static Yoko; // Too much !
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1548,7 +1548,7 @@ import static Yoko; // Too much !
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryAnnotationValueElementRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 @TestClassAnnotation(value = "TEST")
 public class Foo {
@@ -1579,7 +1579,7 @@ public class Foo {
 }
 
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1596,13 +1596,13 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryConstructorRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
   public Foo() {}
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1618,7 +1618,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryFullyQualifiedNameRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 import java.util.List;
 
@@ -1627,7 +1627,7 @@ public class Foo {
     private List list2;             // More appropriate given import of 'java.util.List'
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1642,7 +1642,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryLocalBeforeReturnRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
    public int foo() {
@@ -1651,7 +1651,7 @@ public class Foo {
    }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1670,7 +1670,7 @@ public class Foo {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryModifierRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public @interface Annotation {
     public abstract void bar();     // both abstract and public are ignored by the compiler
@@ -1691,7 +1691,7 @@ public class Bar {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1706,7 +1706,7 @@ public class Bar {
          <class>net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryReturnRule</class>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     public void bar() {
@@ -1715,7 +1715,7 @@ public class Foo {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1749,12 +1749,12 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
-List&lt;String&gt; strings = new ArrayList&lt;String&gt;(); // unnecessary duplication of type parameters
-List&lt;String&gt; stringsWithDiamond = new ArrayList&lt;&gt;(); // using the diamond operator is more concise
+List<String> strings = new ArrayList<String>(); // unnecessary duplication of type parameters
+List<String> stringsWithDiamond = new ArrayList<>(); // using the diamond operator is more concise
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1826,7 +1826,7 @@ List&lt;String&gt; stringsWithDiamond = new ArrayList&lt;&gt;(); // using the di
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
 
@@ -1839,7 +1839,7 @@ public class Foo {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1865,7 +1865,7 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 public class Foo {
     final Foo otherFoo = Foo.this;  // use "this" directly
@@ -1892,7 +1892,7 @@ public class Foo {
     }
 }
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
    <rule-def>
@@ -1918,12 +1918,12 @@ public class Foo {
          </xpath>
       </impl>
       <examples>
-         <example-code>
+         <example-code><![CDATA[
             
 Foo[] x = new Foo[] { ... }; // Overly verbose
 Foo[] x = { ... }; //Equivalent to above line
 
-        </example-code>
+        ]]></example-code>
       </examples>
    </rule-def>
 </ruleset>
