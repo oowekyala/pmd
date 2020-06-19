@@ -32,7 +32,7 @@ public class RulesetValidator {
 
     private static final Logger LOG = Logger.getLogger(RulesetValidator.class.getName());
     private static final String SCHEMA_ID = "https://pmd-code.org/ruleset/7.0.0";
-    private static final String SCHEMA_LOCAL_PATH = "/ruleset_700.xsd";
+    private static final String SCHEMA_LOCAL_PATH = "/ruleset_7_0_0.xsd";
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
         Path input = MigrationTool.getInput(args);

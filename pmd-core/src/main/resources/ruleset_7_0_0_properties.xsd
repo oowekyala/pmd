@@ -4,7 +4,7 @@
            targetNamespace="https://pmd-code.org/ruleset/7.0.0"
            elementFormDefault="qualified">
 
-    <xs:include schemaLocation="ruleset_700_preamble.xsd"/>
+    <xs:include schemaLocation="ruleset_7_0_0_preamble.xsd"/>
 
     <xs:complexType name="property-overrides">
         <xs:sequence>

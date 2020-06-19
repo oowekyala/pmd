@@ -10,8 +10,8 @@
     <!-- TODO use xsd:documentation and xsd:annotation to document the schema -->
 
 
-    <xs:include schemaLocation="ruleset_700_preamble.xsd"/>
-    <xs:include schemaLocation="ruleset_700_properties.xsd"/>
+    <xs:include schemaLocation="ruleset_7_0_0_preamble.xsd"/>
+    <xs:include schemaLocation="ruleset_7_0_0_properties.xsd"/>
 
     <!-- Type allowing only valid values for a language name -->
 
