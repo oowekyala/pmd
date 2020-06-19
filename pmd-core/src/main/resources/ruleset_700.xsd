@@ -61,7 +61,8 @@
     <!-- An empty list is also allowed -->
     <xs:complexType name="examples">
         <xs:sequence>
-            <xs:element name="example" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <!-- TODO example configs -->
+            <xs:element name="example-code" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
 

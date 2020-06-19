@@ -151,6 +151,12 @@
 
     </xsl:template>
 
+    <xsl:template name="example-rename" match="m:example">
+        <example-code>
+            <xsl:value-of select="./text()" />
+        </example-code>
+    </xsl:template>
+
     <xsl:template name="suppression-props" match="m:rule">
         <xsl:param name="vregex" select="mf:get-named-property(., 'violationSuppressRegex')"/>
         <xsl:param name="vxpath" select="mf:get-named-property(., 'violationSuppressXPath')"/>
