@@ -819,9 +819,7 @@ public class JspDocStyleTest extends AbstractJspNodesTst {
                     return Integer.MAX_VALUE;
                 }
                 if (o1.getImage().equals(o2.getImage())) {
-                    String o1Value = o1.getBeginColumn() + "" + o1.getBeginLine();
-                    String o2Value = o2.getBeginColumn() + "" + o2.getBeginLine();
-                    return o1Value.compareTo(o2Value);
+                    return o1.compareLocation(o2);
                 }
                 return o1.getImage().compareTo(o2.getImage());
             }
