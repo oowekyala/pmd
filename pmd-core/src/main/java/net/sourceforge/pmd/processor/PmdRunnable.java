@@ -67,19 +67,20 @@ abstract class PmdRunnable implements Runnable {
 
             // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
             if (ruleSets.applies(textFile)) {
-                TextDocument textDocument = TextDocument.create(textFile, langVersion);
+                try (TextDocument textDocument = TextDocument.create(textFile, langVersion)) {
 
-                if (configuration.getAnalysisCache().isUpToDate(textDocument)) {
-                    reportCachedRuleViolations(ruleCtx, textDocument);
-                } else {
-                    try {
-                        processSource(ruleCtx, textDocument, ruleSets);
-                    } catch (Exception e) {
-                        configuration.getAnalysisCache().analysisFailed(textDocument);
+                    if (configuration.getAnalysisCache().isUpToDate(textDocument)) {
+                        reportCachedRuleViolations(ruleCtx, textDocument);
+                    } else {
+                        try {
+                            processSource(ruleCtx, textDocument, ruleSets);
+                        } catch (Exception e) {
+                            configuration.getAnalysisCache().analysisFailed(textDocument);
 
-                        // The listener handles logging if needed,
-                        // it may also rethrow the error, as a FileAnalysisException (which we let through below)
-                        ruleCtx.reportError(new Report.ProcessingError(e, textFile.getDisplayName()));
+                            // The listener handles logging if needed,
+                            // it may also rethrow the error, as a FileAnalysisException (which we let through below)
+                            ruleCtx.reportError(new Report.ProcessingError(e, textFile.getDisplayName()));
+                        }
                     }
                 }
             }
