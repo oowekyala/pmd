@@ -4,7 +4,6 @@
 
 package net.sourceforge.pmd.processor;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -25,29 +24,25 @@ import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
-import net.sourceforge.pmd.util.datasource.DataSource;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.TextFile;
 
 /**
  * A processing task for a single file.
  */
 abstract class PmdRunnable implements Runnable {
 
-    private final DataSource dataSource;
-    private final File file;
+    private final TextFile textFile;
     private final GlobalAnalysisListener ruleContext;
 
     private final PMDConfiguration configuration;
 
     private final RulesetStageDependencyHelper dependencyHelper;
 
-    PmdRunnable(DataSource dataSource,
+    PmdRunnable(TextFile textFile,
                 GlobalAnalysisListener ruleContext,
                 PMDConfiguration configuration) {
-        this.dataSource = dataSource;
-        // this is the real, canonical and absolute filename (not shortened)
-        String realFileName = dataSource.getNiceFileName(false, null);
-
-        this.file = new File(realFileName);
+        this.textFile = textFile;
         this.ruleContext = ruleContext;
         this.configuration = configuration;
         this.dependencyHelper = new RulesetStageDependencyHelper(configuration);
@@ -66,44 +61,42 @@ abstract class PmdRunnable implements Runnable {
 
         RuleSets ruleSets = getRulesets();
 
-        try (FileAnalysisListener listener = ruleContext.startFileAnalysis(dataSource)) {
+        try (FileAnalysisListener listener = ruleContext.startFileAnalysis(textFile.asDataSource())) {
             final RuleContext ruleCtx = RuleContext.create(listener);
-
-            LanguageVersion langVersion = configuration.getLanguageVersionOfFile(file.getPath());
-
+            LanguageVersion langVersion = textFile.getLanguageVersion(configuration.getLanguageVersionDiscoverer());
 
             // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
-            if (ruleSets.applies(file)) {
-                if (configuration.getAnalysisCache().isUpToDate(file)) {
-                    reportCachedRuleViolations(ruleCtx, file);
+            if (ruleSets.applies(textFile)) {
+                TextDocument textDocument = TextDocument.create(textFile, langVersion);
+
+                if (configuration.getAnalysisCache().isUpToDate(textDocument)) {
+                    reportCachedRuleViolations(ruleCtx, textDocument);
                 } else {
                     try {
-                        processSource(ruleCtx, langVersion, ruleSets);
+                        processSource(ruleCtx, textDocument, ruleSets);
                     } catch (Exception e) {
-                        configuration.getAnalysisCache().analysisFailed(file);
+                        configuration.getAnalysisCache().analysisFailed(textDocument);
 
                         // The listener handles logging if needed,
                         // it may also rethrow the error, as a FileAnalysisException (which we let through below)
-                        ruleCtx.reportError(new Report.ProcessingError(e, file.getPath()));
+                        ruleCtx.reportError(new Report.ProcessingError(e, textFile.getDisplayName()));
                     }
                 }
             }
         } catch (FileAnalysisException e) {
             throw e; // bubble managed exceptions, they were already reported
         } catch (Exception e) {
-            throw FileAnalysisException.wrap(file.getPath(), "Exception while closing listener", e);
+            throw FileAnalysisException.wrap(textFile.getDisplayName(), "Exception while closing listener", e);
         }
 
         TimeTracker.finishThread();
     }
 
-    private void processSource(RuleContext ruleCtx, LanguageVersion languageVersion, RuleSets ruleSets) throws IOException, FileAnalysisException {
-        String fullSource = DataSource.readToString(dataSource, configuration.getSourceEncoding());
-        String filename = dataSource.getNiceFileName(false, null);
+    private void processSource(RuleContext ruleCtx, TextDocument textDoc, RuleSets ruleSets) throws IOException, FileAnalysisException {
 
         try {
             ruleSets.start(ruleCtx);
-            processSource(fullSource, ruleSets, ruleCtx, languageVersion, filename);
+            processSource(textDoc, ruleSets, ruleCtx);
         } finally {
             ruleSets.end(ruleCtx);
         }
@@ -111,7 +104,7 @@ abstract class PmdRunnable implements Runnable {
     }
 
 
-    private void reportCachedRuleViolations(final RuleContext ctx, File file) {
+    private void reportCachedRuleViolations(final RuleContext ctx, TextDocument file) {
         for (final RuleViolation rv : configuration.getAnalysisCache().getCachedViolations(file)) {
             ctx.addViolationNoSuppress(rv);
         }
@@ -124,25 +117,21 @@ abstract class PmdRunnable implements Runnable {
     }
 
 
-    private void processSource(String sourceCode,
+    private void processSource(TextDocument textDocument,
                                RuleSets ruleSets,
-                               RuleContext ctx,
-                               LanguageVersion languageVersion,
-                               String filename) throws FileAnalysisException {
+                               RuleContext ctx) throws FileAnalysisException {
 
         ParserTask task = new ParserTask(
-            languageVersion,
-            filename,
-            sourceCode,
+            textDocument,
             SemanticErrorReporter.noop(), // TODO
             configuration.getSuppressMarker()
         );
 
-        Parser parser = languageVersion.getLanguageVersionHandler().getParser();
+        Parser parser = textDocument.getLanguageVersion().getLanguageVersionHandler().getParser();
 
         RootNode rootNode = parse(parser, task);
 
-        dependencyHelper.runLanguageSpecificStages(ruleSets, languageVersion, rootNode);
+        dependencyHelper.runLanguageSpecificStages(ruleSets, textDocument.getLanguageVersion(), rootNode);
 
         ruleSets.apply(Collections.singletonList(rootNode), ctx);
     }
