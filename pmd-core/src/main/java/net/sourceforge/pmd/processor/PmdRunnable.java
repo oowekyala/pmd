@@ -61,7 +61,7 @@ abstract class PmdRunnable implements Runnable {
 
         RuleSets ruleSets = getRulesets();
 
-        try (FileAnalysisListener listener = ruleContext.startFileAnalysis(textFile.asDataSource())) {
+        try (FileAnalysisListener listener = ruleContext.startFileAnalysis(textFile)) {
             final RuleContext ruleCtx = RuleContext.create(listener);
             LanguageVersion langVersion = textFile.getLanguageVersion(configuration.getLanguageVersionDiscoverer());
 
