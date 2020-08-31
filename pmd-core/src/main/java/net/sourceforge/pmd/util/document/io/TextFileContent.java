@@ -28,6 +28,7 @@ public final class TextFileContent {
      * The normalized line ending used to replace platform-specific
      * line endings in the {@linkplain #getNormalizedText() normalized text}.
      */
+    public static final char NORMALIZED_LINE_TERM_CHAR = '\n';
     public static final String NORMALIZED_LINE_TERM = "\n";
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("\r\n?+|[\n\r\\u0085]");

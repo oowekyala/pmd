@@ -97,7 +97,7 @@ public final class PmdFiles {
      *
      * @throws NullPointerException If the source text or the name is null
      */
-    public static TextFile forString(@NonNull String source, @NonNull String name, @Nullable LanguageVersion lv) {
+    public static TextFile forString(@NonNull CharSequence source, @NonNull String name, @Nullable LanguageVersion lv) {
         return new StringTextFile(source, name, lv);
     }
 
