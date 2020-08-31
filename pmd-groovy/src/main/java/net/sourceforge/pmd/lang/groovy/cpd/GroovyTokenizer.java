@@ -1,14 +1,15 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.cpd;
-
-import java.io.StringReader;
+package net.sourceforge.pmd.lang.groovy.cpd;
 
 import org.codehaus.groovy.antlr.SourceInfo;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 
+import net.sourceforge.pmd.cpd.TokenEntry;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokens;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.util.document.TextDocument;
 
@@ -23,9 +24,7 @@ public class GroovyTokenizer implements Tokenizer {
 
     @Override
     public void tokenize(TextDocument sourceCode, Tokens tokenEntries) {
-        StringBuilder buffer = sourceCode.getCodeBuffer();
-
-        GroovyLexer lexer = new GroovyLexer(new StringReader(buffer.toString()));
+        GroovyLexer lexer = new GroovyLexer(sourceCode.newReader());
         TokenStream tokenStream = lexer.plumb();
 
         try {
@@ -42,7 +41,7 @@ public class GroovyTokenizer implements Tokenizer {
                     // fallback
                     lastCol = token.getColumn() + tokenText.length();
                 }
-                TokenEntry tokenEntry = new TokenEntry(tokenText, sourceCode.getFileName(), token.getLine(), token.getColumn(), lastCol);
+                TokenEntry tokenEntry = new TokenEntry(tokenText, sourceCode.getPathId(), token.getLine(), token.getColumn(), lastCol);
 
                 tokenEntries.add(tokenEntry);
                 token = tokenStream.nextToken();

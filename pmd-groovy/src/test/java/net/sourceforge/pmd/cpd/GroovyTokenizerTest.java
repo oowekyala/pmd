@@ -7,11 +7,12 @@ package net.sourceforge.pmd.cpd;
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
+import net.sourceforge.pmd.lang.groovy.GroovyLanguage;
 
 public class GroovyTokenizerTest extends CpdTextComparisonTest {
 
     public GroovyTokenizerTest() {
-        super(".groovy");
+        super(GroovyLanguage.ID, ".groovy");
     }
 
     @Override
