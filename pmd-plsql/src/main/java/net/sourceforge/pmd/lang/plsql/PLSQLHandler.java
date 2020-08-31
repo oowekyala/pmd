@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.plsql;
 
+import net.sourceforge.pmd.lang.plsql.cpd.PLSQLTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
@@ -20,6 +22,11 @@ public class PLSQLHandler extends AbstractPmdLanguageVersionHandler {
 
     public PLSQLHandler() {
         super(PlsqlProcessingStage.class);
+    }
+
+    @Override
+    public Tokenizer newCpdTokenizer() {
+        return new PLSQLTokenizer();
     }
 
     @Override

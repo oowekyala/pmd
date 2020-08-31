@@ -11,20 +11,20 @@ import net.sourceforge.pmd.lang.BaseLanguageModule;
  */
 public class PLSQLLanguageModule extends BaseLanguageModule {
 
-    public static final String NAME = "PLSQL";
+    public static final String NAME = "PL/SQL";
     public static final String TERSE_NAME = "plsql";
 
     public PLSQLLanguageModule() {
-        super(NAME, null, TERSE_NAME,
-                "sql",
-                "trg",  // Triggers
-                "prc", "fnc", // Standalone Procedures and Functions
-                "pld", // Oracle*Forms
-                "pls", "plh", "plb", // Packages
-                "pck", "pks", "pkh", "pkb", // Packages
-                "typ", "tyb", // Object Types
-                "tps", "tpb" // Object Types
+        super(NAME, "PLSQL", TERSE_NAME,
+              "sql",
+              "trg",  // Triggers
+              "prc", "fnc", // Standalone Procedures and Functions
+              "pld", // Oracle*Forms
+              "pls", "plh", "plb", // Packages
+              "pck", "pks", "pkh", "pkb", // Packages
+              "typ", "tyb", // Object Types
+              "tps", "tpb" // Object Types
         );
-        addVersion("", new PLSQLHandler(), true);
+        addSingleVersion(new PLSQLHandler());
     }
 }
