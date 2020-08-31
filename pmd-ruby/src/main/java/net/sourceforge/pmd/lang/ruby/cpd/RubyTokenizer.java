@@ -1,10 +1,12 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.cpd;
+package net.sourceforge.pmd.lang.ruby.cpd;
 
 import java.util.ArrayList;
+
+import net.sourceforge.pmd.cpd.AbstractTokenizer;
 
 /**
  * Tokenizer for Ruby.
