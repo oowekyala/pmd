@@ -16,6 +16,6 @@ public class XmlLanguageModule extends BaseLanguageModule {
 
     public XmlLanguageModule() {
         super(NAME, null, TERSE_NAME, "xml");
-        addVersion("", new XmlHandler(), true);
+        addSingleVersion(new XmlHandler());
     }
 }

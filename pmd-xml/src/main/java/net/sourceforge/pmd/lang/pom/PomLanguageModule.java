@@ -13,6 +13,6 @@ public class PomLanguageModule extends BaseLanguageModule {
 
     public PomLanguageModule() {
         super(NAME, null, TERSE_NAME, "pom");
-        addVersion("", new XmlHandler(), true);
+        addSingleVersion(new XmlHandler());
     }
 }

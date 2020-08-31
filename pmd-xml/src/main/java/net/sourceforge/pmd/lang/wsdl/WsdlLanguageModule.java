@@ -16,7 +16,7 @@ public class WsdlLanguageModule extends BaseLanguageModule {
 
     public WsdlLanguageModule() {
         super(NAME, null, TERSE_NAME, "wsdl");
-        addVersion("", new XmlHandler(), true);
+        addSingleVersion(new XmlHandler());
     }
 
 }
