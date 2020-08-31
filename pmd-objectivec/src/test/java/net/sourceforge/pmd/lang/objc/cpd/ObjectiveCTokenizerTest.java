@@ -1,23 +1,18 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.cpd;
+package net.sourceforge.pmd.lang.objc.cpd;
 
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
+import net.sourceforge.pmd.lang.objc.ObjectiveCLanguage;
 
 public class ObjectiveCTokenizerTest extends CpdTextComparisonTest {
 
-
     public ObjectiveCTokenizerTest() {
-        super(".m");
-    }
-
-    @Override
-    protected String getResourcePrefix() {
-        return "../lang/objc/cpd/testdata";
+        super(ObjectiveCLanguage.ID, ".m");
     }
 
     @Test
