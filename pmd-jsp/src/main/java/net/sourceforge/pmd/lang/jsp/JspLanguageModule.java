@@ -16,6 +16,6 @@ public class JspLanguageModule extends BaseLanguageModule {
 
     public JspLanguageModule() {
         super(NAME, "JSP", TERSE_NAME, "jsp", "jspx", "jspf", "tag");
-        addVersion("", new JspHandler(), true);
+        addSingleVersion(new JspHandler());
     }
 }
