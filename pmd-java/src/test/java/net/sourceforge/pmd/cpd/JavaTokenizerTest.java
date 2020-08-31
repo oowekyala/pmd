@@ -4,16 +4,16 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
 import org.junit.Test;
 
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
+import net.sourceforge.pmd.lang.java.JavaLanguageModule;
 
 public class JavaTokenizerTest extends CpdTextComparisonTest {
 
     public JavaTokenizerTest() {
-        super(".java");
+        super(JavaLanguageModule.TERSE_NAME, ".java");
     }
 
     @Override
@@ -82,31 +82,31 @@ public class JavaTokenizerTest extends CpdTextComparisonTest {
     }
 
 
-    private static Properties ignoreAnnotations() {
+    private static CpdProperties ignoreAnnotations() {
         return properties(true, false, false);
     }
 
-    private static Properties ignoreIdents() {
+    private static CpdProperties ignoreIdents() {
         return properties(false, false, true);
     }
 
-    private static Properties ignoreLiterals() {
+    private static CpdProperties ignoreLiterals() {
         return properties(false, true, false);
     }
 
 
     @Override
-    public Properties defaultProperties() {
+    public CpdProperties defaultProperties() {
         return properties(false, false, false);
     }
 
-    private static Properties properties(boolean ignoreAnnotations,
-                                         boolean ignoreLiterals,
-                                         boolean ignoreIdents) {
-        Properties properties = new Properties();
-        properties.setProperty(Tokenizer.IGNORE_ANNOTATIONS, Boolean.toString(ignoreAnnotations));
-        properties.setProperty(Tokenizer.IGNORE_IDENTIFIERS, Boolean.toString(ignoreIdents));
-        properties.setProperty(Tokenizer.IGNORE_LITERALS, Boolean.toString(ignoreLiterals));
+    private static CpdProperties properties(boolean ignoreAnnotations,
+                                            boolean ignoreLiterals,
+                                            boolean ignoreIdents) {
+        CpdProperties properties = new CpdProperties();
+        properties.setProperty(Tokenizer.IGNORE_ANNOTATIONS, ignoreAnnotations);
+        properties.setProperty(Tokenizer.IGNORE_IDENTIFIERS, ignoreIdents);
+        properties.setProperty(Tokenizer.IGNORE_LITERALS, ignoreLiterals);
         return properties;
     }
 

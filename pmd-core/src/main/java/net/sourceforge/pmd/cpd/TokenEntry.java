@@ -188,7 +188,7 @@ public class TokenEntry implements Comparable<TokenEntry> {
         return "--unknown--";
     }
 
-    final void setImage(String image) {
+    public final void setImage(String image) {
         Integer i = TOKENS.get().get(image);
         if (i == null) {
             i = TOKENS.get().size() + 1;

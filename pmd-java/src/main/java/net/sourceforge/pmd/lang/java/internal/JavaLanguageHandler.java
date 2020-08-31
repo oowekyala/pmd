@@ -7,6 +7,8 @@ package net.sourceforge.pmd.lang.java.internal;
 import java.util.Arrays;
 import java.util.List;
 
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
@@ -15,6 +17,7 @@ import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.ast.MethodLikeNode;
 import net.sourceforge.pmd.lang.java.ast.internal.LanguageLevelChecker;
 import net.sourceforge.pmd.lang.java.ast.internal.ReportingStrategy;
+import net.sourceforge.pmd.lang.java.cpd.JavaTokenizer;
 import net.sourceforge.pmd.lang.java.metrics.api.JavaClassMetricKey;
 import net.sourceforge.pmd.lang.java.metrics.api.JavaOperationMetricKey;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleViolationFactory;
@@ -50,6 +53,10 @@ public class JavaLanguageHandler extends AbstractPmdLanguageVersionHandler {
         this.levelChecker = new LanguageLevelChecker<>(jdkVersion, preview, ReportingStrategy.reporterThatThrows());
     }
 
+    @Override
+    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+        return new JavaTokenizer().withProperties(cpdProperties);
+    }
 
     @Override
     public Parser getParser(ParserOptions parserOptions) {

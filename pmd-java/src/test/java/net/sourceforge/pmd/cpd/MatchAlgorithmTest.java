@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import net.sourceforge.pmd.lang.java.cpd.JavaTokenizer;
 import net.sourceforge.pmd.util.document.TextDocument;
 import net.sourceforge.pmd.util.document.io.PmdFiles;
 
