@@ -8,9 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.cpd.ApexTokenizer;
+import net.sourceforge.pmd.lang.apex.cpd.ApexTokenizer;
 import net.sourceforge.pmd.cpd.Tokenizer;
-import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;

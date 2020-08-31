@@ -36,6 +36,7 @@ public abstract class BaseLanguageModule implements Language {
         this.shortName = shortName;
         this.terseName = terseName;
         this.extensions = CollectionUtil.listOf(firstExtension, otherExtensions);
+        assert CollectionUtil.none(extensions, it -> it.startsWith(".")) : extensions;
     }
 
     private void addVersion(String version, LanguageVersionHandler languageVersionHandler, boolean isDefault, String... versionAliases) {

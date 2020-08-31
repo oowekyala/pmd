@@ -13,8 +13,10 @@ import net.sourceforge.pmd.lang.CpdOnlyHandler;
  */
 public class GoLanguage extends BaseLanguageModule {
 
+    public static final String TERSE_NAME = "go";
+
     public GoLanguage() {
-        super("Go", "go", "go", ".go");
+        super("Go", "go", TERSE_NAME, "go");
         addSingleVersion(new CpdOnlyHandler(GoTokenizer::new));
     }
 }
