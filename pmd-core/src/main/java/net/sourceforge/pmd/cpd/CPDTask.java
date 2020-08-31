@@ -12,9 +12,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -24,6 +23,8 @@ import org.apache.tools.ant.types.EnumeratedAttribute;
 import org.apache.tools.ant.types.FileSet;
 
 import net.sourceforge.pmd.cpd.renderer.CPDRenderer;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 
 /**
  * CPDTask
@@ -81,7 +82,7 @@ public class CPDTask extends Task {
             log("Tokenizing files", Project.MSG_INFO);
             CPDConfiguration config = new CPDConfiguration();
             config.setMinimumTileSize(minimumTokenCount);
-            config.setLanguage(createLanguage());
+            config.setLanguage(LanguageRegistry.getLanguage(language));
             config.setEncoding(encoding);
             config.setSkipDuplicates(skipDuplicateFiles);
             config.setSkipLexicalErrors(skipLexicalErrors);
@@ -105,25 +106,6 @@ public class CPDTask extends Task {
         } finally {
             Thread.currentThread().setContextClassLoader(oldClassloader);
         }
-    }
-
-    private Language createLanguage() {
-        Properties p = new Properties();
-        if (ignoreLiterals) {
-            p.setProperty(Tokenizer.IGNORE_LITERALS, "true");
-        }
-        if (ignoreIdentifiers) {
-            p.setProperty(Tokenizer.IGNORE_IDENTIFIERS, "true");
-        }
-        if (ignoreAnnotations) {
-            p.setProperty(Tokenizer.IGNORE_ANNOTATIONS, "true");
-        }
-        if (ignoreUsings) {
-            p.setProperty(Tokenizer.IGNORE_USINGS, "true");
-        }
-        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(skipBlocks));
-        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, skipBlocksPattern);
-        return LanguageFactory.createLanguage(language, p);
     }
 
     private void report(CPD cpd) throws ReportException {
@@ -193,10 +175,15 @@ public class CPDTask extends Task {
             throw new BuildException("Must include at least one FileSet");
         }
 
-        if (!Arrays.asList(LanguageFactory.supportedLanguages).contains(language)) {
-            throw new BuildException("Language " + language + " is not supported. Available languages: "
-                    + Arrays.toString(LanguageFactory.supportedLanguages));
+        if (LanguageRegistry.findLanguageByTerseName(language)==null) {
+            throw new BuildException("Language " + language + " is not supported. Available languages: " + cpdLanguages());
         }
+    }
+
+    private static String cpdLanguages() {
+        return LanguageRegistry.cpdLanguages().stream()
+                               .map(Language::getTerseName)
+                               .collect(Collectors.joining(", ", "[", "]"));
     }
 
     public void addFileset(FileSet set) {

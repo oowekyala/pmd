@@ -7,7 +7,6 @@ package net.sourceforge.pmd.cpd;
 import java.io.IOException;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Properties;
 
 import net.sourceforge.pmd.cpd.internal.JavaCCTokenizer;
 import net.sourceforge.pmd.cpd.token.JavaCCTokenFilter;
@@ -31,16 +30,17 @@ public class JavaTokenizer extends JavaCCTokenizer {
 
     private ConstructorDetector constructorDetector;
 
-    public void setProperties(Properties properties) {
-        ignoreAnnotations = Boolean.parseBoolean(properties.getProperty(IGNORE_ANNOTATIONS, "false"));
-        ignoreLiterals = Boolean.parseBoolean(properties.getProperty(IGNORE_LITERALS, "false"));
-        ignoreIdentifiers = Boolean.parseBoolean(properties.getProperty(IGNORE_IDENTIFIERS, "false"));
+    @Override
+    public void setProperties(CpdProperties cpdProperties) {
+        ignoreAnnotations = cpdProperties.getProperty(IGNORE_ANNOTATIONS);
+        ignoreLiterals = cpdProperties.getProperty(IGNORE_LITERALS);
+        ignoreIdentifiers = cpdProperties.getProperty(IGNORE_IDENTIFIERS);
     }
 
     @Override
-    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) throws IOException {
+    public void tokenize(TextDocument textDocument, Tokens tokenEntries) throws IOException {
         constructorDetector = new ConstructorDetector(ignoreIdentifiers);
-        super.tokenize(sourceCode, tokenEntries);
+        super.tokenize(textDocument, tokenEntries);
     }
 
     @Override

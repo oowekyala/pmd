@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.sourceforge.pmd.util.document.TextDocument;
+
 public class MatchAlgorithm {
 
     private static final int MOD = 37;
@@ -18,17 +20,17 @@ public class MatchAlgorithm {
     private int lastMod = 1;
 
     private List<Match> matches;
-    private Map<String, SourceCode> source;
+    private Map<String, TextDocument> source;
     private Tokens tokens;
     private List<TokenEntry> code;
     private CPDListener cpdListener;
     private int min;
 
-    public MatchAlgorithm(Map<String, SourceCode> sourceCode, Tokens tokens, int min) {
+    public MatchAlgorithm(Map<String, TextDocument> sourceCode, Tokens tokens, int min) {
         this(sourceCode, tokens, min, new CPDNullListener());
     }
 
-    public MatchAlgorithm(Map<String, SourceCode> sourceCode, Tokens tokens, int min, CPDListener listener) {
+    public MatchAlgorithm(Map<String, TextDocument> sourceCode, Tokens tokens, int min, CPDListener listener) {
         this.source = sourceCode;
         this.tokens = tokens;
         this.code = tokens.getTokens();
@@ -82,7 +84,7 @@ public class MatchAlgorithm {
 
                 mark.setLineCount(lineCount);
                 mark.setEndToken(endToken);
-                SourceCode sourceCode = source.get(token.getTokenSrcID());
+                TextDocument sourceCode = source.get(token.getTokenSrcID());
                 mark.setSourceCode(sourceCode);
             }
         }

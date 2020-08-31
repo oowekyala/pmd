@@ -14,6 +14,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
+
 public class MatchAlgorithmTest {
 
     private static final String LINE_1 = "public class Foo { ";
@@ -33,12 +36,12 @@ public class MatchAlgorithmTest {
     @Test
     public void testSimple() throws IOException {
         JavaTokenizer tokenizer = new JavaTokenizer();
-        SourceCode sourceCode = new SourceCode(new SourceCode.StringCodeLoader(getSampleCode(), "Foo.java"));
+        TextDocument sourceCode = TextDocument.readOnlyString(getSampleCode(), "Foo.java", PmdFiles.dummyCpdVersion());
         Tokens tokens = new Tokens();
         TokenEntry.clearImages();
         tokenizer.tokenize(sourceCode, tokens);
         assertEquals(41, tokens.size());
-        Map<String, SourceCode> codeMap = new HashMap<>();
+        Map<String, TextDocument> codeMap = new HashMap<>();
         codeMap.put("Foo.java", sourceCode);
 
         MatchAlgorithm matchAlgorithm = new MatchAlgorithm(codeMap, tokens, 5);
@@ -66,11 +69,11 @@ public class MatchAlgorithmTest {
         JavaTokenizer tokenizer = new JavaTokenizer();
         tokenizer.setIgnoreLiterals(true);
         tokenizer.setIgnoreIdentifiers(true);
-        SourceCode sourceCode = new SourceCode(new SourceCode.StringCodeLoader(getSampleCode(), "Foo.java"));
+        TextDocument sourceCode = TextDocument.readOnlyString(getSampleCode(), "Foo.java", PmdFiles.dummyCpdVersion());
         Tokens tokens = new Tokens();
         TokenEntry.clearImages();
         tokenizer.tokenize(sourceCode, tokens);
-        Map<String, SourceCode> codeMap = new HashMap<>();
+        Map<String, TextDocument> codeMap = new HashMap<>();
         codeMap.put("Foo.java", sourceCode);
 
         MatchAlgorithm matchAlgorithm = new MatchAlgorithm(codeMap, tokens, 5);

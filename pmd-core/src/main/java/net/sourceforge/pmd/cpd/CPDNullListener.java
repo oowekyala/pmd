@@ -4,11 +4,9 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.io.File;
-
 public class CPDNullListener implements CPDListener {
     @Override
-    public void addedFile(int fileCount, File file) {
+    public void addedFile(int fileCount, String fileId) {
         // does nothing - override it if necessary
     }
 

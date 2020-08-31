@@ -8,7 +8,7 @@ import java.io.FilenameFilter;
 import java.util.List;
 import java.util.Properties;
 
-public interface Language {
+public interface CpdLanguage {
     String getName();
 
     String getTerseName();

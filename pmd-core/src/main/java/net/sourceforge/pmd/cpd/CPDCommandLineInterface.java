@@ -15,11 +15,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.PMDVersion;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.util.FileUtil;
 import net.sourceforge.pmd.util.database.DBURI;
 
@@ -81,9 +84,6 @@ public final class CPDCommandLineInterface {
             return;
         }
         arguments.postContruct();
-        // Pass extra parameters as System properties to allow language
-        // implementation to retrieve their associate values...
-        CPDConfiguration.setSystemProperties(arguments);
         CPD cpd = new CPD(arguments);
 
         try {
@@ -186,9 +186,15 @@ public final class CPDCommandLineInterface {
                 + " --minimum-tokens 100 --files /path/to/java/code" + PMD.EOL;
         helpText += PMD.EOL;
 
-        helpText += " Supported languages: " + Arrays.toString(LanguageFactory.supportedLanguages) + PMD.EOL;
+        helpText += " Supported languages: " + cpdLanguages() + PMD.EOL;
         helpText += " Formats: " + Arrays.toString(CPDConfiguration.getRenderers()) + PMD.EOL;
         return helpText;
+    }
+
+    private static String cpdLanguages() {
+        return LanguageRegistry.cpdLanguages().stream()
+                               .map(Language::getTerseName)
+                               .collect(Collectors.joining(", ", "[", "]"));
     }
 
 }

@@ -9,8 +9,12 @@ import net.sourceforge.pmd.cpd.SourceCode
 import net.sourceforge.pmd.cpd.TokenEntry
 import net.sourceforge.pmd.cpd.Tokenizer
 import net.sourceforge.pmd.cpd.Tokens
+import net.sourceforge.pmd.lang.LanguageRegistry
 import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.test.BaseTextComparisonTest
+import net.sourceforge.pmd.util.document.TextDocument
+import net.sourceforge.pmd.util.document.io.PmdFiles
+import net.sourceforge.pmd.util.document.io.TextFile
 import org.apache.commons.lang3.StringUtils
 import java.util.*
 
@@ -22,10 +26,11 @@ import java.util.*
  *                              Baseline files are saved in txt files.
  */
 abstract class CpdTextComparisonTest(
+        val languageId: String,
         override val extensionIncludingDot: String
 ) : BaseTextComparisonTest() {
 
-    abstract fun newTokenizer(properties: Properties): Tokenizer
+    abstract fun newTokenizer(properties: Tokenizer.CpdProperties): Tokenizer
 
     override val resourceLoader: Class<*>
         get() = javaClass
@@ -34,7 +39,7 @@ abstract class CpdTextComparisonTest(
         get() = "testdata"
 
 
-    open fun defaultProperties() = Properties()
+    open fun defaultProperties() = Tokenizer.CpdProperties()
 
     /**
      * A test comparing the output of the tokenizer.
@@ -45,9 +50,9 @@ abstract class CpdTextComparisonTest(
      * @param properties     Properties to configure [newTokenizer]
      */
     @JvmOverloads
-    fun doTest(fileBaseName: String, expectedSuffix: String = "", properties: Properties = defaultProperties()) {
+    fun doTest(fileBaseName: String, expectedSuffix: String = "", properties: Tokenizer.CpdProperties = defaultProperties()) {
         super.doTest(fileBaseName, expectedSuffix) { sourceText ->
-            val sourceCode = SourceCode(SourceCode.StringCodeLoader(sourceText, "$fileBaseName$extensionIncludingDot"))
+            val sourceCode = sourceCodeOf(sourceText, fileBaseName)
             val tokens = Tokens().also {
                 val tokenizer = newTokenizer(properties)
                 tokenizer.tokenize(sourceCode, it)
@@ -58,7 +63,7 @@ abstract class CpdTextComparisonTest(
     }
 
     @JvmOverloads
-    fun expectTokenMgrError(source: String, properties: Properties = defaultProperties()): TokenMgrError =
+    fun expectTokenMgrError(source: String, properties: Tokenizer.CpdProperties = defaultProperties()): TokenMgrError =
             shouldThrow {
                 newTokenizer(properties).tokenize(sourceCodeOf(source), Tokens())
             }
@@ -138,7 +143,12 @@ abstract class CpdTextComparisonTest(
     }
 
 
-    fun sourceCodeOf(str: String): SourceCode = SourceCode(SourceCode.StringCodeLoader(str))
+    @JvmOverloads
+    fun sourceCodeOf(str: String, fileBaseName: String = "no_name"): TextDocument {
+        val lang = LanguageRegistry.findLanguageByTerseName(languageId)!!.defaultVersion
+        val textFile = PmdFiles.forString(str, "$fileBaseName$extensionIncludingDot", lang)
+        return TextDocument.create(textFile)
+    }
 
     fun tokenize(tokenizer: Tokenizer, str: String): Tokens =
             Tokens().also {

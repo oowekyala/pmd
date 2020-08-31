@@ -36,7 +36,7 @@ public class CPPTokenizer extends JavaCCTokenizer {
 
     // override to make it visible in tests
     @Override
-    protected TokenManager<JavaccToken> getLexerForSource(SourceCode sourceCode) throws IOException {
+    protected TokenManager<JavaccToken> getLexerForSource(TextDocument sourceCode) throws IOException {
         return super.getLexerForSource(sourceCode);
     }
 

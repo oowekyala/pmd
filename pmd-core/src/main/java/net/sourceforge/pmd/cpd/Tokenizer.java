@@ -6,34 +6,77 @@ package net.sourceforge.pmd.cpd;
 
 import java.io.IOException;
 
+import net.sourceforge.pmd.properties.AbstractPropertySource;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
+import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.util.document.TextDocument;
+
 public interface Tokenizer {
-    String IGNORE_LITERALS = "ignore_literals";
-    String IGNORE_IDENTIFIERS = "ignore_identifiers";
-    String IGNORE_ANNOTATIONS = "ignore_annotations";
 
-    /**
-     * Ignore using directives in C#. The default value is <code>false</code>.
-     */
-    String IGNORE_USINGS = "ignore_usings";
 
-    /**
-     * Enables or disabled skipping of blocks like a pre-processor. It is a
-     * boolean property. The default value is <code>true</code>.
-     *
-     * @see #OPTION_SKIP_BLOCKS_PATTERN
-     */
-    String OPTION_SKIP_BLOCKS = "net.sourceforge.pmd.cpd.Tokenizer.skipBlocks";
-    /**
-     * Configures the pattern, to find the blocks to skip. It is a string
-     * property and contains of two parts, separated by {@code |}. The first
-     * part is the start pattern, the second part is the ending pattern. Default
-     * value is "{@code #if 0|#endif}".
-     *
-     * @see #DEFAULT_SKIP_BLOCKS_PATTERN
-     */
-    String OPTION_SKIP_BLOCKS_PATTERN = "net.sourceforge.pmd.cpd.Tokenizer.skipBlocksPattern";
+    PropertyDescriptor<Boolean> CASE_SENSITIVE =
+        PropertyFactory.booleanProperty("caseSensitive")
+                       .desc("Case sensitive matching (Apex only)")
+                       .defaultValue(false)
+                       .build();
+    PropertyDescriptor<Boolean> IGNORE_LITERALS =
+        PropertyFactory.booleanProperty("ignoreLiterals")
+                       .desc("Anonymize literal values (Java only)")
+                       .defaultValue(false)
+                       .build();
 
+    PropertyDescriptor<Boolean> IGNORE_IDENTIFIERS =
+        PropertyFactory.booleanProperty("ignoreIdentifiers")
+                       .desc("Anonymize identifiers (Java only)")
+                       .defaultValue(false)
+                       .build();
+
+    PropertyDescriptor<Boolean> IGNORE_ANNOTATIONS =
+        PropertyFactory.booleanProperty("ignoreAnnotations")
+                       .desc("Remove annotations from the token stream (Java only)")
+                       .defaultValue(false)
+                       .build();
+
+    PropertyDescriptor<Boolean> IGNORE_IMPORTS =
+        PropertyFactory.booleanProperty("ignoreImports") // maybe it makes sense to generalize this to other languages
+                       .desc("Remove imports from the token stream (C# only, which ignores using directives)")
+                       .defaultValue(false)
+                       .build();
+
+
+    String NO_SKIP_BLOCKS = "";
     String DEFAULT_SKIP_BLOCKS_PATTERN = "#if 0|#endif";
 
-    void tokenize(SourceCode sourceCode, Tokens tokenEntries) throws IOException;
+    PropertyDescriptor<String> SKIP_PROC_DIRECTIVES =
+        PropertyFactory.stringProperty("skipCppProcessorDirectives")
+                       .desc("Remove code sections found between the given delimiters (separated by a pipe, |) (C++ only)")
+                       .defaultValue(DEFAULT_SKIP_BLOCKS_PATTERN)
+                       .build();
+
+    final class CpdProperties extends AbstractPropertySource {
+
+        public CpdProperties() {
+            definePropertyDescriptor(SKIP_PROC_DIRECTIVES);
+            definePropertyDescriptor(IGNORE_IMPORTS);
+            definePropertyDescriptor(IGNORE_LITERALS);
+            definePropertyDescriptor(IGNORE_ANNOTATIONS);
+            definePropertyDescriptor(IGNORE_IDENTIFIERS);
+        }
+
+        @Override
+        protected String getPropertySourceType() {
+            return "CPD tokenizer";
+        }
+
+        @Override
+        public String getName() {
+            return "none";
+        }
+    }
+
+    default void setProperties(CpdProperties cpdProperties) {
+        // to be overridden
+    }
+
+    void tokenize(TextDocument sourceCode, Tokens tokenEntries) throws IOException;
 }

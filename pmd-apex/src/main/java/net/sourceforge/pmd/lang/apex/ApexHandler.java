@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.cpd.ApexTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
@@ -26,6 +29,12 @@ public class ApexHandler extends AbstractPmdLanguageVersionHandler {
 
     private final ApexMetricsProvider myMetricsProvider = new ApexMetricsProvider();
 
+    @Override
+    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+        ApexTokenizer tok = new ApexTokenizer();
+        tok.setProperties(cpdProperties);
+        return tok;
+    }
 
     @Override
     public RuleViolationFactory getRuleViolationFactory() {

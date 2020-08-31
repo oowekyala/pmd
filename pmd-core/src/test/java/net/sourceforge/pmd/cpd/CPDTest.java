@@ -30,7 +30,7 @@ public class CPDTest {
     @Before
     public void setup() throws Exception {
         CPDConfiguration theConfiguration = new CPDConfiguration();
-        theConfiguration.setLanguage(new AnyLanguage("any"));
+        theConfiguration.setLanguage(AnyLanguage.INSTANCE);
         theConfiguration.setMinimumTileSize(10);
         theConfiguration.postContruct();
         cpd = new CPD(theConfiguration);
@@ -143,10 +143,10 @@ public class CPDTest {
         }
 
         @Override
-        public void addedFile(int fileCount, File file) {
+        public void addedFile(int fileCount, String fileId) {
             files++;
             if (files > expectedFilesCount) {
-                Assert.fail("File was added! - " + file);
+                Assert.fail("File was added! - " + fileId);
             }
         }
 

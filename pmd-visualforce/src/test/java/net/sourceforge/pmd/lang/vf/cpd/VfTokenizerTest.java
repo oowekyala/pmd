@@ -7,9 +7,11 @@ package net.sourceforge.pmd.lang.vf.cpd;
 
 import java.util.Properties;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.VfTokenizer;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
@@ -19,8 +21,9 @@ public class VfTokenizerTest extends CpdTextComparisonTest {
         super(".page");
     }
 
+    @NotNull
     @Override
-    public Tokenizer newTokenizer(Properties properties) {
+    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
         VfTokenizer tokenizer = new VfTokenizer();
         return tokenizer;
     }

@@ -7,6 +7,9 @@ package net.sourceforge.pmd.cpd;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,28 +17,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.io.FilenameUtils;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
-import net.sourceforge.pmd.util.FileFinder;
 import net.sourceforge.pmd.util.database.DBMSMetadata;
 import net.sourceforge.pmd.util.database.DBURI;
 import net.sourceforge.pmd.util.database.SourceObject;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
+import net.sourceforge.pmd.util.document.io.TextFile;
 
 public class CPD {
     private static final Logger LOGGER = Logger.getLogger(CPD.class.getName());
 
-    private CPDConfiguration configuration;
+    private final CPDConfiguration configuration;
 
-    private Map<String, SourceCode> source = new TreeMap<>();
+    private final Map<String, TextDocument> source = new TreeMap<>();
     private CPDListener listener = new CPDNullListener();
-    private Tokens tokens = new Tokens();
+    private final Tokens tokens = new Tokens();
     private MatchAlgorithm matchAlgorithm;
-    private Set<String> current = new HashSet<>();
+    private final Set<String> current = new HashSet<>();
 
     public CPD(CPDConfiguration theConfiguration) {
         configuration = theConfiguration;
@@ -58,11 +65,11 @@ public class CPD {
     }
 
     public void addAllInDirectory(File dir) throws IOException {
-        addDirectory(dir, false);
+        addDirectory(dir.toPath(), false);
     }
 
     public void addRecursively(File dir) throws IOException {
-        addDirectory(dir, true);
+        addDirectory(dir.toPath(), true);
     }
 
     public void add(List<File> files) throws IOException {
@@ -71,41 +78,58 @@ public class CPD {
         }
     }
 
-    private void addDirectory(File dir, boolean recurse) throws IOException {
-        if (!dir.exists()) {
-            throw new FileNotFoundException("Couldn't find directory " + dir);
+    private void addDirectory(Path root, boolean recurse) throws IOException {
+        if (!Files.exists(root)) {
+            throw new FileNotFoundException(root.toString());
         }
-        FileFinder finder = new FileFinder();
-        // TODO - could use SourceFileSelector here
-        add(finder.findFilesFrom(dir, configuration.filenameFilter(), recurse));
+
+        Predicate<Path> filter = configuration.filenameFilter();
+
+
+        List<Path> paths;
+        try (Stream<Path> walk = recurse ? Files.walk(root) : Files.list(root)) {
+            paths = walk.filter(filter)
+                        .sorted()
+                        .collect(Collectors.toList());
+        }
+
+        for (Path path : paths) {
+            add(path);
+        }
     }
 
     public void add(File file) throws IOException {
+        add(file.toPath());
+    }
+
+    public void add(Path path) throws IOException {
+
+        if (!Files.isRegularFile(path)) {
+            System.err.println("Skipping " + path + " since it appears to be a symlink or directory");
+            return;
+        }
+
+        if (!Files.exists(path)) {
+            System.err.println("Skipping " + path + " since it doesn't exist (broken symlink?)");
+            return;
+        }
+
+        LanguageVersion version = configuration.getLanguage().getDefaultVersion();
+        TextFile textFile = PmdFiles.forPath(path, Charset.forName(configuration.getEncoding()), version);
+        add(textFile);
+    }
+
+    public void add(TextFile file) throws IOException {
 
         if (configuration.isSkipDuplicates()) {
-            // TODO refactor this thing into a separate class
-            String signature = file.getName() + '_' + file.length();
-            if (current.contains(signature)) {
-                System.err.println("Skipping " + file.getAbsolutePath()
-                        + " since it appears to be a duplicate file and --skip-duplicate-files is set");
+            if (!current.add(file.getPathId())) {
+                System.err.println("Skipping " + file.getPathId()
+                                       + " since it appears to be a duplicate file and --skip-duplicate-files is set");
                 return;
             }
-            current.add(signature);
         }
 
-        if (!FilenameUtils.equalsNormalizedOnSystem(file.getAbsoluteFile().getCanonicalPath(),
-                file.getAbsolutePath())) {
-            System.err.println("Skipping " + file + " since it appears to be a symlink");
-            return;
-        }
-
-        if (!file.exists()) {
-            System.err.println("Skipping " + file + " since it doesn't exist (broken symlink?)");
-            return;
-        }
-
-        SourceCode sourceCode = configuration.sourceCodeFor(file);
-        add(sourceCode);
+        add(TextDocument.create(file));
     }
 
     public void add(DBURI dburi) throws IOException {
@@ -121,18 +145,17 @@ public class CPD {
                 String falseFilePath = sourceObject.getPseudoFileName();
                 LOGGER.log(Level.FINEST, "Adding database source object {0}", falseFilePath);
 
-                SourceCode sourceCode = configuration.sourceCodeFor(dbmsmetadata.getSourceCode(sourceObject),
-                        falseFilePath);
-                add(sourceCode);
+                SourceCode sourceCode = configuration.sourceCodeFor(dbmsmetadata.getSourceCode(sourceObject), falseFilePath);
+                add(PmdFiles.cpdCompat(sourceCode));
             }
         } catch (Exception sqlException) {
             LOGGER.log(Level.SEVERE, "Problem with Input URI", sqlException);
-            throw new RuntimeException("Problem with DBURI: " + dburi, sqlException);
+            throw new IOException("Problem with DBURI: " + dburi, sqlException);
         }
     }
 
     @Experimental
-    public void add(SourceCode sourceCode) throws IOException {
+    public void add(TextDocument sourceCode) throws IOException {
         if (configuration.isSkipLexicalErrors()) {
             addAndSkipLexicalErrors(sourceCode);
         } else {
@@ -140,18 +163,19 @@ public class CPD {
         }
     }
 
-    private void addAndThrowLexicalError(SourceCode sourceCode) throws IOException {
+    private void addAndThrowLexicalError(TextDocument sourceCode) throws IOException {
+
         configuration.tokenizer().tokenize(sourceCode, tokens);
-        listener.addedFile(1, new File(sourceCode.getFileName()));
-        source.put(sourceCode.getFileName(), sourceCode);
+        listener.addedFile(1, sourceCode.getPathId());
+        source.put(sourceCode.getPathId(), sourceCode);
     }
 
-    private void addAndSkipLexicalErrors(SourceCode sourceCode) throws IOException {
+    private void addAndSkipLexicalErrors(TextDocument sourceCode) throws IOException {
         TokenEntry.State savedTokenEntry = new TokenEntry.State(tokens.getTokens());
         try {
             addAndThrowLexicalError(sourceCode);
         } catch (TokenMgrError e) {
-            System.err.println("Skipping " + sourceCode.getFileName() + ". Reason: " + e.getMessage());
+            System.err.println("Skipping " + sourceCode.getDisplayName() + ". Reason: " + e.getMessage());
             tokens.getTokens().clear();
             tokens.getTokens().addAll(savedTokenEntry.restore());
         }
@@ -164,15 +188,6 @@ public class CPD {
      */
     public List<String> getSourcePaths() {
         return new ArrayList<>(source.keySet());
-    }
-
-    /**
-     * Get each Source to be processed.
-     *
-     * @return all Sources to be processed
-     */
-    public List<SourceCode> getSources() {
-        return new ArrayList<>(source.values());
     }
 
     public static void main(String[] args) {

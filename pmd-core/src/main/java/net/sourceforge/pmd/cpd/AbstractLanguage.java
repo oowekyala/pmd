@@ -12,7 +12,7 @@ import java.util.Properties;
 
 import net.sourceforge.pmd.internal.util.PredicateUtil;
 
-public abstract class AbstractLanguage implements Language {
+public abstract class AbstractLanguage implements CpdLanguage {
     private final String name;
     private final String terseName;
     private final Tokenizer tokenizer;

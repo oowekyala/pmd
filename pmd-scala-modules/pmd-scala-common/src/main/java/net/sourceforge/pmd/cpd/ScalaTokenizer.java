@@ -14,6 +14,7 @@ import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.lang.scala.ScalaLanguageHandler;
 import net.sourceforge.pmd.lang.scala.ScalaLanguageModule;
+import net.sourceforge.pmd.util.document.TextDocument;
 
 import scala.collection.Iterator;
 import scala.meta.Dialect;
@@ -60,7 +61,7 @@ public class ScalaTokenizer implements Tokenizer {
     }
 
     @Override
-    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) throws IOException {
+    public void tokenize(TextDocument sourceCode, Tokens tokenEntries) throws IOException {
         String filename = sourceCode.getFileName();
         // create the full code file
         String fullCode = StringUtils.join(sourceCode.getCode(), "\n");

@@ -109,4 +109,8 @@ public final class LanguageRegistry {
         return languages;
     }
 
+
+    public static Set<Language> cpdLanguages() {
+        return LanguageRegistry.getLanguages();
+    }
 }

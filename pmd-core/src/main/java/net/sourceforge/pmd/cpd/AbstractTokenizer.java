@@ -4,8 +4,12 @@
 
 package net.sourceforge.pmd.cpd;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.TextFileContent;
 
 /**
  *
@@ -45,8 +49,8 @@ public abstract class AbstractTokenizer implements Tokenizer {
     private boolean downcaseString = true;
 
     @Override
-    public void tokenize(SourceCode tokens, Tokens tokenEntries) {
-        code = tokens.getCode();
+    public void tokenize(TextDocument tokens, Tokens tokenEntries) {
+        code = Arrays.asList(tokens.getText().toString().split(TextFileContent.NORMALIZED_LINE_TERM));
 
         for (lineNumber = 0; lineNumber < code.size(); lineNumber++) {
             currentLine = code.get(lineNumber);
@@ -64,7 +68,7 @@ public abstract class AbstractTokenizer implements Tokenizer {
                     }
 
                     tokenEntries.add(new TokenEntry(image,
-                                                    tokens.getFileName(),
+                                                    tokens.getPathId(),
                                                     tokBeginLine + 1,
                                                     tokBeginCol + 1,
                                                     loc + 1));

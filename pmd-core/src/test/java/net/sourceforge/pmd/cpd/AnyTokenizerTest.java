@@ -9,13 +9,15 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
 
 public class AnyTokenizerTest {
 
     @Test
     public void testMultiLineMacros() {
         AnyTokenizer tokenizer = new AnyTokenizer();
-        SourceCode code = new SourceCode(new SourceCode.StringCodeLoader(TEST1));
+        TextDocument code = TextDocument.readOnlyString(TEST1, PmdFiles.dummyCpdVersion());
         Tokens tokens = new Tokens();
         tokenizer.tokenize(code, tokens);
         assertEquals(30, tokens.size());

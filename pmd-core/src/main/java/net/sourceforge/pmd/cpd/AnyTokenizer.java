@@ -4,10 +4,13 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.io.BufferedReader;
-import java.io.CharArrayReader;
-import java.io.IOException;
-import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
  * This class does a best-guess try-anything tokenization.
@@ -15,33 +18,26 @@ import java.util.StringTokenizer;
  * @author jheintz
  */
 public class AnyTokenizer implements Tokenizer {
+
     public static final String TOKENS = " \t!#$%^&*(){}-=+<>/\\`~;:";
+    private static final Pattern SEPARATOR_PATTERN = Pattern.compile("\\s++|[!#$%^&*(){}\\-=+<>\\\\/`~;:]");
 
     @Override
-    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-        StringBuilder sb = sourceCode.getCodeBuffer();
-        try (BufferedReader reader = new BufferedReader(new CharArrayReader(sb.toString().toCharArray()))) {
-            int lineNumber = 1;
-            int colNumber = 1;
-            String line = reader.readLine();
-            while (line != null) {
-                StringTokenizer tokenizer = new StringTokenizer(line, TOKENS, true);
-                while (tokenizer.hasMoreTokens()) {
-                    String token = tokenizer.nextToken();
-                    int endCol = colNumber + token.length() - 1; // -1 because inclusive
-                    if (!" ".equals(token) && !"\t".equals(token)) {
-                        tokenEntries.add(new TokenEntry(token, sourceCode.getFileName(), lineNumber, colNumber, endCol));
-                    }
-                    colNumber = endCol + 1;
+    public void tokenize(TextDocument sourceCode, Tokens tokenEntries) {
+        Chars text = sourceCode.getText();
+        Matcher matcher = SEPARATOR_PATTERN.matcher(text);
+        int lastMatchEnd = 0;
+        try {
+            while (matcher.find()) {
+                Chars lastTok = text.subSequence(lastMatchEnd, matcher.start()).trim();
+                if (lastTok.length() > 0) {
+                    FileLocation loc = sourceCode.toLocation(TextRegion.fromBothOffsets(lastMatchEnd, matcher.start()));
+                    tokenEntries.add(new TokenEntry(lastTok.toString(), sourceCode.getPathId(), loc.getBeginLine(), loc.getBeginColumn(), loc.getEndColumn()));
                 }
-                // advance iteration variables
-                line = reader.readLine();
-                lineNumber++;
+                lastMatchEnd = matcher.end();
             }
-        } catch (IOException ignored) {
-            ignored.printStackTrace();
         } finally {
-            tokenEntries.add(TokenEntry.getEOF());
+            tokenEntries.add(TokenEntry.EOF);
         }
     }
 }

@@ -6,8 +6,10 @@ package net.sourceforge.pmd.cpd;
 
 import java.util.Properties;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 public class ObjectiveCTokenizerTest extends CpdTextComparisonTest {
@@ -22,8 +24,9 @@ public class ObjectiveCTokenizerTest extends CpdTextComparisonTest {
         return "../lang/objc/cpd/testdata";
     }
 
+    @NotNull
     @Override
-    public Tokenizer newTokenizer(Properties properties) {
+    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
         return new ObjectiveCTokenizer();
     }
 

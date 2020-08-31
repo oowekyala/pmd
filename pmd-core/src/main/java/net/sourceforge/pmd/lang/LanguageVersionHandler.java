@@ -9,6 +9,8 @@ import static java.util.Collections.emptyList;
 import java.util.List;
 
 import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.metrics.LanguageMetricsProvider;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
@@ -26,6 +28,8 @@ import net.sourceforge.pmd.util.designerbindings.DesignerBindings.DefaultDesigne
  */
 public interface LanguageVersionHandler {
 
+
+    Tokenizer getCpdTokenizer(CpdProperties cpdProperties);
 
     /**
      * Get the XPathHandler.

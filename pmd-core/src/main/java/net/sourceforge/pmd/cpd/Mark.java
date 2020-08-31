@@ -4,11 +4,14 @@
 
 package net.sourceforge.pmd.cpd;
 
+import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.TextDocument;
+
 public class Mark implements Comparable<Mark> {
     private TokenEntry token;
     private TokenEntry endToken;
     private int lineCount;
-    private SourceCode code;
+    private TextDocument code;
 
     public Mark(TokenEntry token) {
         this.token = token;
@@ -62,10 +65,15 @@ public class Mark implements Comparable<Mark> {
 
     /** Newlines are normalized to \n. */
     public String getSourceCodeSlice() {
-        return this.code.getSlice(getBeginLine(), getEndLine());
+        return getSourceCodeSliceCs().toString();
     }
 
-    public void setSourceCode(SourceCode code) {
+    /** Newlines are normalized to \n. */
+    public Chars getSourceCodeSliceCs() {
+        return code.slice(code.createLineRange(getBeginLine(), getEndLine()));
+    }
+
+    public void setSourceCode(TextDocument code) {
         this.code = code;
     }
 

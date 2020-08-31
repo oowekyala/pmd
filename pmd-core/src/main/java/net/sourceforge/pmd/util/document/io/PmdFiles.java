@@ -18,10 +18,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.cpd.SourceCode;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.internal.util.BaseCloseable;
 import net.sourceforge.pmd.lang.BaseLanguageModule;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.LanguageVersionHandler;
+import net.sourceforge.pmd.lang.Parser;
+import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.util.datasource.DataSource;
 
 /**
@@ -177,8 +182,16 @@ public final class PmdFiles {
     @Deprecated
     private static final Language DUMMY_CPD_LANG = new BaseLanguageModule("cpd", "cpd", "cpd", "cpd") {
         {
-            addDefaultVersion("0", parserOptions -> task -> {
-                throw new UnsupportedOperationException();
+            addDefaultVersion("0", new LanguageVersionHandler() {
+                @Override
+                public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public Parser getParser(ParserOptions parserOptions) {
+                    throw new UnsupportedOperationException();
+                }
             });
         }
 

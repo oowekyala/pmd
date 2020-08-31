@@ -22,6 +22,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import net.sourceforge.pmd.cpd.renderer.CPDRenderer;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
 
 /**
  * @author Philippe T'Seyen
@@ -226,7 +228,7 @@ public class XMLRendererTest {
         Mark result = new Mark(new TokenEntry(image, tokenSrcID, beginLine));
 
         result.setLineCount(lineCount);
-        result.setSourceCode(new SourceCode(new SourceCode.StringCodeLoader(code)));
+        result.setSourceCode(TextDocument.readOnlyString(code, tokenSrcID, PmdFiles.dummyCpdVersion()));
         return result;
     }
 
@@ -237,7 +239,7 @@ public class XMLRendererTest {
 
         result.setLineCount(lineCount);
         result.setEndToken(endToken);
-        result.setSourceCode(new SourceCode(new SourceCode.StringCodeLoader(code)));
+        result.setSourceCode(TextDocument.readOnlyString(code, tokenSrcID, PmdFiles.dummyCpdVersion()));
         return result;
     }
 }

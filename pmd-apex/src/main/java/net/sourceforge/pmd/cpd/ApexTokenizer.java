@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.cpd;
 
 import java.util.Locale;
-import java.util.Properties;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.Lexer;
@@ -13,6 +12,8 @@ import org.antlr.runtime.Token;
 
 import net.sourceforge.pmd.lang.apex.ApexJorjeLogging;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.TextDocument;
 
 import apex.jorje.parser.impl.ApexLexer;
 
@@ -22,21 +23,16 @@ public class ApexTokenizer implements Tokenizer {
         ApexJorjeLogging.disableLogging();
     }
 
-    /**
-     * If the properties is <code>false</code> (default), then the case of any token
-     * is ignored.
-     */
-    public static final String CASE_SENSITIVE = "net.sourceforge.pmd.cpd.ApexTokenizer.caseSensitive";
-
     private boolean caseSensitive;
 
-    public void setProperties(Properties properties) {
-        caseSensitive = Boolean.parseBoolean(properties.getProperty(CASE_SENSITIVE, "false"));
+    @Override
+    public void setProperties(CpdProperties cpdProperties) {
+        caseSensitive = cpdProperties.getProperty(Tokenizer.CASE_SENSITIVE);
     }
 
     @Override
-    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-        StringBuilder code = sourceCode.getCodeBuffer();
+    public void tokenize(TextDocument sourceCode, Tokens tokenEntries) {
+        Chars code = sourceCode.getText();
 
         ANTLRStringStream ass = new ANTLRStringStream(code.toString());
         ApexLexer lexer = new ApexLexer(ass) {
@@ -55,7 +51,7 @@ public class ApexTokenizer implements Tokenizer {
                     if (!caseSensitive) {
                         tokenText = tokenText.toLowerCase(Locale.ROOT);
                     }
-                    TokenEntry tokenEntry = new TokenEntry(tokenText, sourceCode.getFileName(),
+                    TokenEntry tokenEntry = new TokenEntry(tokenText, sourceCode.getPathId(),
                                                            token.getLine(),
                                                            token.getCharPositionInLine() + 1,
                                                            token.getCharPositionInLine() + tokenText.length() + 1);

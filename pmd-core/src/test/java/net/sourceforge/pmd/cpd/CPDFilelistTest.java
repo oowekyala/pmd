@@ -14,12 +14,14 @@ import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
 
+import net.sourceforge.pmd.lang.DummyLanguageModule;
+
 public class CPDFilelistTest {
 
     @Test
     public void testFilelist() {
         CPDConfiguration arguments = new CPDConfiguration();
-        arguments.setLanguage(new CpddummyLanguage());
+        arguments.setLanguage(new DummyLanguageModule());
         arguments.setFileListPath("src/test/resources/net/sourceforge/pmd/cpd/cli/filelist.txt");
         CPD cpd = new CPD(arguments);
         CPDCommandLineInterface.addSourceFilesToCPD(cpd, arguments);
@@ -37,7 +39,7 @@ public class CPDFilelistTest {
     @Test
     public void testFilelistMultipleLines() {
         CPDConfiguration arguments = new CPDConfiguration();
-        arguments.setLanguage(new CpddummyLanguage());
+        arguments.setLanguage(new DummyLanguageModule());
         arguments.setFileListPath("src/test/resources/net/sourceforge/pmd/cpd/cli/filelist2.txt");
         CPD cpd = new CPD(arguments);
         CPDCommandLineInterface.addSourceFilesToCPD(cpd, arguments);

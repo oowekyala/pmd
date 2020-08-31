@@ -6,9 +6,11 @@ package net.sourceforge.pmd.cpd;
 
 import java.util.Properties;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 
@@ -26,8 +28,9 @@ public class ScalaTokenizerTest extends CpdTextComparisonTest {
         return "../lang/scala/cpd/testdata";
     }
 
+    @NotNull
     @Override
-    public Tokenizer newTokenizer(Properties properties) {
+    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
         return new ScalaTokenizer();
     }
 

@@ -4,14 +4,10 @@
 
 package net.sourceforge.pmd.cpd.internal;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 
-import net.sourceforge.pmd.cpd.SourceCode;
 import net.sourceforge.pmd.cpd.TokenEntry;
 import net.sourceforge.pmd.cpd.Tokenizer;
 import net.sourceforge.pmd.cpd.Tokens;
@@ -19,7 +15,6 @@ import net.sourceforge.pmd.cpd.token.AntlrTokenFilter;
 import net.sourceforge.pmd.lang.ast.impl.antlr4.AntlrToken;
 import net.sourceforge.pmd.lang.ast.impl.antlr4.AntlrTokenManager;
 import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.io.PmdFiles;
 
 /**
  * Generic implementation of a {@link Tokenizer} useful to any Antlr grammar.
@@ -29,22 +24,18 @@ public abstract class AntlrTokenizer implements Tokenizer {
     protected abstract Lexer getLexerForSource(CharStream charStream);
 
     @Override
-    public void tokenize(final SourceCode sourceCode, final Tokens tokenEntries) {
-        try (TextDocument textDoc = TextDocument.create(PmdFiles.cpdCompat(sourceCode))) {
+    public void tokenize(final TextDocument textDocument, final Tokens tokenEntries) {
+        try {
+            CharStream charStream = CharStreams.fromString(textDocument.getText().toString(), textDocument.getDisplayName());
 
-            CharStream charStream = CharStreams.fromString(textDoc.getText().toString(), textDoc.getDisplayName());
-
-            final AntlrTokenManager tokenManager = new AntlrTokenManager(getLexerForSource(charStream), textDoc);
+            final AntlrTokenManager tokenManager = new AntlrTokenManager(getLexerForSource(charStream), textDocument);
             final AntlrTokenFilter tokenFilter = getTokenFilter(tokenManager);
 
             AntlrToken currentToken = tokenFilter.getNextToken();
             while (currentToken != null) {
-                processToken(tokenEntries, sourceCode.getFileName(), currentToken);
+                processToken(tokenEntries, textDocument.getDisplayName(), currentToken);
                 currentToken = tokenFilter.getNextToken();
             }
-
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         } finally {
             tokenEntries.add(TokenEntry.getEOF());
         }

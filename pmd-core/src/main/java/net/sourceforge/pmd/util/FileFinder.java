@@ -4,13 +4,12 @@
 
 package net.sourceforge.pmd.util;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.commons.io.comparator.PathFileComparator;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import net.sourceforge.pmd.annotation.InternalApi;
 
@@ -22,43 +21,21 @@ import net.sourceforge.pmd.annotation.InternalApi;
 @InternalApi
 public class FileFinder {
 
-    private FilenameFilter filter;
-
     /**
      * Searches for files in a given directory.
      *
      * @param dir     the directory to search files
      * @param filter  the filename filter that can optionally be passed to get files that match this filter
-     * @param recurse search for files recursively or not
      * @return list of files from the given directory
      */
-    public List<File> findFilesFrom(File dir, FilenameFilter filter, boolean recurse) {
-        this.filter = filter;
-        List<File> files = new ArrayList<>();
-        scanDirectory(dir, files, recurse);
-
-        return files;
-    }
-
-    /**
-     * Implements a tail recursive file scanner
-     */
-    private void scanDirectory(File dir, List<File> list, boolean recurse) {
-        File[] candidates = dir.listFiles(filter);
-        if (candidates == null) {
-            return;
-        }
-
-        Arrays.sort(candidates, PathFileComparator.PATH_INSENSITIVE_COMPARATOR);
-
-        for (File tmp : candidates) {
-            if (tmp.isDirectory()) {
-                if (recurse) {
-                    scanDirectory(tmp, list, true);
-                }
-            } else {
-                list.add(tmp);
+    public void findFilesFrom(Set<Path> result, Path dir, Predicate<Path> filter) throws IOException {
+        if (Files.isDirectory(dir)) {
+            try (Stream<Path> pathStream = Files.walk(dir).filter(filter)) {
+                pathStream.forEach(result::add);
             }
+        } else {
+            result.add(dir);
         }
     }
+
 }

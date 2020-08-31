@@ -6,16 +6,16 @@ package net.sourceforge.pmd.cpd;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Properties;
-
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 public class CPPTokenizerTest extends CpdTextComparisonTest {
 
     public CPPTokenizerTest() {
-        super(".cpp");
+        super("cpp", ".cpp");
     }
 
     @Override
@@ -23,15 +23,16 @@ public class CPPTokenizerTest extends CpdTextComparisonTest {
         return "../lang/cpp/cpd/testdata";
     }
 
+    @NotNull
     @Override
-    public Tokenizer newTokenizer(Properties props) {
+    public Tokenizer newTokenizer(@NotNull CpdProperties props) {
         CPPTokenizer tok = new CPPTokenizer();
         tok.setProperties(props);
         return tok;
     }
 
     @Override
-    public Properties defaultProperties() {
+    public CpdProperties defaultProperties() {
         return dontSkipBlocks();
     }
 
@@ -130,24 +131,21 @@ public class CPPTokenizerTest extends CpdTextComparisonTest {
     }
 
 
-    private static Properties skipBlocks(String skipPattern) {
-        return properties(true, skipPattern);
+    private static CpdProperties skipBlocks(String skipPattern) {
+        return properties(skipPattern);
     }
 
-    private static Properties skipBlocks() {
-        return skipBlocks(null);
+    private static CpdProperties skipBlocks() {
+        return skipBlocks(Tokenizer.DEFAULT_SKIP_BLOCKS_PATTERN);
     }
 
-    private static Properties dontSkipBlocks() {
-        return properties(false, null);
+    private static CpdProperties dontSkipBlocks() {
+        return properties(Tokenizer.NO_SKIP_BLOCKS);
     }
 
-    private static Properties properties(boolean skipBlocks, String skipPattern) {
-        Properties properties = new Properties();
-        properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(skipBlocks));
-        if (skipPattern != null) {
-            properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, skipPattern);
-        }
+    private static CpdProperties properties(String skipPattern) {
+        CpdProperties properties = new CpdProperties();
+        properties.setProperty(Tokenizer.SKIP_PROC_DIRECTIVES, skipPattern);
         return properties;
     }
 }

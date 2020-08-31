@@ -12,6 +12,9 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
+
 public class MatchTest {
 
     @Test
@@ -57,7 +60,7 @@ public class MatchTest {
         Mark result = new Mark(new TokenEntry(image, tokenSrcID, beginLine));
 
         result.setLineCount(lineCount);
-        result.setSourceCode(new SourceCode(new SourceCode.StringCodeLoader(code)));
+        result.setSourceCode(TextDocument.readOnlyString(code, tokenSrcID, PmdFiles.dummyCpdVersion()));
         return result;
     }
 

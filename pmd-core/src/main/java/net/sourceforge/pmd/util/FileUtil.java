@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -222,7 +223,7 @@ public final class FileUtil {
 
 
     private static void internalGetApplicableFiles(List<TextFile> files, PMDConfiguration configuration, Set<Language> languages) throws IOException {
-        List<String> ignoredFiles = getIgnoredFiles(configuration);
+        Set<String> ignoredFiles = getIgnoredFiles(configuration.getIgnoreFilePath());
         Predicate<Path> fileFilter = PredicateUtil.toFileFilter(new LanguageFilenameFilter(languages));
         fileFilter = fileFilter.and(path -> !ignoredFiles.contains(path.toString()));
 
@@ -249,19 +250,19 @@ public final class FileUtil {
         }
     }
 
-    private static List<String> getIgnoredFiles(PMDConfiguration configuration) throws IOException {
-        if (null != configuration.getIgnoreFilePath()) {
-            Path ignoreFile = toExistingPath(configuration.getIgnoreFilePath());
+    public static Set<String> getIgnoredFiles(String ignoreFilePath) throws IOException {
+        if (ignoreFilePath != null) {
+            Path ignoreFile = toExistingPath(ignoreFilePath);
             try {
                 // todo, if the file list contains relative paths, they
                 //  should be taken relative to the filelist location,
                 //  not the working directory, right?
-                return readFilelistEntries(ignoreFile);
+                return new HashSet<>(readFilelistEntries(ignoreFile));
             } catch (IOException ex) {
                 throw new IOException("Problem with exclusion filelist: " + ignoreFile, ex);
             }
         } else {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
     }
 

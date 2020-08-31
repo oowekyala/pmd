@@ -8,7 +8,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import net.sourceforge.pmd.cpd.SourceCode.StringCodeLoader;
+import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.io.PmdFiles;
 
 public class MarkTest {
 
@@ -22,7 +23,7 @@ public class MarkTest {
         int lineCount = 10;
         mark.setLineCount(lineCount);
         String codeFragment = "code fragment";
-        mark.setSourceCode(new SourceCode(new StringCodeLoader(codeFragment)));
+        mark.setSourceCode(TextDocument.readOnlyString(codeFragment, PmdFiles.dummyCpdVersion()));
 
         assertEquals(token, mark.getToken());
         assertEquals(filename, mark.getFilename());
@@ -48,7 +49,7 @@ public class MarkTest {
         mark.setLineCount(lineCount);
         mark.setEndToken(endToken);
         final String codeFragment = "code fragment";
-        mark.setSourceCode(new SourceCode(new StringCodeLoader(codeFragment)));
+        mark.setSourceCode(TextDocument.readOnlyString(codeFragment, PmdFiles.dummyCpdVersion()));
 
         assertEquals(token, mark.getToken());
         assertEquals(filename, mark.getFilename());

@@ -8,6 +8,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.cpd.AnyTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.ast.DummyAstStages;
 import net.sourceforge.pmd.lang.ast.DummyRoot;
 import net.sourceforge.pmd.lang.ast.Node;
@@ -45,6 +48,10 @@ public class DummyLanguageModule extends BaseLanguageModule {
             return new RuleViolationFactory();
         }
 
+        @Override
+        public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+            return new AnyTokenizer();
+        }
 
         @Override
         public Parser getParser(ParserOptions parserOptions) {

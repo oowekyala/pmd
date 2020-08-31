@@ -15,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.apex.ApexLanguageModule;
 
 public class ApexCpdTest {
@@ -30,7 +31,7 @@ public class ApexCpdTest {
     public void testIssue427() throws IOException {
         CPDConfiguration configuration = new CPDConfiguration();
         configuration.setMinimumTileSize(10);
-        configuration.setLanguage(LanguageFactory.createLanguage(ApexLanguageModule.TERSE_NAME));
+        configuration.setLanguage(LanguageRegistry.getLanguage(ApexLanguageModule.NAME));
         CPD cpd = new CPD(configuration);
         cpd.add(new File(testdir, "SFDCEncoder.cls"));
         cpd.add(new File(testdir, "SFDCEncoderConstants.cls"));

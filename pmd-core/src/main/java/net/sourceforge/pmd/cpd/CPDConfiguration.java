@@ -7,23 +7,26 @@ package net.sourceforge.pmd.cpd;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import net.sourceforge.pmd.AbstractConfiguration;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.renderer.CPDRenderer;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.util.FileFinder;
-import net.sourceforge.pmd.util.FileUtil;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
@@ -49,9 +52,10 @@ public class CPDConfiguration extends AbstractConfiguration {
         RENDERERS.put("vs", VSRenderer.class);
     }
 
+
     @Parameter(names = "--language", description = "Sources code language. Default value is " + DEFAULT_LANGUAGE,
-            required = false, converter = LanguageConverter.class)
-    private Language language;
+               required = false, converter = LanguageConverter.class)
+    private net.sourceforge.pmd.lang.Language language;
 
     @Parameter(names = "--minimum-tokens",
             description = "The minimum token length which should be reported as a duplicate.", required = true)
@@ -133,14 +137,14 @@ public class CPDConfiguration extends AbstractConfiguration {
     private boolean failOnViolation = true;
 
     // this has to be a public static class, so that JCommander can use it!
-    public static class LanguageConverter implements IStringConverter<Language> {
+    public static class LanguageConverter implements IStringConverter<net.sourceforge.pmd.lang.Language> {
 
         @Override
-        public Language convert(String languageString) {
+        public net.sourceforge.pmd.lang.Language convert(String languageString) {
             if (languageString == null || "".equals(languageString)) {
                 languageString = DEFAULT_LANGUAGE;
             }
-            return LanguageFactory.createLanguage(languageString);
+            return LanguageRegistry.findLanguageByTerseName(languageString);
         }
     }
 
@@ -160,7 +164,7 @@ public class CPDConfiguration extends AbstractConfiguration {
 
     public void postContruct() {
         if (getLanguage() == null) {
-            setLanguage(CPDConfiguration.getLanguageFromString(DEFAULT_LANGUAGE));
+            setLanguage(LanguageRegistry.findLanguageByTerseName(DEFAULT_LANGUAGE));
         }
         if (getRendererName() == null) {
             setRendererName(DEFAULT_RENDERER);
@@ -247,42 +251,25 @@ public class CPDConfiguration extends AbstractConfiguration {
         return result;
     }
 
-    public static Language getLanguageFromString(String languageString) {
-        return LanguageFactory.createLanguage(languageString);
+    public CpdProperties getCpdProperties() {
+        CpdProperties properties = new CpdProperties();
+        properties.setProperty(Tokenizer.IGNORE_LITERALS, this.isIgnoreLiterals());
+        properties.setProperty(Tokenizer.IGNORE_IDENTIFIERS, this.isIgnoreIdentifiers());
+        properties.setProperty(Tokenizer.IGNORE_ANNOTATIONS, this.isIgnoreAnnotations());
+        properties.setProperty(Tokenizer.IGNORE_IMPORTS, this.isIgnoreUsings());
+        if (this.isNoSkipBlocks()) {
+            properties.setProperty(Tokenizer.SKIP_PROC_DIRECTIVES, "");
+        } else {
+            properties.setProperty(Tokenizer.SKIP_PROC_DIRECTIVES, this.getSkipBlocksPattern());
+        }
+        return properties;
     }
 
-    public static void setSystemProperties(CPDConfiguration configuration) {
-        Properties properties = new Properties();
-        if (configuration.isIgnoreLiterals()) {
-            properties.setProperty(Tokenizer.IGNORE_LITERALS, "true");
-        } else {
-            properties.remove(Tokenizer.IGNORE_LITERALS);
-        }
-        if (configuration.isIgnoreIdentifiers()) {
-            properties.setProperty(Tokenizer.IGNORE_IDENTIFIERS, "true");
-        } else {
-            properties.remove(Tokenizer.IGNORE_IDENTIFIERS);
-        }
-        if (configuration.isIgnoreAnnotations()) {
-            properties.setProperty(Tokenizer.IGNORE_ANNOTATIONS, "true");
-        } else {
-            properties.remove(Tokenizer.IGNORE_ANNOTATIONS);
-        }
-        if (configuration.isIgnoreUsings()) {
-            properties.setProperty(Tokenizer.IGNORE_USINGS, "true");
-        } else {
-            properties.remove(Tokenizer.IGNORE_USINGS);
-        }
-        properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(!configuration.isNoSkipBlocks()));
-        properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, configuration.getSkipBlocksPattern());
-        configuration.getLanguage().setProperties(properties);
-    }
-
-    public Language getLanguage() {
+    public net.sourceforge.pmd.lang.Language getLanguage() {
         return language;
     }
 
-    public void setLanguage(Language language) {
+    public void setLanguage(net.sourceforge.pmd.lang.Language language) {
         this.language = language;
     }
 
@@ -323,44 +310,29 @@ public class CPDConfiguration extends AbstractConfiguration {
     }
 
     public Tokenizer tokenizer() {
-        if (language == null) {
-            throw new IllegalStateException("Language is null.");
-        }
-        return language.getTokenizer();
+        Objects.requireNonNull(language, "Language is null.");
+        return language.getDefaultVersion().getLanguageVersionHandler().getCpdTokenizer(getCpdProperties());
     }
 
-    public FilenameFilter filenameFilter() {
-        if (language == null) {
-            throw new IllegalStateException("Language is null.");
-        }
+    public Predicate<Path> filenameFilter() throws IOException {
+        Objects.requireNonNull(language, "Language is null.");
 
-        final FilenameFilter languageFilter = language.getFileFilter();
-        final Set<String> exclusions = new HashSet<>();
+        Predicate<Path> extensionFilter = language.getDefaultFileFilter();
+        final Set<Path> exclusions = new HashSet<>();
 
         if (excludes != null) {
             FileFinder finder = new FileFinder();
             for (File excludedFile : excludes) {
-                if (excludedFile.isDirectory()) {
-                    List<File> files = finder.findFilesFrom(excludedFile, languageFilter, true);
-                    for (File f : files) {
-                        exclusions.add(FileUtil.normalizeFilename(f.getAbsolutePath()));
-                    }
-                } else {
-                    exclusions.add(FileUtil.normalizeFilename(excludedFile.getAbsolutePath()));
-                }
+                finder.findFilesFrom(exclusions, excludedFile.toPath(), extensionFilter);
             }
         }
 
-        return new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                File f = new File(dir, name);
-                if (exclusions.contains(FileUtil.normalizeFilename(f.getAbsolutePath()))) {
-                    System.err.println("Excluding " + f.getAbsolutePath());
-                    return false;
-                }
-                return languageFilter.accept(dir, name);
+        return path -> {
+            if (exclusions.contains(path)) {
+                System.err.println("Excluding " + path.toAbsolutePath());
+                return false;
             }
+            return extensionFilter.test(path);
         };
     }
 

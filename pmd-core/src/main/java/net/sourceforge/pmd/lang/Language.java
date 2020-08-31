@@ -4,7 +4,13 @@
 
 package net.sourceforge.pmd.lang;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * Interface each Language implementation has to implement. It is used by the
@@ -59,6 +65,11 @@ public interface Language extends Comparable<Language> {
      * @return List of file extensions.
      */
     List<String> getExtensions();
+
+    default Predicate<Path> getDefaultFileFilter() {
+        Pattern extensionPattern = Pattern.compile(getExtensions().stream().map(Pattern::quote).collect(Collectors.joining("|")));
+        return path -> extensionPattern.matcher(FilenameUtils.getExtension(path.getFileName().toString())).matches();
+    }
 
     /**
      * Returns whether the given Language handles the given file extension. The
