@@ -8,11 +8,12 @@ package net.sourceforge.pmd.lang.vf.cpd;
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
+import net.sourceforge.pmd.lang.vf.VfLanguageModule;
 
 public class VfTokenizerTest extends CpdTextComparisonTest {
 
     public VfTokenizerTest() {
-        super(".page");
+        super(VfLanguageModule.TERSE_NAME, ".page");
     }
 
     @Test

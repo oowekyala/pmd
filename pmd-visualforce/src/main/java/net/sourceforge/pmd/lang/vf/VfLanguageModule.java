@@ -18,6 +18,6 @@ public class VfLanguageModule extends BaseLanguageModule {
 
     public VfLanguageModule() {
         super(NAME, "VisualForce", TERSE_NAME, "page", "component");
-        addVersion("", new VfHandler(), true);
+        addSingleVersion(new VfHandler());
     }
 }
