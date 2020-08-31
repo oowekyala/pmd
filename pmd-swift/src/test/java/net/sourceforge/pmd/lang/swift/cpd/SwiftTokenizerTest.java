@@ -1,24 +1,19 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.cpd;
+package net.sourceforge.pmd.lang.swift.cpd;
 
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
+import net.sourceforge.pmd.lang.swift.SwiftLanguageModule;
 
 public class SwiftTokenizerTest extends CpdTextComparisonTest {
 
     public SwiftTokenizerTest() {
-        super(".swift");
+        super(SwiftLanguageModule.TERSE_NAME, ".swift");
     }
-
-    @Override
-    protected String getResourcePrefix() {
-        return "../lang/swift/cpd/testdata";
-    }
-
 
     @Test
     public void testSwift42() {
