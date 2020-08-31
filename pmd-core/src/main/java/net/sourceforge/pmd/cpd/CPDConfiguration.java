@@ -311,7 +311,7 @@ public class CPDConfiguration extends AbstractConfiguration {
 
     public Tokenizer tokenizer() {
         Objects.requireNonNull(language, "Language is null.");
-        return language.getDefaultVersion().getLanguageVersionHandler().getCpdTokenizer(getCpdProperties());
+        return language.getDefaultVersion().getLanguageVersionHandler().newCpdTokenizer().withProperties(getCpdProperties());
     }
 
     public Predicate<Path> filenameFilter() throws IOException {

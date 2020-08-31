@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.cpd.test
 
 import io.kotest.assertions.throwables.shouldThrow
-import net.sourceforge.pmd.cpd.SourceCode
 import net.sourceforge.pmd.cpd.TokenEntry
 import net.sourceforge.pmd.cpd.Tokenizer
 import net.sourceforge.pmd.cpd.Tokens
@@ -14,9 +13,7 @@ import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.test.BaseTextComparisonTest
 import net.sourceforge.pmd.util.document.TextDocument
 import net.sourceforge.pmd.util.document.io.PmdFiles
-import net.sourceforge.pmd.util.document.io.TextFile
 import org.apache.commons.lang3.StringUtils
-import java.util.*
 
 /**
  * CPD test comparing a dump of a file against a saved baseline.
@@ -52,7 +49,7 @@ abstract class CpdTextComparisonTest(
         super.doTest(fileBaseName, expectedSuffix) { sourceText ->
             val sourceCode = sourceCodeOf(sourceText, fileBaseName)
             val tokens = Tokens().also {
-                val tokenizer = sourceCode.languageVersion.languageVersionHandler.getCpdTokenizer(properties)
+                val tokenizer = sourceCode.languageVersion.languageVersionHandler.newCpdTokenizer().withProperties(properties)
                 tokenizer.tokenize(sourceCode, it)
             }
 
@@ -64,7 +61,7 @@ abstract class CpdTextComparisonTest(
     fun expectTokenMgrError(source: String, properties: Tokenizer.CpdProperties = defaultProperties()): TokenMgrError =
             shouldThrow {
                 val sourceCode = sourceCodeOf(source)
-                sourceCode.languageVersion.languageVersionHandler.getCpdTokenizer(properties).tokenize(sourceCode, Tokens())
+                sourceCode.languageVersion.languageVersionHandler.newCpdTokenizer().withProperties(properties).tokenize(sourceCode, Tokens())
             }
 
 

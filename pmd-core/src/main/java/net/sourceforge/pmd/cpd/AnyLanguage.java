@@ -23,7 +23,7 @@ public class AnyLanguage implements Language {
 
     private final LanguageVersion anyVersion = new LanguageVersion(this, "0", new LanguageVersionHandler() {
         @Override
-        public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+        public Tokenizer newCpdTokenizer() {
             return new AnyTokenizer();
         }
 

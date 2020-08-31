@@ -31,8 +31,8 @@ public class ScalaLanguageHandler extends AbstractPmdLanguageVersionHandler {
     }
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        return new ScalaTokenizer(this.dialect).withProperties(cpdProperties);
+    public Tokenizer newCpdTokenizer() {
+        return new ScalaTokenizer(this.dialect);
     }
 
     /**

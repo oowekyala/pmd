@@ -17,8 +17,8 @@ import net.sourceforge.pmd.lang.ParserOptions;
 public class Ecmascript3Handler extends AbstractPmdLanguageVersionHandler {
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        return new EcmascriptTokenizer().withProperties(cpdProperties);
+    public Tokenizer newCpdTokenizer() {
+        return new EcmascriptTokenizer();
     }
 
     @Override

@@ -25,8 +25,8 @@ public class CpdOnlyHandler extends AbstractLanguageVersionHandler {
     }
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        return tokenizerMaker.get().withProperties(cpdProperties);
+    public Tokenizer newCpdTokenizer() {
+        return tokenizerMaker.get();
     }
 
     @Override

@@ -30,10 +30,8 @@ public class ApexHandler extends AbstractPmdLanguageVersionHandler {
     private final ApexMetricsProvider myMetricsProvider = new ApexMetricsProvider();
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        ApexTokenizer tok = new ApexTokenizer();
-        tok.setProperties(cpdProperties);
-        return tok;
+    public Tokenizer newCpdTokenizer() {
+        return new ApexTokenizer();
     }
 
     @Override

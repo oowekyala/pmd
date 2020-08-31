@@ -184,7 +184,7 @@ public final class PmdFiles {
         {
             addDefaultVersion("0", new LanguageVersionHandler() {
                 @Override
-                public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+                public Tokenizer newCpdTokenizer() {
                     throw new UnsupportedOperationException();
                 }
 

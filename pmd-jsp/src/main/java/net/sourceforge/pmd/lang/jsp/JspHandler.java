@@ -20,8 +20,8 @@ import net.sourceforge.pmd.lang.jsp.cpd.JSPTokenizer;
 public class JspHandler extends AbstractPmdLanguageVersionHandler {
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        return new JSPTokenizer().withProperties(cpdProperties);
+    public Tokenizer newCpdTokenizer() {
+        return new JSPTokenizer();
     }
 
     @Override

@@ -54,8 +54,8 @@ public class JavaLanguageHandler extends AbstractPmdLanguageVersionHandler {
     }
 
     @Override
-    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
-        return new JavaTokenizer().withProperties(cpdProperties);
+    public Tokenizer newCpdTokenizer() {
+        return new JavaTokenizer();
     }
 
     @Override

@@ -29,7 +29,11 @@ import net.sourceforge.pmd.util.designerbindings.DesignerBindings.DefaultDesigne
 public interface LanguageVersionHandler {
 
 
-    Tokenizer getCpdTokenizer(CpdProperties cpdProperties);
+    /**
+     * Create a new cpd tokenizer. Its properties will be set later with
+     * {@link Tokenizer#setProperties(CpdProperties)}.
+     */
+    Tokenizer newCpdTokenizer();
 
     /**
      * Get the XPathHandler.

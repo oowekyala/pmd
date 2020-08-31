@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.modelica;
 
+import net.sourceforge.pmd.cpd.ModelicaTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.Parser;
 import net.sourceforge.pmd.lang.ParserOptions;
@@ -16,7 +19,10 @@ public class ModelicaHandler extends AbstractPmdLanguageVersionHandler {
         super(ModelicaProcessingStage.class);
     }
 
-
+    @Override
+    public Tokenizer newCpdTokenizer() {
+        return new ModelicaTokenizer();
+    }
 
     @Override
     public Parser getParser(ParserOptions parserOptions) {

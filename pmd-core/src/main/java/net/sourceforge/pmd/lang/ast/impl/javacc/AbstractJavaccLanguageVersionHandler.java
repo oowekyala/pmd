@@ -16,7 +16,7 @@ public abstract class AbstractJavaccLanguageVersionHandler extends AbstractPmdLa
 
 
     @Override
-    public JavaCCTokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+    public JavaCCTokenizer newCpdTokenizer() {
         return null;
     }
 

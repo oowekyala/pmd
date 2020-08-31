@@ -47,7 +47,7 @@ public class DummyLanguageModule extends BaseLanguageModule {
         }
 
         @Override
-        public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+        public Tokenizer newCpdTokenizer() {
             return new AnyTokenizer();
         }
 
