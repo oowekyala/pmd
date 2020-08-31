@@ -54,7 +54,7 @@ abstract class CpdTextComparisonTest(
         super.doTest(fileBaseName, expectedSuffix) { sourceText ->
             val sourceCode = sourceCodeOf(sourceText, fileBaseName)
             val tokens = Tokens().also {
-                val tokenizer = newTokenizer(properties)
+                val tokenizer = sourceCode.languageVersion.languageVersionHandler.getCpdTokenizer(properties)
                 tokenizer.tokenize(sourceCode, it)
             }
 
@@ -65,7 +65,8 @@ abstract class CpdTextComparisonTest(
     @JvmOverloads
     fun expectTokenMgrError(source: String, properties: Tokenizer.CpdProperties = defaultProperties()): TokenMgrError =
             shouldThrow {
-                newTokenizer(properties).tokenize(sourceCodeOf(source), Tokens())
+                val sourceCode = sourceCodeOf(source)
+                sourceCode.languageVersion.languageVersionHandler.getCpdTokenizer(properties).tokenize(sourceCode, Tokens())
             }
 
 

@@ -1,10 +1,13 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.cpd;
+package net.sourceforge.pmd.lang.fortran.cpd;
 
 import java.util.ArrayList;
+
+import net.sourceforge.pmd.cpd.AbstractTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
 
 /**
  * Tokenizer implementation for Fortran

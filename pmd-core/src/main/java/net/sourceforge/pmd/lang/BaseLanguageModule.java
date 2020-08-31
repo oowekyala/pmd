@@ -93,8 +93,17 @@ public abstract class BaseLanguageModule implements Language {
         addVersion(version, languageVersionHandler, true, versionAliases);
     }
 
+
     /**
-     * @deprecated use {@link #addVersion(String, LanguageVersionHandler, String...)} or {@link #addDefaultVersion(String, LanguageVersionHandler, String...)}
+     * Add a default version that has no name.
+     */
+    protected void addSingleVersion(LanguageVersionHandler languageVersionHandler) {
+        addVersion("", languageVersionHandler, true);
+    }
+
+    /**
+     * @deprecated use {@link #addVersion(String, LanguageVersionHandler, String...)} or {@link
+     *     #addDefaultVersion(String, LanguageVersionHandler, String...)}
      */
     @Deprecated
     protected void addVersion(String version, LanguageVersionHandler languageVersionHandler, boolean isDefault) {
