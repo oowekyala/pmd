@@ -13,7 +13,6 @@ import net.sourceforge.pmd.util.document.TextDocument;
 
 public interface Tokenizer {
 
-
     PropertyDescriptor<Boolean> CASE_SENSITIVE =
         PropertyFactory.booleanProperty("caseSensitive")
                        .desc("Case sensitive matching (Apex only)")

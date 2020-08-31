@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.scala;
 
+import net.sourceforge.pmd.cpd.ScalaTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.scala.ast.ScalaParser;
@@ -25,6 +28,11 @@ public class ScalaLanguageHandler extends AbstractPmdLanguageVersionHandler {
      */
     public ScalaLanguageHandler(Dialect scalaDialect) {
         this.dialect = scalaDialect;
+    }
+
+    @Override
+    public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+        return new ScalaTokenizer(this.dialect).withProperties(cpdProperties);
     }
 
     /**

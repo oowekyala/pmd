@@ -20,13 +20,6 @@ public class ApexTokenizerTest extends CpdTextComparisonTest {
         return "../lang/apex/cpd/testdata";
     }
 
-    @Override
-    public Tokenizer newTokenizer(CpdProperties properties) {
-        ApexTokenizer tokenizer = new ApexTokenizer();
-        tokenizer.setProperties(properties);
-        return tokenizer;
-    }
-
 
     @Test
     public void testTokenize() {

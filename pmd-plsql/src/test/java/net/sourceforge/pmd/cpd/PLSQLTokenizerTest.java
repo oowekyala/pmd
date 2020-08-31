@@ -4,12 +4,8 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 public class PLSQLTokenizerTest extends CpdTextComparisonTest {
@@ -23,13 +19,7 @@ public class PLSQLTokenizerTest extends CpdTextComparisonTest {
         return "../lang/plsql/cpd/testdata";
     }
 
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        return new PLSQLTokenizer();
-    }
 
-    
     @Test
     public void testSimple() {
         doTest("sample-plsql");

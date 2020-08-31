@@ -6,7 +6,6 @@ package net.sourceforge.pmd.cpd;
 
 import static org.junit.Assert.assertEquals;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
@@ -23,14 +22,6 @@ public class CPPTokenizerTest extends CpdTextComparisonTest {
         return "../lang/cpp/cpd/testdata";
     }
 
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties props) {
-        CPPTokenizer tok = new CPPTokenizer();
-        tok.setProperties(props);
-        return tok;
-    }
-
     @Override
     public CpdProperties defaultProperties() {
         return dontSkipBlocks();
@@ -38,7 +29,7 @@ public class CPPTokenizerTest extends CpdTextComparisonTest {
 
     @Test
     public void testUTFwithBOM() {
-        Tokenizer tokenizer = newTokenizer(dontSkipBlocks());
+        Tokenizer tokenizer = new CPPTokenizer().withProperties(dontSkipBlocks());
         Tokens tokens = tokenize(tokenizer, "\ufeffint start()\n{ int ret = 1;\nreturn ret;\n}\n");
         assertEquals(15, tokens.size());
     }

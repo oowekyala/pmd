@@ -4,12 +4,8 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 
@@ -22,12 +18,6 @@ public class JSPTokenizerTest extends CpdTextComparisonTest {
     @Override
     protected String getResourcePrefix() {
         return "../lang/jsp/cpd/testdata";
-    }
-
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        return new JSPTokenizer();
     }
 
     @Test

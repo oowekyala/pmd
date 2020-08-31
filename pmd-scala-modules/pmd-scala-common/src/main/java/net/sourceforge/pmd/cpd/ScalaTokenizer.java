@@ -28,46 +28,19 @@ import scala.meta.tokens.Token;
  * Scala Tokenizer class. Uses the Scala Meta Tokenizer.
  */
 public class ScalaTokenizer implements Tokenizer {
-
-    /**
-     * Denotes the version of the scala dialect to use. Based on the values in
-     * {@linkplain ScalaLanguageModule#getVersions()}
-     */
-    public static final String SCALA_VERSION_PROPERTY = "net.sourceforge.pmd.scala.version";
     private final Dialect dialect;
 
     /**
      * Create the Tokenizer using properties from the system environment.
      */
-    public ScalaTokenizer() {
-        this(System.getProperties());
-    }
-
-    /**
-     * Create the Tokenizer given a set of properties.
-     *
-     * @param properties
-     *            the {@linkplain Properties} object to use
-     */
-    public ScalaTokenizer(Properties properties) {
-        String scalaVersion = properties.getProperty(SCALA_VERSION_PROPERTY);
-        LanguageVersion langVer;
-        if (scalaVersion == null) {
-            langVer = LanguageRegistry.getLanguage(ScalaLanguageModule.NAME).getDefaultVersion();
-        } else {
-            langVer = LanguageRegistry.getLanguage(ScalaLanguageModule.NAME).getVersion(scalaVersion);
-        }
-        dialect = ((ScalaLanguageHandler) langVer.getLanguageVersionHandler()).getDialect();
+    public ScalaTokenizer(Dialect dialect) {
+        this.dialect = dialect;
     }
 
     @Override
     public void tokenize(TextDocument sourceCode, Tokens tokenEntries) throws IOException {
-        String filename = sourceCode.getFileName();
-        // create the full code file
-        String fullCode = StringUtils.join(sourceCode.getCode(), "\n");
-
         // create the input file for scala
-        Input.VirtualFile vf = new Input.VirtualFile(filename, fullCode);
+        Input.VirtualFile vf = new Input.VirtualFile(sourceCode.getPathId(), sourceCode.getText().toString());
         ScalametaTokenizer tokenizer = new ScalametaTokenizer(vf, dialect);
 
         // tokenize with a filter
@@ -82,7 +55,7 @@ public class ScalaTokenizer implements Tokenizer {
                 }
                 Position pos = token.pos();
                 TokenEntry cpdToken = new TokenEntry(token.text(),
-                                                     filename,
+                                                     sourceCode.getPathId(),
                                                      pos.startLine() + 1,
                                                      pos.startColumn() + 1,
                                                      pos.endColumn() + 2);
@@ -93,7 +66,7 @@ public class ScalaTokenizer implements Tokenizer {
                 // cannot catch it as it's a checked exception and Scala sneaky throws
                 TokenizeException tokE = (TokenizeException) e;
                 Position pos = tokE.pos();
-                throw new TokenMgrError(pos.startLine() + 1, pos.startColumn() + 1, filename, "Scalameta threw", tokE);
+                throw new TokenMgrError(pos.startLine() + 1, pos.startColumn() + 1, sourceCode.getDisplayName(), "Scalameta threw", tokE);
             } else {
                 throw e;
             }

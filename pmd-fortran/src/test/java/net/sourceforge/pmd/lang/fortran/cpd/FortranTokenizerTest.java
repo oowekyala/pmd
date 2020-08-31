@@ -4,11 +4,8 @@
 
 package net.sourceforge.pmd.lang.fortran.cpd;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sourceforge.pmd.cpd.Tokenizer;
-import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 /**
@@ -24,12 +21,6 @@ public class FortranTokenizerTest extends CpdTextComparisonTest {
     @Override
     protected String getResourcePrefix() {
         return "../lang/fortran/cpd/testdata";
-    }
-
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        return new FortranTokenizer();
     }
 
     @Test

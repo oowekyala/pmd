@@ -30,8 +30,6 @@ abstract class CpdTextComparisonTest(
         override val extensionIncludingDot: String
 ) : BaseTextComparisonTest() {
 
-    abstract fun newTokenizer(properties: Tokenizer.CpdProperties): Tokenizer
-
     override val resourceLoader: Class<*>
         get() = javaClass
 
@@ -47,7 +45,7 @@ abstract class CpdTextComparisonTest(
      * @param fileBaseName   Name of the source file (without extension or resource prefix)
      * @param expectedSuffix Suffix to append to the expected file. This allows reusing the same source file
      *                       with different configurations, provided the suffix is different
-     * @param properties     Properties to configure [newTokenizer]
+     * @param properties     Properties to configure the tokenizer
      */
     @JvmOverloads
     fun doTest(fileBaseName: String, expectedSuffix: String = "", properties: Tokenizer.CpdProperties = defaultProperties()) {

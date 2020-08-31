@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -13,6 +11,7 @@ import org.junit.rules.ExpectedException;
 import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.lang.scala.ScalaLanguageModule;
 
 public class ScalaTokenizerTest extends CpdTextComparisonTest {
 
@@ -20,18 +19,12 @@ public class ScalaTokenizerTest extends CpdTextComparisonTest {
     public ExpectedException ex = ExpectedException.none();
 
     public ScalaTokenizerTest() {
-        super(".scala");
+        super(ScalaLanguageModule.TERSE_NAME, ".scala");
     }
 
     @Override
     protected String getResourcePrefix() {
         return "../lang/scala/cpd/testdata";
-    }
-
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        return new ScalaTokenizer();
     }
 
     @Test

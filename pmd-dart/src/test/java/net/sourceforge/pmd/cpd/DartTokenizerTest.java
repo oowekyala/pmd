@@ -4,22 +4,14 @@
 
 package net.sourceforge.pmd.cpd;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.cpd.test.CpdTextComparisonTest;
 
 public class DartTokenizerTest extends CpdTextComparisonTest {
 
     public DartTokenizerTest() {
         super("dart", ".dart");
-    }
-
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        return new DartTokenizer();
     }
 
 

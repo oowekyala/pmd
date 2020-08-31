@@ -4,7 +4,6 @@
 
 package net.sourceforge.pmd.cpd;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
@@ -24,14 +23,6 @@ public class CsTokenizerTest extends CpdTextComparisonTest {
     @Override
     protected String getResourcePrefix() {
         return "../lang/cs/cpd/testdata";
-    }
-
-    @NotNull
-    @Override
-    public Tokenizer newTokenizer(@NotNull CpdProperties properties) {
-        CsTokenizer tok = new CsTokenizer();
-        tok.setProperties(properties);
-        return tok;
     }
 
     @Test
