@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.AbstractConfiguration;
 import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
@@ -441,6 +444,10 @@ public class CPDConfiguration extends AbstractConfiguration {
 
     public String getEncoding() {
         return encoding;
+    }
+
+    public @NonNull Charset getCharset() {
+        return encoding == null ? Charset.defaultCharset() : Charset.forName(encoding);
     }
 
     public boolean isNoSkipBlocks() {

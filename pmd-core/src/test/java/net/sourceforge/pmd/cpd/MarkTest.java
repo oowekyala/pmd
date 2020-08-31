@@ -20,9 +20,9 @@ public class MarkTest {
         TokenEntry token = new TokenEntry("public", "/var/Foo.java", 1);
 
         Mark mark = new Mark(token);
-        int lineCount = 10;
+        int lineCount = 2;
         mark.setLineCount(lineCount);
-        String codeFragment = "code fragment";
+        String codeFragment = "code fragment\nanotherline";
         mark.setSourceCode(TextDocument.readOnlyString(codeFragment, PmdFiles.dummyCpdVersion()));
 
         assertEquals(token, mark.getToken());
@@ -45,10 +45,10 @@ public class MarkTest {
         final TokenEntry endToken = new TokenEntry("}", "/var/Foo.java", 5, endColumn - 1, endColumn);
 
         final Mark mark = new Mark(token);
-        final int lineCount = 10;
+        final int lineCount = 2;
         mark.setLineCount(lineCount);
         mark.setEndToken(endToken);
-        final String codeFragment = "code fragment";
+        String codeFragment = "code fragment\nanotherline";
         mark.setSourceCode(TextDocument.readOnlyString(codeFragment, PmdFiles.dummyCpdVersion()));
 
         assertEquals(token, mark.getToken());

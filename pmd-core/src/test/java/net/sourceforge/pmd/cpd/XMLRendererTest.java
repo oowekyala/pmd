@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.cpd;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,9 +65,9 @@ public class XMLRendererTest {
         CPDRenderer renderer = new XMLRenderer();
         List<Match> list = new ArrayList<>();
         int lineCount = 6;
-        String codeFragment = "code\nfragment";
+        String codeFragment = "code\nfragment\n\n\n\n\n";
         Mark mark1 = createMark("public", "/var/Foo.java", 1, lineCount, codeFragment);
-        Mark mark2 = createMark("stuff", "/var/Foo.java", 73, lineCount, codeFragment);
+        Mark mark2 = createMark("stuff", "/var/Foo.java", 2, lineCount, codeFragment);
         Match match = new Match(75, mark1, mark2);
 
         list.add(match);
@@ -93,8 +95,8 @@ public class XMLRendererTest {
                 }
             }
             if (file != null) {
-                assertEquals("73", file.getAttributes().getNamedItem("line").getNodeValue());
-                assertEquals("78", file.getAttributes().getNamedItem("endline").getNodeValue());
+                assertEquals("2", file.getAttributes().getNamedItem("line").getNodeValue());
+                assertEquals("7", file.getAttributes().getNamedItem("endline").getNodeValue());
                 assertEquals(null, file.getAttributes().getNamedItem("column"));
                 assertEquals(null, file.getAttributes().getNamedItem("endcolumn"));
             }
@@ -110,16 +112,16 @@ public class XMLRendererTest {
     public void testRenderWithMultipleMatch() throws IOException {
         CPDRenderer renderer = new XMLRenderer();
         List<Match> list = new ArrayList<>();
-        int lineCount1 = 6;
-        String codeFragment1 = "code fragment";
-        Mark mark1 = createMark("public", "/var/Foo.java", 48, lineCount1, codeFragment1);
-        Mark mark2 = createMark("void", "/var/Foo.java", 73, lineCount1, codeFragment1);
+        int lineCount1 = 4;
+        String codeFragment1 = "code fragment\n1b\n2c\n3d\n5()";
+        Mark mark1 = createMark("public", "/var/Foo.java", 2, lineCount1, codeFragment1);
+        Mark mark2 = createMark("void", "/var/Foo.java", 1, lineCount1, codeFragment1);
         Match match1 = new Match(75, mark1, mark2);
 
-        int lineCount2 = 7;
-        String codeFragment2 = "code fragment 2";
-        Mark mark3 = createMark("void", "/var/Foo2.java", 49, lineCount2, codeFragment2);
-        Mark mark4 = createMark("stuff", "/var/Foo2.java", 74, lineCount2, codeFragment2);
+        int lineCount2 = 3;
+        String codeFragment2 = "code fragment\nb\nc\nd\n()";
+        Mark mark3 = createMark("void", "/var/Foo2.java", 1, lineCount2, codeFragment2);
+        Mark mark4 = createMark("stuff", "/var/Foo2.java", 2, lineCount2, codeFragment2);
         Match match2 = new Match(76, mark3, mark4);
 
         list.add(match1);
@@ -143,9 +145,9 @@ public class XMLRendererTest {
         CPDRenderer renderer = new XMLRenderer();
         List<Match> list = new ArrayList<>();
         int lineCount = 6;
-        String codeFragment = "code\nfragment";
+        String codeFragment = "code\nfragment\na\nc\n\n\n";
         Mark mark1 = createMark("public", "/var/Foo.java", 1, lineCount, codeFragment, 2, 3);
-        Mark mark2 = createMark("stuff", "/var/Foo.java", 73, lineCount, codeFragment, 4, 5);
+        Mark mark2 = createMark("stuff", "/var/Foo.java", 2, lineCount, codeFragment, 4, 5);
         Match match = new Match(75, mark1, mark2);
 
         list.add(match);
@@ -173,8 +175,8 @@ public class XMLRendererTest {
                 }
             }
             if (file != null) {
-                assertEquals("73", file.getAttributes().getNamedItem("line").getNodeValue());
-                assertEquals("78", file.getAttributes().getNamedItem("endline").getNodeValue());
+                assertEquals("2", file.getAttributes().getNamedItem("line").getNodeValue());
+                assertEquals("7", file.getAttributes().getNamedItem("endline").getNodeValue());
                 assertEquals("4", file.getAttributes().getNamedItem("column").getNodeValue());
                 assertEquals("5", file.getAttributes().getNamedItem("endcolumn").getNodeValue());
             }
@@ -191,8 +193,9 @@ public class XMLRendererTest {
         CPDRenderer renderer = new XMLRenderer();
         List<Match> list = new ArrayList<>();
         final String espaceChar = "&lt;";
-        Mark mark1 = createMark("public", "/var/A<oo.java" + FORM_FEED, 48, 6, "code fragment");
-        Mark mark2 = createMark("void", "/var/B<oo.java", 73, 6, "code fragment");
+        String fileText = "code fragment\nb\nc\nd";
+        Mark mark1 = createMark("public", "/var/A<oo.java" + FORM_FEED, 1, 3, fileText);
+        Mark mark2 = createMark("void", "/var/B<oo.java", 2, 2, fileText);
         Match match1 = new Match(75, mark1, mark2);
         list.add(match1);
 
@@ -221,7 +224,7 @@ public class XMLRendererTest {
         assertFalse(report.contains(FORM_FEED_ENTITY));
         assertTrue(report.contains("no & escaping necessary in CDATA"));
         assertFalse(report.contains("x=\"]]>\";")); // must be escaped
-        assertTrue(report.contains("x=\"]]]]><![CDATA[>\";"));
+        assertThat(report, containsString("x=\"]]]]><![CDATA[>\";"));
     }
 
     private Mark createMark(String image, String tokenSrcID, int beginLine, int lineCount, String code) {

@@ -7,7 +7,6 @@ package net.sourceforge.pmd.cpd;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -115,7 +114,7 @@ public class CPD {
         }
 
         LanguageVersion version = configuration.getLanguage().getDefaultVersion();
-        TextFile textFile = PmdFiles.forPath(path, Charset.forName(configuration.getEncoding()), version);
+        TextFile textFile = PmdFiles.forPath(path, configuration.getCharset(), version);
         add(textFile);
     }
 

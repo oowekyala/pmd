@@ -66,10 +66,7 @@ final class TextDocumentImpl extends BaseCloseable implements TextDocument {
     public FileLocation toLocation(TextRegion region) {
         checkInRange(region);
 
-        if (positioner == null) {
-            // if nobody cares about lines, this is not computed
-            positioner = new SourceCodePositioner(getText());
-        }
+        ensureHasPositioner();
 
         int bline = positioner.lineNumberFromOffset(region.getStartOffset());
         int bcol = positioner.columnFromOffset(bline, region.getStartOffset());
@@ -83,8 +80,16 @@ final class TextDocumentImpl extends BaseCloseable implements TextDocument {
         );
     }
 
+    private void ensureHasPositioner() {
+        if (positioner == null) {
+            // if nobody cares about lines, this is not computed
+            positioner = new SourceCodePositioner(getText());
+        }
+    }
+
     @Override
     public TextRegion createLineRange(int startLineInclusive, int endLineInclusive) {
+        ensureHasPositioner();
         if (!positioner.isValidLine(startLineInclusive)
             || !positioner.isValidLine(endLineInclusive)
             || startLineInclusive > endLineInclusive) {
