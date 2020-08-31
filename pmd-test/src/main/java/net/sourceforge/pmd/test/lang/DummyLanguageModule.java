@@ -6,6 +6,9 @@ package net.sourceforge.pmd.test.lang;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import net.sourceforge.pmd.cpd.AnyTokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer;
+import net.sourceforge.pmd.cpd.Tokenizer.CpdProperties;
 import net.sourceforge.pmd.lang.AbstractPmdLanguageVersionHandler;
 import net.sourceforge.pmd.lang.BaseLanguageModule;
 import net.sourceforge.pmd.lang.LanguageVersion;
@@ -41,6 +44,11 @@ public class DummyLanguageModule extends BaseLanguageModule {
         @Override
         public RuleViolationFactory getRuleViolationFactory() {
             return new RuleViolationFactory();
+        }
+
+        @Override
+        public Tokenizer getCpdTokenizer(CpdProperties cpdProperties) {
+            return new AnyTokenizer();
         }
 
         @Override

@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
 
@@ -20,16 +18,10 @@ import net.sourceforge.pmd.lang.cs.antlr4.CSharpLexer;
  */
 public class CsTokenizer extends AntlrTokenizer {
 
-    private boolean ignoreUsings = false;
+    private boolean ignoreUsings;
 
-    public void setProperties(Properties properties) {
-        if (properties.containsKey(IGNORE_USINGS)) {
-            ignoreUsings = Boolean.parseBoolean(properties.getProperty(IGNORE_USINGS, "false"));
-        }
-    }
-
-    public void setIgnoreUsings(boolean ignoreUsings) {
-        this.ignoreUsings = ignoreUsings;
+    public void setProperties(CpdProperties properties) {
+        ignoreUsings = properties.getProperty(IGNORE_IMPORTS);
     }
 
     @Override

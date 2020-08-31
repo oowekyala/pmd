@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
 
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
@@ -40,7 +41,8 @@ public class AntlrTokenManager implements TokenManager<AntlrToken> {
 
     private AntlrToken getNextTokenFromAnyChannel() {
         final AntlrToken previousComment = previousToken != null && previousToken.isHidden() ? previousToken : null;
-        final AntlrToken currentToken = new AntlrToken(lexer.nextToken(), previousComment, textDoc);
+        Token token = lexer.nextToken();
+        final AntlrToken currentToken = new AntlrToken(token, previousComment, textDoc);
         if (previousToken != null) {
             previousToken.next = currentToken;
         }

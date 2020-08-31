@@ -4,29 +4,20 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
+import net.sourceforge.pmd.lang.BaseLanguageModule;
+import net.sourceforge.pmd.lang.CpdOnlyHandler;
 
 /**
  * Defines the Language module for C/C++
  */
-public class CPPLanguage extends AbstractLanguage {
+public class CPPLanguage extends BaseLanguageModule {
 
     /**
      * Creates a new instance of {@link CPPLanguage} with the default extensions
      * for c/c++ files.
      */
     public CPPLanguage() {
-        this(System.getProperties());
-    }
-
-    public CPPLanguage(Properties properties) {
-        super("C++", "cpp", new CPPTokenizer(), ".h", ".hpp", ".hxx", ".c", ".cpp", ".cxx", ".cc", ".C");
-        setProperties(properties);
-    }
-
-    @Override
-    public void setProperties(Properties properties) {
-        super.setProperties(properties);
-        ((CPPTokenizer) getTokenizer()).setProperties(properties);
+        super("C++", "cpp", "cpp", ".h", ".hpp", ".hxx", ".c", ".cpp", ".cxx", ".cc", ".C");
+        addDefaultVersion("", new CpdOnlyHandler(CPPTokenizer::new));
     }
 }

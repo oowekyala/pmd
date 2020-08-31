@@ -144,8 +144,7 @@ public class CPPTokenizerTest extends CpdTextComparisonTest {
     }
 
     private static CpdProperties properties(String skipPattern) {
-        CpdProperties properties = new CpdProperties();
-        properties.setProperty(Tokenizer.SKIP_PROC_DIRECTIVES, skipPattern);
-        return properties;
+        return new CpdProperties()
+            .withProperty(Tokenizer.SKIP_PROC_DIRECTIVES, skipPattern);
     }
 }

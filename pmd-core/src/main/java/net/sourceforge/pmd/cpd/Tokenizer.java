@@ -61,11 +61,17 @@ public interface Tokenizer {
             definePropertyDescriptor(IGNORE_LITERALS);
             definePropertyDescriptor(IGNORE_ANNOTATIONS);
             definePropertyDescriptor(IGNORE_IDENTIFIERS);
+            definePropertyDescriptor(CASE_SENSITIVE);
         }
 
         @Override
         protected String getPropertySourceType() {
             return "CPD tokenizer";
+        }
+
+        public <T> CpdProperties withProperty(PropertyDescriptor<T> descriptor, T value) {
+            setProperty(descriptor, value);
+            return this;
         }
 
         @Override
@@ -76,6 +82,11 @@ public interface Tokenizer {
 
     default void setProperties(CpdProperties cpdProperties) {
         // to be overridden
+    }
+
+    default Tokenizer withProperties(CpdProperties cpdProperties) {
+        setProperties(cpdProperties);
+        return this;
     }
 
     void tokenize(TextDocument sourceCode, Tokens tokenEntries) throws IOException;

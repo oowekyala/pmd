@@ -4,25 +4,15 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
+import net.sourceforge.pmd.lang.BaseLanguageModule;
+import net.sourceforge.pmd.lang.CpdOnlyHandler;
 
 /**
  * Language implementation for C#
  */
-public class CsLanguage extends AbstractLanguage {
-
+public class CsLanguage extends BaseLanguageModule {
     public CsLanguage() {
-        this(System.getProperties());
-    }
-
-    public CsLanguage(Properties properties) {
-        super("C#", "cs", new CsTokenizer(), ".cs");
-        setProperties(properties);
-    }
-
-    @Override
-    public final void setProperties(Properties properties) {
-        CsTokenizer tokenizer = (CsTokenizer) getTokenizer();
-        tokenizer.setProperties(properties);
+        super("C#", "cs", "cs", ".cs");
+        addDefaultVersion("", new CpdOnlyHandler(CsTokenizer::new));
     }
 }

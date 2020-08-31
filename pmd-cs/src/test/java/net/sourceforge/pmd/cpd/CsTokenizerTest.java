@@ -4,8 +4,6 @@
 
 package net.sourceforge.pmd.cpd;
 
-import java.util.Properties;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -20,7 +18,7 @@ public class CsTokenizerTest extends CpdTextComparisonTest {
     public ExpectedException ex = ExpectedException.none();
 
     public CsTokenizerTest() {
-        super(".cs");
+        super("cs", ".cs");
     }
 
     @Override
@@ -93,13 +91,11 @@ public class CsTokenizerTest extends CpdTextComparisonTest {
         doTest("tabWidth");
     }
 
-    private Properties ignoreUsings() {
+    private CpdProperties ignoreUsings() {
         return properties(true);
     }
 
-    private Properties properties(boolean ignoreUsings) {
-        Properties properties = new Properties();
-        properties.setProperty(Tokenizer.IGNORE_USINGS, Boolean.toString(ignoreUsings));
-        return properties;
+    private CpdProperties properties(boolean ignoreUsings) {
+        return new CpdProperties().withProperty(Tokenizer.IGNORE_IMPORTS, ignoreUsings);
     }
 }

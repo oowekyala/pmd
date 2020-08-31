@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.cpd;
 
 import java.io.IOException;
-import java.util.Properties;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -30,10 +29,6 @@ public class CPPTokenizer extends JavaCCTokenizer {
     private String skipBlocksStart;
     private String skipBlocksEnd;
 
-    public CPPTokenizer() {
-        setProperties(new Properties()); // set the defaults
-    }
-
     // override to make it visible in tests
     @Override
     protected TokenManager<JavaccToken> getLexerForSource(TextDocument sourceCode) throws IOException {
@@ -43,22 +38,17 @@ public class CPPTokenizer extends JavaCCTokenizer {
     /**
      * Sets the possible options for the C++ tokenizer.
      *
-     * @param properties
-     *            the properties
-     * @see #OPTION_SKIP_BLOCKS
-     * @see #OPTION_SKIP_BLOCKS_PATTERN
+     * @param properties the properties
      */
-    public void setProperties(Properties properties) {
-        skipBlocks = Boolean.parseBoolean(properties.getProperty(OPTION_SKIP_BLOCKS, Boolean.TRUE.toString()));
-        if (skipBlocks) {
-            String skipBlocksPattern = properties.getProperty(OPTION_SKIP_BLOCKS_PATTERN, DEFAULT_SKIP_BLOCKS_PATTERN);
-            String[] split = skipBlocksPattern.split("\\|", 2);
+    public void setProperties(CpdProperties properties) {
+        String skipPattern = properties.getProperty(SKIP_PROC_DIRECTIVES);
+        String[] split = skipPattern.split("\\|", 2);
+        if (split.length < 2) {
+            skipBlocks = false;
+        } else {
+            skipBlocks = true;
             skipBlocksStart = split[0];
-            if (split.length == 1) {
-                skipBlocksEnd = split[0];
-            } else {
-                skipBlocksEnd = split[1];
-            }
+            skipBlocksEnd = split[1];
         }
     }
 
