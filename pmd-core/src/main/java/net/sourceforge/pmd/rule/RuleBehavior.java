@@ -2,13 +2,15 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd;
+package net.sourceforge.pmd.rule;
 
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 
+import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.AstVisitor;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
@@ -99,6 +101,17 @@ public interface RuleBehavior {
      *                                    reported the same way as a {@link DysfunctionalRuleException}
      */
     RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) throws DysfunctionalRuleException;
+
+
+    /**
+     * Tests whether the rule applies to the given language version.
+     * This is used to ignore some files.
+     */
+    default boolean appliesToVersion(LanguageVersion version) {
+        // TODO make a LanguageVersionRange class
+        // TODO validate that version is for the proper language
+        return true;
+    }
 
     /**
      * Reporter for {@link #initialize(PropertySource, Language, InitializationWarner)}.
