@@ -14,7 +14,6 @@ import java.util.Map;
 import net.sourceforge.pmd.RuleBehavior;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.Language;
-import net.sourceforge.pmd.lang.ast.AstVisitor;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodOrConstructorDeclaration;
@@ -67,67 +66,74 @@ public class CyclomaticComplexityRule2 implements RuleBehavior {
                          .build();
 
     @Override
-    public String languageId() {
-        return "java";
-    }
-
-    @Override
     public List<? extends PropertyDescriptor<?>> declaredProperties() {
         return listOf(CLASS_LEVEL_DESCRIPTOR, METHOD_LEVEL_DESCRIPTOR, CYCLO_OPTIONS_DESCRIPTOR);
     }
 
     @Override
-    public FileAnalyser initialize(PropertySource properties, Language language) {
+    public RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) {
         int methodReportLevel = properties.getProperty(METHOD_LEVEL_DESCRIPTOR);
         int classReportLevel = properties.getProperty(CLASS_LEVEL_DESCRIPTOR);
         MetricOptions cycloOptions = MetricOptions.ofOptions(properties.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
 
-        return new VisitorAnalyser(new JavaVisitorBase<RuleContext, Void>() {
+        return new VisitorAnalyser(new MyVisitor(cycloOptions, classReportLevel, methodReportLevel));
+    }
 
-            @Override
-            public Void visitTypeDecl(ASTAnyTypeDeclaration node, RuleContext ctx) {
+    private static class MyVisitor extends JavaVisitorBase<RuleContext, Void> {
 
-                visitChildren(node, ctx);
+        private final MetricOptions cycloOptions;
+        private final int classReportLevel;
+        private final int methodReportLevel;
 
-                if (JavaClassMetricKey.WMC.supports(node)) {
-                    int classWmc = (int) MetricsUtil.computeMetric(JavaClassMetricKey.WMC, node, cycloOptions);
+        public MyVisitor(MetricOptions cycloOptions, int classReportLevel, int methodReportLevel) {
+            this.cycloOptions = cycloOptions;
+            this.classReportLevel = classReportLevel;
+            this.methodReportLevel = methodReportLevel;
+        }
 
-                    if (classWmc >= classReportLevel) {
-                        int classHighest = (int) MetricsUtil.computeStatistics(JavaOperationMetricKey.CYCLO, node.getOperations(), cycloOptions).getMax();
+        @Override
+        public Void visitTypeDecl(ASTAnyTypeDeclaration node, RuleContext ctx) {
 
-                        String[] messageParams = {PrettyPrintingUtil.kindName(node),
-                                                  node.getSimpleName(),
-                                                  " total",
-                                                  classWmc + " (highest " + classHighest + ")",};
+            visitChildren(node, ctx);
 
-                        ctx.addViolation(node, messageParams);
-                    }
+            if (JavaClassMetricKey.WMC.supports(node)) {
+                int classWmc = (int) MetricsUtil.computeMetric(JavaClassMetricKey.WMC, node, cycloOptions);
+
+                if (classWmc >= classReportLevel) {
+                    int classHighest = (int) MetricsUtil.computeStatistics(JavaOperationMetricKey.CYCLO, node.getOperations(), cycloOptions).getMax();
+
+                    String[] messageParams = {PrettyPrintingUtil.kindName(node),
+                                              node.getSimpleName(),
+                                              " total",
+                                              classWmc + " (highest " + classHighest + ")",};
+
+                    ctx.addViolation(node, messageParams);
                 }
-                return null;
             }
+            return null;
+        }
 
 
-            @Override
-            public final Void visitMethodOrCtor(ASTMethodOrConstructorDeclaration node, RuleContext ctx) {
+        @Override
+        public final Void visitMethodOrCtor(ASTMethodOrConstructorDeclaration node, RuleContext ctx) {
 
-                if (JavaOperationMetricKey.CYCLO.supports(node)) {
-                    int cyclo = (int) MetricsUtil.computeMetric(JavaOperationMetricKey.CYCLO, node, cycloOptions);
-                    if (cyclo >= methodReportLevel) {
-
-
-                        String opname = PrettyPrintingUtil.displaySignature(node);
-
-                        String kindname = node instanceof ASTConstructorDeclaration ? "constructor" : "method";
+            if (JavaOperationMetricKey.CYCLO.supports(node)) {
+                int cyclo = (int) MetricsUtil.computeMetric(JavaOperationMetricKey.CYCLO, node, cycloOptions);
+                if (cyclo >= methodReportLevel) {
 
 
-                        ctx.addViolation(node, new String[] {kindname,
-                                                             opname,
-                                                             "",
-                                                             "" + cyclo,});
-                    }
+                    String opname = PrettyPrintingUtil.displaySignature(node);
+
+                    String kindname = node instanceof ASTConstructorDeclaration ? "constructor" : "method";
+
+
+                    ctx.addViolation(node, new String[] {kindname,
+                                                         opname,
+                                                         "",
+                                                         "" + cyclo,});
                 }
-                return null;
             }
-        });
+            return null;
+        }
     }
 }
