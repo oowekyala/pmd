@@ -13,8 +13,12 @@ import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.StringProperty;
+import net.sourceforge.pmd.rule.RuleBehavior;
+import net.sourceforge.pmd.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.rule.RuleDescriptor;
 
 /**
  * This is the basic Rule interface for PMD rules.
@@ -24,8 +28,14 @@ import net.sourceforge.pmd.properties.StringProperty;
  * thread. The instances are not shared across different threads. However, a
  * single rule instance is reused for analyzing multiple files.
  * </p>
+ *
+ * @deprecated Implementations should implement {@link RuleBehavior},
+ *     while programmatic users should use {@link RuleDescriptor}. This
+ *     implements {@link RuleDescriptor} for compatibility.
  */
-public interface Rule extends PropertySource {
+// I don't dare deprecate it for now
+// @Deprecated
+public interface Rule extends PropertySource, RuleDescriptor {
 
     /**
      * The property descriptor to universally suppress violations with messages
@@ -330,5 +340,69 @@ public interface Rule extends PropertySource {
      */
     Rule deepCopy();
 
+    // compatiblity
 
+    @Override
+    default String getLanguageId() {
+        return getLanguage().getTerseName();
+    }
+
+    @Override
+    default RuleBehavior getBehavior() {
+        final class CompatAnalyser implements RuleAnalyser {
+
+            private final Rule rule;
+
+            private CompatAnalyser(Rule rule) {
+                this.rule = rule;
+            }
+
+            @Override
+            public void apply(Node node, RuleContext ctx) {
+                rule.start(ctx);
+                rule.apply(node, ctx);
+                rule.end(ctx);
+            }
+        }
+
+        class CompatBehavior implements RuleBehavior {
+
+            private final Rule rule;
+
+            private CompatBehavior(Rule rule) {
+                this.rule = rule;
+            }
+
+            @Override
+            public boolean appliesToVersion(LanguageVersion version) {
+                return RuleSet.applies(rule, version);
+            }
+
+            @Override
+            public List<? extends PropertyDescriptor<?>> declaredProperties() {
+                return rule.getPropertyDescriptors();
+            }
+
+            @Override
+            public RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) throws DysfunctionalRuleException {
+                Rule copy = rule.deepCopy();
+                for (PropertyDescriptor<?> prop : properties.getOverriddenPropertyDescriptors()) {
+                    setRulePropertyCapture(copy, prop, properties);
+                }
+
+                String dysfunctionReason = copy.dysfunctionReason();
+                if (dysfunctionReason != null) {
+                    throw warner.fatalConfigError(dysfunctionReason);
+                }
+
+                return new CompatAnalyser(copy);
+            }
+
+            private <T> void setRulePropertyCapture(Rule rule, PropertyDescriptor<T> descriptor, PropertySource source) {
+                rule.setProperty(descriptor, source.getProperty(descriptor));
+            }
+        }
+
+        return new CompatBehavior(this);
+    }
 }
