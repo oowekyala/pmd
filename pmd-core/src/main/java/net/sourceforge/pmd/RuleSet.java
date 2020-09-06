@@ -25,6 +25,7 @@ import net.sourceforge.pmd.internal.util.PredicateUtil;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.RuleReference;
+import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
  * This class represents a collection of rules along with some optional filter
@@ -537,19 +538,6 @@ public class RuleSet implements ChecksumAware {
     }
 
     /**
-     * Triggers that start lifecycle event on each rule in this ruleset. Some
-     * rules perform initialization tasks on start.
-     *
-     * @param ctx
-     *            the current context
-     */
-    public void start(RuleContext ctx) {
-        for (Rule rule : rules) {
-            rule.start(ctx);
-        }
-    }
-
-    /**
      * Executes the rules in this ruleset against each of the given nodes.
      *
      * @param acuList
@@ -557,10 +545,10 @@ public class RuleSet implements ChecksumAware {
      * @param ctx
      *            the current context
      *
-     * @deprecated Use {@link RuleSets#apply(List, RuleContext)}
+     * @deprecated Use {@link RuleSets#apply(List, net.sourceforge.pmd.reporting.FileAnalysisListener)}
      */
     @Deprecated
-    public void apply(List<? extends Node> acuList, RuleContext ctx) {
+    public void apply(List<? extends Node> acuList, FileAnalysisListener ctx) {
         new RuleSets(this).apply(acuList, ctx);
     }
 
@@ -583,19 +571,6 @@ public class RuleSet implements ChecksumAware {
         return rule.getLanguage().equals(languageVersion.getLanguage())
                 && (min == null || min.compareTo(languageVersion) <= 0)
                 && (max == null || max.compareTo(languageVersion) >= 0);
-    }
-
-    /**
-     * Triggers the end lifecycle event on each rule in the ruleset. Some rules
-     * perform a final summary calculation or cleanup in the end.
-     *
-     * @param ctx
-     *            the current context
-     */
-    public void end(RuleContext ctx) {
-        for (Rule rule : rules) {
-            rule.end(ctx);
-        }
     }
 
     /**

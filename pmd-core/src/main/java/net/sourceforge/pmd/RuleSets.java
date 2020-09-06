@@ -19,6 +19,7 @@ import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.internal.RuleApplicator;
+import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
  * Grouping of Rules per Language in a RuleSet.
@@ -109,26 +110,15 @@ public class RuleSets {
     }
 
     /**
-     * Notify all rules of the start of processing.
-     */
-    public void start(RuleContext ctx) {
-        for (RuleSet ruleSet : ruleSets) {
-            ruleSet.start(ctx);
-        }
-    }
-
-    /**
      * Apply all applicable rules to the compilation units. Applicable means the
      * language of the rules must match the language of the source (@see
      * applies).
-     *
-     * @param acuList
+     *  @param acuList
      *            the List of compilation units; the type these must have,
      *            depends on the source language
-     * @param ctx
-     *            the RuleContext
+     * @param listener
      */
-    public void apply(List<? extends Node> acuList, RuleContext ctx) {
+    public void apply(List<? extends Node> acuList, FileAnalysisListener listener) {
         if (ruleApplicator == null) {
             // initialize here instead of ctor, because some rules properties
             // are set after creating the ruleset, and jaxen xpath queries
@@ -143,18 +133,9 @@ public class RuleSets {
 
             for (RuleSet ruleSet : ruleSets) {
                 if (ruleSet.applies(new File(node.getSourceCodeFile()))) {
-                    ruleApplicator.apply(ruleSet.getRules(), ctx);
+                    ruleApplicator.apply(ruleSet.getRules(), listener);
                 }
             }
-        }
-    }
-
-    /**
-     * Notify all rules of the end of processing.
-     */
-    public void end(RuleContext ctx) {
-        for (RuleSet ruleSet : ruleSets) {
-            ruleSet.end(ctx);
         }
     }
 

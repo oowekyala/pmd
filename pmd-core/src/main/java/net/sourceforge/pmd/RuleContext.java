@@ -34,9 +34,13 @@ public final class RuleContext {
     private static final Object[] NO_ARGS = new Object[0];
 
     private final FileAnalysisListener listener;
+    private final Rule rule;
 
-    private RuleContext(FileAnalysisListener listener) {
+    private RuleContext(FileAnalysisListener listener, Rule rule) {
+        Objects.requireNonNull(listener, "Listener was null");
+        Objects.requireNonNull(rule, "Rule was null");
         this.listener = listener;
+        this.rule = rule;
     }
 
     // TODO we could have one RuleCtx per rule; that way addViolation wouldn't need the rule parameter.
@@ -47,24 +51,23 @@ public final class RuleContext {
     }
 
 
-    public void addViolation(Rule rule, Node location) {
-        addViolationWithMessage(rule, location, rule.getMessage(), NO_ARGS);
+    public void addViolation(Node location) {
+        addViolationWithMessage(location, rule.getMessage(), NO_ARGS);
     }
 
-    public void addViolation(Rule rule, Node location, Object... formatArgs) {
-        addViolationWithMessage(rule, location, rule.getMessage(), formatArgs);
+    public void addViolation(Node location, Object... formatArgs) {
+        addViolationWithMessage(location, rule.getMessage(), formatArgs);
     }
 
-    public void addViolationWithMessage(Rule rule, Node location, String message) {
-        addViolationWithPosition(rule, location, -1, -1, message, NO_ARGS);
+    public void addViolationWithMessage(Node location, String message) {
+        addViolationWithPosition(location, -1, -1, message, NO_ARGS);
     }
 
-    public void addViolationWithMessage(Rule rule, Node location, String message, Object... formatArgs) {
-        addViolationWithPosition(rule, location, -1, -1, message, formatArgs);
+    public void addViolationWithMessage(Node location, String message, Object... formatArgs) {
+        addViolationWithPosition(location, -1, -1, message, formatArgs);
     }
 
-    public void addViolationWithPosition(Rule rule, Node location, int beginLine, int endLine, String message, Object... formatArgs) {
-        Objects.requireNonNull(rule, "Rule was null");
+    public void addViolationWithPosition(Node location, int beginLine, int endLine, String message, Object... formatArgs) {
         Objects.requireNonNull(location, "Node was null");
         Objects.requireNonNull(message, "Message was null");
         Objects.requireNonNull(formatArgs, "Format arguments were null, use an empty array");
@@ -104,8 +107,8 @@ public final class RuleContext {
      * The listener must be closed by its creator.
      */
     @InternalApi
-    public static RuleContext create(FileAnalysisListener listener) {
-        return new RuleContext(listener);
+    public static RuleContext create(FileAnalysisListener listener, Rule rule) {
+        return new RuleContext(listener, rule);
     }
 
 }
