@@ -49,7 +49,7 @@ public class CommentContentRule2 implements RuleBehavior {
     }
 
     @Override
-    public RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) throws DysfunctionalRuleException {
+    public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
 
         List<String> originalBadWords = properties.getProperty(DISSALLOWED_TERMS_DESCRIPTOR);
 

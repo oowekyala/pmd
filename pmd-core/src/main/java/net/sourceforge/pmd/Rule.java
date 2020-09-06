@@ -384,7 +384,7 @@ public interface Rule extends PropertySource, RuleDescriptor {
             }
 
             @Override
-            public RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) throws DysfunctionalRuleException {
+            public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
                 Rule copy = rule.deepCopy();
                 for (PropertyDescriptor<?> prop : properties.getOverriddenPropertyDescriptors()) {
                     setRulePropertyCapture(copy, prop, properties);

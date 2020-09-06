@@ -32,9 +32,9 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
  * <li>Rule descriptors are collected from rulesets by following references.
  * Their {@link RuleBehavior} is used to collect properties. The output of this
  * phase is the final set of rules that comprise the ruleset, and their corresponding
- * property bundles. No {@link #initialize(PropertySource, Language, InitializationWarner) initialize}
+ * property bundles. No {@link #initialize(PropertySource, Language, RuleInitializationWarner) initialize}
  * method has been called yet.
- * <li>For each rule descriptor of this set, we call {@link #initialize(PropertySource, Language, InitializationWarner) initialize}
+ * <li>For each rule descriptor of this set, we call {@link #initialize(PropertySource, Language, RuleInitializationWarner) initialize}
  * with the corresponding property bundle, and the language instance the
  * analysis will be using. Exceptions are reported, in particular, {@link DysfunctionalRuleException}s.
  * The output of this phase is a set of {@link RuleAnalyser}s, which are
@@ -56,7 +56,7 @@ public interface RuleBehavior {
     /**
      * The target selector for this rule. This must be constant throughout
      * the analysis (this will be only called once, around the time {@link #initialize(PropertySource, Language,
-     * InitializationWarner) initialize}
+     * RuleInitializationWarner) initialize}
      * is called), so is not part of the {@link RuleAnalyser} interface.
      */
     default RuleTargetSelector getTargetSelector() {
@@ -66,7 +66,7 @@ public interface RuleBehavior {
     /**
      * Returns the properties that this rule accepts. These will be
      * declared on a {@link PropertySource}, set to the values provided
-     * in the ruleset XML, before they're passed to {@link #initialize(PropertySource, Language, InitializationWarner)}.
+     * in the ruleset XML, before they're passed to {@link #initialize(PropertySource, Language, RuleInitializationWarner)}.
      */
     default List<? extends PropertyDescriptor<?>> declaredProperties() {
         return Collections.emptyList();
@@ -81,9 +81,9 @@ public interface RuleBehavior {
      *
      * <p>If the rule is misconfigured, the warner parameter should be used
      * to report it. If the configuration can still provide a useful rule,
-     * then only {@link InitializationWarner#configWarning(String, Object...) configWarning}s
+     * then only {@link RuleInitializationWarner#configWarning(String, Object...) configWarning}s
      * should be reported. If the configuration is so broken that the
-     * rule would be useless, then {@link InitializationWarner#fatalConfigError(String, Object...)}
+     * rule would be useless, then {@link RuleInitializationWarner#fatalConfigError(String, Object...)}
      * should be used to produce an exception that will be thrown.
      *
      * @param properties Property bundle, on which all properties mentioned
@@ -100,7 +100,7 @@ public interface RuleBehavior {
      * @throws RuntimeException           This should be caught by calling code and
      *                                    reported the same way as a {@link DysfunctionalRuleException}
      */
-    RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) throws DysfunctionalRuleException;
+    RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException;
 
 
     /**
@@ -114,7 +114,7 @@ public interface RuleBehavior {
     }
 
     /**
-     * Thrown by {@link #initialize(PropertySource, Language, InitializationWarner)}
+     * Thrown by {@link #initialize(PropertySource, Language, RuleInitializationWarner)}
      * if the configuration is so broken, that no useful file analyser
      * can be produced.
      */
@@ -127,9 +127,9 @@ public interface RuleBehavior {
     }
 
     /**
-     * Reporter for {@link #initialize(PropertySource, Language, InitializationWarner)}.
+     * Reporter for {@link #initialize(PropertySource, Language, RuleInitializationWarner)}.
      */
-    interface InitializationWarner {
+    interface RuleInitializationWarner {
 
         /**
          * Report a misconfiguration that doesn't make the rule completely

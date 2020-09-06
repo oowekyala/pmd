@@ -71,7 +71,7 @@ public class CyclomaticComplexityRule2 implements RuleBehavior {
     }
 
     @Override
-    public RuleAnalyser initialize(PropertySource properties, Language language, InitializationWarner warner) {
+    public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) {
         int methodReportLevel = properties.getProperty(METHOD_LEVEL_DESCRIPTOR);
         int classReportLevel = properties.getProperty(CLASS_LEVEL_DESCRIPTOR);
         MetricOptions cycloOptions = MetricOptions.ofOptions(properties.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
