@@ -114,6 +114,19 @@ public interface RuleBehavior {
     }
 
     /**
+     * Thrown by {@link #initialize(PropertySource, Language, InitializationWarner)}
+     * if the configuration is so broken, that no useful file analyser
+     * can be produced.
+     */
+    class DysfunctionalRuleException extends Exception {
+
+        DysfunctionalRuleException(String reason) {
+            super(reason);
+        }
+
+    }
+
+    /**
      * Reporter for {@link #initialize(PropertySource, Language, InitializationWarner)}.
      */
     interface InitializationWarner {
@@ -144,19 +157,6 @@ public interface RuleBehavior {
          */
         DysfunctionalRuleException fatalConfigError(String message, Object... args) throws DysfunctionalRuleException;
 
-
-    }
-
-    /**
-     * Thrown by {@link #initialize(PropertySource, Language, InitializationWarner)}
-     * if the configuration is so broken, that no useful file analyser
-     * can be produced.
-     */
-    class DysfunctionalRuleException extends Exception {
-
-        DysfunctionalRuleException(String reason) {
-            super(reason);
-        }
 
     }
 

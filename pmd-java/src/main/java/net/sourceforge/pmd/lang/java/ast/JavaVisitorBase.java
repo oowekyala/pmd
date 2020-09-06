@@ -22,7 +22,7 @@ import net.sourceforge.pmd.lang.ast.AstVisitorBase;
  * code duplication. However it's still recommended to extend a base class,
  * for forward compatibility.
  */
-public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaVisitor<P, R> {
+public abstract class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaVisitor<P, R> {
 
     // todo on java-grammar: uncomment
 

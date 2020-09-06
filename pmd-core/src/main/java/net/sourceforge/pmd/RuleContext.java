@@ -50,13 +50,16 @@ public final class RuleContext {
         listener.onError(error);
     }
 
+    public String getDefaultMessage() {
+        return rule.getMessage();
+    }
 
     public void addViolation(Node location) {
-        addViolationWithMessage(location, rule.getMessage(), NO_ARGS);
+        addViolationWithMessage(location, getDefaultMessage(), NO_ARGS);
     }
 
     public void addViolation(Node location, Object... formatArgs) {
-        addViolationWithMessage(location, rule.getMessage(), formatArgs);
+        addViolationWithMessage(location, getDefaultMessage(), formatArgs);
     }
 
     public void addViolationWithMessage(Node location, String message) {
