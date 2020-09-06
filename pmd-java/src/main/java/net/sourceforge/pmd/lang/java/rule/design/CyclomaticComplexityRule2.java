@@ -38,7 +38,7 @@ import net.sourceforge.pmd.properties.PropertySource;
  * @version 6.0.0
  * @see CycloMetric
  */
-public class CyclomaticComplexityRule2 extends RuleBehavior.VisitorRuleBehavior {
+public class CyclomaticComplexityRule2 implements RuleBehavior {
 
     private static final PropertyDescriptor<Integer> CLASS_LEVEL_DESCRIPTOR
         = PropertyFactory.intProperty("classReportLevel")
@@ -77,12 +77,12 @@ public class CyclomaticComplexityRule2 extends RuleBehavior.VisitorRuleBehavior 
     }
 
     @Override
-    protected AstVisitor<RuleContext, Void> buildVisitor(PropertySource properties, Language language) {
+    public FileAnalyser initialize(PropertySource properties, Language language) {
         int methodReportLevel = properties.getProperty(METHOD_LEVEL_DESCRIPTOR);
         int classReportLevel = properties.getProperty(CLASS_LEVEL_DESCRIPTOR);
         MetricOptions cycloOptions = MetricOptions.ofOptions(properties.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
 
-        return new JavaVisitorBase<RuleContext, Void>() {
+        return new VisitorAnalyser(new JavaVisitorBase<RuleContext, Void>() {
 
             @Override
             public Void visitTypeDecl(ASTAnyTypeDeclaration node, RuleContext ctx) {
@@ -128,6 +128,6 @@ public class CyclomaticComplexityRule2 extends RuleBehavior.VisitorRuleBehavior 
                 }
                 return null;
             }
-        };
+        });
     }
 }
