@@ -23,7 +23,7 @@ import net.sourceforge.pmd.lang.java.ast.Comment;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
-import net.sourceforge.pmd.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
 
 /**
  * A rule that checks for illegal words in the comment text.

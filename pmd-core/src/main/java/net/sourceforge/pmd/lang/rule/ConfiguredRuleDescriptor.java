@@ -2,14 +2,14 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.rule;
+package net.sourceforge.pmd.lang.rule;
 
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.rule.RuleBehavior.DysfunctionalRuleException;
-import net.sourceforge.pmd.rule.RuleBehavior.RuleInitializationWarner;
-import net.sourceforge.pmd.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.DysfunctionalRuleException;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleInitializationWarner;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
 
 /**
  * A rule descriptor zipped with its properties. No properties can be

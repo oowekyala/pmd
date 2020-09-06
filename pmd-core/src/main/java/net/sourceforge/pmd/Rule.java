@@ -16,9 +16,9 @@ import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.StringProperty;
-import net.sourceforge.pmd.rule.RuleBehavior;
-import net.sourceforge.pmd.rule.RuleBehavior.RuleAnalyser;
-import net.sourceforge.pmd.rule.RuleDescriptor;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 
 /**
  * This is the basic Rule interface for PMD rules.

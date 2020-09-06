@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sourceforge.pmd.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
