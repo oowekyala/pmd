@@ -14,9 +14,13 @@ import net.sourceforge.pmd.Report.ProcessingError;
 import net.sourceforge.pmd.Report.SuppressedViolation;
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.ConfiguredRuleDescriptor;
 import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
 import net.sourceforge.pmd.processor.AbstractPMDProcessor;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
+import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
@@ -34,9 +38,9 @@ public final class RuleContext {
     private static final Object[] NO_ARGS = new Object[0];
 
     private final FileAnalysisListener listener;
-    private final Rule rule;
+    private final ConfiguredRuleDescriptor rule;
 
-    private RuleContext(FileAnalysisListener listener, Rule rule) {
+    private RuleContext(FileAnalysisListener listener, ConfiguredRuleDescriptor rule) {
         Objects.requireNonNull(listener, "Listener was null");
         Objects.requireNonNull(rule, "Rule was null");
         this.listener = listener;
@@ -51,7 +55,7 @@ public final class RuleContext {
     }
 
     public String getDefaultMessage() {
-        return rule.getMessage();
+        return rule.getRule().getMessage();
     }
 
     public void addViolation(Node location) {
@@ -77,7 +81,7 @@ public final class RuleContext {
 
         RuleViolationFactory fact = location.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory();
 
-        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs));
+        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs, rule.getProperties()));
         if (beginLine != -1 && endLine != -1) {
             // fixme, this is needed until we have actual Location objects
             ((ParametricRuleViolation<?>) violation).setLines(beginLine, endLine);
@@ -96,11 +100,36 @@ public final class RuleContext {
         listener.onRuleViolation(rv);
     }
 
-    private String makeMessage(@NonNull String message, Object[] args) {
+    private String makeMessage(@NonNull String message, Object[] args, PropertySource properties) {
         // Escape PMD specific variable message format, specifically the {
         // in the ${, so MessageFormat doesn't bitch.
         final String escapedMessage = StringUtils.replace(message, "${", "$'{'");
         return MessageFormat.format(escapedMessage, args);
+    }
+
+    private String expandVariables(String message, PropertySource properties) {
+        if (!message.contains("${")) {
+            return message;
+        }
+
+        StringBuilder buf = new StringBuilder(message);
+        int startIndex = -1;
+        while ((startIndex = buf.indexOf("${", startIndex + 1)) >= 0) {
+            final int endIndex = buf.indexOf("}", startIndex);
+            if (endIndex >= 0) {
+                final String name = buf.substring(startIndex + 2, endIndex);
+                String variableValue = getVariableValue(name, properties);
+                if (variableValue != null) {
+                    buf.replace(startIndex, endIndex + 1, variableValue);
+                }
+            }
+        }
+        return buf.toString();
+    }
+
+    private String getVariableValue(String name, PropertySource properties) {
+        final PropertyDescriptor<?> propertyDescriptor = properties.getPropertyDescriptor(name);
+        return propertyDescriptor == null ? null : String.valueOf(properties.getProperty(propertyDescriptor));
     }
 
     /**
@@ -110,7 +139,7 @@ public final class RuleContext {
      * The listener must be closed by its creator.
      */
     @InternalApi
-    public static RuleContext create(FileAnalysisListener listener, Rule rule) {
+    public static RuleContext create(FileAnalysisListener listener, ConfiguredRuleDescriptor rule) {
         return new RuleContext(listener, rule);
     }
 

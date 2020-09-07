@@ -17,6 +17,7 @@ import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.ViolationSuppressor;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
 
 /**
@@ -33,7 +34,7 @@ public class DefaultRuleViolationFactory implements RuleViolationFactory {
     private Set<ViolationSuppressor> allSuppressors;
 
     @Override
-    public RuleViolation createViolation(Rule rule, @NonNull Node location, String filename, String formattedMessage) {
+    public RuleViolation createViolation(RuleDescriptor rule, @NonNull Node location, String filename, String formattedMessage) {
         return new ParametricRuleViolation<>(rule, filename, location, formattedMessage);
     }
 

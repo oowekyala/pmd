@@ -63,6 +63,11 @@ public interface RuleDescriptor {
 
     RulePriority getPriority();
 
+    /**
+     * Returns a new {@link ConfiguredRuleDescriptor} on which all
+     * properties of this descriptor are declared. This may be used to
+     * set property values.
+     */
     default ConfiguredRuleDescriptor configure() {
         return new ConfiguredRuleDescriptor(this);
     }

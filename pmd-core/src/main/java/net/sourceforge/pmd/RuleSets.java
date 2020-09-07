@@ -63,7 +63,7 @@ public class RuleSets {
     }
 
     private RuleApplicator prepareApplicator() {
-        return RuleApplicator.build(ruleSets.stream().flatMap(it -> it.getRules().stream())::iterator);
+        return RuleApplicator.build(ruleSets.stream().flatMap(it -> it.getRules().stream()).iterator());
     }
 
     /**

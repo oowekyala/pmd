@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd;
 
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
+
 /**
  * A RuleViolation is created by a Rule when it identifies a violation of the
  * Rule constraints. RuleViolations are simple data holders that are collected
@@ -22,7 +24,7 @@ public interface RuleViolation {
      *
      * @return The identifying Rule.
      */
-    Rule getRule();
+    RuleDescriptor getRule();
 
     /**
      * Get the description of this violation.

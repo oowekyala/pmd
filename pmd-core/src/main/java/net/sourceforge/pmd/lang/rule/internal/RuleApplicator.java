@@ -15,6 +15,9 @@ import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet.RunnableRule;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /** Applies a set of rules to a set of ASTs. */
@@ -41,22 +44,24 @@ public class RuleApplicator {
         }
     }
 
-    public void apply(Collection<? extends Rule> rules, FileAnalysisListener listener) {
+    public void apply(RunnableRuleSet rules, FileAnalysisListener listener) {
         applyOnIndex(idx, rules, listener);
     }
 
-    private void applyOnIndex(TreeIndex idx, Collection<? extends Rule> rules, FileAnalysisListener listener) {
-        for (Rule rule : rules) {
+    private void applyOnIndex(TreeIndex idx, RunnableRuleSet rules, FileAnalysisListener listener) {
+        for (RunnableRule rule : rules.getRules()) {
+            rule.getAnalyser().nextFile();
+            RuleContext ctx = RuleContext.create(listener, rule);
 
-            Iterator<? extends Node> targets = rule.getTargetSelector().getVisitedNodes(idx);
+            Iterator<? extends Node> targets = rule.getBehavior().getTargetSelector().getVisitedNodes(idx);
             while (targets.hasNext()) {
                 Node node = targets.next();
-                if (!RuleSet.applies(rule, node.getLanguageVersion())) {
+                if (rule.getBehavior().appliesToVersion(node.getLanguageVersion())) {
                     continue;
                 }
 
                 try (TimedOperation rcto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getName())) {
-                    rule.apply(node, RuleContext.create(listener, rule));
+                    rule.getAnalyser().apply(node, ctx);
                     rcto.close(1);
                 } catch (RuntimeException e) {
                     // The listener handles logging if needed,
@@ -74,11 +79,9 @@ public class RuleApplicator {
         }
     }
 
-    public static RuleApplicator build(Iterable<? extends Rule> rules) {
+    public static RuleApplicator build(Iterator<? extends RuleBehavior> rules) {
         TargetSelectorInternal.ApplicatorBuilder builder = new TargetSelectorInternal.ApplicatorBuilder();
-        for (Rule it : rules) {
-            it.getTargetSelector().prepare(builder);
-        }
+        rules.forEachRemaining(it -> it.getTargetSelector().prepare(builder));
         return builder.build();
     }
 

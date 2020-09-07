@@ -4,15 +4,13 @@
 
 package net.sourceforge.pmd.lang.rule;
 
-import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     // todo move to package reporting
 
-    protected final Rule rule;
+    protected final RuleDescriptor rule;
     protected final String description;
     protected String filename;
 
@@ -32,7 +30,7 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
     // RuleViolationFactory to support identifying without a Node, and update
     // Rule base classes too.
     // TODO we never need a node. We just have to have a "position", ie line/column, or offset, + file, whatever
-    public ParametricRuleViolation(Rule theRule, String filename, T node, String message) {
+    public ParametricRuleViolation(RuleDescriptor theRule, String filename, T node, String message) {
         rule = theRule;
         description = message;
         this.filename = filename == null ? "" : filename;
@@ -43,53 +41,16 @@ public class ParametricRuleViolation<T extends Node> implements RuleViolation {
             endLine = node.getEndLine();
             endColumn = node.getEndColumn();
         }
-
-    }
-
-    protected String expandVariables(String message) {
-
-        if (!message.contains("${")) {
-            return message;
-        }
-
-        StringBuilder buf = new StringBuilder(message);
-        int startIndex = -1;
-        while ((startIndex = buf.indexOf("${", startIndex + 1)) >= 0) {
-            final int endIndex = buf.indexOf("}", startIndex);
-            if (endIndex >= 0) {
-                final String name = buf.substring(startIndex + 2, endIndex);
-                String variableValue = getVariableValue(name);
-                if (variableValue != null) {
-                    buf.replace(startIndex, endIndex + 1, variableValue);
-                }
-            }
-        }
-        return buf.toString();
-    }
-
-    protected String getVariableValue(String name) {
-        if ("variableName".equals(name)) {
-            return variableName;
-        } else if ("methodName".equals(name)) {
-            return methodName;
-        } else if ("className".equals(name)) {
-            return className;
-        } else if ("packageName".equals(name)) {
-            return packageName;
-        } else {
-            final PropertyDescriptor<?> propertyDescriptor = rule.getPropertyDescriptor(name);
-            return propertyDescriptor == null ? null : String.valueOf(rule.getProperty(propertyDescriptor));
-        }
     }
 
     @Override
-    public Rule getRule() {
+    public RuleDescriptor getRule() {
         return rule;
     }
 
     @Override
     public String getDescription() {
-        return expandVariables(description);
+        return description;
     }
 
     @Override
