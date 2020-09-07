@@ -5,11 +5,12 @@
 package net.sourceforge.pmd.lang.rule;
 
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.DysfunctionalRuleException;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleInitializationWarner;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.lang.rule.RuleBehavior.DysfunctionalRuleException;
-import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleInitializationWarner;
-import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
+import net.sourceforge.pmd.properties.PropertySource;
 
 /**
  * A rule descriptor zipped with its properties. No properties can be
@@ -32,6 +33,15 @@ public final class ConfiguredRuleDescriptor extends AbstractPropertySource {
         return descriptor.getBehavior().initialize(this, language, warner);
     }
 
+    public ConfiguredRuleDescriptor newReference(BaseRuleDescriptor.RuleDescriptorConfig config) {
+        ConfiguredRuleDescriptor newConfig = new ConfiguredRuleDescriptor(new RuleDescriptorReference(config, this.descriptor));
+        for (PropertyDescriptor<?> prop : newConfig.getPropertyDescriptors()) {
+            // copy properties so far
+            setRulePropertyCapture(this, prop, newConfig);
+        }
+        return newConfig;
+    }
+
     /**
      * @deprecated This will throw
      */
@@ -49,5 +59,10 @@ public final class ConfiguredRuleDescriptor extends AbstractPropertySource {
     @Override
     public String getName() {
         return descriptor.getName();
+    }
+
+
+    private static <T> void setRulePropertyCapture(PropertySource target, PropertyDescriptor<T> descriptor, PropertySource source) {
+        target.setProperty(descriptor, source.getProperty(descriptor));
     }
 }

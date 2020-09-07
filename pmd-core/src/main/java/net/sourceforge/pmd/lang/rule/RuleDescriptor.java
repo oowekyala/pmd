@@ -63,4 +63,8 @@ public interface RuleDescriptor {
 
     RulePriority getPriority();
 
+    default ConfiguredRuleDescriptor configure() {
+        return new ConfiguredRuleDescriptor(this);
+    }
+
 }
