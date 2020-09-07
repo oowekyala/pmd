@@ -12,13 +12,12 @@ import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.StringProperty;
-import net.sourceforge.pmd.lang.rule.RuleBehavior;
-import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
-import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 
 /**
  * This is the basic Rule interface for PMD rules.
@@ -29,13 +28,13 @@ import net.sourceforge.pmd.lang.rule.RuleDescriptor;
  * single rule instance is reused for analyzing multiple files.
  * </p>
  *
- * @deprecated Implementations should implement {@link RuleBehavior},
+ * @deprecated Implementations should implement {@link RuleBehavior} only,
  *     while programmatic users should use {@link RuleDescriptor}. This
- *     implements {@link RuleDescriptor} for compatibility.
+ *     implements both interfaces only for compatibility.
  */
 // I don't dare deprecate it for now
 // @Deprecated
-public interface Rule extends PropertySource, RuleDescriptor {
+public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
 
     /**
      * The property descriptor to universally suppress violations with messages
@@ -43,7 +42,8 @@ public interface Rule extends PropertySource, RuleDescriptor {
      */
     // TODO 7.0.0 use PropertyDescriptor<Optional<Pattern>>
     StringProperty VIOLATION_SUPPRESS_REGEX_DESCRIPTOR = new StringProperty("violationSuppressRegex",
-            "Suppress violations with messages matching a regular expression", null, Integer.MAX_VALUE - 1);
+                                                                            "Suppress violations with messages matching a regular expression", null,
+                                                                            Integer.MAX_VALUE - 1);
 
     /**
      * Name of the property to universally suppress violations on nodes which
@@ -306,6 +306,7 @@ public interface Rule extends PropertySource, RuleDescriptor {
      * Returns the object that selects the nodes to which this rule applies.
      * The selected nodes will be handed to {@link #apply(Node, RuleContext)}.
      */
+    @Override
     RuleTargetSelector getTargetSelector();
 
 
@@ -336,11 +337,46 @@ public interface Rule extends PropertySource, RuleDescriptor {
 
     /**
      * Creates a new copy of this rule.
+     *
      * @return A new exact copy of this rule
      */
     Rule deepCopy();
 
     // compatiblity
+
+    // for RuleBehavior
+
+    @Override
+    default List<? extends PropertyDescriptor<?>> declaredProperties() {
+        return getPropertyDescriptors();
+    }
+
+    @Override
+    default boolean appliesToVersion(LanguageVersion version) {
+        return RuleSet.applies(this, version);
+    }
+
+    @Override
+    default RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
+
+        Rule copy = this.deepCopy();
+        for (PropertyDescriptor<?> prop : properties.getOverriddenPropertyDescriptors()) {
+            PropertySource.copyProperty(properties, prop, copy);
+        }
+
+        String dysfunctionReason = copy.dysfunctionReason();
+        if (dysfunctionReason != null) {
+            throw warner.fatalConfigError(dysfunctionReason);
+        }
+
+        return (node, ctx) -> {
+            copy.start(ctx);
+            copy.apply(node, ctx);
+            copy.end(ctx);
+        };
+    }
+
+    // for RuleDescriptor
 
     @Override
     default String getLanguageId() {
@@ -349,60 +385,6 @@ public interface Rule extends PropertySource, RuleDescriptor {
 
     @Override
     default RuleBehavior getBehavior() {
-        final class CompatAnalyser implements RuleAnalyser {
-
-            private final Rule rule;
-
-            private CompatAnalyser(Rule rule) {
-                this.rule = rule;
-            }
-
-            @Override
-            public void apply(Node node, RuleContext ctx) {
-                rule.start(ctx);
-                rule.apply(node, ctx);
-                rule.end(ctx);
-            }
-        }
-
-        class CompatBehavior implements RuleBehavior {
-
-            private final Rule rule;
-
-            private CompatBehavior(Rule rule) {
-                this.rule = rule;
-            }
-
-            @Override
-            public boolean appliesToVersion(LanguageVersion version) {
-                return RuleSet.applies(rule, version);
-            }
-
-            @Override
-            public List<? extends PropertyDescriptor<?>> declaredProperties() {
-                return rule.getPropertyDescriptors();
-            }
-
-            @Override
-            public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
-                Rule copy = rule.deepCopy();
-                for (PropertyDescriptor<?> prop : properties.getOverriddenPropertyDescriptors()) {
-                    setRulePropertyCapture(copy, prop, properties);
-                }
-
-                String dysfunctionReason = copy.dysfunctionReason();
-                if (dysfunctionReason != null) {
-                    throw warner.fatalConfigError(dysfunctionReason);
-                }
-
-                return new CompatAnalyser(copy);
-            }
-
-            private <T> void setRulePropertyCapture(Rule rule, PropertyDescriptor<T> descriptor, PropertySource source) {
-                rule.setProperty(descriptor, source.getProperty(descriptor));
-            }
-        }
-
-        return new CompatBehavior(this);
+        return this;
     }
 }

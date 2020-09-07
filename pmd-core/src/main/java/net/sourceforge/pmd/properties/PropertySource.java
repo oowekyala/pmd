@@ -161,4 +161,21 @@ public interface PropertySource {
      * @return String
      */
     String dysfunctionReason();
+
+    /**
+     * Copy the value of a property from one source to another. This
+     * is useful because it captures a wildcard in the property descriptor
+     * type.
+     *
+     * @param source     Source of the property
+     * @param descriptor Property descriptor
+     * @param target     Target on which the property will be set
+     * @param <T>        Type of the property
+     *
+     * @throws IllegalArgumentException If the descriptor is not declared
+     *                                  on both property sources
+     */
+    static <T> void copyProperty(PropertySource source, PropertyDescriptor<T> descriptor, PropertySource target) {
+        target.setProperty(descriptor, source.getProperty(descriptor));
+    }
 }

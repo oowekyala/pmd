@@ -37,7 +37,7 @@ public final class ConfiguredRuleDescriptor extends AbstractPropertySource {
         ConfiguredRuleDescriptor newConfig = new ConfiguredRuleDescriptor(new RuleDescriptorReference(config, this.descriptor));
         for (PropertyDescriptor<?> prop : newConfig.getPropertyDescriptors()) {
             // copy properties so far
-            setRulePropertyCapture(this, prop, newConfig);
+            PropertySource.copyProperty(newConfig, prop, this);
         }
         return newConfig;
     }
@@ -59,10 +59,5 @@ public final class ConfiguredRuleDescriptor extends AbstractPropertySource {
     @Override
     public String getName() {
         return descriptor.getName();
-    }
-
-
-    private static <T> void setRulePropertyCapture(PropertySource target, PropertyDescriptor<T> descriptor, PropertySource source) {
-        target.setProperty(descriptor, source.getProperty(descriptor));
     }
 }
