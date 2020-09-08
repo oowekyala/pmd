@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.rule.RuleBehavior.DysfunctionalRuleException;
 import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
@@ -26,9 +27,9 @@ public class RuleDescriptorSet {
 
     private static final Logger LOG = Logger.getLogger("Ruleset initialization");
 
-    private final Set<ConfiguredRuleDescriptor> rules;
+    private final Set<RuleDescriptor> rules;
 
-    RuleDescriptorSet(Collection<? extends ConfiguredRuleDescriptor> rules) {
+    RuleDescriptorSet(Collection<? extends RuleDescriptor> rules) {
         this.rules = new LinkedHashSet<>(rules);
     }
 
@@ -36,10 +37,9 @@ public class RuleDescriptorSet {
         Set<RunnableRule> result = new LinkedHashSet<>();
 
         RuleInitializationWarner warner = new LogRuleInitializationWarner();
-        for (ConfiguredRuleDescriptor rule : rules) {
+        for (RuleDescriptor rule : rules) {
             try {
-
-                RuleAnalyser analyser = rule.initialize(languages, warner);
+                RuleAnalyser analyser = initializeRule(rule, languages, warner);
                 result.add(new RunnableRule(rule, analyser));
             } catch (DysfunctionalRuleException e) {
                 LOG.warning("Removing dysfunctional rule " + rule.getName());
@@ -50,6 +50,11 @@ public class RuleDescriptorSet {
         return new RunnableRuleSet(result);
     }
 
+
+    private static RuleAnalyser initializeRule(RuleDescriptor descriptor, LanguageRegistry languageRegistry, RuleInitializationWarner warner) throws DysfunctionalRuleException {
+        Language language = LanguageRegistry.findLanguageByTerseName(descriptor.getLanguageId());
+        return descriptor.behavior().initialize(descriptor.properties(), language, warner);
+    }
 
     private static class LogRuleInitializationWarner implements RuleInitializationWarner {
 

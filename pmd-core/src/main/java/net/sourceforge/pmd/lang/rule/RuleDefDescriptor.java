@@ -5,24 +5,16 @@
 package net.sourceforge.pmd.lang.rule;
 
 
-import java.util.Objects;
-
 class RuleDefDescriptor extends BaseRuleDescriptor {
 
-    private final RuleBehavior behavior;
-
-    RuleDefDescriptor(RuleDescriptorConfig builder, RuleBehavior behavior) {
+    private final String languageId;
+    RuleDefDescriptor(RuleDescriptorConfig.RuleDefConfig builder) {
         super(builder);
-        this.behavior = behavior;
-        Objects.requireNonNull(behavior);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(languageId);
-        Objects.requireNonNull(description);
-        // todo etc
+        this.languageId = builder.languageId;
     }
 
     @Override
-    public RuleBehavior getBehavior() {
-        return behavior;
+    public String getLanguageId() {
+        return languageId;
     }
 }

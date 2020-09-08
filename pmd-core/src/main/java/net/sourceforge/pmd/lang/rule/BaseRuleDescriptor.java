@@ -7,10 +7,13 @@ package net.sourceforge.pmd.lang.rule;
 import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.internal.util.AssertionUtil;
+import net.sourceforge.pmd.properties.PropertySource;
 
 abstract class BaseRuleDescriptor implements RuleDescriptor {
 
-    protected final String languageId;
+    // these may be null in RuleRefDescriptor
+    // must be non-null in RuleDefDescriptor
     protected final String name;
     protected final String message;
     protected final String description;
@@ -21,8 +24,10 @@ abstract class BaseRuleDescriptor implements RuleDescriptor {
     protected final String externalInfoUrl;
     protected final RulePriority priority;
 
+    private final RuleBehavior behavior;
+    private final PropertySource properties;
+
     BaseRuleDescriptor(RuleDescriptorConfig config) {
-        this.languageId = config.languageId;
         this.name = config.name;
         this.description = config.description;
         this.ruleSetName = config.ruleSetName;
@@ -32,11 +37,18 @@ abstract class BaseRuleDescriptor implements RuleDescriptor {
         this.priority = config.priority;
         this.isDeprecated = config.isDeprecated;
         this.since = config.since;
+        this.behavior = AssertionUtil.requireParamNotNull("behavior", config.behavior);
+        this.properties = new RuleProperties(config.behavior.declaredProperties());
     }
 
     @Override
-    public String getLanguageId() {
-        return languageId;
+    public final RuleBehavior behavior() {
+        return behavior;
+    }
+
+    @Override
+    public final PropertySource properties() {
+        return properties;
     }
 
     @Override
@@ -84,70 +96,4 @@ abstract class BaseRuleDescriptor implements RuleDescriptor {
         return priority;
     }
 
-    public abstract static class RuleDescriptorConfig {
-
-        private String languageId;
-        private String name;
-        private String description;
-        private String ruleSetName;
-        private String message;
-        private List<String> examples;
-        private String externalInfoUrl;
-        private RulePriority priority;
-        private Boolean isDeprecated;
-        private String since;
-
-        public RuleDescriptorConfig setLanguageId(String languageId) {
-            this.languageId = languageId;
-            return this;
-        }
-
-        public RuleDescriptorConfig setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public RuleDescriptorConfig setDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public RuleDescriptorConfig setRuleSetName(String ruleSetName) {
-            this.ruleSetName = ruleSetName;
-            return this;
-        }
-
-        public RuleDescriptorConfig setMessage(String message) {
-            this.message = message;
-            return this;
-        }
-
-        public RuleDescriptorConfig setExamples(List<String> examples) {
-            this.examples = examples;
-            return this;
-        }
-
-        public RuleDescriptorConfig setExternalInfoUrl(String externalInfoUrl) {
-            this.externalInfoUrl = externalInfoUrl;
-            return this;
-        }
-
-        public RuleDescriptorConfig setPriority(RulePriority priority) {
-            this.priority = priority;
-            return this;
-        }
-
-        public RuleDescriptorConfig setDeprecated(boolean isDeprecated) {
-            this.isDeprecated = isDeprecated;
-            return this;
-        }
-
-        public RuleDescriptorConfig setSince(String since) {
-            this.since = since;
-            return this;
-        }
-
-        public abstract RuleDescriptor build();
-
-    }
 }

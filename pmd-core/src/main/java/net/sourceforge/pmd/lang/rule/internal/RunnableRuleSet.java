@@ -13,10 +13,9 @@ import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.RootNode;
-import net.sourceforge.pmd.lang.rule.ConfiguredRuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleBehavior;
 import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
-import net.sourceforge.pmd.lang.rule.RuleDescriptorSet;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
@@ -54,21 +53,21 @@ public class RunnableRuleSet {
 
     public static class RunnableRule {
 
-        private final ConfiguredRuleDescriptor descriptor;
+        private final RuleDescriptor descriptor;
         private final RuleAnalyser analyser;
 
 
-        public RunnableRule(ConfiguredRuleDescriptor descriptor, RuleAnalyser analyser) {
+        public RunnableRule(RuleDescriptor descriptor, RuleAnalyser analyser) {
             this.descriptor = descriptor;
             this.analyser = analyser;
         }
 
-        public ConfiguredRuleDescriptor getDescriptor() {
+        public RuleDescriptor getDescriptor() {
             return descriptor;
         }
 
         public RuleBehavior getBehavior() {
-            return descriptor.getBehavior();
+            return descriptor.behavior();
         }
 
         public RuleAnalyser getAnalyser() {

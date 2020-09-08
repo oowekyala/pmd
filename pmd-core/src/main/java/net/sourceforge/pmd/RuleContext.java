@@ -14,7 +14,6 @@ import net.sourceforge.pmd.Report.ProcessingError;
 import net.sourceforge.pmd.Report.SuppressedViolation;
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.rule.ConfiguredRuleDescriptor;
 import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
 import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
@@ -38,9 +37,9 @@ public final class RuleContext {
     private static final Object[] NO_ARGS = new Object[0];
 
     private final FileAnalysisListener listener;
-    private final ConfiguredRuleDescriptor rule;
+    private final RuleDescriptor rule;
 
-    private RuleContext(FileAnalysisListener listener, ConfiguredRuleDescriptor rule) {
+    private RuleContext(FileAnalysisListener listener, RuleDescriptor rule) {
         Objects.requireNonNull(listener, "Listener was null");
         Objects.requireNonNull(rule, "Rule was null");
         this.listener = listener;
@@ -55,7 +54,7 @@ public final class RuleContext {
     }
 
     public String getDefaultMessage() {
-        return rule.getRule().getMessage();
+        return rule.getMessage();
     }
 
     public void addViolation(Node location) {
@@ -81,7 +80,7 @@ public final class RuleContext {
 
         RuleViolationFactory fact = location.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory();
 
-        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs, rule.getProperties()));
+        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs, rule.properties()));
         if (beginLine != -1 && endLine != -1) {
             // fixme, this is needed until we have actual Location objects
             ((ParametricRuleViolation<?>) violation).setLines(beginLine, endLine);
@@ -139,7 +138,7 @@ public final class RuleContext {
      * The listener must be closed by its creator.
      */
     @InternalApi
-    public static RuleContext create(FileAnalysisListener listener, ConfiguredRuleDescriptor rule) {
+    public static RuleContext create(FileAnalysisListener listener, RuleDescriptor rule) {
         return new RuleContext(listener, rule);
     }
 

@@ -8,24 +8,28 @@ package net.sourceforge.pmd.lang.rule;
 import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
+import net.sourceforge.pmd.properties.PropertySource;
 
-class RuleDescriptorReference extends BaseRuleDescriptor {
+class RuleRefDescriptor extends BaseRuleDescriptor {
 
     private final RuleDescriptor baseDescriptor;
 
-    RuleDescriptorReference(RuleDescriptorConfig overriddenStuff, RuleDescriptor baseDescriptor) {
-        super(overriddenStuff);
-        this.baseDescriptor = baseDescriptor;
-        if (!getLanguageId().equals(baseDescriptor.getLanguageId())) {
-            throw new IllegalArgumentException("Cannot override language");
+    RuleRefDescriptor(RuleDescriptorConfig.RuleRefConfig config) {
+        super(config);
+
+        this.baseDescriptor = config.referencedRule;
+
+        for (PropertyDescriptor<?> prop : properties().getPropertyDescriptors()) {
+            // copy properties so far
+            PropertySource.copyProperty(baseDescriptor.properties(), prop, this.properties());
         }
     }
 
     @Override
-    public RuleBehavior getBehavior() {
-        return baseDescriptor.getBehavior();
+    public String getLanguageId() {
+        return baseDescriptor.getLanguageId();
     }
-
 
     @Override
     public String getName() {
@@ -71,5 +75,6 @@ class RuleDescriptorReference extends BaseRuleDescriptor {
     public RulePriority getPriority() {
         return priority == null ? baseDescriptor.getPriority() : priority;
     }
+
 
 }

@@ -9,12 +9,13 @@ import java.util.List;
 import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.RuleSet;
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.properties.PropertySource;
 
 /**
  * Metadata about a rule. Custom rules implement {@link RuleBehavior}
  * instead of this interface. All this metadata is overridable in a rule
  * reference except the {@linkplain #getLanguageId() language ID} and the
- * {@linkplain #getBehavior() behavior}.
+ * {@linkplain #behavior() behavior}.
  *
  * <p>Rule descriptors are independent from {@link Language} instances,
  * so are independent from a particular analysis. In PMD 7, a {@link RuleSet}
@@ -31,7 +32,14 @@ public interface RuleDescriptor {
     String getLanguageId();
 
     /** The implemented behavior of this rule. */
-    RuleBehavior getBehavior();
+    RuleBehavior behavior();
+
+    /**
+     * The properties of this descriptor. You can set existing properties, but
+     * not declare them. All the properties of the {@linkplain #behavior()}
+     * are declared on it.
+     */
+    PropertySource properties();
 
     // Overridable metadata
     // Documentation has been stripped to remove clutter, this is basically
@@ -62,14 +70,5 @@ public interface RuleDescriptor {
     String getExternalInfoUrl();
 
     RulePriority getPriority();
-
-    /**
-     * Returns a new {@link ConfiguredRuleDescriptor} on which all
-     * properties of this descriptor are declared. This may be used to
-     * set property values.
-     */
-    default ConfiguredRuleDescriptor configure() {
-        return new ConfiguredRuleDescriptor(this);
-    }
 
 }

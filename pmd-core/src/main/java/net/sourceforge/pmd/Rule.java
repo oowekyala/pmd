@@ -384,7 +384,7 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
     }
 
     @Override
-    default RuleBehavior getBehavior() {
+    default RuleBehavior behavior() {
         return this;
     }
 }
