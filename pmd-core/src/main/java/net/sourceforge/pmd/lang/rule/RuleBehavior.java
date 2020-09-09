@@ -31,9 +31,9 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
  * <li>Rule descriptors are collected from rulesets by following references.
  * Their {@link RuleBehavior} is used to collect properties. The output of this
  * phase is the final set of rules that comprise the ruleset, and their corresponding
- * property bundles. No {@link #initialize(PropertySource, Language, RuleInitializationWarner) initialize}
+ * property bundles. No {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner) initialize}
  * method has been called yet.
- * <li>For each rule descriptor of this set, we call {@link #initialize(PropertySource, Language, RuleInitializationWarner) initialize}
+ * <li>For each rule descriptor of this set, we call {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner) initialize}
  * with the corresponding property bundle, and the language instance the
  * analysis will be using. Exceptions are reported, in particular, {@link DysfunctionalRuleException}s.
  * The output of this phase is a set of {@link RuleAnalyser}s, which are
@@ -54,7 +54,7 @@ public interface RuleBehavior {
 
     /**
      * The target selector for this rule. This must be constant throughout
-     * the analysis (this will be only called once, around the time {@link #initialize(PropertySource, Language,
+     * the analysis (this will be only called once, around the time {@link #initialize(RuleDescriptor, Language,
      * RuleInitializationWarner) initialize}
      * is called), so is not part of the {@link RuleAnalyser} interface.
      */
@@ -65,7 +65,8 @@ public interface RuleBehavior {
     /**
      * Returns the properties that this rule accepts. These will be
      * declared on a {@link PropertySource}, set to the values provided
-     * in the ruleset XML, before they're passed to {@link #initialize(PropertySource, Language, RuleInitializationWarner)}.
+     * in the ruleset XML, before they're passed to {@link #initialize(RuleDescriptor, Language,
+     * RuleInitializationWarner)}.
      */
     default List<? extends PropertyDescriptor<?>> declaredProperties() {
         return Collections.emptyList();
@@ -85,8 +86,7 @@ public interface RuleBehavior {
      * rule would be useless, then {@link RuleInitializationWarner#fatalConfigError(String, Object...)}
      * should be used to produce an exception that will be thrown.
      *
-     * @param properties Property bundle, on which all properties mentioned
-     *                   by {@link #declaredProperties()} are declared
+     * @param descriptor Rule descriptor, from which property values can be retrieved
      * @param language   Language instance global to the analysis
      * @param warner     An object to report misconfigurations that property
      *                   constraints couldn't catch.
@@ -99,7 +99,7 @@ public interface RuleBehavior {
      * @throws RuntimeException           This should be caught by calling code and
      *                                    reported the same way as a {@link DysfunctionalRuleException}
      */
-    RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException;
+    RuleAnalyser initialize(RuleDescriptor descriptor, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException;
 
 
     /**
@@ -113,7 +113,7 @@ public interface RuleBehavior {
     }
 
     /**
-     * Thrown by {@link #initialize(PropertySource, Language, RuleInitializationWarner)}
+     * Thrown by {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner)}
      * if the configuration is so broken, that no useful file analyser
      * can be produced.
      */
@@ -126,7 +126,7 @@ public interface RuleBehavior {
     }
 
     /**
-     * Reporter for {@link #initialize(PropertySource, Language, RuleInitializationWarner)}.
+     * Reporter for {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner)}.
      */
     interface RuleInitializationWarner {
 

@@ -6,9 +6,7 @@ package net.sourceforge.pmd.lang.rule;
 
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -53,7 +51,7 @@ public class RuleDescriptorSet {
 
     private static RuleAnalyser initializeRule(RuleDescriptor descriptor, LanguageRegistry languageRegistry, RuleInitializationWarner warner) throws DysfunctionalRuleException {
         Language language = LanguageRegistry.findLanguageByTerseName(descriptor.getLanguageId());
-        return descriptor.behavior().initialize(descriptor.properties(), language, warner);
+        return descriptor.behavior().initialize(descriptor, language, warner);
     }
 
     private static class LogRuleInitializationWarner implements RuleInitializationWarner {

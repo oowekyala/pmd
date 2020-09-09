@@ -4,12 +4,13 @@
 
 package net.sourceforge.pmd.lang.rule;
 
+import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.RuleSet;
 import net.sourceforge.pmd.lang.Language;
-import net.sourceforge.pmd.properties.PropertySource;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
 
 /**
  * Metadata about a rule. Custom rules implement {@link RuleBehavior}
@@ -35,11 +36,25 @@ public interface RuleDescriptor {
     RuleBehavior behavior();
 
     /**
-     * The properties of this descriptor. You can set existing properties, but
-     * not declare them. All the properties of the {@linkplain #behavior()}
-     * are declared on it.
+     * Returns the value of the given property
+     *
+     * @param propertyDescriptor Descriptor of the property
+     * @param <T>                Type of values
+     *
+     * @return The value set for this property
+     *
+     * @throws IllegalArgumentException If the property is not declared by the {@link #behavior()}
      */
-    PropertySource properties();
+    <T> T getProperty(PropertyDescriptor<T> propertyDescriptor);
+
+
+    PropertyDescriptor<?> getPropertyDescriptor(String name);
+
+
+    default List<PropertyDescriptor<?>> getPropertyDescriptors() {
+        return Collections.unmodifiableList(behavior().declaredProperties());
+    }
+
 
     // Overridable metadata
     // Documentation has been stripped to remove clutter, this is basically

@@ -25,9 +25,9 @@ import net.sourceforge.pmd.lang.java.metrics.internal.CycloMetric;
 import net.sourceforge.pmd.lang.java.metrics.internal.CycloMetric.CycloOption;
 import net.sourceforge.pmd.lang.metrics.MetricOptions;
 import net.sourceforge.pmd.lang.metrics.MetricsUtil;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
-import net.sourceforge.pmd.properties.PropertySource;
 
 
 /**
@@ -71,10 +71,10 @@ public class CyclomaticComplexityRule2 implements RuleBehavior {
     }
 
     @Override
-    public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) {
-        int methodReportLevel = properties.getProperty(METHOD_LEVEL_DESCRIPTOR);
-        int classReportLevel = properties.getProperty(CLASS_LEVEL_DESCRIPTOR);
-        MetricOptions cycloOptions = MetricOptions.ofOptions(properties.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
+    public RuleAnalyser initialize(RuleDescriptor descriptor, Language language, RuleInitializationWarner warner) {
+        int methodReportLevel = descriptor.getProperty(METHOD_LEVEL_DESCRIPTOR);
+        int classReportLevel = descriptor.getProperty(CLASS_LEVEL_DESCRIPTOR);
+        MetricOptions cycloOptions = MetricOptions.ofOptions(descriptor.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
 
         return new VisitorAnalyser(new MyVisitor(cycloOptions, classReportLevel, methodReportLevel));
     }

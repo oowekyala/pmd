@@ -25,11 +25,11 @@ public abstract class RuleDescriptorConfig {
     String since;
 
     final RuleBehavior behavior;
-    private final PropertySource myProperties;
+    final PropertySource properties;
 
     private RuleDescriptorConfig(RuleBehavior behavior) {
         this.behavior = behavior;
-        myProperties = new RuleProperties(behavior.declaredProperties());
+        properties = new RuleProperties(behavior.declaredProperties());
     }
 
     static class RuleRefConfig extends RuleDescriptorConfig {
@@ -39,7 +39,17 @@ public abstract class RuleDescriptorConfig {
         private RuleRefConfig(RuleDescriptor referencedRule) {
             super(referencedRule.behavior());
             this.referencedRule = referencedRule;
+
+            for (PropertyDescriptor<?> prop : referencedRule.behavior().declaredProperties()) {
+                // copy properties so far
+                copyProperty(referencedRule, prop, this.properties);
+            }
         }
+
+        static <T> void copyProperty(RuleDescriptor source, PropertyDescriptor<T> descriptor, PropertySource target) {
+            target.setProperty(descriptor, source.getProperty(descriptor));
+        }
+
 
         @Override
         public RuleDescriptor build() {
@@ -80,7 +90,7 @@ public abstract class RuleDescriptorConfig {
     }
 
     public <T> RuleDescriptorConfig setProperty(PropertyDescriptor<T> descriptor, T value) {
-        myProperties.setProperty(descriptor, value);
+        properties.setProperty(descriptor, value);
         return this;
     }
 

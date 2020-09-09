@@ -8,6 +8,7 @@ import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.internal.util.AssertionUtil;
+import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 
 abstract class BaseRuleDescriptor implements RuleDescriptor {
@@ -38,17 +39,22 @@ abstract class BaseRuleDescriptor implements RuleDescriptor {
         this.isDeprecated = config.isDeprecated;
         this.since = config.since;
         this.behavior = AssertionUtil.requireParamNotNull("behavior", config.behavior);
-        this.properties = new RuleProperties(config.behavior.declaredProperties());
+        this.properties = AssertionUtil.requireParamNotNull("properties", config.properties);
+    }
+
+    @Override
+    public <T> T getProperty(PropertyDescriptor<T> propertyDescriptor) {
+        return properties.getProperty(propertyDescriptor);
+    }
+
+    @Override
+    public PropertyDescriptor<?> getPropertyDescriptor(String name) {
+        return properties.getPropertyDescriptor(name);
     }
 
     @Override
     public final RuleBehavior behavior() {
         return behavior;
-    }
-
-    @Override
-    public final PropertySource properties() {
-        return properties;
     }
 
     @Override

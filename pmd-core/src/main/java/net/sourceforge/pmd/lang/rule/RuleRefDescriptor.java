@@ -8,8 +8,6 @@ package net.sourceforge.pmd.lang.rule;
 import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
-import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertySource;
 
 class RuleRefDescriptor extends BaseRuleDescriptor {
 
@@ -17,13 +15,7 @@ class RuleRefDescriptor extends BaseRuleDescriptor {
 
     RuleRefDescriptor(RuleDescriptorConfig.RuleRefConfig config) {
         super(config);
-
         this.baseDescriptor = config.referencedRule;
-
-        for (PropertyDescriptor<?> prop : properties().getPropertyDescriptors()) {
-            // copy properties so far
-            PropertySource.copyProperty(baseDescriptor.properties(), prop, this.properties());
-        }
     }
 
     @Override

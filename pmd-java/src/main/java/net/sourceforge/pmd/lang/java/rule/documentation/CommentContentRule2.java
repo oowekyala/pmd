@@ -21,8 +21,8 @@ import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.Comment;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.lang.rule.RuleBehavior;
 
 /**
@@ -49,15 +49,15 @@ public class CommentContentRule2 implements RuleBehavior {
     }
 
     @Override
-    public RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
+    public RuleAnalyser initialize(RuleDescriptor descriptor, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
 
-        List<String> originalBadWords = properties.getProperty(DISSALLOWED_TERMS_DESCRIPTOR);
+        List<String> originalBadWords = descriptor.getProperty(DISSALLOWED_TERMS_DESCRIPTOR);
 
         if (originalBadWords.isEmpty()) {
             throw warner.fatalConfigError("No disallowed terms specified");
         }
 
-        boolean caseSensitive = properties.getProperty(CASE_SENSITIVE_DESCRIPTOR);
+        boolean caseSensitive = descriptor.getProperty(CASE_SENSITIVE_DESCRIPTOR);
         List<String> currentBadWords;
         if (caseSensitive) {
             currentBadWords = originalBadWords;

@@ -357,11 +357,11 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
     }
 
     @Override
-    default RuleAnalyser initialize(PropertySource properties, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
+    default RuleAnalyser initialize(RuleDescriptor descriptor, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
 
         Rule copy = this.deepCopy();
-        for (PropertyDescriptor<?> prop : properties.getOverriddenPropertyDescriptors()) {
-            PropertySource.copyProperty(properties, prop, copy);
+        for (PropertyDescriptor<?> prop : descriptor.getOverriddenPropertyDescriptors()) {
+            PropertySource.copyProperty(descriptor, prop, copy);
         }
 
         String dysfunctionReason = copy.dysfunctionReason();

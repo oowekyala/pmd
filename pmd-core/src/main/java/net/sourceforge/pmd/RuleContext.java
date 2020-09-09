@@ -80,7 +80,7 @@ public final class RuleContext {
 
         RuleViolationFactory fact = location.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory();
 
-        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs, rule.properties()));
+        RuleViolation violation = fact.createViolation(rule, location, location.getSourceCodeFile(), makeMessage(message, formatArgs));
         if (beginLine != -1 && endLine != -1) {
             // fixme, this is needed until we have actual Location objects
             ((ParametricRuleViolation<?>) violation).setLines(beginLine, endLine);
@@ -99,14 +99,15 @@ public final class RuleContext {
         listener.onRuleViolation(rv);
     }
 
-    private String makeMessage(@NonNull String message, Object[] args, PropertySource properties) {
+    private String makeMessage(@NonNull String message, Object[] args) {
         // Escape PMD specific variable message format, specifically the {
         // in the ${, so MessageFormat doesn't bitch.
         final String escapedMessage = StringUtils.replace(message, "${", "$'{'");
-        return MessageFormat.format(escapedMessage, args);
+        String formatted = MessageFormat.format(escapedMessage, args);
+        return expandVariables(formatted, rule);
     }
 
-    private String expandVariables(String message, PropertySource properties) {
+    private static String expandVariables(String message, RuleDescriptor rule) {
         if (!message.contains("${")) {
             return message;
         }
@@ -117,7 +118,7 @@ public final class RuleContext {
             final int endIndex = buf.indexOf("}", startIndex);
             if (endIndex >= 0) {
                 final String name = buf.substring(startIndex + 2, endIndex);
-                String variableValue = getVariableValue(name, properties);
+                String variableValue = getVariableValue(name, rule);
                 if (variableValue != null) {
                     buf.replace(startIndex, endIndex + 1, variableValue);
                 }
@@ -126,9 +127,9 @@ public final class RuleContext {
         return buf.toString();
     }
 
-    private String getVariableValue(String name, PropertySource properties) {
-        final PropertyDescriptor<?> propertyDescriptor = properties.getPropertyDescriptor(name);
-        return propertyDescriptor == null ? null : String.valueOf(properties.getProperty(propertyDescriptor));
+    private static String getVariableValue(String name, RuleDescriptor rule) {
+        final PropertyDescriptor<?> propertyDescriptor = rule.getPropertyDescriptor(name);
+        return propertyDescriptor == null ? null : String.valueOf(rule.getProperty(propertyDescriptor));
     }
 
     /**
