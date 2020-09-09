@@ -8,15 +8,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.RuleSet;
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.rule.RuleBehavior;
-import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
 import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet.RunnableRule;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
@@ -51,16 +47,16 @@ public class RuleApplicator {
     private void applyOnIndex(TreeIndex idx, RunnableRuleSet rules, FileAnalysisListener listener) {
         for (RunnableRule rule : rules.getRules()) {
             rule.getAnalyser().nextFile();
-            RuleContext ctx = RuleContext.create(listener, rule);
+            RuleContext ctx = RuleContext.create(listener, rule.getDescriptor());
 
-            Iterator<? extends Node> targets = rule.getBehavior().getTargetSelector().getVisitedNodes(idx);
+            Iterator<? extends Node> targets = rule.getTargetSelector().getVisitedNodes(idx);
             while (targets.hasNext()) {
                 Node node = targets.next();
-                if (rule.getBehavior().appliesToVersion(node.getLanguageVersion())) {
+                if (rule.appliesToVersion(node.getLanguageVersion())) {
                     continue;
                 }
 
-                try (TimedOperation rcto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getName())) {
+                try (TimedOperation rcto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getDescriptor().getName())) {
                     rule.getAnalyser().apply(node, ctx);
                     rcto.close(1);
                 } catch (RuntimeException e) {
@@ -79,7 +75,7 @@ public class RuleApplicator {
         }
     }
 
-    public static RuleApplicator build(Iterator<? extends RuleBehavior> rules) {
+    public static RuleApplicator build(Iterator<? extends RunnableRule> rules) {
         TargetSelectorInternal.ApplicatorBuilder builder = new TargetSelectorInternal.ApplicatorBuilder();
         rules.forEachRemaining(it -> it.getTargetSelector().prepare(builder));
         return builder.build();

@@ -9,12 +9,12 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.AstVisitor;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
@@ -24,23 +24,23 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
  * The configurable behavior of a rule. This is the interface rule classes
  * should implement. A {@link RuleBehavior} is not directly the behavior,
  * it's some additional metadata and initialization routine for the actual
- * runnable rule, which is represented by a {@link RuleAnalyser}.
+ * runnable rule, which is represented by a {@link RuleAnalyser}. Inside a
+ * ruleset, a behavior is wrapped within a {@link RuleDescriptor}.
  *
  * <p>The lifecycle of an analysis looks like so:
  * <ul>
  * <li>Rule descriptors are collected from rulesets by following references.
- * Their {@link RuleBehavior} is used to collect properties. The output of this
- * phase is the final set of rules that comprise the ruleset, and their corresponding
- * property bundles. No {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner) initialize}
+ * The output of this phase is the final set of descriptors that comprise the ruleset,
+ * with their final configuration (properties). No {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner) initialize}
  * method has been called yet.
  * <li>For each rule descriptor of this set, we call {@link #initialize(RuleDescriptor, Language, RuleInitializationWarner) initialize}
- * with the corresponding property bundle, and the language instance the
- * analysis will be using. Exceptions are reported, in particular, {@link DysfunctionalRuleException}s.
+ * with the language instance the analysis will be using. Exceptions are
+ * reported, in particular, {@link DysfunctionalRuleException}s.
  * The output of this phase is a set of {@link RuleAnalyser}s, which are
  * all functional.
- * <li>During analysis, each {@link RuleAnalyser} is reset with {@link RuleAnalyser#nextFile() FileAnalyser::nextFile}
- * before being fed with nodes that match the {@linkplain #getTargetSelector() target selector}.
- * {@link RuleAnalyser#apply(Node, RuleContext) FileAnalyser::apply}
+ * <li>During analysis, each {@link RuleAnalyser} is reset with {@link RuleAnalyser#nextFile() RuleAnalyser::nextFile}
+ * before being fed with nodes that match the {@linkplain RuleAnalyser#getTargetSelector() target selector}.
+ * {@link RuleAnalyser#apply(Node, RuleContext) RuleAnalyser::apply}
  * performs side-effects on the {@link RuleContext} to report events like
  * violations. Where those events end up is the problem of the {@link FileAnalysisListener},
  * which most commonly forwards to a {@link Renderer}.
@@ -52,21 +52,10 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
  */
 public interface RuleBehavior {
 
-    /**
-     * The target selector for this rule. This must be constant throughout
-     * the analysis (this will be only called once, around the time {@link #initialize(RuleDescriptor, Language,
-     * RuleInitializationWarner) initialize}
-     * is called), so is not part of the {@link RuleAnalyser} interface.
-     */
-    default RuleTargetSelector getTargetSelector() {
-        return RuleTargetSelector.forRootOnly();
-    }
 
     /**
      * Returns the properties that this rule accepts. These will be
-     * declared on a {@link PropertySource}, set to the values provided
-     * in the ruleset XML, before they're passed to {@link #initialize(RuleDescriptor, Language,
-     * RuleInitializationWarner)}.
+     * declared on all {@link RuleDescriptor}s built for this behavior.
      */
     default List<? extends PropertyDescriptor<?>> declaredProperties() {
         return Collections.emptyList();
@@ -83,7 +72,7 @@ public interface RuleBehavior {
      * to report it. If the configuration can still provide a useful rule,
      * then only {@link RuleInitializationWarner#configWarning(String, Object...) configWarning}s
      * should be reported. If the configuration is so broken that the
-     * rule would be useless, then {@link RuleInitializationWarner#fatalConfigError(String, Object...)}
+     * rule would be useless, then {@link RuleInitializationWarner#fatalConfigError(String, Object...) fatalConfigError}
      * should be used to produce an exception that will be thrown.
      *
      * @param descriptor Rule descriptor, from which property values can be retrieved
@@ -161,12 +150,25 @@ public interface RuleBehavior {
 
 
     /**
-     * The reporting behavior of a rule. This is fully initialized and
-     * will receive nodes to report them on the rule context.
+     * The reporting behavior of a rule. This is the thing carrying out
+     * the behavior of the rule.
      */
     interface RuleAnalyser {
 
-        // copy doc from Rule#apply: this is fed with nodes that match the RuleTargetSelector
+        /**
+         * The target selector for this rule. This must be constant throughout
+         * the analysis (this will be only called once, before any {@link #apply(Node, RuleContext)}
+         * method is called).
+         */
+        RuleTargetSelector getTargetSelector();
+
+        /**
+         * Process the given node. The nodes that are fed to this method
+         * are the nodes selected by {@link #getTargetSelector()}.
+         *
+         * @param node Node on which to apply the rule
+         * @param ctx  Rule context, handling violations
+         */
         void apply(Node node, RuleContext ctx);
 
         /**
@@ -183,17 +185,34 @@ public interface RuleBehavior {
     }
 
 
+    /**
+     * A {@link RuleAnalyser} that uses a visitor for the apply method.
+     */
     class VisitorAnalyser implements RuleAnalyser {
 
+        private final RuleTargetSelector targetSelector;
         private final AstVisitor<RuleContext, Void> visitor;
 
-        public VisitorAnalyser(AstVisitor<RuleContext, Void> visitor) {
-            this.visitor = visitor;
+        public VisitorAnalyser(RuleTargetSelector targetSelector, AstVisitor<RuleContext, Void> visitor) {
+            this.targetSelector = AssertionUtil.requireParamNotNull("target selector", targetSelector);
+            this.visitor = AssertionUtil.requireParamNotNull("visitor", visitor);
+        }
+
+        @Override
+        public final RuleTargetSelector getTargetSelector() {
+            return targetSelector;
         }
 
         @Override
         public final void apply(Node node, RuleContext ctx) {
             node.acceptVisitor(visitor, ctx);
+        }
+    }
+
+    class FullTreeVisitorAnalyser extends VisitorAnalyser {
+
+        public FullTreeVisitorAnalyser(AstVisitor<RuleContext, Void> visitor) {
+            super(RuleTargetSelector.forRootOnly(), visitor);
         }
     }
 }

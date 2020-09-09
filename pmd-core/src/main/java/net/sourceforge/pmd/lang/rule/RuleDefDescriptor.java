@@ -5,12 +5,15 @@
 package net.sourceforge.pmd.lang.rule;
 
 
+import net.sourceforge.pmd.lang.rule.RuleDescriptorBuilder.RuleDefBuilder;
+
 class RuleDefDescriptor extends BaseRuleDescriptor {
 
     private final String languageId;
-    RuleDefDescriptor(RuleDescriptorConfig.RuleDefConfig builder) {
+    RuleDefDescriptor(RuleDefBuilder builder) {
         super(builder);
         this.languageId = builder.languageId;
+        // todo assert everything is non-null?
     }
 
     @Override

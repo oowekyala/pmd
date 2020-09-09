@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sourceforge.pmd.lang.rule.RuleBehavior;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
@@ -25,6 +24,7 @@ import net.sourceforge.pmd.lang.java.metrics.internal.CycloMetric;
 import net.sourceforge.pmd.lang.java.metrics.internal.CycloMetric.CycloOption;
 import net.sourceforge.pmd.lang.metrics.MetricOptions;
 import net.sourceforge.pmd.lang.metrics.MetricsUtil;
+import net.sourceforge.pmd.lang.rule.RuleBehavior;
 import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
@@ -76,7 +76,7 @@ public class CyclomaticComplexityRule2 implements RuleBehavior {
         int classReportLevel = descriptor.getProperty(CLASS_LEVEL_DESCRIPTOR);
         MetricOptions cycloOptions = MetricOptions.ofOptions(descriptor.getProperty(CYCLO_OPTIONS_DESCRIPTOR));
 
-        return new VisitorAnalyser(new MyVisitor(cycloOptions, classReportLevel, methodReportLevel));
+        return new FullTreeVisitorAnalyser(new MyVisitor(cycloOptions, classReportLevel, methodReportLevel));
     }
 
     private static class MyVisitor extends JavaVisitorBase<RuleContext, Void> {

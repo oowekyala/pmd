@@ -19,6 +19,8 @@ import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.internal.RuleApplicator;
+import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet;
+import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet.RunnableRule;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
@@ -63,7 +65,8 @@ public class RuleSets {
     }
 
     private RuleApplicator prepareApplicator() {
-        return RuleApplicator.build(ruleSets.stream().flatMap(it -> it.getRules().stream()).iterator());
+        return RuleApplicator.build(ruleSets.stream().flatMap(it -> it.getRules().stream())
+                                            .map(it -> new RunnableRule()).iterator());
     }
 
     /**

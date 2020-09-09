@@ -13,6 +13,7 @@ import net.sourceforge.pmd.lang.ParserOptions;
 import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.RuleBehavior;
+import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
 import net.sourceforge.pmd.lang.rule.RuleDescriptor;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -34,7 +35,7 @@ import net.sourceforge.pmd.properties.StringProperty;
  */
 // I don't dare deprecate it for now
 // @Deprecated
-public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
+public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior, RuleAnalyser {
 
     /**
      * The property descriptor to universally suppress violations with messages
@@ -325,6 +326,7 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
      * @param target Node on which to apply the rule
      * @param ctx    Rule context, handling violations
      */
+    @Override // now part of RuleAnalyser
     void apply(Node target, RuleContext ctx);
 
     /**
@@ -360,7 +362,7 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
     default RuleAnalyser initialize(RuleDescriptor descriptor, Language language, RuleInitializationWarner warner) throws DysfunctionalRuleException {
 
         Rule copy = this.deepCopy();
-        for (PropertyDescriptor<?> prop : descriptor.getOverriddenPropertyDescriptors()) {
+        for (PropertyDescriptor<?> prop : descriptor.getPropertyDescriptors()) {
             PropertySource.copyProperty(descriptor, prop, copy);
         }
 
@@ -369,11 +371,7 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
             throw warner.fatalConfigError(dysfunctionReason);
         }
 
-        return (node, ctx) -> {
-            copy.start(ctx);
-            copy.apply(node, ctx);
-            copy.end(ctx);
-        };
+        return Rule.this;
     }
 
     // for RuleDescriptor
@@ -382,6 +380,9 @@ public interface Rule extends PropertySource, RuleDescriptor, RuleBehavior {
     default String getLanguageId() {
         return getLanguage().getTerseName();
     }
+
+    @Override
+    List<PropertyDescriptor<?>> getPropertyDescriptors();
 
     @Override
     default RuleBehavior behavior() {

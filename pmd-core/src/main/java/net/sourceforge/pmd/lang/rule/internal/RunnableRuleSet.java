@@ -8,14 +8,16 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import net.sourceforge.pmd.RuleSet;
+import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
+import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.rule.RuleBehavior;
 import net.sourceforge.pmd.lang.rule.RuleBehavior.RuleAnalyser;
 import net.sourceforge.pmd.lang.rule.RuleDescriptor;
+import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
@@ -28,7 +30,7 @@ public class RunnableRuleSet {
 
     public RunnableRuleSet(Set<RunnableRule> rules) {
         this.rules = new LinkedHashSet<>(rules);
-        this.ruleApplicator = RuleApplicator.build(rules.stream().map(RunnableRule::getBehavior).iterator());
+        this.ruleApplicator = RuleApplicator.build(rules.stream().iterator());
     }
 
 
@@ -37,14 +39,7 @@ public class RunnableRuleSet {
             ruleApplicator.index(Collections.singletonList(root));
         }
 
-        ruleApplicator.apply(ruleSet.getRules(), listener);
-
-
-        for (RuleSet ruleSet : ruleSets) {
-            if (ruleSet.applies(file)) {
-                ruleApplicator.apply(ruleSet.getRules(), listener);
-            }
-        }
+        ruleApplicator.apply(this, listener);
     }
 
     public Iterable<RunnableRule> getRules() {
@@ -55,11 +50,25 @@ public class RunnableRuleSet {
 
         private final RuleDescriptor descriptor;
         private final RuleAnalyser analyser;
+        private final RuleTargetSelector selector;
 
 
         public RunnableRule(RuleDescriptor descriptor, RuleAnalyser analyser) {
             this.descriptor = descriptor;
             this.analyser = analyser;
+            this.selector = analyser.getTargetSelector();
+        }
+
+        public static RunnableRule fromPmd6(Rule rule) {
+            return new RunnableRule(rule, rule);
+        }
+
+        public boolean appliesToVersion(LanguageVersion lv) {
+            return getBehavior().appliesToVersion(lv);
+        }
+
+        public RuleTargetSelector getTargetSelector() {
+            return selector;
         }
 
         public RuleDescriptor getDescriptor() {

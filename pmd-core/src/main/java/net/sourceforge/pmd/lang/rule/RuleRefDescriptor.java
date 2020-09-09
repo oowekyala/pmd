@@ -8,12 +8,13 @@ package net.sourceforge.pmd.lang.rule;
 import java.util.List;
 
 import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.lang.rule.RuleDescriptorBuilder.RuleRefBuilder;
 
 class RuleRefDescriptor extends BaseRuleDescriptor {
 
     private final RuleDescriptor baseDescriptor;
 
-    RuleRefDescriptor(RuleDescriptorConfig.RuleRefConfig config) {
+    RuleRefDescriptor(RuleRefBuilder config) {
         super(config);
         this.baseDescriptor = config.referencedRule;
     }

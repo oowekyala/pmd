@@ -7,6 +7,8 @@ package net.sourceforge.pmd.properties;
 import java.util.List;
 import java.util.Map;
 
+import net.sourceforge.pmd.lang.rule.RuleDescriptor;
+
 
 /**
  * Entity that manages a list of properties. Properties are described by
@@ -24,6 +26,8 @@ import java.util.Map;
  * @author Brian Remedios
  */
 public interface PropertySource {
+    // todo extract read-only subset into a super-interface, make RuleDescriptor
+    //  implement that
 
     /**
      * Defines a new property. Properties must be defined before they can be set a value.
@@ -175,7 +179,7 @@ public interface PropertySource {
      * @throws IllegalArgumentException If the descriptor is not declared
      *                                  on both property sources
      */
-    static <T> void copyProperty(PropertySource source, PropertyDescriptor<T> descriptor, PropertySource target) {
+    static <T> void copyProperty(RuleDescriptor source, PropertyDescriptor<T> descriptor, PropertySource target) {
         target.setProperty(descriptor, source.getProperty(descriptor));
     }
 }

@@ -4,21 +4,22 @@
 
 package net.sourceforge.pmd.lang.rule;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 
 /** Builder pattern for a descriptor. */
-public abstract class RuleDescriptorConfig {
+public abstract class RuleDescriptorBuilder {
 
-    String languageId;
     String name;
     String description;
     String ruleSetName;
     String message;
-    List<String> examples;
+    List<String> examples = new ArrayList<>();
     String externalInfoUrl;
     RulePriority priority;
     Boolean isDeprecated;
@@ -27,29 +28,24 @@ public abstract class RuleDescriptorConfig {
     final RuleBehavior behavior;
     final PropertySource properties;
 
-    private RuleDescriptorConfig(RuleBehavior behavior) {
+    private RuleDescriptorBuilder(RuleBehavior behavior) {
         this.behavior = behavior;
         properties = new RuleProperties(behavior.declaredProperties());
     }
 
-    static class RuleRefConfig extends RuleDescriptorConfig {
+    static class RuleRefBuilder extends RuleDescriptorBuilder {
 
         final RuleDescriptor referencedRule;
 
-        private RuleRefConfig(RuleDescriptor referencedRule) {
+        private RuleRefBuilder(RuleDescriptor referencedRule) {
             super(referencedRule.behavior());
             this.referencedRule = referencedRule;
 
             for (PropertyDescriptor<?> prop : referencedRule.behavior().declaredProperties()) {
                 // copy properties so far
-                copyProperty(referencedRule, prop, this.properties);
+                PropertySource.copyProperty(referencedRule, prop, this.properties);
             }
         }
-
-        static <T> void copyProperty(RuleDescriptor source, PropertyDescriptor<T> descriptor, PropertySource target) {
-            target.setProperty(descriptor, source.getProperty(descriptor));
-        }
-
 
         @Override
         public RuleDescriptor build() {
@@ -57,11 +53,11 @@ public abstract class RuleDescriptorConfig {
         }
     }
 
-    static class RuleDefConfig extends RuleDescriptorConfig {
+    static class RuleDefBuilder extends RuleDescriptorBuilder {
 
         final String languageId;
 
-        private RuleDefConfig(RuleBehavior behavior, String languageId) {
+        private RuleDefBuilder(RuleBehavior behavior, String languageId) {
             super(behavior);
             this.languageId = languageId;
         }
@@ -78,24 +74,44 @@ public abstract class RuleDescriptorConfig {
      * they have on the base descriptor, but can then be independently
      * modified.
      */
-    public static RuleDescriptorConfig forReference(RuleDescriptor baseDescriptor) {
-        return new RuleRefConfig(baseDescriptor);
+    public static RuleDescriptorBuilder forReference(RuleDescriptor baseDescriptor) {
+        return new RuleRefBuilder(baseDescriptor);
     }
 
     /**
      * A new config for a rule definition. Note: many methods are required.
      */
-    public static RuleDescriptorConfig forDefinition(String languageId, RuleBehavior behavior) {
-        return new RuleDefConfig(behavior, languageId);
+    public static RuleDescriptorBuilder forDefinition(String languageId, RuleBehavior behavior) {
+        return new RuleDefBuilder(behavior, languageId);
     }
 
-    public <T> RuleDescriptorConfig setProperty(PropertyDescriptor<T> descriptor, T value) {
+    public <T> RuleDescriptorBuilder setProperty(PropertyDescriptor<T> descriptor, T value) {
         properties.setProperty(descriptor, value);
         return this;
     }
 
-    public RuleDescriptorConfig languageId(String languageId) {
-        this.languageId = languageId;
+    public RuleDescriptorBuilder name(String name) {
+        this.name = Objects.requireNonNull(name);
+        return this;
+    }
+
+    public RuleDescriptorBuilder description(String description) {
+        this.description = Objects.requireNonNull(description);
+        return this;
+    }
+
+    public RuleDescriptorBuilder message(String message) {
+        this.message = Objects.requireNonNull(message);
+        return this;
+    }
+
+    public RuleDescriptorBuilder examples(List<String> examples) {
+        this.examples = new ArrayList<>(Objects.requireNonNull(examples));
+        return this;
+    }
+
+    public RuleDescriptorBuilder addExample(String example) {
+        this.examples.add(Objects.requireNonNull(example));
         return this;
     }
 

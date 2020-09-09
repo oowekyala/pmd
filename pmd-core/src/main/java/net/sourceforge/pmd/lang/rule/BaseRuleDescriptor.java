@@ -28,7 +28,7 @@ abstract class BaseRuleDescriptor implements RuleDescriptor {
     private final RuleBehavior behavior;
     private final PropertySource properties;
 
-    BaseRuleDescriptor(RuleDescriptorConfig config) {
+    BaseRuleDescriptor(RuleDescriptorBuilder config) {
         this.name = config.name;
         this.description = config.description;
         this.ruleSetName = config.ruleSetName;
