@@ -13,6 +13,7 @@ import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.AstVisitor;
+import net.sourceforge.pmd.lang.ast.AstVisitorBase;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.renderers.Renderer;
@@ -75,6 +76,17 @@ public interface RuleBehavior {
      * rule would be useless, then {@link RuleInitializationWarner#fatalConfigError(String, Object...) fatalConfigError}
      * should be used to produce an exception that will be thrown.
      *
+     * <p>Examples of initialization workloads:
+     * <ul>
+     * <li>Extracting and validating properties
+     * <li>Initializing data structures and helper objects, eg
+     * <ul>
+     *     <li>Parsing the XPath expression for XPath rules
+     *     <li>Checking that some classes mentioned in properties are
+     *     on the classpath, in the java module
+     * </ul>
+     * </ul>
+     *
      * @param descriptor Rule descriptor, from which property values can be retrieved
      * @param language   Language instance global to the analysis
      * @param warner     An object to report misconfigurations that property
@@ -108,7 +120,7 @@ public interface RuleBehavior {
      */
     class DysfunctionalRuleException extends Exception {
 
-        DysfunctionalRuleException(String reason) {
+        public DysfunctionalRuleException(String reason) {
             super(reason);
         }
 
@@ -209,6 +221,12 @@ public interface RuleBehavior {
         }
     }
 
+    /**
+     * Like {@link VisitorAnalyser}, but {@link #apply(Node, RuleContext) apply}
+     * is only called once, on the root. To traverse the whole tree, each
+     * visit method should call {@link AstVisitorBase#visitChildren(Node, Object) visitChildren}
+     * appropriately.
+     */
     class FullTreeVisitorAnalyser extends VisitorAnalyser {
 
         public FullTreeVisitorAnalyser(AstVisitor<RuleContext, Void> visitor) {

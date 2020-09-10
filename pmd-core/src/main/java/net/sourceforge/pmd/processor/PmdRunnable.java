@@ -22,6 +22,7 @@ import net.sourceforge.pmd.lang.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
+import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
 import net.sourceforge.pmd.util.datasource.DataSource;
@@ -57,13 +58,13 @@ abstract class PmdRunnable implements Runnable {
      * That way an implementation that uses a ThreadLocal will see the
      * correct thread.
      */
-    protected abstract RuleSets getRulesets();
+    protected abstract RunnableRuleSet getRulesets();
 
     @Override
     public void run() throws FileAnalysisException {
         TimeTracker.initThread();
 
-        RuleSets ruleSets = getRulesets();
+        RunnableRuleSet ruleSets = getRulesets();
 
         try (FileAnalysisListener listener = ruleContext.startFileAnalysis(dataSource)) {
 
@@ -95,7 +96,7 @@ abstract class PmdRunnable implements Runnable {
         TimeTracker.finishThread();
     }
 
-    private void processSource(FileAnalysisListener listener, LanguageVersion languageVersion, RuleSets ruleSets) throws IOException, FileAnalysisException {
+    private void processSource(FileAnalysisListener listener, LanguageVersion languageVersion, RunnableRuleSet ruleSets) throws IOException, FileAnalysisException {
         String fullSource = DataSource.readToString(dataSource, configuration.getSourceEncoding());
         String filename = dataSource.getNiceFileName(false, null);
 
@@ -117,7 +118,7 @@ abstract class PmdRunnable implements Runnable {
 
 
     private void processSource(String sourceCode,
-                               RuleSets ruleSets,
+                               RunnableRuleSet ruleSets,
                                FileAnalysisListener listener,
                                LanguageVersion languageVersion,
                                String filename) throws FileAnalysisException {
@@ -134,9 +135,10 @@ abstract class PmdRunnable implements Runnable {
 
         RootNode rootNode = parse(parser, task);
 
+        // todo remove this
         dependencyHelper.runLanguageSpecificStages(ruleSets, languageVersion, rootNode);
 
-        ruleSets.apply(Collections.singletonList(rootNode), listener);
+        ruleSets.apply(rootNode, listener);
     }
 
 }

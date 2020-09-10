@@ -14,13 +14,10 @@ import java.util.List;
 import java.util.Set;
 
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.benchmark.TimeTracker;
-import net.sourceforge.pmd.benchmark.TimedOperation;
-import net.sourceforge.pmd.benchmark.TimedOperationCategory;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.rule.internal.RuleApplicator;
+import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet;
-import net.sourceforge.pmd.lang.rule.internal.RunnableRuleSet.RunnableRule;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 /**
@@ -36,7 +33,7 @@ public class RuleSets {
 
     private final List<RuleSet> ruleSets;
 
-    private RuleApplicator ruleApplicator;
+    private RunnableRuleSet runnableRuleSet;
 
     /**
      * Copy constructor. Deep copies RuleSets.
@@ -64,9 +61,11 @@ public class RuleSets {
         this.ruleSets = Collections.singletonList(ruleSet);
     }
 
-    private RuleApplicator prepareApplicator() {
-        return RuleApplicator.build(ruleSets.stream().flatMap(it -> it.getRules().stream())
-                                            .map(it -> new RunnableRule()).iterator());
+    private RunnableRuleSet prepareApplicator() {
+        if (runnableRuleSet == null) {
+            runnableRuleSet = RunnableRuleSet.initialize(getAllRules(), LanguageRegistry.getInstance(), false);
+        }
+        return runnableRuleSet;
     }
 
     /**
@@ -122,24 +121,15 @@ public class RuleSets {
      * @param listener
      */
     public void apply(List<? extends Node> acuList, FileAnalysisListener listener) {
-        if (ruleApplicator == null) {
-            // initialize here instead of ctor, because some rules properties
-            // are set after creating the ruleset, and jaxen xpath queries
-            // initialize their XPath expressions when calling getRuleChainVisits()... fixme
-            this.ruleApplicator = prepareApplicator();
-        }
-
         for (Node node : acuList) {
-            try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.RULE_AST_INDEXATION)) {
-                ruleApplicator.index(Collections.singletonList(node));
-            }
-
-            for (RuleSet ruleSet : ruleSets) {
-                if (ruleSet.applies(new File(node.getSourceCodeFile()))) {
-                    ruleApplicator.apply(ruleSet.getRules(), listener);
-                }
+            if (node instanceof RootNode) {
+                apply((RootNode) node, listener);
             }
         }
+    }
+
+    public void apply(RootNode root, FileAnalysisListener listener) {
+        prepareApplicator().apply(root, listener);
     }
 
     /**
