@@ -48,6 +48,13 @@ public interface JdocRef extends JavadocNode {
             return getFirstToken().getImage();
         }
 
+        /**
+         * Returns whether this is an empty ref.
+         */
+        public boolean isEmptyForSelfClass() {
+            return getSimpleRef().isEmpty();
+        }
+
     }
 
     /**
