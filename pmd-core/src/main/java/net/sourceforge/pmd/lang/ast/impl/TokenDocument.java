@@ -14,7 +14,6 @@ import net.sourceforge.pmd.util.document.TextDocument;
  */
 @Experimental
 public abstract class TokenDocument<T extends GenericToken<T>> {
-
     private final TextDocument textDocument;
 
     public TokenDocument(TextDocument textDocument) {

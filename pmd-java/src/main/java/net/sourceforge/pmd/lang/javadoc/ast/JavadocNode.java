@@ -16,9 +16,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
+import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
+import net.sourceforge.pmd.util.document.Chars;
 
 
 /**
@@ -35,16 +39,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyn
  *     in the tokens (see {@link JdocTokenType#LINE_BREAK} and {@link JdocTokenType#WHITESPACE}).
  * </ul>
  */
-public interface JavadocNode extends TextAvailableNode {
-
-
-    @Override
-    @Nullable
-    JavadocNode jjtGetParent();
-
-
-    @Override
-    JavadocNode jjtGetChild(int index);
+public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode> {
 
 
     JdocToken getFirstToken();
@@ -60,15 +55,8 @@ public interface JavadocNode extends TextAvailableNode {
         return getFirstToken().equals(getLastToken()) && getFirstToken().isImplicit();
     }
 
-
-    /**
-     * Returns the original source code underlying this node. This may
-     * contain some insignificant whitespace characters (or asterisks),
-     * so use {@link JdocCommentData#getData()} to retrieve the actual
-     * content. It also features all unicode escapes.
-     */
     @Override
-    String getText();
+    Chars getText();
 
 
     /**
@@ -97,10 +85,10 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the significant text of this comment. */
         public String getData() {
-            return getFirstToken().rangeTo(getLastToken())
-                                  .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
-                                  .map(JdocToken::getImage)
-                                  .collect(Collectors.joining(" "));
+            return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
+                               .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
+                               .map(JdocToken::getImage)
+                               .collect(Collectors.joining(" "));
         }
 
     }
@@ -146,8 +134,8 @@ public interface JavadocNode extends TextAvailableNode {
         }
 
         @Override
-        public String getText() {
-            return getFirstToken().getImage();
+        public Chars getText() {
+            return getFirstToken().getImageCs();
         }
 
         /**
@@ -156,7 +144,7 @@ public interface JavadocNode extends TextAvailableNode {
          */
         @Nullable
         public KnownHtmlEntity getConstant() {
-            return name != null ? KnownHtmlEntity.lookupByName(getText())
+            return name != null ? KnownHtmlEntity.lookupByName(name)
                                 : KnownHtmlEntity.lookupByCode(getCodePoint());
         }
 
@@ -420,10 +408,10 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the significant text of this comment. */
         public String getData() {
-            return getFirstToken().rangeTo(getLastToken())
-                                  .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
-                                  .map(JdocToken::getImage)
-                                  .collect(Collectors.joining());
+            return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
+                               .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
+                               .map(JdocToken::getImage)
+                               .collect(Collectors.joining());
         }
     }
 

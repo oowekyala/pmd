@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.ast.impl;
 
 import net.sourceforge.pmd.lang.ast.GenericToken;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
  * Base class for tokens based on the (start, end) offset representation.
@@ -28,34 +29,8 @@ public abstract class OffsetBasedToken<T extends OffsetBasedToken<T, D>, D exten
     }
 
     @Override
-    public int getStartInDocument() {
-        return startInclusive;
+    public final TextRegion getRegion() {
+        return TextRegion.fromBothOffsets(startInclusive, endExclusive);
     }
-
-    @Override
-    public int getEndInDocument() {
-        return endExclusive;
-    }
-
-    @Override
-    public int getBeginLine() {
-        return document == null ? -1 : document.lineNumberFromOffset(startInclusive);
-    }
-
-    @Override
-    public int getEndLine() {
-        return document == null ? -1 : document.lineNumberFromOffset(endExclusive);
-    }
-
-    @Override
-    public int getBeginColumn() {
-        return document == null ? -1 : document.columnFromOffset(startInclusive);
-    }
-
-    @Override
-    public int getEndColumn() {
-        return document == null ? -1 : document.columnFromOffset(endExclusive);
-    }
-
 }
 

@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.ast;
 import java.util.Iterator;
 
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.util.document.Chars;
