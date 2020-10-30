@@ -9,22 +9,22 @@ import io.kotest.core.spec.DslDrivenSpec
 import io.kotest.core.spec.style.scopes.Lifecycle
 import io.kotest.core.spec.style.scopes.RootScope
 import io.kotest.core.spec.style.scopes.RootTestRegistration
-import io.kotest.core.test.createTestName
 import io.kotest.core.test.TestCaseConfig
 import io.kotest.core.test.TestContext
 import io.kotest.core.test.TestType
+import io.kotest.core.test.createTestName
 import io.kotest.matchers.Matcher
-import io.kotest.matchers.should as kotlintestShould
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.ParseException
-import net.sourceforge.pmd.lang.ast.test.Assertions
-import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldMatchN
+import net.sourceforge.pmd.lang.ast.test.*
+import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx
+import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx
 import net.sourceforge.pmd.lang.java.types.JTypeMirror
 import net.sourceforge.pmd.lang.java.types.TypeDslMixin
 import net.sourceforge.pmd.lang.java.types.TypeDslOf
-import net.sourceforge.pmd.lang.ast.test.IntelliMarker
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode
+import net.sourceforge.pmd.lang.javadoc.ast.jdoc
+import io.kotest.matchers.should as kotlintestShould
 
 /**
  * Base class for grammar tests that use the DSL. Tests are layered into
@@ -98,7 +98,7 @@ abstract class ParserTestSpec(body: ParserTestSpec.() -> Unit) : DslDrivenSpec()
      */
     fun parserTest(name: String,
                    javaVersion: JavaVersion = JavaVersion.Latest,
-                   spec: suspend GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   spec: suspend VersionedTestCtx.() -> Unit) =
             parserTest(name, listOf(javaVersion), spec)
 
     /**
@@ -118,7 +118,7 @@ abstract class ParserTestSpec(body: ParserTestSpec.() -> Unit) : DslDrivenSpec()
      */
     fun parserTest(name: String,
                    javaVersions: List<JavaVersion>,
-                   spec: suspend GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   spec: suspend VersionedTestCtx.() -> Unit) =
             parserTestGroup(name) {
                 onVersions(javaVersions) {
                     spec()

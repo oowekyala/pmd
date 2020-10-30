@@ -22,7 +22,7 @@ class JavadocTest : ParserTestSpec({
             """ should parseAs {
 
                 classDecl(simpleName = "Top") {
-                    it.javadocComment.shouldMatchComment {
+                    it.javadocComment!!.jdocTree.shouldMatchComment {
                         data("sacramento")
                     }
 

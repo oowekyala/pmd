@@ -4,13 +4,15 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotlintest.shouldBe
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.*
 
 
-class JdocHtmlParserTests : JavadocParserSpec({
+class JdocHtmlParserTests : ProcessorTestSpec({
     /*
         TODO tests:
          - html comments
@@ -18,13 +20,13 @@ class JdocHtmlParserTests : JavadocParserSpec({
          - block tags
     */
 
-    parserTest("Test some HTML") {
+    jdocParserTest("Test some HTML") {
 
         """
 /**
  *  <i> foo</i> <p> aha
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             html("i") {
                 it::getText shouldBe "<i> foo</i>"
@@ -39,13 +41,13 @@ class JdocHtmlParserTests : JavadocParserSpec({
         }
     }
 
-    parserTest("Test HTML char references") {
+    jdocParserTest("Test HTML char references") {
 
         """
 /**
  *  <i> &amp; foo</i> <p> &#160; aha &#x00a0;
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             html("i") {
                 it::getText shouldBe "<i> &amp; foo</i>"
@@ -74,18 +76,18 @@ class JdocHtmlParserTests : JavadocParserSpec({
         // bad reference
         """
 /** & amp; */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             data("& amp;")
         }
     }
 
-    parserTest("Test void elements") {
+    jdocParserTest("Test void elements") {
 
         """
 /**
  *  <area> contents <p> p;
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             html("area") {
                 it::getCloseSyntax shouldBe HtmlCloseSyntax.VOID
@@ -100,13 +102,13 @@ class JdocHtmlParserTests : JavadocParserSpec({
 
     }
 
-    parserTest("Test HTML attributes") {
+    jdocParserTest("Test HTML attributes") {
 
         """
 /**
  *  <a href="foo">
  */
-        """.trim() should parseAs {
+        """.trim() should parseAsJdoc {
 
             html("a") {
 
@@ -125,7 +127,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  <a href='foo'> </href>
  */
-        """.trim() should parseAs {
+        """.trim() should parseAsJdoc {
 
             html("a") {
 
@@ -146,7 +148,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  <a href=foo bar=oha > </a>
  */
-        """.trim() should parseAs {
+        """.trim() should parseAsJdoc {
 
             html("a") {
 
@@ -175,7 +177,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  <a href bar >
  */
-        """.trim() should parseAs {
+        """.trim() should parseAsJdoc {
 
             html("a") {
 
@@ -192,7 +194,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
         }
     }
 
-    parserTest("Autoclosing HTML") {
+    jdocParserTest("Autoclosing HTML") {
 
         """
 /**
@@ -208,7 +210,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
  * </ul>
  *
  */
-""".trimIndent() should parseAs {
+""".trimIndent() should parseAsJdoc {
             data("Header.")
 
             html("p") {
@@ -244,7 +246,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  contents <unknown> p;
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             data("contents ")
             html("unknown") {
@@ -258,7 +260,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  contents <ul><unknown> p;</ul>
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             data("contents ")
             html("ul") {
@@ -276,7 +278,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
 /**
  *  <ul><li>li1<li>li2
  */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
 
             html("ul") {
@@ -293,7 +295,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
         }
     }
 
-    parserTest("Test case insensitivity") {
+    jdocParserTest("Test case insensitivity") {
 
         """
 /**
@@ -309,7 +311,7 @@ class JdocHtmlParserTests : JavadocParserSpec({
  * </uL>
  *
  */
-""".trimIndent() should parseAs {
+""".trimIndent() should parseAsJdoc {
             data("Header.")
 
             html("P") {

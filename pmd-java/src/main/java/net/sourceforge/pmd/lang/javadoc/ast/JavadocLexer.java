@@ -118,7 +118,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                reader = new CharSequenceReader(doc.getFullText().subSequence(curOffset, maxOffset));
+                reader = new CharSequenceReader(doc.getFullText());
                 this.lexer = new JavadocFlexer(reader);
                 lexer.yybegin(initialState);
             }

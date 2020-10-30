@@ -4,17 +4,16 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import net.sourceforge.pmd.lang.java.ast.block
+import net.sourceforge.pmd.lang.java.ast.JavadocParsingCtx
+import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 
 
-class JdocBlockTagParserTests : JavadocParserSpec({
-
+class JdocBlockTagParserTests : ProcessorTestSpec({
 
 
     parserTest("Test @return block tag") {
-
-
-        """
+        inContext(JavadocParsingCtx) {
+            """
         /**
          * Param {@code <T>} is no {@code
          *   <R>
@@ -23,21 +22,24 @@ class JdocBlockTagParserTests : JavadocParserSpec({
          *  value
          */
         """.trimIndent() should parseAs {
-
-            data("Param ")
-            code("<T>")
-            data(" is no ")
-            code("<R>")
-            blockTag("@return") {
-                data("A return value")
+                jdoc {
+                    data("Param ")
+                    code("<T>")
+                    data(" is no ")
+                    code("<R>")
+                    blockTag("@return") {
+                        data("A return value")
+                    }
+                }
             }
         }
     }
 
 
     parserTest("Test block tag precedence over HTML") {
+        inContext(JavadocParsingCtx) {
 
-        """
+            """
         /**
          * Param {@code <T>} is no {@code
          *   <R>
@@ -49,24 +51,25 @@ class JdocBlockTagParserTests : JavadocParserSpec({
          * </pre>
          */
         """.trimIndent() should parseAs {
+                jdoc {
+                    data("Param ")
+                    code("<T>")
+                    data(" is no ")
+                    code("<R>")
+                    blockTag("@return") {
+                        data("A return value ")
+                        html("pre") {
 
-            data("Param ")
-            code("<T>")
-            data(" is no ")
-            code("<R>")
-            blockTag("@return") {
-                data("A return value ")
-                html("pre") {
-
+                        }
+                    }
+                    blockTag("@author") {
+                        data("name")
+                        htmlEnd("pre")
+                    }
                 }
-            }
-            blockTag("@author") {
-                data("name")
-                htmlEnd("pre")
             }
         }
     }
-
 
 
 })

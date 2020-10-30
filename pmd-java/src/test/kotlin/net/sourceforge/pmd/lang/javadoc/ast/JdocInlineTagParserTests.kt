@@ -4,11 +4,13 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotlintest.matchers.string.shouldContain
+import io.kotest.matchers.should
+import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 
 
-class JdocInlineTagParserTests : JavadocParserSpec({
+class JdocInlineTagParserTests : ProcessorTestSpec({
     /*
         TODO tests:
          - html comments
@@ -16,14 +18,14 @@ class JdocInlineTagParserTests : JavadocParserSpec({
          - block tags
     */
 
-    parserTest("Test @link inline tags") {
+    jdocParserTest("Test @link inline tags") {
 
 
         """
         /**
          * See {@link #hey}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@link #hey}\n */"
 
             data("See ")
@@ -41,7 +43,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@link Oha#hey label label}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@link Oha#hey label label}\n */"
 
             data("See ")
@@ -65,7 +67,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@link Oha# label label}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@link Oha# label label}\n */"
 
             data("See ")
@@ -88,7 +90,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@link }
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@link }\n */"
 
             data("See ")
@@ -104,7 +106,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@link}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@link}\n */"
 
             data("See ")
@@ -120,13 +122,13 @@ class JdocInlineTagParserTests : JavadocParserSpec({
     }
 
 
-    parserTest("Test @value inline tags") {
+    jdocParserTest("Test @value inline tags") {
 
         """
         /**
          * See {@value #hey}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@value #hey}\n */"
 
             data("See ")
@@ -146,7 +148,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@value Oha#hey label label}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@value Oha#hey label label}\n */"
 
             data("See ")
@@ -170,7 +172,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
         /**
          * See {@value }
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             it::getText shouldBe "/**\n * See {@value }\n */"
 
             data("See ")
@@ -185,7 +187,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
     }
 
 
-    parserTest("Test @code inline tag") {
+    jdocParserTest("Test @code inline tag") {
 
 
         """
@@ -194,7 +196,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
          *   <R>
          * }
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
 
             data("Param ")
             code("<T>")
@@ -206,13 +208,13 @@ class JdocInlineTagParserTests : JavadocParserSpec({
     }
 
 
-    parserTest("Test unknown inline tags") {
+    jdocParserTest("Test unknown inline tags") {
 
         """
         /**
          * See {@cobalt #hey}
          */
-        """.trimIndent() should parseAs {
+        """.trimIndent() should parseAsJdoc {
             data("See ")
             unknownInline("@cobalt") {
                 it::getText shouldBe "{@cobalt #hey}"

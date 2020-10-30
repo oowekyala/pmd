@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.java.ast
 
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode
 
 /**
  * Describes a kind of node that can be found commonly in the same contexts.
@@ -156,4 +157,16 @@ object TypeParametersParsingCtx : NodeParsingCtx<ASTTypeParameters>("type parame
                     .descendantsOrSelf()
                     .last(ASTMethodDeclaration::class.java)!!
                     .typeParameters!!
+}
+
+object JavadocParsingCtx : NodeParsingCtx<JavadocNode.JdocComment>("javadoc comment") {
+    override fun getTemplate(construct: String, ctx: ParserTestCtx): String =
+            TypeBodyParsingCtx.getTemplate("$construct public void f() {}", ctx)
+
+    override fun retrieveNode(acu: ASTCompilationUnit) =
+            TypeBodyParsingCtx.retrieveNode(acu)
+                    .descendantsOrSelf()
+                    .last(ASTMethodDeclaration::class.java)!!
+                    .javadocComment!!
+                    .jdocTree
 }
