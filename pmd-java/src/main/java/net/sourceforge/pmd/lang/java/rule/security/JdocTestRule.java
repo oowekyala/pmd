@@ -4,12 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.rule.security;
 
-import java.util.List;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
@@ -51,14 +46,6 @@ public class JdocTestRule extends AbstractJavaRule {
 
     private State state = new State();
 
-    @Override
-    public void apply(List<? extends Node> nodes, RuleContext ctx) {
-        try {
-            super.apply(nodes, ctx);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
 
     //    @Override
     //    public Object visit(ASTCompilationUnit node, Object data) {
@@ -67,14 +54,14 @@ public class JdocTestRule extends AbstractJavaRule {
     //    }
 
     @Override
-    public Object visit(JavaNode node, Object data) {
+    public Object visitJavaNode(JavaNode node, Object data) {
 
         if (node instanceof JavadocCommentOwner) {
             try {
                 ((JavadocCommentOwner) node).getJavadocComment();
                 state.numResolved++;
             } catch (Throwable e) {
-                System.err.println(position(node, data));
+                System.err.println(node.getReportLocation().startPosToStringWithFile());
                 e.printStackTrace();
                 state.numerrors++;
                 if (e instanceof Error) {
@@ -83,13 +70,7 @@ public class JdocTestRule extends AbstractJavaRule {
             }
         }
 
-        return super.visit(node, data);
-    }
-
-    @NonNull
-    public String position(JavaNode node, Object data) {
-        return "In: " + ((RuleContext) data).getSourceCodeFile() + ":" + node.getBeginLine() + ":"
-            + node.getBeginColumn();
+        return super.visitJavaNode(node, data);
     }
 
     @Override

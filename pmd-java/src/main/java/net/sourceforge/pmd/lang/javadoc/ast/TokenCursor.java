@@ -50,7 +50,7 @@ final class TokenCursor<T extends PrevLinkedToken<T>> {
             return true;
         }
         T t = lexer.getNextToken();
-        if (t == null || lexer.isEof(t)) {
+        if (t == null) {
             isEoi = true;
             return false;
         }
@@ -61,7 +61,7 @@ final class TokenCursor<T extends PrevLinkedToken<T>> {
     public void reset(T newHead) {
         tok = newHead;
         offset = 0;
-        isEoi = newHead == null || lexer.isEof(newHead);
+        isEoi = newHead == null;
     }
 
     /**

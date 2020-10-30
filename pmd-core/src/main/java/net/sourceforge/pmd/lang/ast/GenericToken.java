@@ -70,12 +70,6 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
     /** Returns a text region with the coordinates of this token. */
     TextRegion getRegion();
 
-    /**
-     * Returns true if this token is an end-of-file token. This is the
-     * last token of token sequences that have been fully lexed.
-     */
-    boolean isEof();
-
 
     /**
      * Returns true if this token is implicit, ie was inserted artificially

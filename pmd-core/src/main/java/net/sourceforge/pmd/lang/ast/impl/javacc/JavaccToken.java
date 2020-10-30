@@ -107,11 +107,6 @@ public class JavaccToken implements GenericToken<JavaccToken> {
     }
 
     @Override
-    public boolean isEof() {
-        return kind == EOF;
-    }
-
-    @Override
     public JavaccToken getNext() {
         return next;
     }

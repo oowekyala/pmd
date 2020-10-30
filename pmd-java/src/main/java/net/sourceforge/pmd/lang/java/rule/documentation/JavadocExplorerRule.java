@@ -4,11 +4,11 @@
 
 package net.sourceforge.pmd.lang.java.rule.documentation;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.FormalComment;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode;
@@ -50,7 +50,8 @@ public class JavadocExplorerRule extends AbstractJavaRule {
         total++;
         JdocComment comment;
         try {
-            comment = commentOwner.getJavadocComment();
+            final FormalComment formal = commentOwner.getJavadocComment();
+            comment = formal != null ? formal.getJdocTree() : null;
         } catch (Throwable e) {
             e.printStackTrace();
             return;
@@ -60,7 +61,7 @@ public class JavadocExplorerRule extends AbstractJavaRule {
             return;
         }
 
-        System.out.println(((RuleContext) data).getSourceCodeFilename() + ","
+        System.out.println(commentOwner.getReportLocation().startPosToStringWithFile() + " "
                                + comment.findDescendantsOfType(JavadocNode.class).size());
     }
 }

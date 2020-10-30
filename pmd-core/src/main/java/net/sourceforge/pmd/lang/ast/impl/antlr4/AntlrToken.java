@@ -63,11 +63,6 @@ public class AntlrToken implements GenericToken<AntlrToken> {
     }
 
     @Override
-    public boolean isEof() {
-        return getKind() == Token.EOF;
-    }
-
-    @Override
     public int compareTo(AntlrToken o) {
         return getRegion().compareTo(o.getRegion());
     }

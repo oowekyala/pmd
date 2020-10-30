@@ -11,15 +11,24 @@ import java.util.regex.Pattern;
 
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.java.javadoc.JavadocTag;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocParserFacade;
 
 public class FormalComment extends Comment {
 
     private static final Pattern JAVADOC_TAG = Pattern.compile("@([A-Za-z0-9]+)");
+    private JdocComment parsed;
 
     public FormalComment(JavaccToken t) {
         super(t);
         assert t.kind == JavaTokenKinds.FORMAL_COMMENT;
         findJavadocs();
+    }
+
+    public JdocComment getJdocTree() {
+        if (parsed == null)
+            parsed = JavadocParserFacade.parseJavadoc(getFirstToken());
+        return parsed;
     }
 
     @Override
