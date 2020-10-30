@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.EnumSet;
 
-import org.apache.commons.io.input.CharSequenceReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
@@ -118,7 +117,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                reader = new CharSequenceReader(doc.getFullText());
+                reader = doc.getFullText().slice(curOffset, maxOffset - curOffset).newReader();
                 this.lexer = new JavadocFlexer(reader);
                 lexer.yybegin(initialState);
             }
