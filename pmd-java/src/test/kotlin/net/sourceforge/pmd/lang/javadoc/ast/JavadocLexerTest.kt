@@ -21,7 +21,7 @@ import java.io.IOException
 import kotlin.test.assertEquals
 
 
-fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
+internal fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
         JavadocLexer(TextDocument.readOnlyString(code.substring(start, end),
                 JavaParsingHelper.JUST_PARSE.defaultVersion))
 

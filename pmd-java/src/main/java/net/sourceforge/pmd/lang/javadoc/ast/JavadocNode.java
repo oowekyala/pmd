@@ -23,6 +23,7 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.TextDocument;
 
 
 /**
@@ -64,13 +65,21 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
      */
     class JdocComment extends AbstractJavadocNode implements RootNode {
 
-        JdocComment() {
+        private final TextDocument textDocument;
+
+        JdocComment(TextDocument textDocument) {
             super(JavadocNodeId.ROOT);
+            this.textDocument = textDocument;
+        }
+
+        @Override
+        public @NonNull TextDocument getTextDocument() {
+            return textDocument;
         }
 
     }
 
-    /** Some text payload for the comment */
+    /** Some text payload for the comment. */
     class JdocCommentData extends AbstractJavadocNode {
 
         JdocCommentData(JdocToken tok) {

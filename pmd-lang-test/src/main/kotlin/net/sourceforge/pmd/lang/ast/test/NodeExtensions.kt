@@ -13,6 +13,7 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode
 import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken
 import java.util.*
+import kotlin.test.assertEquals
 
 
 /**
@@ -22,8 +23,8 @@ import java.util.*
 val TextAvailableNode.textStr: String
     get() = text.toString()
 
-infix fun TextAvailableNode.textEquals(str:String) {
-    this::textStr shouldBe str
+infix fun TextAvailableNode.shouldHaveText(str:String) {
+    assertEquals(str, text.toString(), "Text is different")
 }
 
 

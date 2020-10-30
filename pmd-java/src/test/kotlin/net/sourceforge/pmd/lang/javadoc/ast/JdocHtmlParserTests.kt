@@ -4,15 +4,14 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
+import net.sourceforge.pmd.lang.ast.test.shouldHaveText
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml.HtmlCloseSyntax
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.*
 
 
-class JdocHtmlParserTests : ProcessorTestSpec({
+class JdocHtmlParserTests : JdocParserTestSpec({
     /*
         TODO tests:
          - html comments
@@ -20,7 +19,7 @@ class JdocHtmlParserTests : ProcessorTestSpec({
          - block tags
     */
 
-    jdocParserTest("Test some HTML") {
+    parserTest("Test some HTML") {
 
         """
 /**
@@ -29,19 +28,19 @@ class JdocHtmlParserTests : ProcessorTestSpec({
         """.trimIndent() should parseAsJdoc {
 
             html("i") {
-                it::getText shouldBe "<i> foo</i>"
+                it shouldHaveText "<i> foo</i>" 
                 data(" foo")
                 htmlEnd("i")
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> aha\n */"
+                it shouldHaveText "<p> aha\n */" 
                 data(" aha")
             }
         }
     }
 
-    jdocParserTest("Test HTML char references") {
+    parserTest("Test HTML char references") {
 
         """
 /**
@@ -50,7 +49,7 @@ class JdocHtmlParserTests : ProcessorTestSpec({
         """.trimIndent() should parseAsJdoc {
 
             html("i") {
-                it::getText shouldBe "<i> &amp; foo</i>"
+                it shouldHaveText "<i> &amp; foo</i>" 
                 data(" ")
                 namedEntity("amp") {
                     it::getConstant shouldBe KnownHtmlEntity.AMP
@@ -60,14 +59,14 @@ class JdocHtmlParserTests : ProcessorTestSpec({
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> &#160; aha &#x00a0;\n */"
+                it shouldHaveText "<p> &#160; aha &#x00a0;\n */" 
                 data(" ")
                 decCharReference(160) {
                     it::getConstant shouldBe KnownHtmlEntity.NONBREAKINGSPACE
                 }
                 data(" aha ")
                 hexCharReference(160) {
-                    it::getText shouldBe "&#x00a0;"
+                    it shouldHaveText "&#x00a0;" 
                     it::getConstant shouldBe KnownHtmlEntity.NONBREAKINGSPACE
                 }
             }
@@ -81,7 +80,7 @@ class JdocHtmlParserTests : ProcessorTestSpec({
         }
     }
 
-    jdocParserTest("Test void elements") {
+    parserTest("Test void elements") {
 
         """
 /**
@@ -102,7 +101,7 @@ class JdocHtmlParserTests : ProcessorTestSpec({
 
     }
 
-    jdocParserTest("Test HTML attributes") {
+    parserTest("Test HTML attributes") {
 
         """
 /**
@@ -112,12 +111,12 @@ class JdocHtmlParserTests : ProcessorTestSpec({
 
             html("a") {
 
-                it::getText shouldBe "<a href=\"foo\">\n */"
+                it shouldHaveText "<a href=\"foo\">\n */" 
 
                 it.getAttribute("href") shouldBe htmlAttr("href", DOUBLE_QUOTED) {
                     it::getValue shouldBe "foo"
 
-                    it::getText shouldBe "href=\"foo\""
+                    it shouldHaveText "href=\"foo\"" 
 
                 }
             }
@@ -131,11 +130,11 @@ class JdocHtmlParserTests : ProcessorTestSpec({
 
             html("a") {
 
-                it::getText shouldBe "<a href='foo'> </href>\n */"
+                it shouldHaveText "<a href='foo'> </href>\n */" 
 
                 it.getAttribute("href") shouldBe htmlAttr("href", SINGLE_QUOTED) {
 
-                    it::getText shouldBe "href='foo'"
+                    it shouldHaveText "href='foo'" 
 
                     it::getValue shouldBe "foo"
                 }
@@ -152,17 +151,17 @@ class JdocHtmlParserTests : ProcessorTestSpec({
 
             html("a") {
 
-                it::getText shouldBe "<a href=foo bar=oha > </a>"
+                it shouldHaveText "<a href=foo bar=oha > </a>" 
 
 
                 it.getAttribute("href") shouldBe htmlAttr("href", UNQUOTED) {
-                    it::getText shouldBe "href=foo"
+                    it shouldHaveText "href=foo" 
 
                     it::getValue shouldBe "foo"
                 }
 
                 it.getAttribute("bar") shouldBe htmlAttr("bar", UNQUOTED) {
-                    it::getText shouldBe "bar=oha"
+                    it shouldHaveText "bar=oha" 
 
                     it::getValue shouldBe "oha"
                 }
@@ -182,19 +181,19 @@ class JdocHtmlParserTests : ProcessorTestSpec({
             html("a") {
 
                 it.getAttribute("href") shouldBe htmlAttr("href", EMPTY) {
-                    it::getText shouldBe "href"
+                    it shouldHaveText "href" 
                     it::getValue shouldBe "href"
                 }
 
                 it.getAttribute("bar") shouldBe htmlAttr("bar", EMPTY) {
-                    it::getText shouldBe "bar"
+                    it shouldHaveText "bar" 
                     it::getValue shouldBe "bar"
                 }
             }
         }
     }
 
-    jdocParserTest("Autoclosing HTML") {
+    parserTest("Autoclosing HTML") {
 
         """
 /**
@@ -295,7 +294,7 @@ class JdocHtmlParserTests : ProcessorTestSpec({
         }
     }
 
-    jdocParserTest("Test case insensitivity") {
+    parserTest("Test case insensitivity") {
 
         """
 /**
