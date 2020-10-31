@@ -26,8 +26,9 @@ public class FormalComment extends Comment {
     }
 
     public JdocComment getJdocTree() {
-        if (parsed == null)
+        if (parsed == null) {
             parsed = JavadocParserFacade.parseJavadoc(getFirstToken());
+        }
         return parsed;
     }
 
@@ -45,8 +46,8 @@ public class FormalComment extends Comment {
             int tagStartIndex = javadocTagMatcher.start(1);
             if (tag != null) {
                 kids.add(new JavadocElement(getFirstToken(), getBeginLine(), getBeginLine(),
-                        // TODO valid?
-                        tagStartIndex, tagStartIndex + tag.label.length() + 1, tag));
+                                            // TODO valid?
+                                            tagStartIndex, tagStartIndex + tag.label.length() + 1, tag));
             }
         }
 

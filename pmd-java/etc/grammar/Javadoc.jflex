@@ -32,6 +32,10 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
         }
     }
+
+    public void yyappendtext(StringBuilder sb) {
+        sb.append(zzBuffer, zzStartRead, zzMarkedPos-zzStartRead);
+    }
 %}
 
 
@@ -135,6 +139,10 @@ IDENT_START=[:jletter:]
 
 <COMMENT_DATA_START>    .                      { yybegin(COMMENT_DATA);      return JdocTokenType.COMMENT_DATA; }
 <INLINE_TAG_START>      .                      { yybegin(INLINE_TAG);        return JdocTokenType.COMMENT_DATA; }
+// this is an optimisation, parsing words when possible
+//<COMMENT_DATA,
+// INLINE_TAG>            [:alphanum:]+          {                             return JdocTokenType.COMMENT_DATA; }
+
 <COMMENT_DATA,
  INLINE_TAG>            .                      {                             return JdocTokenType.COMMENT_DATA; }
 

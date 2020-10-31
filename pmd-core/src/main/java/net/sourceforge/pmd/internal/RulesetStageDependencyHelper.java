@@ -53,8 +53,8 @@ public class RulesetStageDependencyHelper {
     public void runLanguageSpecificStages(RuleSets ruleSets, LanguageVersion languageVersion, RootNode rootNode) {
         AstAnalysisContext context = buildContext(languageVersion);
 
-//        getDependencies(ruleSets, languageVersion)
-//            .forEach(stage -> executeProcessingStage(stage, rootNode, context));
+        getDependencies(ruleSets, languageVersion)
+            .forEach(stage -> executeProcessingStage(stage, rootNode, context));
 
     }
 

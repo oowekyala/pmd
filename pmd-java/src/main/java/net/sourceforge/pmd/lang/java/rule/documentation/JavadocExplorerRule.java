@@ -6,7 +6,9 @@ package net.sourceforge.pmd.lang.java.rule.documentation;
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.FormalComment;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
@@ -42,6 +44,18 @@ public class JavadocExplorerRule extends AbstractJavaRule {
 
     @Override
     public Object visit(ASTConstructorDeclaration node, Object data) {
+        process(node, data);
+        return super.visit(node, data);
+    }
+
+    @Override
+    public Object visit(ASTEnumConstant node, Object data) {
+        process(node, data);
+        return super.visit(node, data);
+    }
+
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
         process(node, data);
         return super.visit(node, data);
     }
