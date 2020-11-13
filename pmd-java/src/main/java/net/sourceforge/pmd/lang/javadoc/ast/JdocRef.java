@@ -30,7 +30,7 @@ public interface JdocRef extends JavadocNode {
     /**
      * A reference to a java class in javadoc.
      */
-    class JdocClassRef extends AbstractJavadocNode implements JdocRef {
+    final class JdocClassRef extends AbstractJavadocNode implements JdocRef {
 
         JdocClassRef(@Nullable JdocToken tok) {
             super(JavadocNodeId.CLASS_REF);
@@ -60,7 +60,7 @@ public interface JdocRef extends JavadocNode {
     /**
      * A reference to a field of a class in javadoc.
      */
-    class JdocFieldRef extends AbstractJavadocNode implements JdocMemberRef {
+    final class JdocFieldRef extends AbstractJavadocNode implements JdocMemberRef {
 
         JdocFieldRef(JdocClassRef classRef, JdocToken fieldName) {
             super(JavadocNodeId.FIELD_REF);
@@ -80,7 +80,7 @@ public interface JdocRef extends JavadocNode {
     /**
      * A reference to a method or constructor of a class in javadoc.
      */
-    class JdocExecutableRef extends AbstractJavadocNode implements JdocMemberRef {
+    final class JdocExecutableRef extends AbstractJavadocNode implements JdocMemberRef {
 
         private final String name;
 
