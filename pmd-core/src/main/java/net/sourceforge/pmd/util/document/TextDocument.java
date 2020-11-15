@@ -6,6 +6,7 @@ package net.sourceforge.pmd.util.document;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Reader;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -135,6 +136,13 @@ public interface TextDocument extends Closeable {
 
 
     /**
+     * Returns a reader over the text of this document.
+     */
+    default Reader newReader() {
+        return getText().newReader();
+    }
+
+    /**
      * Returns the length in characters of the {@linkplain #getText() text}.
      */
     default int getLength() {
@@ -168,6 +176,12 @@ public interface TextDocument extends Closeable {
      * @throws IndexOutOfBoundsException If the argument is not a valid region in this document
      */
     FileLocation toLocation(TextRegion region);
+
+
+    // todo doc
+    default FileLocation createLocation(int bline, int bcol, int eline, int ecol) {
+        return FileLocation.location(getDisplayName(), bline, bcol, eline, ecol);
+    }
 
     /**
      * Determines the line number at the given offset (inclusive).

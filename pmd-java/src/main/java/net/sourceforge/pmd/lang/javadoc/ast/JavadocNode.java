@@ -17,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
@@ -76,10 +77,17 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
     class JdocComment extends AbstractJavadocNode implements RootNode {
 
         private final TextDocument textDocument;
+        private final AstInfo<JdocComment> astInfo;
 
         JdocComment(TextDocument textDocument) {
             super(JavadocNodeId.ROOT);
             this.textDocument = textDocument;
+            this.astInfo = new AstInfo<>(textDocument, this, Collections.emptyMap());
+        }
+
+        @Override
+        public AstInfo<JdocComment> getAstInfo() {
+            return astInfo;
         }
 
         @Override

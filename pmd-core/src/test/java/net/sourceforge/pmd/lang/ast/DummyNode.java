@@ -7,21 +7,20 @@ package net.sourceforge.pmd.lang.ast;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.TextDocument;
 
 public class DummyNode extends AbstractNode<DummyNode, DummyNode> implements GenericNode<DummyNode> {
     private final boolean findBoundary;
     private final String xpathName;
     private final Map<String, String> userData = new HashMap<>();
     private String image;
-    private String fileName = "sample.dummy";
 
-    private FileLocation location;
+    private int bline = 1;
+    private int bcol = 1;
+    private int eline = 1;
+    private int ecol = 1;
 
     public DummyNode(String xpathName) {
         super();
@@ -49,31 +48,22 @@ public class DummyNode extends AbstractNode<DummyNode, DummyNode> implements Gen
         }
     }
 
-    public void setCoords(int bline, int bcol, int eline, int ecol) {
-        this.location = FileLocation.location(":dummyFile:", bline, bcol, eline, ecol);
+    public DummyNode setCoords(int bline, int bcol, int eline, int ecol) {
+        this.bline = bline;
+        this.bcol = bcol;
+        this.eline = eline;
+        this.ecol = ecol;
+        return this;
     }
 
     @Override
     public FileLocation getReportLocation() {
-        assert location != null : "Should have called setCoords";
-        return location;
+        return getTextDocument().createLocation(bline, bcol, eline, ecol);
     }
 
     public void setImage(String image) {
         this.image = image;
     }
-
-    public DummyNode withFileName(String fname) {
-        this.fileName = fname;
-        return this;
-    }
-
-
-    @Override
-    public @NonNull TextDocument getTextDocument() {
-        return TextDocument.readOnlyString("dummy text", fileName, getRoot().getLanguageVersion());
-    }
-
 
     @Override
     public String getImage() {
@@ -107,6 +97,11 @@ public class DummyNode extends AbstractNode<DummyNode, DummyNode> implements Gen
     @Override
     public DummyNode getChild(int index) {
         return super.getChild(index);
+    }
+
+    public DummyNode withFileName(String filename) {
+        ((DummyRoot) getRoot()).withFileName(filename);
+        return this;
     }
 
     public static class DummyNodeTypeB extends DummyNode {

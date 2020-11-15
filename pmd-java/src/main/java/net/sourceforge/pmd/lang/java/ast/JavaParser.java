@@ -4,10 +4,11 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument.TokenDocumentBehavior;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JjtreeParserAdapter;
-import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
 import net.sourceforge.pmd.lang.java.ast.internal.LanguageLevelChecker;
 
 /**
@@ -38,8 +39,7 @@ public class JavaParser extends JjtreeParserAdapter<ASTCompilationUnit> {
         parser.setPreview(checker.isPreviewEnabled());
 
         ASTCompilationUnit acu = parser.CompilationUnit();
-        acu.setNoPmdComments(parser.getSuppressMap());
-        acu.addTaskInfo(cs.getTokenDocument().getTextDocument()); // this is the translated document != task.getTextDocument()
+        acu.setAstInfo(new AstInfo<>(task, acu, parser.getSuppressMap()));
         checker.check(acu);
         return acu;
     }

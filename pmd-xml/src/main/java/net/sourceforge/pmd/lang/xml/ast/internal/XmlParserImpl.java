@@ -12,18 +12,17 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import net.sourceforge.pmd.lang.Parser.ParserTask;
+import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.xml.XmlParserOptions;
 import net.sourceforge.pmd.lang.xml.ast.XmlNode;
-import net.sourceforge.pmd.util.document.TextDocument;
 
 
 public class XmlParserImpl {
@@ -63,7 +62,7 @@ public class XmlParserImpl {
     public RootXmlNode parse(ParserTask task) {
         String xmlData = task.getSourceText();
         Document document = parseDocument(xmlData);
-        RootXmlNode root = new RootXmlNode(this, document, task.getTextDocument());
+        RootXmlNode root = new RootXmlNode(this, document, task);
         DOMLineNumbers lineNumbers = new DOMLineNumbers(root, task.getTextDocument());
         lineNumbers.determine();
         nodeCache.put(document, root);
@@ -93,16 +92,16 @@ public class XmlParserImpl {
      */
     public static class RootXmlNode extends XmlNodeWrapper implements RootNode {
 
-        private final TextDocument textDoc;
+        private final AstInfo<RootXmlNode> astInfo;
 
-        RootXmlNode(XmlParserImpl parser, Node domNode, TextDocument textDoc) {
+        RootXmlNode(XmlParserImpl parser, Node domNode, ParserTask task) {
             super(parser, domNode);
-            this.textDoc = textDoc;
+            this.astInfo = new AstInfo<>(task, this);
         }
 
         @Override
-        public @NonNull TextDocument getTextDocument() {
-            return textDoc;
+        public AstInfo<RootXmlNode> getAstInfo() {
+            return astInfo;
         }
     }
 
