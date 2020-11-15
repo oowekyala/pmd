@@ -65,7 +65,7 @@ fun TreeNodeWrapper<Node, out JavadocNode>.malformed(spec: NodeSpec<JavadocNode.
 
 fun TreeNodeWrapper<Node, out JavadocNode>.data(data: String, spec: NodeSpec<JavadocNode.JdocCommentData> = EmptyAssertions) =
         child<JavadocNode.JdocCommentData> {
-            it::getData shouldBe data
+            it.data.toString() shouldBe data
             spec()
         }
 

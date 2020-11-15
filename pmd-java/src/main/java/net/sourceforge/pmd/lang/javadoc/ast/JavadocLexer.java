@@ -44,9 +44,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
     private final int initialState;
     private int curOffset;
     private JdocToken prevToken;
-    private Reader reader;
-    @Nullable
-    private JdocTokenType pendingTok;
+    private @Nullable JdocTokenType pendingTok;
 
     /**
      * Build a lexer that scans the whole text.
@@ -117,7 +115,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                reader = doc.getFullText().slice(curOffset, maxOffset - curOffset).newReader();
+                Reader reader = doc.getFullText().slice(curOffset, maxOffset - curOffset).newReader();
                 this.lexer = new JavadocFlexer(reader);
                 lexer.yybegin(initialState);
             }

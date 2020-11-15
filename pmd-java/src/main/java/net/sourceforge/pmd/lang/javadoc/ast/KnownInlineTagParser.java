@@ -133,15 +133,13 @@ enum KnownInlineTagParser implements InlineTagParser {
         return name;
     }
 
-    @NonNull
-    static JdocInlineTag selectAndParse(String name, MainJdocParser parser) {
+    static @NonNull JdocInlineTag selectAndParse(String name, MainJdocParser parser) {
         InlineTagParser tagParser = LOOKUP.getOrDefault(name, UNKNOWN_PARSER);
         assert tagParser != null;
         return tagParser.parse(name, parser);
     }
 
-    @NonNull
-    private static String consumeInlineTag(MainJdocParser parser) {
+    private static @NonNull String consumeInlineTag(MainJdocParser parser) {
         StringBuilder builder = new StringBuilder();
         parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
                             it -> it.getKind().isSignificant(),
