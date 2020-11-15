@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.java.symbols.table;
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChain;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -15,6 +16,8 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig;
 /**
  * A symbol table for a particular region of a Java program. Keeps track of the types,
  * values, and methods accessible from their simple name in their extent.
+ *
+ * <p>Get a hold of one using {@link JavaNode#getSymbolTable()}.
  *
  * <p>Instances of this interface just tie together a few {@link ShadowChain}
  * instances for each interesting namespace in the program.

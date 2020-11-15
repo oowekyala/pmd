@@ -17,6 +17,7 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.util.document.Chars;
@@ -47,15 +48,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
     private JdocToken prevToken;
     private @Nullable JdocTokenType pendingTok;
 
-    /**
-     * Builds a lexer that will lex the entire text document. The document
-     * must start with the token "/*". The lexer stops when the region is
-     * ended, or when it encounters a "*" "/" token (end of comment), whichever
-     * comes first.
-     *
-     * @param commentText Full file text
-     */
-    public JavadocLexer(TextDocument commentText) {
+    JavadocLexer(TextDocument commentText) {
         this.doc = new JavadocTokenDocument(commentText);
         this.curOffset = 0;
         this.maxOffset = commentText.getLength();
@@ -94,9 +87,13 @@ class JavadocLexer implements TokenManager<JdocToken> {
         this.prevToken = newLastTok; // set the end of the chain to the new last token
     }
 
+    /**
+     * Note that this never throws {@link TokenMgrError}, because we want to
+     * be very resilient to invalid comment source.
+     */
     @Override
     @SuppressWarnings("PMD.AssignmentInOperand")
-    public @Nullable JdocToken getNextToken() throws TokenMgrError {
+    public @Nullable JdocToken getNextToken() {
 
         try {
             if (lexer == null) {
@@ -155,12 +152,8 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw lexerError(e);
+            throw AssertionUtil.shouldNeverBeThrown(e, "We're reading from an in-memory char slice");
         }
-    }
-
-    private TokenMgrError lexerError(@Nullable Throwable e) {
-        return new TokenMgrError(-1, -1, null, "Error lexing Javadoc comment", e);
     }
 
 }

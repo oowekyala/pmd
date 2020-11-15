@@ -13,15 +13,13 @@ import net.sourceforge.pmd.lang.LanguageVersion;
  */
 final class FragmentedTextDocument extends BaseMappedDocument implements TextDocument {
 
-    private final Fragment firstFragment;
     private final Chars text;
 
     private Fragment lastAccessedFragment;
 
     FragmentedTextDocument(TextDocument base, Fragment firstFragment, Fragment lastFragment) {
         super(base);
-        assert firstFragment != lastFragment; // NOPMD
-        this.firstFragment = firstFragment;
+        assert firstFragment != lastFragment : "Normally if there is a single fragment another implementation should be used"; // NOPMD
         this.text = toChars(firstFragment, lastFragment);
         this.lastAccessedFragment = firstFragment;
     }
@@ -50,44 +48,39 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
 
     @Override
     protected int localOffsetTransform(int outOffset, boolean inclusive) {
-        // todo this would be pretty slow when we're in the middle of some escapes
-        // we could check save the fragment last accessed to speed it up, and look forwards & backwards
-        return inputOffsetAt(outOffset, inclusive);
-    }
-
-    private int inputOffsetAt(int outputOffset, boolean inclusive) {
+        // we save the last fragment to amortize the lookup
         Fragment f = this.lastAccessedFragment;
         if (f == null) {
-            return outputOffset;
+            return outOffset;
         }
 
-        if (!f.contains(outputOffset)) {
+        if (!f.contains(outOffset)) {
             // Slow path, we must search for the fragment
             // This optimisation is important, otherwise we have
             // to search for very long times in some files
 
-            if (f.outEnd() < outputOffset) { // search forward
-                while (f.next != null && f.outEnd() < outputOffset) {
+            if (f.outEnd() < outOffset) { // search forward
+                while (f.next != null && f.outEnd() < outOffset) {
                     f = f.next;
                 }
             } else { // search backwards
-                while (f.prev != null && outputOffset <= f.outStart()) {
+                while (f.prev != null && outOffset <= f.outStart()) {
                     f = f.prev;
                 }
             }
             lastAccessedFragment = f;
         }
 
-        if (!inclusive && f.outEnd() == outputOffset) {
+        if (!inclusive && f.outEnd() == outOffset) {
             if (f.next != null) {
                 f = f.next;
                 lastAccessedFragment = f;
                 // fallthrough
             } else {
-                return f.outToIn(outputOffset) + 1;
+                return f.outToIn(outOffset) + 1;
             }
         }
-        return f.outToIn(outputOffset);
+        return f.outToIn(outOffset);
     }
 
 
@@ -149,7 +142,7 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
         }
 
         int outToIn(int outOffset) {
-            return inStart() + (outOffset - outStart());
+            return inStart() + outOffset - outStart();
         }
 
         boolean contains(int outOffset) {

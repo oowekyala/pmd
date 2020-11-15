@@ -27,7 +27,7 @@ public class FormalComment extends Comment {
 
     public JdocComment getJdocTree() {
         if (parsed == null) {
-            parsed = JavadocParserFacade.parseJavadoc(getFirstToken());
+            parsed = JavadocParserFacade.parseJavaToken(getFirstToken());
         }
         return parsed;
     }

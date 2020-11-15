@@ -7,10 +7,10 @@ package net.sourceforge.pmd.util.document;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.commons.io.input.CharSequenceReader;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.cpd.SourceCode;
+import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.util.datasource.DataSource;
 
@@ -222,7 +222,7 @@ public interface TextDocument extends Closeable {
         try {
             return create(textFile);
         } catch (IOException e) {
-            throw new AssertionError("String text file should never throw IOException", e);
+            throw AssertionUtil.shouldNeverBeThrown(e, "String text file should never throw IOException");
         }
     }
 

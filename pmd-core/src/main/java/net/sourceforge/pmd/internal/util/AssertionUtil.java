@@ -152,8 +152,7 @@ public final class AssertionUtil {
         return exceptionMaker.apply(String.format("%s must be %s, got %s", name, condition, value));
     }
 
-    @NonNull
-    public static <T> T requireParamNotNull(String paramName, T obj) {
+    public static <T> @NonNull T requireParamNotNull(String paramName, T obj) {
         if (obj == null) {
             throw new NullPointerException("Parameter " + paramName + " is null");
         }
@@ -161,11 +160,22 @@ public final class AssertionUtil {
         return obj;
     }
 
-    public static @NonNull AssertionError shouldNotReachHere(String message) {
+    public static @NonNull AssertionError shouldNotReachHere(String explanation) {
+        return new AssertionError(makeMessage(explanation));
+    }
+
+    private static String makeMessage(String message) {
         String prefix = "This should be unreachable";
-        message = StringUtils.isBlank(message) ? prefix
-                                               : prefix + ": " + message;
-        return new AssertionError(message);
+        return StringUtils.isBlank(message) ? prefix
+                                            : prefix + ": " + message;
+    }
+
+    /**
+     * An assertion error to emit when we catch an exception that we know can
+     * never occur.
+     */
+    public static @NonNull AssertionError shouldNeverBeThrown(Throwable cause, String explanation) {
+        return new AssertionError(makeMessage(explanation), cause);
     }
 
 }

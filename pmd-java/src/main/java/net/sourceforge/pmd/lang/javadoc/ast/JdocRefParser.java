@@ -29,6 +29,8 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
  */
 class JdocRefParser extends BaseJavadocParser {
 
+    private static final EnumSet<JdocTokenType> SKIPPED = EnumSet.of(WHITESPACE, REF_COMMA, BAD_CHAR);
+
     JdocRefParser(JdocToken tokenToSplit) {
         super(new JavadocLexer(tokenToSplit, JavadocFlexer.REF_START));
     }
@@ -51,8 +53,7 @@ class JdocRefParser extends BaseJavadocParser {
         return ref;
     }
 
-    @Nullable
-    private JdocRef parseInternal() {
+    private @Nullable JdocRef parseInternal() {
         advance();
 
         final JdocClassRef classRef;
@@ -89,10 +90,9 @@ class JdocRefParser extends BaseJavadocParser {
 
 
     private void parseParams(JdocExecutableRef method) {
-        final EnumSet<JdocTokenType> skipped = EnumSet.of(WHITESPACE, REF_COMMA, BAD_CHAR);
 
         while (advance()) {
-            while (tokIsAny(skipped) && advance()) {
+            while (tokIsAny(SKIPPED) && advance()) {
                 // skip
             }
 
@@ -100,8 +100,8 @@ class JdocRefParser extends BaseJavadocParser {
                 method.addChild(new JdocClassRef(head()), method.getNumChildren() + 1);
             }
             advance();
-            while (tokIsAny(skipped) && advance()) {
-                ;  // skip
+            while (tokIsAny(SKIPPED) && advance()) {
+                // skip
             }
             if (tokIs(REF_RPAREN)) {
                 return;

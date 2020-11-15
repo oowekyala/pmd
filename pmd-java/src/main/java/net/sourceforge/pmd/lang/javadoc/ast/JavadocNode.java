@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +21,7 @@ import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.util.document.Chars;
 import net.sourceforge.pmd.util.document.TextDocument;
@@ -37,13 +38,16 @@ import net.sourceforge.pmd.util.document.TextDocument;
  *     and its subclasses.
  *     <li>HTML nodes are represented by {@link JdocHtml}.
  *     <li>HTML comments are represented by {@link JdocHtmlComment}.
- *     <li>Malformed HTML is represented by {@link JdocMalformed}.
+ *     <li>Malformed content is represented by {@link JdocMalformed}.
  *     <li>Whitespace characters, and leading asterisks are only available
  *     in the tokens (see {@link JdocTokenType#LINE_BREAK} and {@link JdocTokenType#WHITESPACE}).
  * </ul>
+ *
+ * <p>Javadoc trees are supposed to be tightly integrated into a Java tree.
+ * For example, references ({@link JdocRef}) may only be interpreted with
+ * input from the Java analysis, in particular, the {@linkplain JSymbolTable symbol table}.
  */
 public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode> {
-
 
     JdocToken getFirstToken();
 
@@ -52,10 +56,14 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
 
 
     /**
-     * Returns true if this node is implied by context.
+     * Returns true if this node is implied by context. This happens for
+     * <ul>
+     * <li>The class reference part of a {@link JdocRef.JdocMemberRef} if
+     * it is omitted, eg in {@code #someField}.
+     * </ul>
      */
     default boolean isImplicit() {
-        return getFirstToken().equals(getLastToken()) && getFirstToken().isImplicit();
+        return getFirstToken() == getLastToken() && getFirstToken().isImplicit();
     }
 
     @Override
@@ -158,8 +166,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
          * Returns the name of this named entity reference, or null if
          * this is a numeric character reference.
          */
-        @Nullable
-        public String getName() {
+        public @Nullable String getName() {
             return name;
         }
 
@@ -189,10 +196,10 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         private final Set<JdocTokenType> expected;
         private final @Nullable JdocToken actual;
 
-        JdocMalformed(EnumSet<JdocTokenType> expected,
+        JdocMalformed(Set<JdocTokenType> expected,
                       @Nullable JdocToken actual) {
             super(JavadocNodeId.MALFORMED);
-            this.expected = expected;
+            this.expected = Collections.unmodifiableSet(expected);
             this.actual = actual;
             setFirstToken(actual);
             setLastToken(actual);
@@ -213,7 +220,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
             }
             String message = "Unexpected " + actual.getKind().format(actual) + " at " + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
             if (!expected.isEmpty()) {
-                return message + " expecting " + format(expected);
+                return message + ", expecting " + format(expected);
             } else {
                 return message;
             }
@@ -266,8 +273,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         }
 
         /** Returns the value of an attribute, or null if the attribute has no value. */
-        @Nullable
-        public JdocHtmlAttr getAttribute(String name) {
+        public @Nullable JdocHtmlAttr getAttribute(String name) {
             return attributes.get(name);
         }
 
@@ -283,8 +289,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
             this.syntax = syntax;
         }
 
-        @NonNull
-        public HtmlCloseSyntax getCloseSyntax() {
+        public @NonNull HtmlCloseSyntax getCloseSyntax() {
             assert syntax != null : "Syntax was not set";
             return syntax;
         }
@@ -332,8 +337,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
          * Returns the string value of the attribute. For {@linkplain HtmlAttrSyntax#EMPTY empty attribute syntax},
          * the value is the name of the attribute.
          */
-        @NonNull
-        public String getValue() {
+        public @NonNull String getValue() {
             return getSyntax() == HtmlAttrSyntax.EMPTY
                    ? getName()
                    : getValueToken() == null
@@ -342,14 +346,12 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         }
 
         /** Returns the name of the attribute. */
-        @NonNull
-        public String getName() {
+        public @NonNull String getName() {
             return getIdentifierToken().getImage();
         }
 
         /** Returns the identifier token. */
-        @NonNull
-        public JdocToken getIdentifierToken() {
+        public @NonNull JdocToken getIdentifierToken() {
             return getFirstToken();
         }
 
@@ -358,14 +360,12 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
          * {@linkplain HtmlAttrSyntax#EMPTY empty attribute syntax},
          * or if the value is the empty string.
          */
-        @Nullable
-        public JdocToken getValueToken() {
+        public @Nullable JdocToken getValueToken() {
             return valueToken;
         }
 
         /** Returns the syntax used by this attribute. */
-        @NonNull
-        public HtmlAttrSyntax getSyntax() {
+        public @NonNull HtmlAttrSyntax getSyntax() {
             return syntax;
         }
 
