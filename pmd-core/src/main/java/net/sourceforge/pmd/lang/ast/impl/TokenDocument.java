@@ -25,6 +25,7 @@ public abstract class TokenDocument<T extends GenericToken<T>> {
         return textDocument.getText();
     }
 
+    /** Returns the underlying text document. */
     public TextDocument getTextDocument() {
         return textDocument;
     }
@@ -36,5 +37,9 @@ public abstract class TokenDocument<T extends GenericToken<T>> {
      */
     public abstract T getFirstToken();
 
+
+    protected static IllegalStateException documentNotReady() {
+        return new IllegalStateException("Document has not been opened");
+    }
 
 }

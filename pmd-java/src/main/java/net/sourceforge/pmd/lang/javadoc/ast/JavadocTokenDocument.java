@@ -12,13 +12,21 @@ import net.sourceforge.pmd.util.document.TextDocument;
  */
 public final class JavadocTokenDocument extends TokenDocument<JdocToken> {
 
+    JdocToken first;
+
     JavadocTokenDocument(TextDocument fullText) {
         super(fullText);
     }
 
+    void setFirstToken(JdocToken first) {
+        this.first = first;
+    }
 
     @Override
     public JdocToken getFirstToken() {
-        return null; // TODO
+        if (first == null) {
+            throw documentNotReady();
+        }
+        return first;
     }
 }

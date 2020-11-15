@@ -173,7 +173,7 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
     @Override
     public JavaccToken getFirstToken() {
         if (first == null || first.next == null) {
-            throw new IllegalStateException("Document has not been opened");
+            throw documentNotReady();
         }
         return first.next;
     }

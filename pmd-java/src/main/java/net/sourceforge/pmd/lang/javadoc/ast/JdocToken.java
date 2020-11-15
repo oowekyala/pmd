@@ -20,10 +20,12 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     JdocToken next;
 
     private final JdocTokenType kind;
+    private String image;
 
-    JdocToken(JdocTokenType kind, String image, int startInclusive, int endExclusive, JavadocTokenDocument document) {
+    JdocToken(JdocTokenType kind, @Nullable String constImage, int startInclusive, int endExclusive, JavadocTokenDocument document) {
         super(startInclusive, endExclusive, document);
         this.kind = kind;
+        image = kind.isConst() ? kind.getConstValue() : constImage;
     }
 
     /**
@@ -55,6 +57,13 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
         return document.getTextDocument().sliceTranslatedText(getRegion());
     }
 
+    @Override
+    public String getImage() {
+        if (image == null) {
+            image = getImageCs().toString();
+        }
+        return image;
+    }
 
     @Override
     public FileLocation getReportLocation() {
