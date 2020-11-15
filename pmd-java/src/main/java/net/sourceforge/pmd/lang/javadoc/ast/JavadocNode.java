@@ -199,8 +199,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         }
 
         /** Null if EOF. */
-        @Nullable
-        public JdocToken getActual() {
+        public @Nullable JdocToken getActual() {
             return actual;
         }
 

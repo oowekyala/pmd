@@ -22,9 +22,13 @@ public final class JavadocTokenDocument extends TokenDocument<JdocToken> {
         this.first = first;
     }
 
+    boolean isOpen() {
+        return first != null;
+    }
+
     @Override
     public JdocToken getFirstToken() {
-        if (first == null) {
+        if (!isOpen()) {
             throw documentNotReady();
         }
         return first;

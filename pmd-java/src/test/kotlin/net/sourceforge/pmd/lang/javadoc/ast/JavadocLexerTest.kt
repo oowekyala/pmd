@@ -28,49 +28,27 @@ internal fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
 class JavadocLexerTest : FunSpec({
 
 
-    test("Test out of bounds max offset gives EOF") {
+    test("Test trailing chars are ignored") {
 
-        val code = "01234567/** some javadoc */"
-        //                  ^
+        val lexer = newLexer("/** some javadoc */  ...")
 
-        val lexer = newLexer(code, 8, code.length + 10)
-
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
-        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 24, image = "some javadoc")
-        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 24, end = 25, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 25, end = 27, image = "*/")
-        lexer.nextToken shouldBe null
-    }
-
-    test("Test lexing stops anyway at COMMENT_END") {
-
-        val comment = "/** some javadoc */"
-        val code = "01234567${comment}public void foo()"
-        //                  ^
-        val lexer = newLexer(code, 8, 8 + comment.length + 3)
-
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
-        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 24, image = "some javadoc")
-        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 24, end = 25, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 25, end = 27, image = "*/")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = 3, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 3, end = 4, image = " ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 4, end = 16, image = "some javadoc")
+        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 16, end = 17, image = " ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 17, end = 19, image = "*/")
         lexer.nextToken shouldBe null
     }
 
     test("Test lexing stops anyway at EOF") {
 
-        val code = "01234567/** some javadoc "
-        //                  ^
-        val lexer = newLexer(code, 8, 100)
+        val lexer = newLexer("/** some javadoc ")
 
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
-        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 25, image = "some javadoc ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = 3, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 3, end = 4, image = " ")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 4, end = 17, image = "some javadoc ")
         lexer.nextToken shouldBe null
     }
-
-
 
     test("Test java unicode escapes") {
 

@@ -140,8 +140,8 @@ public enum JdocTokenType {
 
     public String format(JdocToken token) {
         assert token.getKind() == this;
-        return isConst ? "token " + token.getImage()
-                       : "token " + token.getImage() + " (" + this + ")";
+        return isConst ? "token '" + token.getImage() + "'"
+                       : "token '" + token.getImage() + "' (" + this + ")";
     }
 
 

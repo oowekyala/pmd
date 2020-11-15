@@ -23,8 +23,8 @@ import kotlin.test.assertEquals
 val TextAvailableNode.textStr: String
     get() = text.toString()
 
-infix fun TextAvailableNode.shouldHaveText(str:String) {
-    assertEquals(str, text.toString(), "Text is different")
+infix fun TextAvailableNode.shouldHaveText(str: String) {
+    assertEquals(expected = str, actual = text.toString(), message = "Text is different")
 }
 
 

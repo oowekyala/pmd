@@ -12,6 +12,7 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_CONTENT;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -47,51 +48,38 @@ class JavadocLexer implements TokenManager<JdocToken> {
     private @Nullable JdocTokenType pendingTok;
 
     /**
-     * Build a lexer that scans the whole text.
+     * Builds a lexer that will lex the entire text document. The document
+     * must start with the token "/*". The lexer stops when the region is
+     * ended, or when it encounters a "*" "/" token (end of comment), whichever
+     * comes first.
+     *
+     * @param commentText Full file text
      */
     public JavadocLexer(TextDocument commentText) {
-        this(commentText, TextRegion.fromOffsetLength(0, commentText.getLength()));
+        this.doc = new JavadocTokenDocument(commentText);
+        this.curOffset = 0;
+        this.maxOffset = commentText.getLength();
+        this.initialState = JavadocFlexer.YYINITIAL;
     }
 
     /**
-     * Builds a lexer that will lex the region of the [fullText] delimited
-     * by the given offsets. The region must start with the token "/*". The
-     * lexer stops when the region is ended, or when it encounters a "*" "/"
-     * token (end of comment), whichever comes first.
-     *
-     * @param fullText Full file text, may contain Java unicode escapes
-     * @param region   Region of the file
-     */
-    public JavadocLexer(TextDocument fullText, TextRegion region) {
-        this(region, new JavadocTokenDocument(fullText), JavadocFlexer.YYINITIAL);
-    }
-
-    /**
-     * Produces a lexer that lexes the given token's text.
+     * Produces a lexer that lexes the given token's text. This is used
+     * to break up tokens into smaller tokens. Inline tags are lexed
+     * initially as a single big token, then, for those that contain
+     * references to Java constructs, relexed using the {@link JavadocFlexer#REF_START}
+     * state to break it up into smaller tokens.
      *
      * @param token        Token to lex
      * @param initialState Initial parsing state, one of the constants
      *                     defined on {@link JavadocFlexer}
      */
-    public JavadocLexer(JdocToken token, int initialState) {
-        this(token.getRegion(), token.getDocument(), initialState);
-    }
+    JavadocLexer(JdocToken token, int initialState) {
+        this.doc = token.getDocument();
+        this.initialState = initialState;
 
-    /**
-     * Builds a lexer that will lex the region of the [fullText] delimited
-     * by the given offsets. The region must start with the token "/*". The
-     * lexer stops when the region is ended, or when it encounters a "*" "/"
-     * token (end of comment), whichever comes first.
-     *
-     * @param region       Region to lex in the file text
-     * @param document     Token document
-     * @param initialState Initial state of the lexer
-     */
-    public JavadocLexer(TextRegion region, JavadocTokenDocument document, int initialState) {
-        this.doc = document;
+        TextRegion region = token.getRegion();
         this.curOffset = region.getStartOffset();
         this.maxOffset = region.getEndOffset();
-        this.initialState = initialState;
     }
 
     JavadocTokenDocument getDoc() {
@@ -115,7 +103,10 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                return openLexer();
+                Chars slice = doc.getFullText().slice(curOffset, maxOffset - curOffset);
+                Reader reader = slice.newReader();
+                this.lexer = new JavadocFlexer(reader);
+                lexer.yybegin(initialState);
             }
 
             if (prevToken != null && prevToken.next != null) {
@@ -172,16 +163,4 @@ class JavadocLexer implements TokenManager<JdocToken> {
         return new TokenMgrError(-1, -1, null, "Error lexing Javadoc comment", e);
     }
 
-    private JdocToken openLexer() throws IOException {
-        Chars slice = doc.getFullText().slice(curOffset, maxOffset - curOffset);
-        this.lexer = new JavadocFlexer(slice.newReader());
-        lexer.yybegin(initialState);
-        JdocTokenType firstKind = lexer.advance();
-        if (firstKind != JdocTokenType.COMMENT_START) {
-            throw lexerError(null);
-        }
-        JdocToken firstToken = new JdocToken(firstKind, "/**", 0, 3, doc);
-        doc.setFirstToken(firstToken);
-        return firstToken;
-    }
 }
