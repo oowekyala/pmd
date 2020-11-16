@@ -6,6 +6,8 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+
 /**
  * A node that may own a javadoc comment.
  */
@@ -18,6 +20,17 @@ public interface JavadocCommentOwner extends JavaNode {
      */
     default @Nullable FormalComment getJavadocComment() {
         return CommentAssignmentPass.getComment(this);
+    }
+
+    /**
+     * Returns the root of the javadoc tree, if there is a comment.
+     */
+    default @Nullable JdocComment getJavadocTree() {
+        FormalComment comment = getJavadocComment();
+        if (comment != null) {
+            return comment.getJdocTree();
+        }
+        return null;
     }
 
 }

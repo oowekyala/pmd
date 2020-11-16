@@ -22,6 +22,8 @@ import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
@@ -72,6 +74,15 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
     @Override
     Chars getText();
 
+    @Override
+    default @NonNull JdocComment getRoot() {
+        return (JdocComment) GenericNode.super.getRoot();
+    }
+
+    default @Nullable JSymbolTable getJavaSymbolTable() {
+        return getRoot().getJavaSymbolTable();
+    }
+
 
     /**
      * Root node of Javadoc ASTs.
@@ -80,6 +91,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
 
         private final TextDocument textDocument;
         private final AstInfo<JdocComment> astInfo;
+        private @Nullable JavadocCommentOwner javaLeaf;
 
         JdocComment(TextDocument textDocument) {
             super(JavadocNodeId.ROOT);
@@ -97,6 +109,38 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
             return textDocument;
         }
 
+        @Override
+        public @Nullable JSymbolTable getJavaSymbolTable() {
+            if (javaLeaf instanceof ASTAnyTypeDeclaration) {
+                // declarations of the body are in scope in here
+                return ((ASTAnyTypeDeclaration) javaLeaf).getBody().getSymbolTable();
+            }
+            return javaLeaf == null ? null : javaLeaf.getSymbolTable();
+        }
+
+        /**
+         * Returns the type of an empty reference.
+         */
+        public @Nullable ASTAnyTypeDeclaration getContextType() {
+            if (javaLeaf instanceof ASTAnyTypeDeclaration) {
+                return (ASTAnyTypeDeclaration) javaLeaf;
+            }
+            return javaLeaf == null ? null : javaLeaf.getEnclosingType();
+        }
+
+        /**
+         * Returns the package name this node lives in.
+         */
+        public @Nullable String getPackageName() {
+            if (javaLeaf != null) {
+                return javaLeaf.getRoot().getPackageName();
+            }
+            return null;
+        }
+
+        void setJavaLeaf(@Nullable JavadocCommentOwner javaNode) {
+            this.javaLeaf = javaNode;
+        }
     }
 
     /** Some text payload for the comment. */

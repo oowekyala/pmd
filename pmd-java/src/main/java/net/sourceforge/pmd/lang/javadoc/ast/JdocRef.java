@@ -7,7 +7,15 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
+import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
+import net.sourceforge.pmd.lang.java.types.JClassType;
+import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.JVariableSig;
+import net.sourceforge.pmd.lang.java.types.JVariableSig.FieldSig;
+import net.sourceforge.pmd.lang.java.types.TypeOps;
 
 /**
  * A javadoc node that references a Java program element.
@@ -51,6 +59,28 @@ public interface JdocRef extends JavadocNode {
         }
 
         /**
+         * Resolve the reference using the java symbol table.
+         */
+        public @Nullable JTypeMirror resolveRef() {
+            JSymbolTable symTable = getJavaSymbolTable();
+            if (symTable == null) {
+                return null;
+            }
+
+            String ref = getSimpleRef();
+            if (ref.isEmpty()) {
+                ASTAnyTypeDeclaration ctx = getRoot().getContextType();
+                return ctx == null ? null : ctx.getTypeMirror();
+            }
+            JTypeMirror type = symTable.types().resolveFirst(ref);
+            int arrayDims = getArrayDimensions();
+            if (arrayDims > 0 && type != null) {
+                type = type.getTypeSystem().arrayType(type, arrayDims);
+            }
+            return type;
+        }
+
+        /**
          * Returns whether this is an empty ref.
          */
         public boolean isEmptyForSelfClass() {
@@ -74,11 +104,41 @@ public interface JdocRef extends JavadocNode {
      */
     final class JdocFieldRef extends AbstractJavadocNode implements JdocMemberRef {
 
+        private FieldSig resolved = null;
+
         JdocFieldRef(JdocClassRef classRef, JdocToken fieldName) {
             super(JavadocNodeId.FIELD_REF);
             addChild(classRef, 0);
             setFirstToken(classRef.getFirstToken());
             setLastToken(fieldName);
+        }
+
+        /**
+         * Resolve the reference to this field. Returns null if it could not
+         * be resolved.
+         */
+        public @Nullable JVariableSig resolveRef() {
+            if (resolved != null) {
+                return resolved;
+            }
+            JTypeMirror t = getOwnerClassRef().resolveRef();
+            if (!(t instanceof JClassType)) {
+                return null;
+            }
+
+            JdocComment root = getRoot();
+            // null if we're eg in a package-info comment
+            ASTAnyTypeDeclaration contextType = root.getContextType();
+            String packageName = root.getPackageName();
+            String fieldName = getName();
+            if (packageName == null) {
+                return null;
+            }
+            JClassSymbol enclosing = contextType == null ? null : contextType.getSymbol();
+            NameResolver<FieldSig> fieldResolver = TypeOps.getMemberFieldResolver(t, packageName, enclosing, fieldName);
+
+            resolved = fieldResolver.resolveFirst(fieldName);
+            return resolved;
         }
 
         /**

@@ -29,6 +29,7 @@ final class CommentAssignmentPass {
 
     private static void setComment(JavadocCommentOwner commentableNode, FormalComment comment) {
         commentableNode.getUserMap().set(FORMAL_COMMENT_KEY, comment);
+        comment.setOwner(commentableNode);
     }
 
     public static void assignCommentsToDeclarations(ASTCompilationUnit root) {

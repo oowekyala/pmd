@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.java.ast;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.sourceforge.pmd.lang.java.symboltable.BaseNonParserTest;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
 
 public class CommentAssignmentTest extends BaseNonParserTest {
 
@@ -81,6 +84,25 @@ public class CommentAssignmentTest extends BaseNonParserTest {
 
         assertCommentEquals(node.descendants(ASTPackageDeclaration.class).firstOrThrow(),
                             "/** Comment 1 */");
+    }
+
+    @Test
+    public void testReferencesInComment() {
+
+        ASTCompilationUnit node = java.parse("/** {@link #field} */\n"
+                                                 + "class Foo {\n"
+                                                 + " public static final int field = 0;\n"
+                                                 + "}");
+
+
+        ASTAnyTypeDeclaration type = node.descendants(ASTAnyTypeDeclaration.class).firstOrThrow();
+        ASTVariableDeclaratorId fieldId = node.descendants(ASTVariableDeclaratorId.class).firstOrThrow();
+        JdocComment tree = type.getJavadocTree();
+        assertNotNull(tree);
+        JdocFieldRef ref = tree.descendants(JdocFieldRef.class).firstOrThrow();
+
+        assertNotNull(ref.resolveRef());
+        assertEquals(fieldId, ref.resolveRef().getSymbol().tryGetNode());
     }
 
     @Test
