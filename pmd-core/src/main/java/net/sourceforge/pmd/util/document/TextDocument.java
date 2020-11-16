@@ -184,6 +184,21 @@ public interface TextDocument extends Closeable {
     }
 
     /**
+     * Slice a piece of text as a new logical sub-document.
+     *
+     * @param region          Text region (see {@link #sliceTranslatedText(TextRegion)})
+     * @param languageVersion Language version of the new document (may be different from that of this document)
+     *
+     * @return a new sub-document
+     *
+     * @throws IndexOutOfBoundsException if the region is invalid
+     * @throws NullPointerException      if any parameter is null
+     */
+    default TextDocument subDocument(TextRegion region, LanguageVersion languageVersion) {
+        return new ContiguousSubDocument(this, languageVersion, region);
+    }
+
+    /**
      * Determines the line number at the given offset (inclusive).
      *
      * @return the line number at the given index

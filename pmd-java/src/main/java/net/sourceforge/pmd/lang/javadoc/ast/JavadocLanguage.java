@@ -14,6 +14,8 @@ import net.sourceforge.pmd.lang.ParserOptions;
  */
 public class JavadocLanguage extends BaseLanguageModule {
 
+    static final JavadocLanguage INSTANCE = new JavadocLanguage();
+
     public static final String NAME = "Javadoc";
     public static final String TERSE_NAME = "javadoc";
 

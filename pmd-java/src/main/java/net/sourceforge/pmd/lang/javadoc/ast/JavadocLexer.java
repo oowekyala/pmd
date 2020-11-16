@@ -49,6 +49,8 @@ class JavadocLexer implements TokenManager<JdocToken> {
     private @Nullable JdocTokenType pendingTok;
 
     JavadocLexer(TextDocument commentText) {
+        assert commentText.getLanguageVersion().getLanguage() instanceof JavadocLanguage;
+
         this.doc = new JavadocTokenDocument(commentText);
         this.curOffset = 0;
         this.maxOffset = commentText.getLength();

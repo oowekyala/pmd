@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.util.document;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -17,7 +18,7 @@ abstract class BaseMappedDocument implements TextDocument {
     protected final TextDocument base;
 
     BaseMappedDocument(TextDocument base) {
-        this.base = base;
+        this.base = Objects.requireNonNull(base);
     }
 
     @Override
