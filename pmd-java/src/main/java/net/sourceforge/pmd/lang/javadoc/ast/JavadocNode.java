@@ -16,7 +16,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.RootNode;
@@ -155,7 +154,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         /** Returns the significant text of this comment. */
         @NoAttribute
         public CharSequence getData() {
-            return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
+            return GenericToken.streamRange(getFirstToken(), getLastToken())
                                .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
                                .map(JdocToken::getImage)
                                .collect(Collectors.joining(" "));
@@ -469,7 +468,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         /** Returns the significant text of this comment. */
         @NoAttribute
         public CharSequence getData() {
-            return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
+            return GenericToken.streamRange(getFirstToken(), getLastToken())
                                .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
                                .map(JdocToken::getImage)
                                .collect(Collectors.joining());
