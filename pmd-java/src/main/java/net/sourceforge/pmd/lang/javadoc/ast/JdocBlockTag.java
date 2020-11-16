@@ -26,16 +26,21 @@ public abstract class JdocBlockTag extends AbstractJavadocNode {
 
     /** An unknown block tag. */
     public static class JdocUnknownBlockTag extends JdocBlockTag {
+
         JdocUnknownBlockTag(String tagName) {
             super(JavadocNodeId.UNKNOWN_BLOCK_TAG, tagName);
         }
     }
 
-    /** A {@code @return}. */
+    /** Any known block tag. */
     static class JdocSimpleBlockTag extends JdocBlockTag {
 
         JdocSimpleBlockTag(JavadocNodeId id, String tagName) {
             super(id, tagName);
+        }
+
+        JdocSimpleBlockTag(String tagName) {
+            this(JavadocNodeId.SIMPLE_BLOCK_TAG, tagName);
         }
     }
 }

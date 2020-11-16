@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.COMMENT_DATA;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,10 +22,49 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocUnknownBlockTag;
  * @author Clément Fournier
  */
 enum KnownBlockTagParser implements BlockTagParser {
+    // those are only followed by regular comment data
     RETURN("@return"),
     AUTHOR("@author"),
     SINCE("@since"),
     DEPRECATED("@deprecated"),
+    IMPL_NOTE("@implNote"),
+    IMPL_SPEC("@implSpec"),
+
+    SEE("@see") {
+        @Override
+        public JdocBlockTag parse(String name, MainJdocParser parser) {
+            JdocSimpleBlockTag tag = new JdocSimpleBlockTag(name);
+            JdocToken tokBeforeRef = parser.head();
+            if (parser.nextNonWs() && parser.tokIs(COMMENT_DATA) && !parser.head().getImageCs().startsWith('"', 0)) {
+                parser.parseReference(tokBeforeRef, tag);
+            }
+            return tag;
+        }
+    },
+
+    // +1 name + comment data
+    PARAM("@param"), // todo
+
+    // +1 class ref + comment data
+    EXCEPTION("@exception") {
+        @Override
+        public JdocBlockTag parse(String name, MainJdocParser parser) {
+            JdocSimpleBlockTag tag = new JdocSimpleBlockTag(name);
+            JdocToken tokBeforeRef = parser.head();
+            if (parser.nextNonWs()) {
+                parser.parseReference(tokBeforeRef, tag);
+            }
+            return tag;
+        }
+    },
+    THROWS("@throws") {
+        @Override
+        public JdocBlockTag parse(String name, MainJdocParser parser) {
+            return EXCEPTION.parse(name, parser);
+        }
+    },
+
+
     ;
 
     static final BlockTagParser UNKNOWN_PARSER = new BlockTagParser() {
