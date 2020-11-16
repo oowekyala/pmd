@@ -160,6 +160,20 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
                                .collect(Collectors.joining(" "));
         }
 
+        public @Nullable JdocToken getSingleDataToken() {
+            JdocToken found = null;
+            for (JdocToken token : GenericToken.range(getFirstToken(), getLastToken())) {
+                if (token.getKind() == JdocTokenType.COMMENT_DATA) {
+                    if (found != null) {
+                        return null;
+                    } else {
+                        found = token;
+                    }
+                }
+            }
+            return found;
+        }
+
     }
 
     /**

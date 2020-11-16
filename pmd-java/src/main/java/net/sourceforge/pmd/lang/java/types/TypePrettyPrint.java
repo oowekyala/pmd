@@ -33,6 +33,13 @@ public final class TypePrettyPrint {
         return sb.getResult();
     }
 
+    public static @NonNull String prettyPrintWithSimpleNames(@NonNull JTypeMirror t) {
+        TypePrettyPrinter sb = new TypePrettyPrinter();
+        sb.useSimpleNames = true;
+        t.acceptVisitor(PrettyPrintVisitor.INSTANCE, sb);
+        return sb.getResult();
+    }
+
     public static @NonNull String prettyPrint(@NonNull JMethodSig sig, boolean printHeader) {
         TypePrettyPrinter sb = new TypePrettyPrinter();
         sb.printMethodHeader = printHeader;
@@ -58,6 +65,7 @@ public final class TypePrettyPrint {
 
         private final StringBuilder sb = new StringBuilder();
 
+        private boolean useSimpleNames = false;
         private boolean printMethodHeader = true;
         private OptionalBool printTypeVarBounds = UNKNOWN;
         private boolean qualifyTvars = false;
@@ -90,7 +98,7 @@ public final class TypePrettyPrint {
             JClassType enclosing = t.getEnclosingType();
             boolean isAnon = t.getSymbol().isAnonymousClass();
 
-            if (enclosing != null && !isAnon) {
+            if (enclosing != null && !isAnon &&!sb.useSimpleNames) {
                 visitClass(enclosing, sb);
                 sb.append('#');
             } else if (t.hasErasedSuperTypes() && !t.isRaw()) {
@@ -102,7 +110,7 @@ public final class TypePrettyPrint {
                 sb.append('*'); // a small marker to spot them
             }
 
-            if (enclosing != null && !isAnon) {
+            if (enclosing != null && !isAnon || sb.useSimpleNames) {
                 sb.append(t.getSymbol().getSimpleName());
             } else {
                 sb.append(t.getSymbol().getBinaryName());
