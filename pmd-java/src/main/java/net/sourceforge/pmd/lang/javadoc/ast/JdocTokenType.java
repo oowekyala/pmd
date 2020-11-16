@@ -85,6 +85,7 @@ public enum JdocTokenType {
 
     TYPE_REFERENCE("type reference", false),
     MEMBER_REFERENCE("member reference", false),
+    PARAM_NAME("parameter name", false),
     REF_POUND("#", true),
     REF_LPAREN("(", true),
     REF_RPAREN(")", true),
