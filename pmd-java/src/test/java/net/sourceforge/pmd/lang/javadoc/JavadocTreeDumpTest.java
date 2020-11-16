@@ -71,4 +71,9 @@ public class JavadocTreeDumpTest extends BaseTreeDumpTest {
     public void testParamTag() {
         doTest("paramTag");
     }
+
+    @Test
+    public void testSeeTag() {
+        doTest("seeTag");
+    }
 }
