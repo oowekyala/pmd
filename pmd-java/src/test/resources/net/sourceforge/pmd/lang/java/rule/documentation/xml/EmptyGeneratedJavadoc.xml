@@ -6,7 +6,11 @@
 
     <test-code>
         <description>Useless param tags</description>
-        <expected-problems>3</expected-problems>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>3</expected-linenumbers>
+        <expected-messages>
+            <message>This comment contains low quality content (3 @param), eg line 6 (parameter description is just a type)</message>
+        </expected-messages>
         <code><![CDATA[
 public class Foo {
 
@@ -16,6 +20,43 @@ public class Foo {
      * @param sb        StringBuilder
      * @param items     Object[]
      * @param separator
+     */
+    void joinOnto(StringBuilder sb, Object[] items, String separator) {}
+
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Useless param tags (long form)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Parameter description is just a type</message>
+        </expected-messages>
+        <code><![CDATA[
+public class Foo {
+
+    /**
+     * joinOnto.
+     *
+     * @param sb        StringBuilder
+     */
+    void joinOnto(StringBuilder sb, Object[] items, String separator) {}
+
+}
+        ]]></code>
+    </test-code>
+    <test-code>
+        <description>Proper parameter descriptions</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+
+    /**
+     * joinOnto.
+     *
+     * @param sb        A proper description
      */
     void joinOnto(StringBuilder sb, Object[] items, String separator) {}
 
