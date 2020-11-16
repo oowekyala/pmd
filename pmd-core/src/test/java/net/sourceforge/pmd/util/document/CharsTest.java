@@ -8,11 +8,15 @@ import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
@@ -146,6 +150,22 @@ public class CharsTest {
     }
 
     @Test
+    public void removeSuffix() {
+        Chars bc = Chars.wrap("abcdb").slice(1, 2);
+        //                      --
+
+        Assert.assertEquals("bc", bc.toString());
+        Assert.assertEquals("b", bc.removeSuffix("c").toString());
+        Assert.assertEquals("", bc.removeSuffix("bc").toString());
+
+        bc = Chars.wrap("aaaaaaa").slice(2, 3);
+        //                 ---
+
+        Assert.assertEquals("", bc.removeSuffix("aaa").toString());
+        Assert.assertEquals("aaa", bc.removeSuffix("aaaa").toString());
+    }
+
+    @Test
     public void trimNoop() {
         Chars bc = Chars.wrap("abcdb").slice(1, 2);
         Assert.assertEquals("bc", bc.toString());
@@ -217,6 +237,39 @@ public class CharsTest {
         Assert.assertFalse(chars.contentEquals(Chars.wrap("a_b-c")));
 
         Assert.assertTrue(chars.contentEquals(Chars.wrap("A_B_C"), true));
+    }
+
+    @Test
+    public void testSplits() {
+        Chars chars = Chars.wrap("a_a_b_c_s").slice(2, 5);
+        Assert.assertEquals("a_b_c", chars.toString());
+
+        testSplits(chars, "_");
+        testSplits(chars, "a");
+        testSplits(chars, "b");
+        testSplits(chars, "c");
+        Assert.assertEquals(listOf("", "_b_c"), listSplits(chars, "a"));
+
+        chars = chars.subSequence(1, 5);
+        Assert.assertEquals("_b_c", chars.toString());
+
+        Assert.assertEquals(listOf("", "b", "c"), listSplits(chars, "_"));
+
+
+        testSplits(Chars.wrap("abc"), "");
+        testSplits(Chars.wrap(""), "");
+    }
+
+    private List<String> listSplits(Chars chars, String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        Iterator<Chars> splits = chars.splits(pattern).iterator();
+        return IteratorUtil.toList(IteratorUtil.map(splits, Chars::toString));
+    }
+
+    private void testSplits(Chars chars, String regex) {
+        List<String> splitList = listSplits(chars, regex);
+        List<String> expected = Arrays.asList(chars.toString().split(regex));
+        Assert.assertEquals("Split should behave like String#split", expected, splitList);
     }
 
 }
