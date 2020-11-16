@@ -92,4 +92,12 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
         successor.prev = tok;
         return tok;
     }
+
+    @Override
+    public String toString() {
+        return "JdocToken{" +
+            "kind=" + kind +
+            ", image='" + image + '\'' +
+            '}';
+    }
 }

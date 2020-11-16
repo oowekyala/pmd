@@ -84,7 +84,7 @@ public interface JdocRef extends JavadocNode {
 
         private final String name;
 
-        public JdocExecutableRef(JdocClassRef classRef, JdocToken nametok) {
+        JdocExecutableRef(JdocClassRef classRef, JdocToken nametok) {
             super(JavadocNodeId.EXECUTABLE_REF);
             addChild(classRef, 0);
             setFirstToken(classRef.getFirstToken());

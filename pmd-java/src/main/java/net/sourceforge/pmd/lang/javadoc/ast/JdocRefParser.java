@@ -97,7 +97,7 @@ class JdocRefParser extends BaseJavadocParser {
             }
 
             if (tokIs(TYPE_REFERENCE)) {
-                method.addChild(new JdocClassRef(head()), method.getNumChildren() + 1);
+                method.appendChild(new JdocClassRef(head()));
             }
             advance();
             while (tokIsAny(SKIPPED) && advance()) {

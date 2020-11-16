@@ -24,6 +24,7 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
+import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
 import net.sourceforge.pmd.util.document.Chars;
 import net.sourceforge.pmd.util.document.TextDocument;
 
@@ -63,6 +64,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
      * it is omitted, eg in {@code #someField}.
      * </ul>
      */
+    @NoAttribute
     default boolean isImplicit() {
         return getFirstToken() == getLastToken() && getFirstToken().isImplicit();
     }
@@ -107,7 +109,8 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         }
 
         /** Returns the significant text of this comment. */
-        public String getData() {
+        @NoAttribute
+        public CharSequence getData() {
             return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
                                .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
                                .map(JdocToken::getImage)
@@ -420,7 +423,8 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         }
 
         /** Returns the significant text of this comment. */
-        public String getData() {
+        @NoAttribute
+        public CharSequence getData() {
             return IteratorUtil.toStream(GenericToken.range(getFirstToken(), getLastToken()))
                                .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
                                .map(JdocToken::getImage)
