@@ -8,9 +8,8 @@ package net.sourceforge.pmd.lang.java.rule.documentation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
 
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
@@ -138,6 +137,7 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         List<String> shortProblems;
         JavadocNode reportNode;
         String longMessage;
+        String mainKey;
 
 
         void addProblem(JavadocNode node, String key, String longMessage) {
@@ -145,12 +145,14 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
             if (size == 1) {
                 reportNode = node;
                 this.longMessage = longMessage;
+                mainKey = key;
                 shortProblems = new ArrayList<>();
             } else if (size == 2) {
-                // second message, fallback to aggregate report
+                // prefer reporting on the topmost
                 if (node.compareLocation(reportNode) <= 0) {
                     reportNode = node;
                     this.longMessage = longMessage;
+                    mainKey = key;
                 }
             }
             shortProblems.add(key);
@@ -163,16 +165,23 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
             if (size == 1) {
                 ctx.addViolationWithMessage(reportNode, longMessage);
             } else {
-                StringBuilder stringBuilder = new StringBuilder("This comment contains low quality content (");
+
                 Map<String, Long> summary = shortProblems.stream().collect(Collectors.groupingBy(it -> it, Collectors.counting()));
-                summary.forEach((type, count) -> stringBuilder.append(count).append(' ').append(type));
-                stringBuilder.append(')')
-                             .append(", eg line ")
-                             .append(reportNode.getReportLocation().getBeginLine())
-                             .append(" (")
-                             .append(StringUtils.uncapitalize(longMessage))
-                             .append(')');
-                ctx.addViolationWithMessage(reportNode.getRoot(), stringBuilder.toString());
+
+                StringJoiner joiner = new StringJoiner(
+                    ", ",
+                    longMessage + " (there are problems with ",
+                    " in this comment)"
+                );
+
+                summary.forEach((type, count) -> {
+                    if (type.equals(mainKey)) {
+                        joiner.add((count - 1) + " other " + type);
+                    } else {
+                        joiner.add(count + " " + type);
+                    }
+                });
+                ctx.addViolationWithMessage(reportNode, joiner.toString());
             }
         }
     }
