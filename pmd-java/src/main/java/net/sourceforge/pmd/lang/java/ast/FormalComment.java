@@ -10,6 +10,9 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocParserFacade;
 
+/**
+ * A wrapper for Javadoc {@link Comment}s.
+ */
 public class FormalComment extends Comment {
 
     private JdocComment parsed;
@@ -30,14 +33,9 @@ public class FormalComment extends Comment {
 
     public JdocComment getJdocTree() {
         if (parsed == null) {
-            parsed = JavadocParserFacade.parseJavaToken(this, getFirstToken());
+            parsed = JavadocParserFacade.parseJavaToken(this, getToken());
         }
         return parsed;
-    }
-
-    @Override
-    public String getXPathNodeName() {
-        return "FormalComment";
     }
 
 }
