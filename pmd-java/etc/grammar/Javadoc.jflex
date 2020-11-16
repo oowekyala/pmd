@@ -69,7 +69,8 @@ HTML_TAG_NAME=          [^\s\"\'<>/=]+
 HTML_ATTR_NAME=         [^\s\"\'<>/=]+
 UNQUOTED_ATTR_VALUE=    [^\s\"\'`<>/=]+
 
-JAVA_NAME=[.[:jletter:]]+
+JAVA_NAME=[:jletter:] [.[:jletter:]]+
+JAVA_NAME_STRICT={JAVA_IDENT} ('.' {JAVA_IDENT})*
 JAVA_IDENT=[:jletter:]+
 TYPE_PARAM_IDENT=("<" {JAVA_IDENT} ">")
 IDENT_START=[:jletter:]
@@ -187,6 +188,8 @@ IDENT_START=[:jletter:]
 
 <REF_START> {
                         {JAVA_NAME}            {                              return JdocTokenType.TYPE_REFERENCE; }
+                        "["                    {                              return JdocTokenType.REF_LBRACKET;   }
+                        "]"                    {                              return JdocTokenType.REF_RBRACKET;   }
                         "#" / {IDENT_START}    { yybegin(REF_MEMBER);         return JdocTokenType.REF_POUND;      }
                         {WS_CHAR}+             { yybegin(REF_REST);           return JdocTokenType.WHITESPACE;     }
                         [^]                    { yybegin(REF_REST_WS);        return JdocTokenType.BAD_CHAR;       }
@@ -203,8 +206,11 @@ IDENT_START=[:jletter:]
                         [^]                    { yybegin(REF_REST_WS);        return JdocTokenType.BAD_CHAR;       }
 }
 
-<REF_PARAMS> {
-                        {JAVA_NAME}            {                              return JdocTokenType.TYPE_REFERENCE; }
+<REF_PARAMS> {          // stricter name regex, to avoid consuming the "..." tokens
+                        {JAVA_NAME_STRICT}     {                              return JdocTokenType.TYPE_REFERENCE; }
+                        "["                    {                              return JdocTokenType.REF_LBRACKET;   }
+                        "]"                    {                              return JdocTokenType.REF_RBRACKET;   }
+                        "..."                  {                              return JdocTokenType.REF_VARARGS;    }
                         {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
                         ","                    {                              return JdocTokenType.REF_COMMA;      }
                         ")"                    { yybegin(REF_REST_WS);        return JdocTokenType.REF_RPAREN;     }

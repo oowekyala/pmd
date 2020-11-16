@@ -32,6 +32,8 @@ public interface JdocRef extends JavadocNode {
      */
     final class JdocClassRef extends AbstractJavadocNode implements JdocRef {
 
+        private int arrayDimensions;
+
         JdocClassRef(@Nullable JdocToken tok) {
             super(JavadocNodeId.CLASS_REF);
             setFirstToken(tok);
@@ -55,6 +57,16 @@ public interface JdocRef extends JavadocNode {
             return getSimpleRef().isEmpty();
         }
 
+        void setArrayDims(int numDims) {
+            this.arrayDimensions = numDims;
+        }
+
+        /**
+         * The number of array dimensions of this type.
+         */
+        public int getArrayDimensions() {
+            return arrayDimensions;
+        }
     }
 
     /**

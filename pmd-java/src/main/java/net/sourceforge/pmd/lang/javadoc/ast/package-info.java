@@ -3,7 +3,7 @@
  */
 
 /**
- * Contains classes to model the Javadoc AST. Javadoc trees are
+ * Model of the Javadoc AST. Javadoc trees are
  * made accessible from the Java nodes that can bear a Javadoc
  * comment (see {@link net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner}).
  * That is the only supported API point to get a hold of a Javadoc

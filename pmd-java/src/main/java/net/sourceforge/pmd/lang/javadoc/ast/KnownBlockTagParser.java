@@ -33,24 +33,30 @@ enum KnownBlockTagParser implements BlockTagParser {
     IMPL_NOTE("@implNote"),
     IMPL_SPEC("@implSpec"),
 
+    API_NOTE("@apiNote"),
+    SERIAL("@serial"),
+    // todo serial field has some structure
+    SERIAL_FIELD("@serialField"),
+
     SEE("@see") {
         @Override
         public JdocBlockTag parse(String name, MainJdocParser parser) {
             JdocBlockTag tag = new JdocBlockTag(name);
             JdocToken tokBeforeRef = parser.head();
             if (parser.nextNonWs() && parser.tokIs(COMMENT_DATA) && !parser.head().getImageCs().startsWith('"', 0)) {
+                // there are several forms of "see", including one with
+                // a kind of string literal, which is not interpreted as
+                // a reference
                 parser.parseReference(tokBeforeRef, tag);
             }
             return tag;
         }
     },
 
-    // +1 name + comment data
     PARAM("@param") {
         @Override
         public JdocBlockTag parse(String name, MainJdocParser parser) {
             JdocBlockTag tag = new JdocBlockTag(name);
-            // todo store the name somewhere
             if (parser.nextNonWs() && parser.tokIs(PARAM_NAME)) {
                 tag.setParamName(parser.head());
                 parser.nextNonWs(); // put the parser on the next data token
@@ -59,7 +65,6 @@ enum KnownBlockTagParser implements BlockTagParser {
         }
     },
 
-    // +1 class ref + comment data
     EXCEPTION("@exception") {
         @Override
         public JdocBlockTag parse(String name, MainJdocParser parser) {

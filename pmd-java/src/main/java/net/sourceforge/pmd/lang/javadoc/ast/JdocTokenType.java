@@ -90,6 +90,9 @@ public enum JdocTokenType {
     REF_LPAREN("(", true),
     REF_RPAREN(")", true),
     REF_COMMA(",", true),
+    REF_LBRACKET("[", true),
+    REF_RBRACKET("]", true),
+    REF_VARARGS("...", true),
 
     /**
      * Catch all rule for things that don't match anything. Normally
