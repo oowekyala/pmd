@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.ast.impl.javacc;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -26,7 +25,6 @@ import net.sourceforge.pmd.util.document.TextDocument;
 public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
 
     private final TokenDocumentBehavior behavior;
-    private final StringPool stringPool = new StringPool();
 
     private JavaccToken first;
 
@@ -37,22 +35,11 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
 
     public static class TokenDocumentBehavior {
 
-        public static final TokenDocumentBehavior DEFAULT = new TokenDocumentBehavior();
+        public static final TokenDocumentBehavior DEFAULT = new TokenDocumentBehavior(Collections.emptyList());
         private final List<String> tokenNames;
-        private final Function<TextDocument, TextDocument> translator;
-
-        private TokenDocumentBehavior() {
-            this(Collections.emptyList());
-        }
 
         public TokenDocumentBehavior(List<String> tokenNames) {
-            this(tokenNames, t -> t);
-        }
-
-        public TokenDocumentBehavior(List<String> tokenNames,
-                                     Function<TextDocument, TextDocument> translator) {
             this.tokenNames = tokenNames;
-            this.translator = translator;
         }
 
         /**
@@ -74,7 +61,7 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
          * @see EscapeTranslator
          */
         protected TextDocument translate(TextDocument text) throws MalformedSourceException {
-            return translator.apply(text);
+            return text;
         }
 
 
@@ -176,14 +163,6 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
             throw documentNotReady();
         }
         return first.next;
-    }
-
-    String computeImage(JavaccToken t) {
-        CharSequence imageCs = t.getImageCs();
-        if (imageCs instanceof String) {
-            return (String) imageCs;
-        }
-        return stringPool.toString(imageCs, behavior.isImagePooled(t));
     }
 
     /**
