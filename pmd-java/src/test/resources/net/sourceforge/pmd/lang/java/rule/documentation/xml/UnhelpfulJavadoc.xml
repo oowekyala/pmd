@@ -9,7 +9,7 @@
         <expected-problems>1</expected-problems>
         <expected-linenumbers>6</expected-linenumbers>
         <expected-messages>
-            <message>Parameter description is just a type (there are problems with 2 other @param in this comment)</message>
+            <message>Parameter description is just a type (there are other problems with 2 other @param in this comment)</message>
         </expected-messages>
         <code><![CDATA[
 public class Foo {
@@ -57,6 +57,26 @@ public class Foo {
      * joinOnto.
      *
      * @param sb        A proper description
+     */
+    void joinOnto(StringBuilder sb, Object[] items, String separator) {}
+
+}
+        ]]></code>
+    </test-code>
+    <test-code>
+        <description>Throws tag with no description</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Missing @throws description (there are other problems with 1 @exception in this comment)</message>
+        </expected-messages>
+        <code><![CDATA[
+public class Foo {
+
+    /**
+     *
+     * @throws IllegalStateException
+     * @exception  IllegalArgumentException
      */
     void joinOnto(StringBuilder sb, Object[] items, String separator) {}
 

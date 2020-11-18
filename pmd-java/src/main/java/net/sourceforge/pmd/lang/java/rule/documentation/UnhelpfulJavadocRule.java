@@ -65,7 +65,6 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         return data;
     }
 
-    // todo report single violation for each comment
     private void checkMethodComment(ASTMethodOrConstructorDeclaration method, RuleContext ctx) {
         JdocComment javadoc = method.getJavadocTree();
         if (javadoc == null) {
@@ -76,38 +75,57 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
 
         List<ASTVariableDeclaratorId> formals = method.getFormalParameters().toStream().map(ASTFormalParameter::getVarId).toList();
 
-        for (JdocBlockTag param : javadoc.descendants(JdocBlockTag.class)
-                                         .filter(it -> it.isA("@param"))) {
-
-            String paramName = param.getParamName();
-            if (paramName == null) {
-                continue;
-            }
-
-            ASTVariableDeclaratorId formal = getFormal(formals, paramName);
-            if (formal == null) {
-                continue;
-            }
-
-            JdocCommentData description = param.firstChild(JdocCommentData.class);
-            if (description == null) {
-                collector.addProblem(param, "@param", "Missing @param description");
-            } else {
-                JdocToken data = description.getSingleDataToken();
-                if (data == null) {
-                    continue;
-                }
-
-                JTypeMirror type = formal.getTypeMirror();
-                String signature = TypePrettyPrint.prettyPrintWithSimpleNames(type);
-                if (data.getImageCs().contentEquals(signature)
-                    || data.getImageCs().contentEquals(TypePrettyPrint.prettyPrintWithSimpleNames(type.getErasure()))) {
-                    collector.addProblem(param, "@param", "Parameter description is just a type");
-                }
+        for (JdocBlockTag blockTag : javadoc.descendants(JdocBlockTag.class)) {
+            switch (blockTag.getTagName()) {
+            case "@param":
+                checkParamTag(collector, formals, blockTag);
+                break;
+            case "@throws":
+            case "@exception":
+                checkExceptionTag(collector, blockTag);
+                break;
             }
         }
 
         collector.report(ctx);
+    }
+
+    private void checkParamTag(ProblemCollector collector, List<ASTVariableDeclaratorId> formals, JdocBlockTag paramTag) {
+        String paramName = paramTag.getParamName();
+        if (paramName == null) {
+            return;
+        }
+
+        ASTVariableDeclaratorId formal = getFormal(formals, paramName);
+        if (formal == null) {
+            return;
+        }
+
+        JdocCommentData description = paramTag.firstChild(JdocCommentData.class);
+        if (description == null) {
+            collector.addProblem(paramTag, "@param", "Missing @param description");
+        } else {
+            JdocToken data = description.getSingleDataToken();
+            if (data == null) {
+                return;
+            }
+
+            JTypeMirror type = formal.getTypeMirror();
+            String signature = TypePrettyPrint.prettyPrintWithSimpleNames(type);
+            if (data.getImageCs().contentEquals(signature)
+                || data.getImageCs().contentEquals(TypePrettyPrint.prettyPrintWithSimpleNames(type.getErasure()))) {
+                collector.addProblem(paramTag, "@param", "Parameter description is just a type");
+            }
+        }
+    }
+
+    private void checkExceptionTag(ProblemCollector collector, JdocBlockTag throwsTag) {
+        JdocCommentData description = throwsTag.firstChild(JdocCommentData.class);
+        if (description == null) {
+            collector.addProblem(throwsTag,
+                                 throwsTag.getTagName(),
+                                 "Missing " + throwsTag.getTagName() + " description");
+        }
     }
 
     private ASTVariableDeclaratorId getFormal(List<ASTVariableDeclaratorId> formals, String paramName) {
@@ -131,6 +149,10 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         return super.visit(node, data);
     }
 
+    /**
+     * Aggregates violations, so as not to report 5 violations for a single
+     * comment (usually, auto-generated comments have several problems).
+     */
     static final class ProblemCollector {
 
         private int size;
@@ -170,13 +192,15 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
 
                 StringJoiner joiner = new StringJoiner(
                     ", ",
-                    longMessage + " (there are problems with ",
+                    longMessage + " (there are other problems with ",
                     " in this comment)"
                 );
 
                 summary.forEach((type, count) -> {
                     if (type.equals(mainKey)) {
-                        joiner.add((count - 1) + " other " + type);
+                        if (count > 1) {
+                            joiner.add((count - 1) + " other " + type);
+                        }
                     } else {
                         joiner.add(count + " " + type);
                     }
