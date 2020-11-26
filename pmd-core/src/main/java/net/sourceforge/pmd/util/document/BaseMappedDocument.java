@@ -74,4 +74,9 @@ abstract class BaseMappedDocument implements TextDocument {
     public void close() throws IOException {
         base.close();
     }
+
+    @Override
+    public Locator detachLocator() {
+        return base.detachLocator(); // todo this looks quite hard with fragmented documents
+    }
 }

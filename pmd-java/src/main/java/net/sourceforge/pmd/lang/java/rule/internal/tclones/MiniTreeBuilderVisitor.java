@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
@@ -13,6 +14,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
 import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTree.MiniTreeBuilder;
+import net.sourceforge.pmd.util.document.Locator;
 
 /**
  *
@@ -41,28 +43,25 @@ public class MiniTreeBuilderVisitor {
         }
     }
 
-    interface CloneDetectorGlobals {
-
-        void acceptTree(MiniTree tree);
-
-    }
-
-    static MiniTree buildJavaMiniTree(JavaNode root, CloneDetectorGlobals sink) {
-        return buildMiniTree(root, new MiniTreeBuilder(), JAVA_CONFIG, sink);
+    static MiniTree buildJavaMiniTree(JavaNode root, CloneDetectorGlobals state, Locator locator) {
+        return buildMiniTree(root, JAVA_CONFIG, state, locator);
     }
 
 
-    static <N extends GenericNode<N>> MiniTree buildMiniTree(N root, MiniAstHandler<N> config, CloneDetectorGlobals sink) {
-        return buildMiniTree(root, new MiniTreeBuilder(), config, sink);
+    public static <N extends GenericNode<N> & TextAvailableNode> MiniTree buildMiniTree(N root,
+                                                                                        MiniAstHandler<N> config,
+                                                                                        CloneDetectorGlobals state,
+                                                                                        Locator locator) {
+        return buildMiniTree(root, new MiniTreeBuilder(locator), config, state);
     }
 
-    private static <N extends GenericNode<N>> MiniTree buildMiniTree(N node,
-                                                                     MiniTreeBuilder myBuilder,
-                                                                     MiniAstHandler<N> config,
-                                                                     CloneDetectorGlobals globals) {
+    private static <N extends GenericNode<N> & TextAvailableNode> MiniTree buildMiniTree(N node,
+                                                                                         MiniTreeBuilder myBuilder,
+                                                                                         MiniAstHandler<N> config,
+                                                                                         CloneDetectorGlobals globals) {
         myBuilder.hashKind(config.getRuleKind(node));
 
-        MiniTreeBuilder childrenBuilder = new MiniTreeBuilder();
+        MiniTreeBuilder childrenBuilder = myBuilder.childrenBuilder();
 
         // builder may be reset and reused for all children
         for (N child : node.children()) {
@@ -72,7 +71,7 @@ public class MiniTreeBuilderVisitor {
 
         config.hashAttributes(node, myBuilder);
 
-        MiniTree built = myBuilder.buildAndReset();
+        MiniTree built = myBuilder.buildAndReset(node.getTextRegion());
         globals.acceptTree(built);
         return built;
     }

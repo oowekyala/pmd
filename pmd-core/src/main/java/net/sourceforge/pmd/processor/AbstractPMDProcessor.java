@@ -9,9 +9,11 @@ import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 import java.util.List;
 
 import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleSet;
 import net.sourceforge.pmd.RuleSets;
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
 import net.sourceforge.pmd.util.document.TextFile;
 
@@ -31,7 +33,15 @@ public abstract class AbstractPMDProcessor implements AutoCloseable {
     /**
      * Analyse all files. Each text file is closed.
      */
-    public abstract void processFiles(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener);
+    protected abstract void processFilesImpl(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener);
+
+    public final void processFiles(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
+        processFilesImpl(rulesets, files, listener);
+        rulesets.getAllRules().forEach(r -> {
+            RuleContext rctx = RuleContext.create(FileAnalysisListener.noop(), r);
+            r.endAnalysis(rctx);
+        });
+    }
 
     /**
      * Joins tasks and await completion of the analysis. After this, all

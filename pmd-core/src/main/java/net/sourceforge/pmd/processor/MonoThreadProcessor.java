@@ -23,7 +23,7 @@ final class MonoThreadProcessor extends AbstractPMDProcessor {
 
     @Override
     @SuppressWarnings("PMD.CloseResource") // closed by the PMDRunnable
-    public void processFiles(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
+    public void processFilesImpl(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
         for (TextFile file : files) {
             new MonothreadRunnable(rulesets, file, listener, configuration).run();
         }

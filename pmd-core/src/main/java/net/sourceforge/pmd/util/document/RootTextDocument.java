@@ -29,6 +29,7 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
 
     private final String fileName;
     private final String pathId;
+    private Locator refToMe;
 
     RootTextDocument(TextFile backend) throws IOException {
         this.backend = backend;
@@ -36,6 +37,7 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
         this.langVersion = backend.getLanguageVersion();
         this.fileName = backend.getDisplayName();
         this.pathId = backend.getPathId();
+        this.refToMe = new LocatorSoftReference(backend, this);
 
         Objects.requireNonNull(langVersion, "Null language version for file " + backend);
         Objects.requireNonNull(fileName, "Null display name for file " + backend);
@@ -126,6 +128,11 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
     @Override
     public Chars sliceOriginalText(TextRegion region) {
         return getText().subSequence(region.getStartOffset(), region.getEndOffset());
+    }
+
+    @Override
+    public Locator detachLocator() {
+        return refToMe;
     }
 
     private static final String NOT_IN_RANGE = "Region [start=%d, end=%d[ is not in range of this document (length %d)";

@@ -29,7 +29,7 @@ final class MultiThreadProcessor extends AbstractPMDProcessor {
 
     @Override
     @SuppressWarnings("PMD.CloseResource") // closed by the PMDRunnable
-    public void processFiles(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
+    public void processFilesImpl(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
         // The thread-local is not static, but analysis-global
         // This means we don't have to reset it manually, every analysis is isolated.
         // The initial value makes a copy of the rulesets

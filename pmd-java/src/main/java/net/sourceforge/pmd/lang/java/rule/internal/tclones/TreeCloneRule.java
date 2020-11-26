@@ -4,21 +4,20 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
+import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTreeBuilderVisitor.CloneDetectorGlobals;
+import net.sourceforge.pmd.util.document.Locator;
 
 /**
  *
  */
 public class TreeCloneRule extends AbstractJavaRulechainRule {
-    private static final CloneDetectorState STATE = new CloneDetectorState(20);
+
+    private static final CloneDetectorGlobals STATE = new CloneDetectorGlobals(10);
+
+    private Locator loc;
 
     public TreeCloneRule() {
         super(ASTMethodDeclaration.class);
@@ -26,34 +25,24 @@ public class TreeCloneRule extends AbstractJavaRulechainRule {
 
     @Override
     public Object visit(ASTMethodDeclaration node, Object data) {
+        if (loc == null) {
+            loc = node.getTextDocument().detachLocator();
+        }
         ASTBlock body = node.getBody();
         if (body != null) {
-            MiniTreeBuilderVisitor.buildJavaMiniTree(body, STATE);
+            MiniTreeBuilderVisitor.buildJavaMiniTree(body, STATE, loc);
         }
         return null;
     }
 
-    static final class CloneDetectorState implements CloneDetectorGlobals {
+    @Override
+    public void end(RuleContext ctx) {
+        loc = null;
+        STATE.endFile();
+    }
 
-        final ConcurrentMap<Integer, List<MiniTree>> buckets = new ConcurrentHashMap<>();
-        final int minConsideredSize;
-
-        CloneDetectorState(int minConsideredSize) {
-            this.minConsideredSize = minConsideredSize;
-        }
-
-        @Override
-        public void acceptTree(MiniTree tree) {
-            if (tree.mass() >= minConsideredSize) {
-                // `compute` guarantees atomic access to the list so it doesn't need synchronization
-                buckets.compute(tree.hash(), (key, list) -> {
-                    if (list == null) {
-                        list = new ArrayList<>(1);
-                    }
-                    list.add(tree);
-                    return list;
-                });
-            }
-        }
+    @Override
+    public void endAnalysis(RuleContext ctx) {
+        STATE.computeDuplicates();
     }
 }

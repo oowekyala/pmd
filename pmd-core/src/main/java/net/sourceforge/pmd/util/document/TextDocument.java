@@ -24,7 +24,7 @@ import net.sourceforge.pmd.util.datasource.DataSource;
  * {@link DataSource}, though the abstraction level of {@link DataSource}
  * is the {@link TextFile}.
  */
-public interface TextDocument extends Closeable {
+public interface TextDocument extends Closeable, Locator {
     // todo logical sub-documents, to support embedded languages
     //  ideally, just slice the text, and share the positioner
     //  a problem with document slices becomes reference counting for the close routine
@@ -127,6 +127,10 @@ public interface TextDocument extends Closeable {
      * offsets translated through {@link #inputOffset(int, boolean)}. The
      * returned region may have a different length.
      *
+     * <p>The returned region may very well be invalid in this document
+     * (eg {@link #toLocation(TextRegion)} could throw), but will work
+     * properly with {@link #detachLocator()}.
+     *
      * @param outputRegion Output region
      *
      * @return Input region
@@ -190,7 +194,7 @@ public interface TextDocument extends Closeable {
      * @throws IndexOutOfBoundsException If the argument is not a valid offset in this document
      */
     default int lineNumberAt(int offset) {
-        return toLocation(TextRegion.fromOffsetLength(offset, 0)).getBeginLine();
+        return toLocation(TextRegion.caretAt(offset)).getBeginLine();
     }
 
     /**
@@ -206,6 +210,24 @@ public interface TextDocument extends Closeable {
      */
     @Override
     void close() throws IOException;
+
+
+    /**
+     * Returns a locator that does not necessarily keep all the text
+     * content in memory. This allows only saving a reference to that
+     * locator and a text region (or its components) in order to be
+     * able to build a {@link FileLocation}.
+     *
+     * <p>Note: if the document is reloaded it is not going to be
+     * reparsed, meaning, for the region to be valid, you have to
+     * save the result of {@link #inputRegion(TextRegion)}.
+     *
+     * <p>I suppose this could be used by CPD.
+     */
+    // TODO this does not detect stale locations yet, even though we
+    //  store the contents checksum
+    Locator detachLocator();
+
 
     static TextDocument create(TextFile textFile) throws IOException {
         return new RootTextDocument(textFile);
