@@ -35,4 +35,6 @@ public interface JjtreeNode<N extends JjtreeNode<N>> extends GenericNode<N>, Tex
         return GenericToken.range(getFirstToken(), getLastToken());
     }
 
+    /** The ID of the rule that produced this node. */
+    int getProductionId();
 }

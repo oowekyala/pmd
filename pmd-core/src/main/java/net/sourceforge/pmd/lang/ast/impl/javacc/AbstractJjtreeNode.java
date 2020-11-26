@@ -139,6 +139,11 @@ public abstract class AbstractJjtreeNode<B extends AbstractJjtreeNode<B, N>, N e
         return lastToken;
     }
 
+    @Override
+    public final int getProductionId() {
+        return id;
+    }
+
     // the super methods query line & column, which we want to avoid
 
     protected void setLastToken(JavaccToken token) {
