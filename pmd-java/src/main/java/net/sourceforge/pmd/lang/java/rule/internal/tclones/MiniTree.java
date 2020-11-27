@@ -19,15 +19,23 @@ import net.sourceforge.pmd.util.document.Locator;
 import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
- *
+ * A light-weight mirror of an AST, that can be kept in memory when we're
+ * looking for clones.
  */
 public final class MiniTree {
 
-    private final MiniTree[] children;
+    // total size of this subtree
     private final int mass;
+
+    // state used only in the initial partitioning phase
     private final int deepHash;
+
+    // state used only in the similarity comparison phase
     private final int kind;
     private final Map<String, Object> attributes;
+    private final MiniTree[] children;
+
+    // state used to locate the node, only used if it is identified as a clone
     private final int startOffset;
     private final int endOffset;
     private final Locator locator;
@@ -50,7 +58,7 @@ public final class MiniTree {
         this.locator = locator;
     }
 
-    public FileLocation computeLocation() {
+    public FileLocation fetchLocation() {
         return locator.toLocation(getRegion());
     }
 

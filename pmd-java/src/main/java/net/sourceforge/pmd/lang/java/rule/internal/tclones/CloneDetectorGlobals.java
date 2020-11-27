@@ -5,12 +5,16 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+
+import net.sourceforge.pmd.util.StringUtil;
+import net.sourceforge.pmd.util.document.FileLocation;
 
 /**
  *
@@ -61,26 +65,45 @@ final class CloneDetectorGlobals {
         logger.endFile(this);
     }
 
+    static final class CloneSpec {
+
+        final double similarity;
+        final MiniTree tree;
+
+        CloneSpec(double similarity, MiniTree tree) {
+            this.similarity = similarity;
+            this.tree = tree;
+        }
+
+        public double similarity() {
+            return similarity;
+        }
+
+        public FileLocation fetchLocation() {
+            return tree.fetchLocation();
+        }
+    }
+
     static final class CloneSet {
 
-        final Map<MiniTree, List<MiniTree>> clones = new HashMap<>();
+        final Map<MiniTree, List<CloneSpec>> clones = new HashMap<>();
 
         void removeClonesOf(MiniTree t) {
             if (clones.remove(t) != null) {
                 return;
             }
-            clones.values().forEach(it -> it.removeIf(t2 -> t2 == t));
+            clones.values().forEach(clones -> clones.removeIf(spec -> spec.tree == t));
         }
 
-        void addClonePair(MiniTree t1, MiniTree t2) {
+        void addClonePair(MiniTree t1, MiniTree t2, double similarity) {
             if (System.identityHashCode(t2) < System.identityHashCode(t1)) {
                 // canonicalize order, to speedup containment test
                 // todo this should be repeatable across runs
-                addClonePair(t2, t1);
+                addClonePair(t2, t1, similarity);
                 return;
             }
 
-            clones.compute(t1, (k, list) -> appendList(t2, list));
+            clones.compute(t1, (k, list) -> appendList(new CloneSpec(similarity, t2), list));
         }
 
         int totalSize() {
@@ -96,8 +119,14 @@ final class CloneDetectorGlobals {
         logger.endAll(this);
 
         cloneSet.clones.forEach((key, others) -> {
-            System.out.println(key.computeLocation());
-            others.forEach(it -> System.out.println("    " + it.computeLocation()));
+            others.sort(Comparator.comparingDouble(CloneSpec::similarity).reversed());
+
+            System.out.println(key.fetchLocation());
+
+            others.forEach(clone -> {
+                String simPercent = StringUtil.percentageString(clone.similarity(), 2);
+                System.out.println("    " + simPercent + " @ " + clone.fetchLocation());
+            });
         });
 
         System.out.println(cloneSet.totalSize() + " clones in " + cloneSet.clones.size() + " buckets");
@@ -118,7 +147,7 @@ final class CloneDetectorGlobals {
                         ti.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         tj.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         // finally add the clone pair
-                        cloneSet.addClonePair(ti, tj);
+                        cloneSet.addClonePair(ti, tj, similarity);
                     }
                 }
             }
