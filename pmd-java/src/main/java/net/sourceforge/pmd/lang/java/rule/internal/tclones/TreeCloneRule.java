@@ -5,8 +5,8 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.lang.java.ast.ASTBlock;
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.util.document.Locator;
 
@@ -15,29 +15,29 @@ import net.sourceforge.pmd.util.document.Locator;
  */
 public class TreeCloneRule extends AbstractJavaRulechainRule {
 
-    private static final CloneDetectorGlobals STATE = new CloneDetectorGlobals(10);
+    private static final int MIN_MASS = 50;
+    private static final double SIM_THRESHOLD = 0.8;
+    private static final CloneDetectorGlobals STATE = new CloneDetectorGlobals(MIN_MASS, SIM_THRESHOLD);
 
-    private Locator loc;
+    private MiniTreeFileProcessor<JavaNode> processor;
 
     public TreeCloneRule() {
-        super(ASTMethodDeclaration.class);
+        super(ASTCompilationUnit.class);
     }
 
     @Override
-    public Object visit(ASTMethodDeclaration node, Object data) {
-        if (loc == null) {
-            loc = node.getTextDocument().detachLocator();
+    public Object visit(ASTCompilationUnit node, Object data) {
+        if (processor == null) {
+            Locator loc = node.getTextDocument().detachLocator();
+            processor = new MiniTreeFileProcessor<>(STATE, loc, JavaMiniTreeAttributes.JAVA_CONFIG);
         }
-        ASTBlock body = node.getBody();
-        if (body != null) {
-            MiniTreeBuilderVisitor.buildJavaMiniTree(body, STATE, loc);
-        }
+        processor.addSubtreesRecursively(node);
         return null;
     }
 
     @Override
     public void end(RuleContext ctx) {
-        loc = null;
+        processor = null;
         STATE.endFile();
     }
 

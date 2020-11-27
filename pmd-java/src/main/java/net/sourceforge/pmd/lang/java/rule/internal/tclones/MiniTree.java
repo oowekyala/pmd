@@ -5,8 +5,14 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.util.document.FileLocation;
 import net.sourceforge.pmd.util.document.Locator;
@@ -19,7 +25,9 @@ public final class MiniTree {
 
     private final MiniTree[] children;
     private final int mass;
-    private final int hash;
+    private final int deepHash;
+    private final int kind;
+    private final Map<String, Object> attributes;
     private final int startOffset;
     private final int endOffset;
     private final Locator locator;
@@ -27,11 +35,16 @@ public final class MiniTree {
     private MiniTree(MiniTree[] children,
                      int mass,
                      int hash,
+                     int kind,
+                     Map<String, Object> attributes,
                      TextRegion region,
                      Locator locator) {
+        this.attributes = attributes;
+        assert kind != -1;
         this.children = children;
         this.mass = mass;
-        this.hash = hash;
+        this.deepHash = hash;
+        this.kind = kind;
         this.startOffset = region.getStartOffset();
         this.endOffset = region.getEndOffset();
         this.locator = locator;
@@ -41,26 +54,57 @@ public final class MiniTree {
         return locator.toLocation(TextRegion.fromBothOffsets(startOffset, endOffset));
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    public void foreachDescendantAboveMass(int minMass, Consumer<MiniTree> action) {
+        for (MiniTree child : children) {
+            if (child.mass >= minMass) {
+                action.accept(this);
+                child.foreachDescendantAboveMass(minMass, action);
+            }
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+    }
+
+    /**
+     * Similarity = num common nodes / total tree size
+     */
+    public double similarity(MiniTree other) {
+        return 2 * numCommonNodes(this, other)
+            / (double) (this.mass + other.mass);
+    }
+
+    private boolean shallowEquals(MiniTree other) {
+        return this.kind == other.kind && other.attributes.equals(this.attributes);
+    }
+
+    private static int numCommonNodes(MiniTree t1, MiniTree t2) {
+        int result = 0;
+        if (t1.shallowEquals(t2)) {
+            result++;
         }
-        MiniTree miniTree = (MiniTree) o;
-        return hash == miniTree.hash
-            && mass == miniTree.mass; // i hope no chance of collision
+
+        if (t1.children.length > t2.children.length) {
+            MiniTree tmp = t1;
+            t1 = t2;
+            t2 = tmp;
+        }
+
+        int t1Len = t1.children.length;
+        // t1 is now the node with the fewest children
+
+        for (int i = 0; i < t1Len; i++) {
+            result += numCommonNodes(t1.children[i], t2.children[i]);
+        }
+
+        return result;
     }
 
     @Override
     public int hashCode() {
-        return hash;
+        return deepHash; //this is relevant to put it in the buckets of the hashmap
     }
 
-    public int hash() {
-        return hash;
+    /** The hash includes the whole subtree. */
+    public int deepHash() {
+        return deepHash;
     }
 
     /** Size of the subtree, in number of nodes. */
@@ -70,33 +114,54 @@ public final class MiniTree {
 
     public static final class MiniTreeBuilder {
 
-        private static final int KIND_H = 1097; // some random prime number
-
         private final List<MiniTree> children;
         private int hash;
         private int mass;
+        private int kind;
+        private Map<String, Object> attributes;
 
         private final Locator locator;
 
         public MiniTreeBuilder(Locator locator) {
             this.locator = locator;
-            mass = 1; // for the self node
-            hash = 1;
             children = new ArrayList<>(2);
+            reset();
         }
 
         public void addChild(MiniTree mtree) {
             children.add(mtree);
-            hash *= 7 + 31 * mtree.hash;
+            hash *= 7 + 31 * mtree.deepHash;
             mass += mtree.mass;
         }
 
 
-        public MiniTreeBuilder hashAttr(String label, Object attribute) {
-            return hashInt(label, Objects.hashCode(attribute));
+        public MiniTreeBuilder hashAttr(String label, @Nullable Object value) {
+            recordAttr(label, value);
+            return hashInt(label, Objects.hashCode(value));
         }
 
-        public MiniTreeBuilder hashInt(String label, int attrHash) {
+        /**
+         * Add an attribute that will NOT be hashed but will count
+         * towards similarity.
+         */
+        public void addAttrWithoutHash(String label, @Nullable Object value) {
+            recordAttr(label, value);
+        }
+
+        private void recordAttr(String label, @Nullable Object value) {
+            if (attributes == null) {
+                attributes = new HashMap<>(1);
+            }
+            attributes.put(label, value);
+        }
+
+
+        public void hashKind(int productionID) {
+            this.kind = productionID;
+            hashInt("", productionID);
+        }
+
+        private MiniTreeBuilder hashInt(String label, int attrHash) {
             int h = this.hash;
             h *= 7;
             h += 13 * (3 + label.hashCode()) * 17 * (attrHash + 1);
@@ -106,7 +171,11 @@ public final class MiniTree {
 
         public MiniTree buildAndReset(TextRegion region) {
             MiniTree[] children = this.children.toArray(this.children.toArray(new MiniTree[0]));
-            MiniTree result = new MiniTree(children, mass, hash, region, locator);
+            Map<String, Object> attributes = this.attributes;
+            if (attributes == null) {
+                attributes = Collections.emptyMap();
+            }
+            MiniTree result = new MiniTree(children, mass, hash, kind, attributes, region, locator);
             this.reset();
             return result;
         }
@@ -115,10 +184,8 @@ public final class MiniTree {
             hash = 1;
             mass = 1;
             children.clear();
-        }
-
-        public void hashKind(int productionID) {
-            hash = KIND_H * (productionID + 1);
+            kind = -1;
+            attributes = null;
         }
 
         public MiniTreeBuilder childrenBuilder() {
