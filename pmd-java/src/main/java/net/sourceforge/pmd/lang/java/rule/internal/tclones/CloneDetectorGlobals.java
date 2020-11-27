@@ -66,7 +66,10 @@ final class CloneDetectorGlobals {
         final Map<MiniTree, List<MiniTree>> clones = new HashMap<>();
 
         void removeClonesOf(MiniTree t) {
-
+            if (clones.remove(t) != null) {
+                return;
+            }
+            clones.values().forEach(it -> it.removeIf(t2 -> t2 == t));
         }
 
         void addClonePair(MiniTree t1, MiniTree t2) {
@@ -78,6 +81,10 @@ final class CloneDetectorGlobals {
             }
 
             clones.compute(t1, (k, list) -> appendList(t2, list));
+        }
+
+        int totalSize() {
+            return clones.values().stream().mapToInt(it -> it.size() + 1).sum();
         }
     }
 
@@ -92,6 +99,8 @@ final class CloneDetectorGlobals {
             System.out.println(key.computeLocation());
             others.forEach(it -> System.out.println("    " + it.computeLocation()));
         });
+
+        System.out.println(cloneSet.totalSize() + " clones in " + cloneSet.clones.size() + " buckets");
     }
 
     private @NonNull CloneSet initialCloneSet() {
@@ -105,6 +114,7 @@ final class CloneDetectorGlobals {
                     double similarity = ti.similarity(tj);
                     if (similarity >= simThreshold) {
                         // remove strictly smaller clones
+                        // todo not sure if this works actually
                         ti.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         tj.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         // finally add the clone pair

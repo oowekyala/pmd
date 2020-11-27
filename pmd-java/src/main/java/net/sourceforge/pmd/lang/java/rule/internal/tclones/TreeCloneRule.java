@@ -15,8 +15,8 @@ import net.sourceforge.pmd.util.document.Locator;
  */
 public class TreeCloneRule extends AbstractJavaRulechainRule {
 
-    private static final int MIN_MASS = 50;
-    private static final double SIM_THRESHOLD = 0.8;
+    private static final int MIN_MASS = 30;
+    private static final double SIM_THRESHOLD = 0.9;
     private static final CloneDetectorGlobals STATE = new CloneDetectorGlobals(MIN_MASS, SIM_THRESHOLD);
 
     private MiniTreeFileProcessor<JavaNode> processor;

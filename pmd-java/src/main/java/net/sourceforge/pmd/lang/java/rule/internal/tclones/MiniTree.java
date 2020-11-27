@@ -40,7 +40,7 @@ public final class MiniTree {
                      TextRegion region,
                      Locator locator) {
         this.attributes = attributes;
-        assert kind != -1;
+        assert kind != -1 : "Kind was not set";
         this.children = children;
         this.mass = mass;
         this.deepHash = hash;
@@ -51,7 +51,7 @@ public final class MiniTree {
     }
 
     public FileLocation computeLocation() {
-        return locator.toLocation(TextRegion.fromBothOffsets(startOffset, endOffset));
+        return locator.toLocation(getRegion());
     }
 
     public void foreachDescendantAboveMass(int minMass, Consumer<MiniTree> action) {
@@ -64,7 +64,7 @@ public final class MiniTree {
     }
 
     /**
-     * Similarity = num common nodes / total tree size
+     * Similarity is the proportion of nodes both trees have in common.
      */
     public double similarity(MiniTree other) {
         return 2 * numCommonNodes(this, other)
@@ -73,6 +73,10 @@ public final class MiniTree {
 
     private boolean shallowEquals(MiniTree other) {
         return this.kind == other.kind && other.attributes.equals(this.attributes);
+    }
+
+    public TextRegion getRegion() {
+        return TextRegion.fromBothOffsets(startOffset, endOffset);
     }
 
     private static int numCommonNodes(MiniTree t1, MiniTree t2) {
@@ -188,8 +192,5 @@ public final class MiniTree {
             attributes = null;
         }
 
-        public MiniTreeBuilder childrenBuilder() {
-            return new MiniTreeBuilder(this.locator);
-        }
     }
 }

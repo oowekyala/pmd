@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
@@ -27,6 +28,11 @@ public class JavaMiniTreeAttributes {
         public boolean isIgnored(JavaNode node) {
             return node instanceof ASTImportDeclaration
                 || node instanceof ASTPackageDeclaration;
+        }
+
+        @Override
+        public boolean isSequencer(JavaNode node) {
+            return node instanceof ASTBlock;
         }
 
         @Override

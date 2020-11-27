@@ -11,12 +11,14 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTree.MiniTreeBuilder;
 import net.sourceforge.pmd.util.document.Locator;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
  * Proxy to a {@link CloneDetectorGlobals} scoped to a single file.
  */
 final class MiniTreeFileProcessor<N extends GenericNode<N> & TextAvailableNode> {
 
+    private static final int SEQUENCE_FAKE_KIND = -495062;
     private final CloneDetectorGlobals globals;
     private final Locator locator;
     private final MiniAstHandler<N> ast;
@@ -39,15 +41,13 @@ final class MiniTreeFileProcessor<N extends GenericNode<N> & TextAvailableNode> 
     private MiniTree addSubtreesRecursively(N node, MiniTreeBuilder myBuilder) {
         myBuilder.hashKind(ast.getRuleKind(node));
 
-        MiniTreeBuilder childrenBuilder = myBuilder.childrenBuilder();
-
         // builder may be reset and reused for all children
-        for (N child : node.children()) {
-            if (ast.isIgnored(child)) {
-                continue;
-            }
-            MiniTree childTree = addSubtreesRecursively(child, childrenBuilder);
-            myBuilder.addChild(childTree); // add children hash to this hash too
+        MiniTreeBuilder childrenBuilder = newBuilder();
+
+        if (ast.isSequencer(node)) {
+            buildSequence(node, myBuilder, childrenBuilder);
+        } else {
+            buildNormal(node, myBuilder, childrenBuilder);
         }
 
         ast.hashAttributes(node, myBuilder);
@@ -55,5 +55,46 @@ final class MiniTreeFileProcessor<N extends GenericNode<N> & TextAvailableNode> 
         MiniTree built = myBuilder.buildAndReset(node.getTextRegion());
         globals.acceptTree(built);
         return built;
+    }
+
+    private void buildNormal(N node, MiniTreeBuilder myBuilder, MiniTreeBuilder childrenBuilder) {
+        for (N child : node.children()) {
+            if (ast.isIgnored(child)) {
+                continue;
+            }
+            MiniTree childTree = addSubtreesRecursively(child, childrenBuilder);
+            myBuilder.addChild(childTree); // add children hash to this hash too
+        }
+    }
+
+
+    public MiniTreeBuilder newBuilder() {
+        return new MiniTreeBuilder(this.locator);
+    }
+
+    private void buildSequence(N node, MiniTreeBuilder myBuilder, MiniTreeBuilder childrenBuilder) {
+        if (node.getNumChildren() == 0) {
+            return;
+        }
+        /*
+        This builds a tree that is unbalanced to the left
+         */
+
+        MiniTreeBuilder tmpBuilder = newBuilder();
+        tmpBuilder.hashKind(SEQUENCE_FAKE_KIND);
+
+        MiniTree left = addSubtreesRecursively(node.getChild(0), childrenBuilder);
+
+        for (int i = 1; i < node.getNumChildren(); i++) {
+            MiniTree right = addSubtreesRecursively(node.getChild(i), childrenBuilder);
+            tmpBuilder.addChild(left);
+            tmpBuilder.addChild(right);
+
+            TextRegion combinedRegion = TextRegion.union(left.getRegion(), right.getRegion());
+            left = tmpBuilder.buildAndReset(combinedRegion);
+            tmpBuilder.hashKind(SEQUENCE_FAKE_KIND);
+        }
+
+        myBuilder.addChild(left);
     }
 }

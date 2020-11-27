@@ -16,6 +16,10 @@ interface MiniAstHandler<N extends GenericNode<N>> {
         return false;
     }
 
+    default boolean isSequencer(N node) {
+        return false;
+    }
+
     void hashAttributes(N node, MiniTreeBuilder builder);
 
     default int getRuleKind(N node) {
