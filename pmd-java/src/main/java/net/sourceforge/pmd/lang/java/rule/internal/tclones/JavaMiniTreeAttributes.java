@@ -50,6 +50,7 @@ public class JavaMiniTreeAttributes {
     };
 
     static final class AttributesHasher extends JavaVisitorBase<MiniTreeBuilder, Void> {
+        // note that nodes of a given type need to add exactly the same attributes in the same order
 
         static final AttributesHasher INSTANCE = new AttributesHasher();
 
@@ -87,14 +88,13 @@ public class JavaMiniTreeAttributes {
 
         @Override
         public Void visit(ASTMethodDeclaration node, MiniTreeBuilder data) {
-            if (node.isOverridden()) {
-                // the name only somewhat matters when we're overriding
-                // something, because it's not declared locally
-                // todo this should be generalized with the external ref check
-                //  other things to consider in the generalization:
-                //  - remove super., this. and static qualifiers
-                data.hashAttr("overriddenName", node.getName());
-            }
+            // the name only somewhat matters when we're overriding
+            // something, because it's not declared locally
+            // todo this should be generalized with the external ref check
+            //  other things to consider in the generalization:
+            //  - remove super., this. and static qualifiers
+            String name = node.isOverridden() ? node.getName() : null;
+            data.hashAttr("overriddenName", name);
             return null;
         }
 
