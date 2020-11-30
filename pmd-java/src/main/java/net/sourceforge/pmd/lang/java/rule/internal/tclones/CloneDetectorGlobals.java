@@ -157,8 +157,7 @@ final class CloneDetectorGlobals {
                     MiniTree tj = bucket.get(j);
                     double similarity = ti.similarity(tj);
                     if (similarity >= simThreshold) {
-                        // remove strictly smaller clones
-                        // todo not sure if this works actually
+                        // remove strictly smaller clones because they're less interesting
                         ti.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         tj.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
                         // finally add the clone pair
