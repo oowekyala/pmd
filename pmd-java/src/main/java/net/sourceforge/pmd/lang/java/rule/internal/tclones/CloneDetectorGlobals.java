@@ -7,8 +7,10 @@ package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -86,13 +88,22 @@ final class CloneDetectorGlobals {
 
     static final class CloneSet {
 
+        private static final int GC_GEN_SIZE = 300;
         final Map<MiniTree, List<CloneSpec>> clones = new HashMap<>();
+        final Set<MiniTree> prunedTrees = new HashSet<>();
 
         void removeClonesOf(MiniTree t) {
-            if (clones.remove(t) != null) {
-                return;
+            boolean ok = clones.remove(t) != null;
+
+            // we need to remove it also in the values list
+            // we only do that periodically, which is a big performance improvement,
+            // both in space (the lambdas need to be garbage collected) and time
+            if (!ok && prunedTrees.add(t) && prunedTrees.size() > GC_GEN_SIZE) {
+                for (List<CloneSpec> cloneSpecs : clones.values()) {
+                    cloneSpecs.removeIf(spec -> prunedTrees.contains(spec.tree));
+                }
+                prunedTrees.clear();
             }
-            clones.values().forEach(clones -> clones.removeIf(spec -> spec.tree == t));
         }
 
         void addClonePair(MiniTree t1, MiniTree t2, double similarity) {
@@ -103,7 +114,11 @@ final class CloneDetectorGlobals {
                 return;
             }
 
-            clones.compute(t1, (k, list) -> appendList(new CloneSpec(similarity, t2), list));
+            List<CloneSpec> list = clones.get(t1);
+            List<CloneSpec> list2 = appendList(new CloneSpec(similarity, t2), list);
+            if (list != list2) {
+                clones.put(t1, list2);
+            }
         }
 
         int totalSize() {

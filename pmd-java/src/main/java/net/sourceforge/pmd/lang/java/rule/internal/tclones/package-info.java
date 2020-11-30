@@ -19,6 +19,32 @@
  * the AST it doesn't show count in irrelevant token sequences like
  * closing braces.
  *
+ * <p>Concretely the tree
+ * <pre>{@code
+ * boolean foo(int i, int j) {
+ *   return i + j % 2;
+ * }
+ * }</pre>
+ * is hashed as if it was
+ * <pre>{@code
+ * boolean x0(int x1, int x2) {
+ *   return x3 + x4 % x5;
+ * }
+ * }</pre>
+ * where the {@code xi} may match any node of the same kind as the original.
+ * So {@code foo} is placed in the same bucket as
+ * <pre>{@code
+ * boolean bar(int i, int j) {
+ *   return i + i % j;
+ * }
+ * }</pre>
+ *
+ * <p>The similarity metric is then affected by the two differences
+ * (in places {@code x4} and {@code x5}).
+ *
+ * <p>TODO relax the kind requirement on hash holes. Maybe only place
+ *     a mass requirement.
+ *
  * <p>TODO identify unification function using local declarations.
  *     Basically anonymise identifiers when they're locally declared,
  *     but not when they're external.

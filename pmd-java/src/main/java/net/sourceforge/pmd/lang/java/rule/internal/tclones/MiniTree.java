@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.util.document.FileLocation;
@@ -23,6 +24,8 @@ import net.sourceforge.pmd.util.document.TextRegion;
  * looking for clones.
  */
 public final class MiniTree {
+
+    private static final MiniTree[] EMPTY = new MiniTree[0];
 
     // total size of this subtree
     private final int mass;
@@ -140,16 +143,31 @@ public final class MiniTree {
             reset();
         }
 
-        public void addChild(MiniTree mtree) {
+        void addChild(MiniTree mtree) {
             children.add(mtree);
             hash *= 7 + 31 * mtree.deepHash;
             mass += mtree.mass;
         }
 
-
+        /**
+         * Record an attribute that will count during both the structural
+         * pruning (hash phase) and the similarity phase.
+         */
         public MiniTreeBuilder hashAttr(String label, @Nullable Object value) {
             recordAttr(label, value);
             return hashInt(label, Objects.hashCode(value));
+        }
+
+        // values with perfect hashes do not need to be recorded for later comparison
+
+        /** Enums have perfect hashes. */
+        public MiniTreeBuilder perfectHashAttr(String label, @NonNull Enum<?> value) {
+            return hashInt(label, Objects.hashCode(value));
+        }
+
+        /** Integers have perfect hashes. */
+        public MiniTreeBuilder perfectHashAttr(String label, int value) {
+            return hashInt(label, value);
         }
 
         /**
@@ -168,7 +186,7 @@ public final class MiniTree {
         }
 
 
-        public void hashKind(int productionID) {
+        void hashKind(int productionID) {
             this.kind = productionID;
             hashInt("", productionID);
         }
@@ -182,7 +200,7 @@ public final class MiniTree {
         }
 
         public MiniTree buildAndReset(TextRegion region) {
-            MiniTree[] children = this.children.toArray(this.children.toArray(new MiniTree[0]));
+            MiniTree[] children = this.children.toArray(EMPTY);
             Map<String, Object> attributes = this.attributes;
             if (attributes == null) {
                 attributes = Collections.emptyMap();

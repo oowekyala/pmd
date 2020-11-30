@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
+import java.util.Objects;
+
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
@@ -58,32 +60,36 @@ public class JavaMiniTreeAttributes {
 
         @Override
         public Void visit(ASTMethodCall node, MiniTreeBuilder data) {
-            data.hashAttr("name", node.getMethodName().intern());
+            // method names are used in the structure filter, but not other identifiers
+            data.hashAttr("name", node.getMethodName());
             return null;
         }
 
         @Override
         public Void visitLiteral(ASTLiteral node, MiniTreeBuilder data) {
-            data.addAttrWithoutHash("value", node.getConstValue());
+            // We store only the hashcode so as not to keep strings in memory
+            // Also the value is not part of the structural hash
+            data.addAttrWithoutHash("value", Objects.hashCode(node.getConstValue()));
             return null;
         }
 
         @Override
         public Void visit(ASTInfixExpression node, MiniTreeBuilder data) {
-            data.hashAttr("op", node.getOperator());
+            data.perfectHashAttr("op", node.getOperator());
             return null;
         }
 
         @Override
         public Void visit(ASTPrimitiveType node, MiniTreeBuilder data) {
-            data.hashAttr("k", node.getKind());
+            data.perfectHashAttr("k", node.getKind());
             return null;
         }
 
         @Override
         public Void visit(ASTMethodDeclaration node, MiniTreeBuilder data) {
             if (node.isOverridden()) {
-                // the name only somewhat matters when we're overriding something, because it's not declared locally
+                // the name only somewhat matters when we're overriding
+                // something, because it's not declared locally
                 // todo this should be generalized with the external ref check
                 //  other things to consider in the generalization:
                 //  - remove super., this. and static qualifiers
