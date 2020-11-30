@@ -5,10 +5,7 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -35,7 +32,7 @@ public final class MiniTree {
 
     // state used only in the similarity comparison phase
     private final int kind;
-    private final Map<String, Object> attributes;
+    private final AttrMap attributes;
     private final MiniTree[] children;
 
     // state used to locate the node, only used if it is identified as a clone
@@ -47,7 +44,7 @@ public final class MiniTree {
                      int mass,
                      int hash,
                      int kind,
-                     Map<String, Object> attributes,
+                     AttrMap attributes,
                      TextRegion region,
                      Locator locator) {
         this.attributes = attributes;
@@ -133,7 +130,7 @@ public final class MiniTree {
         private int hash;
         private int mass;
         private int kind;
-        private Map<String, Object> attributes;
+        private AttrMap attributes;
 
         private final Locator locator;
 
@@ -180,9 +177,10 @@ public final class MiniTree {
 
         private void recordAttr(String label, @Nullable Object value) {
             if (attributes == null) {
-                attributes = new HashMap<>(1);
+                attributes = new AttrMap(label, value);
+            } else {
+                attributes.put(label, value);
             }
-            attributes.put(label, value);
         }
 
 
@@ -201,9 +199,9 @@ public final class MiniTree {
 
         public MiniTree buildAndReset(TextRegion region) {
             MiniTree[] children = this.children.toArray(EMPTY);
-            Map<String, Object> attributes = this.attributes;
+            AttrMap attributes = this.attributes;
             if (attributes == null) {
-                attributes = Collections.emptyMap();
+                attributes = AttrMap.EMPTY;
             }
             MiniTree result = new MiniTree(children, mass, hash, kind, attributes, region, locator);
             this.reset();
