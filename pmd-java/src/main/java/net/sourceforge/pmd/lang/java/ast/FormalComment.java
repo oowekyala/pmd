@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
@@ -31,7 +32,10 @@ public class FormalComment extends Comment {
         return owner;
     }
 
-    public JdocComment getJdocTree() {
+    /**
+     * Returns the root of the parsed javadoc tree.
+     */
+    public @NonNull JdocComment getJdocTree() {
         if (parsed == null) {
             parsed = JavadocParserFacade.parseJavaToken(this, getToken());
         }

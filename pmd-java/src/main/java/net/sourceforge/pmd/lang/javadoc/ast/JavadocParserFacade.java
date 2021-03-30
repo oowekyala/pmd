@@ -20,6 +20,10 @@ import net.sourceforge.pmd.util.document.TextDocument;
 @InternalApi
 public final class JavadocParserFacade {
 
+    private JavadocParserFacade() {
+        // utility class
+    }
+
     /**
      * Parse the given text document as a javadoc "file". The document must start
      * with the token {@code /**} and end with the token {@code * /} (though this

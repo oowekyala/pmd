@@ -4,15 +4,10 @@
 
 package net.sourceforge.pmd.lang.ast.test
 
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.shouldNotBe
-import net.sourceforge.pmd.lang.ast.impl.AbstractNode
-import net.sourceforge.pmd.lang.ast.GenericToken
+import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.TextAvailableNode
-import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode
-import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken
-import java.util.*
 import kotlin.test.assertEquals
 
 
@@ -26,6 +21,9 @@ val TextAvailableNode.textStr: String
 infix fun TextAvailableNode.shouldHaveText(str: String) {
     assertEquals(expected = str, actual = text.toString(), message = "Text is different")
 }
+
+fun TextAvailableNode.textOfReportLocation(): String? =
+        reportLocation.regionInFile?.let(textDocument::sliceOriginalText)?.toString()
 
 
 fun Node.assertTextRangeIsOk() {
