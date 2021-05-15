@@ -610,8 +610,8 @@ public class Foo {
     <rule name="OptimizableToArrayCall"
           language="java"
           since="1.8"
-	  minimumLanguageVersion="1.6"
-          message="This call to Collection.toArray() may be optimizable"
+          minimumLanguageVersion="1.6"
+          message="Prefer calling `toArray(E[])` with an empty array argument"
           class="net.sourceforge.pmd.lang.rule.XPathRule"
           externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_performance.html#optimizabletoarraycall">
         <description>
