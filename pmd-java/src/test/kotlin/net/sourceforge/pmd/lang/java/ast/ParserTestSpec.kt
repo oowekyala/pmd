@@ -16,14 +16,15 @@ import io.kotest.core.test.createTestName
 import io.kotest.matchers.Matcher
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.ParseException
-import net.sourceforge.pmd.lang.ast.test.*
+import net.sourceforge.pmd.lang.ast.test.Assertions
+import net.sourceforge.pmd.lang.ast.test.IntelliMarker
+import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
+import net.sourceforge.pmd.lang.ast.test.shouldMatchN
 import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx
-import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx
 import net.sourceforge.pmd.lang.java.types.JTypeMirror
 import net.sourceforge.pmd.lang.java.types.TypeDslMixin
 import net.sourceforge.pmd.lang.java.types.TypeDslOf
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode
-import net.sourceforge.pmd.lang.javadoc.ast.jdoc
+import net.sourceforge.pmd.lang.java.types.shouldHaveType
 import io.kotest.matchers.should as kotlintestShould
 
 /**
@@ -193,7 +194,7 @@ abstract class ParserTestSpec(body: ParserTestSpec.() -> Unit) : DslDrivenSpec()
                 fun haveType(type: TypeDslMixin.() -> JTypeMirror): Assertions<String> = {
 
                     val node = doParse(it)
-                    if (node is TypeNode) node::getTypeMirror shouldBe TypeDslOf(node.typeSystem).type()
+                    if (node is TypeNode) node shouldHaveType TypeDslOf(node.typeSystem).type()
                     else throw AssertionError("Not a TypeNode: $node")
 
                 }

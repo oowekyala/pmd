@@ -21,6 +21,8 @@ val TextAvailableNode.textStr: String
 infix fun TextAvailableNode.shouldHaveText(str: String) {
     assertEquals(expected = str, actual = text.toString(), message = "Text is different")
 }
+inline fun <reified T : Node> Node.getDescendantsOfType(): List<T> = descendants(T::class.java).toList()
+inline fun <reified T : Node> Node.getFirstDescendantOfType(): T = descendants(T::class.java).firstOrThrow()
 
 fun TextAvailableNode.textOfReportLocation(): String? =
         reportLocation.regionInFile?.let(textDocument::sliceOriginalText)?.toString()
