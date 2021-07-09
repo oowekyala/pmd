@@ -62,11 +62,6 @@ public class ScalaTokenAdapter implements GenericToken<ScalaTokenAdapter> {
     }
 
     @Override
-    public int getKind() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String toString() {
         return "ScalaTokenAdapter{"
                 + "token=" + token
