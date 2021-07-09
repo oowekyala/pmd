@@ -8,6 +8,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.java.ast.ParserTestCtx
 import net.sourceforge.pmd.lang.java.types.TypePrettyPrint.TypePrettyPrinter
+import net.sourceforge.pmd.lang.java.types.TypePrettyPrint.withSimpleNames
 
 /**
  * @author Clément Fournier
@@ -40,7 +41,7 @@ class TypePrettyPrintTest : FunSpec({
 
     test("pretty print with simple names") {
 
-        fun JTypeMirror.pp() = TypePrettyPrint.prettyPrint(this, TypePrettyPrinter().useSimpleNames(true))
+        fun JTypeMirror.pp() = TypePrettyPrint.prettyPrint(this, withSimpleNames())
 
         with(TypeDslOf(ts)) {
             ts.OBJECT.pp() shouldBe "Object"

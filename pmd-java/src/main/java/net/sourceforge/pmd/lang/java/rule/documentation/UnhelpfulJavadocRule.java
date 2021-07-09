@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.java.rule.documentation;
 
 
+import static net.sourceforge.pmd.lang.java.types.TypePrettyPrint.withSimpleNames;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,9 +113,9 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
             }
 
             JTypeMirror type = formal.getTypeMirror();
-            String signature = TypePrettyPrint.prettyPrintWithSimpleNames(type);
+            String signature = TypePrettyPrint.prettyPrint(type, withSimpleNames());
             if (data.getImageCs().contentEquals(signature)
-                || data.getImageCs().contentEquals(TypePrettyPrint.prettyPrintWithSimpleNames(type.getErasure()))) {
+                || data.getImageCs().contentEquals(TypePrettyPrint.prettyPrint(type.getErasure(), withSimpleNames()))) {
                 collector.addProblem(paramTag, "@param", "Parameter description is just a type");
             }
         }

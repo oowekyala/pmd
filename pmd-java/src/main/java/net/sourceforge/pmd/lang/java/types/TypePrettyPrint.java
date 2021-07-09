@@ -27,6 +27,10 @@ public final class TypePrettyPrint {
 
     }
 
+    public static TypePrettyPrinter withSimpleNames() {
+        return new TypePrettyPrinter().useSimpleNames(true);
+    }
+
     public static @NonNull String prettyPrint(@NonNull JTypeVisitable t) {
         return prettyPrint(t, new TypePrettyPrinter());
     }
