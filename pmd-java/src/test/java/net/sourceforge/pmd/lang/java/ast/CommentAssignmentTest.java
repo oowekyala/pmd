@@ -8,8 +8,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -17,11 +17,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.sourceforge.pmd.lang.java.symboltable.BaseNonParserTest;
+import net.sourceforge.pmd.lang.java.BaseParserTest;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
 
-public class CommentAssignmentTest extends BaseNonParserTest {
+public class CommentAssignmentTest extends BaseParserTest {
 
     /**
      * Blank lines in comments should not raise an exception. See bug #1048.
