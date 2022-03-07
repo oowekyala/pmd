@@ -160,15 +160,15 @@ public class CharsTest {
         Chars bc = Chars.wrap("abcdb").slice(1, 2);
         //                      --
 
-        Assert.assertEquals("bc", bc.toString());
-        Assert.assertEquals("b", bc.removeSuffix("c").toString());
-        Assert.assertEquals("", bc.removeSuffix("bc").toString());
+        assertEquals("bc", bc.toString());
+        assertEquals("b", bc.removeSuffix("c").toString());
+        assertEquals("", bc.removeSuffix("bc").toString());
 
         bc = Chars.wrap("aaaaaaa").slice(2, 3);
         //                 ---
 
-        Assert.assertEquals("", bc.removeSuffix("aaa").toString());
-        Assert.assertEquals("aaa", bc.removeSuffix("aaaa").toString());
+        assertEquals("", bc.removeSuffix("aaa").toString());
+        assertEquals("aaa", bc.removeSuffix("aaaa").toString());
     }
 
     @Test
@@ -255,18 +255,18 @@ public class CharsTest {
     @Test
     public void testSplits() {
         Chars chars = Chars.wrap("a_a_b_c_s").slice(2, 5);
-        Assert.assertEquals("a_b_c", chars.toString());
+        assertEquals("a_b_c", chars.toString());
 
         testSplits(chars, "_");
         testSplits(chars, "a");
         testSplits(chars, "b");
         testSplits(chars, "c");
-        Assert.assertEquals(listOf("", "_b_c"), listSplits(chars, "a"));
+        assertEquals(listOf("", "_b_c"), listSplits(chars, "a"));
 
         chars = chars.subSequence(1, 5);
-        Assert.assertEquals("_b_c", chars.toString());
+        assertEquals("_b_c", chars.toString());
 
-        Assert.assertEquals(listOf("", "b", "c"), listSplits(chars, "_"));
+        assertEquals(listOf("", "b", "c"), listSplits(chars, "_"));
 
 
         testSplits(Chars.wrap("abc"), "");
@@ -282,7 +282,7 @@ public class CharsTest {
     private void testSplits(Chars chars, String regex) {
         List<String> splitList = listSplits(chars, regex);
         List<String> expected = Arrays.asList(chars.toString().split(regex));
-        Assert.assertEquals("Split should behave like String#split", expected, splitList);
+        assertEquals("Split should behave like String#split", expected, splitList);
     }
 
 }
