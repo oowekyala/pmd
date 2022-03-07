@@ -8,8 +8,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.FileLocation;
 
 /** A token implementation for Javadoc nodes. */
 public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDocument> implements PrevLinkedToken<JdocToken> {

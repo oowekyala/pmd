@@ -6,10 +6,10 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
-import net.sourceforge.pmd.lang.java.ast.FormalComment;
+import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.java.ast.JavaTokenKinds;
+import net.sourceforge.pmd.lang.java.ast.JavadocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
-import net.sourceforge.pmd.util.document.TextDocument;
 
 /**
  * Main entry point to parse javadoc comments.
@@ -46,7 +46,7 @@ public final class JavadocParserFacade {
      * Parse a <i>Java</i> token corresponding to a javadoc comment as if
      * with {@link #parseJavadoc(TextDocument)}.
      */
-    public static JdocComment parseJavaToken(FormalComment parent, JavaccToken token) {
+    public static JdocComment parseJavaToken(JavadocComment parent, JavaccToken token) {
         assert token.kind == JavaTokenKinds.FORMAL_COMMENT;
         TextDocument baseDocument = token.getDocument().getTextDocument();
         TextDocument textDocument = baseDocument.subDocument(token.getRegion(), JavadocLanguage.INSTANCE.getDefaultVersion());

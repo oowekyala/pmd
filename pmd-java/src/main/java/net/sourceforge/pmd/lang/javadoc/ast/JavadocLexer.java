@@ -20,9 +20,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 /**
  * Wraps the generated JFlex lexer into a {@link TokenManager}. The parsers

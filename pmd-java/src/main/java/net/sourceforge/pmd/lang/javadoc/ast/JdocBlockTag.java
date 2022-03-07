@@ -7,8 +7,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.FileLocation;
 
 /**
  * An inline javadoc tag, eg {@code @return}.

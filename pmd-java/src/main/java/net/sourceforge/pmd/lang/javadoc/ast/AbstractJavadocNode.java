@@ -7,9 +7,9 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import java.util.EnumSet;
 
 import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.FileLocation;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 class AbstractJavadocNode extends AbstractNode<AbstractJavadocNode, JavadocNode> implements JavadocNode {
 
