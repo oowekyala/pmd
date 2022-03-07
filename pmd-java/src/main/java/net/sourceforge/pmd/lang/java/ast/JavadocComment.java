@@ -12,9 +12,9 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocParserFacade;
 
 /**
- * A {@link Comment} that has Javadoc content.
+ * A {@link JavaComment} that has Javadoc content.
  */
-public final class JavadocComment extends Comment {
+public final class JavadocComment extends JavaComment {
 
     private JdocComment parsed;
     private JavadocCommentOwner owner;

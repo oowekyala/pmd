@@ -47,40 +47,41 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
 
 
     @Override
-    protected int localOffsetTransform(int outOffset, boolean inclusive) {
-        // we save the last fragment to amortize the lookup
+    protected int localOffsetTransform(int outputOffset, boolean inclusive) {
+        // caching the last accessed fragment instead of doing
+        // a linear search is critical for performance.
         Fragment f = this.lastAccessedFragment;
         if (f == null) {
-            return outOffset;
+            return outputOffset;
         }
 
-        if (!f.contains(outOffset)) {
+        if (!f.contains(outputOffset)) {
             // Slow path, we must search for the fragment
             // This optimisation is important, otherwise we have
             // to search for very long times in some files
 
-            if (f.outEnd() < outOffset) { // search forward
-                while (f.next != null && f.outEnd() < outOffset) {
+            if (f.outEnd() < outputOffset) { // search forward
+                while (f.next != null && f.outEnd() < outputOffset) {
                     f = f.next;
                 }
             } else { // search backwards
-                while (f.prev != null && outOffset <= f.outStart()) {
+                while (f.prev != null && outputOffset <= f.outStart()) {
                     f = f.prev;
                 }
             }
             lastAccessedFragment = f;
         }
 
-        if (!inclusive && f.outEnd() == outOffset) {
+        if (!inclusive && f.outEnd() == outputOffset) {
             if (f.next != null) {
                 f = f.next;
                 lastAccessedFragment = f;
                 // fallthrough
             } else {
-                return f.outToIn(outOffset) + 1;
+                return f.outToIn(outputOffset) + 1;
             }
         }
-        return f.outToIn(outOffset);
+        return f.outToIn(outputOffset);
     }
 
 
@@ -95,9 +96,9 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
         final @Nullable Fragment prev;
         @Nullable Fragment next;
 
+        private final int inStart;
         private final int inLength;
         private final int outStart;
-        private final int inStart;
 
         Fragment(@Nullable Fragment prev, int inLength, Chars chars) {
             this.chars = chars;

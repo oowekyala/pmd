@@ -2,14 +2,14 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.util.document;
+package net.sourceforge.pmd.lang.document;
 
 import java.util.Objects;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
 
 /**
- *
+ * See {@link TextDocument#subDocument(TextRegion, LanguageVersion)}.
  */
 final class ContiguousSubDocument extends BaseMappedDocument {
 

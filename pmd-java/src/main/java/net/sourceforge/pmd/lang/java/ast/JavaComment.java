@@ -12,7 +12,7 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JjtreeNode;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
-import net.sourceforge.pmd.lang.document.Reportable;
+import net.sourceforge.pmd.reporting.Reportable;
 
 /**
  * Wraps a comment token to provide some utilities.
@@ -22,12 +22,12 @@ import net.sourceforge.pmd.lang.document.Reportable;
  * <p>This class represents any kind of comment. A specialized subclass
  * provides more API for Javadoc comments, see {@link JavadocComment}.
  */
-public class Comment implements Reportable {
+public class JavaComment implements Reportable {
     //TODO maybe move part of this into pmd core
 
     private final JavaccToken token;
 
-    Comment(JavaccToken t) {
+    JavaComment(JavaccToken t) {
         this.token = t;
     }
 
@@ -85,7 +85,7 @@ public class Comment implements Reportable {
 
     public Iterable<Chars> filteredLines(boolean preserveEmptyLines) {
         if (preserveEmptyLines) {
-            return () -> IteratorUtil.map(getText().lines().iterator(), Comment::removeCommentMarkup);
+            return () -> IteratorUtil.map(getText().lines().iterator(), JavaComment::removeCommentMarkup);
         } else {
             return () -> IteratorUtil.mapNotNull(
                 getText().lines().iterator(),
@@ -140,6 +140,6 @@ public class Comment implements Reportable {
         if (node instanceof AccessNode) {
             node = ((AccessNode) node).getModifiers();
         }
-        return getSpecialCommentsIn(node).filter(Comment::isComment);
+        return getSpecialCommentsIn(node).filter(JavaComment::isComment);
     }
 }
