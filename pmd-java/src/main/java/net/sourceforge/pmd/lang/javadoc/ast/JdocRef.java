@@ -52,7 +52,7 @@ public interface JdocRef extends JavadocNode {
          * Returns the name of the class. This may be a simple name,
          * which needs to be resolved with a {@link JSymbolTable}.
          * This may also be empty, in which case the enclosing class
-         * is implied.
+         * is implied. It's not necessarily a single identifier.
          */
         public String getSimpleRef() {
             return getFirstToken().getImage();
