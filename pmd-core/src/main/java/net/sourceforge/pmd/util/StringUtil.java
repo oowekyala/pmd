@@ -177,6 +177,20 @@ public final class StringUtil {
     }
 
     /**
+     * Returns the substring preceding the first occurrence of the
+     * given character. If the character doesn't occur, returns
+     * the whole string. This contrasts with {@link StringUtils#substringBefore(String, String)}
+     * which returns the empty string in that case.
+     *
+     * @param str String to cut
+     * @param c   Delimiter
+     */
+    public static String substringBefore(String str, int c) {
+        int i = str.indexOf(c);
+        return i == -1 ? str : str.substring(0, i);
+    }
+
+    /**
      * Formats a double to a percentage, keeping {@code numDecimal} decimal places.
      *
      * @param val         a double value between 0 and 1

@@ -133,7 +133,7 @@ class ClassTypeImpl implements JClassType {
     }
 
     @Override
-    public JClassType selectInner(JClassSymbol symbol, List<? extends JTypeMirror> targs) {
+    public @NonNull JClassType selectInner(JClassSymbol symbol, List<? extends JTypeMirror> targs) {
         return new ClassTypeImpl(ts,
                                  this,
                                  symbol,

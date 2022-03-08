@@ -13,17 +13,14 @@ import net.sourceforge.pmd.lang.java.ast.JavaVersion
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol
-import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol
-import net.sourceforge.pmd.lang.java.symbols.internal.testSymResolver
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable
 import net.sourceforge.pmd.lang.java.types.JTypeMirror
-import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger
 import net.sourceforge.pmd.lang.java.types.testTypeSystem
 
 // TODO remove this and use mocking to test the semantic logger
 internal fun testProcessor(jdkVersion: JavaVersion = JavaVersion.J13, logger: TestCheckLogger = TestCheckLogger()) =
-        JavaAstProcessor.create(testSymResolver, testTypeSystem, jdkVersion.pmdVersion, logger)
+        JavaAstProcessor.create(testTypeSystem, jdkVersion.pmdVersion, logger)
 
 inline fun <reified T : JVariableSymbol> JSymbolTable.shouldResolveVarTo(simpleName: String, expected: JVariableSymbol): T {
         val resolved = variables().resolveFirst(simpleName)

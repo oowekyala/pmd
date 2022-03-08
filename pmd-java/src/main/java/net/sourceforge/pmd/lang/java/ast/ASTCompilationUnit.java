@@ -14,6 +14,7 @@ import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.typeresolution.ClassTypeResolver;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
@@ -110,8 +111,10 @@ public final class ASTCompilationUnit extends AbstractJavaTypeNode implements Ja
         return lazyTypeResolver.getTypeSystem();
     }
 
-    void setTypeResolver(LazyTypeResolver typeResolver) {
+    void initResolvers(LazyTypeResolver typeResolver, JavaAstProcessor astProcessor) {
         this.lazyTypeResolver = typeResolver;
+        assert lazyTypeResolver != null;
+        assert astProcessor != null;
     }
 
     @NonNull LazyTypeResolver getLazyTypeResolver() {

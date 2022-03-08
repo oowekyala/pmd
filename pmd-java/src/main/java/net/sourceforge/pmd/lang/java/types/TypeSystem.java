@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -170,7 +171,8 @@ public final class TypeSystem {
     /** Contains special types, that must be shared to be comparable by reference. */
     private final Map<JTypeDeclSymbol, JTypeMirror> sharedTypes;
     // test only
-    final SymbolResolver resolver;
+    SymbolResolver resolver;
+    private final TypeSystem parent;
 
     /**
      * Builds a new type system. Its public fields will be initialized
@@ -212,6 +214,7 @@ public final class TypeSystem {
      *                         {@link #SERIALIZABLE}, {@link #BOXED_VOID}.
      */
     public TypeSystem(Function<TypeSystem, ? extends SymbolResolver> symResolverMaker) {
+        this.parent = null;
         this.resolver = symResolverMaker.apply(this); // leak the this
 
         // initialize primitives. their constructor also initializes their box + box erasure
@@ -289,12 +292,61 @@ public final class TypeSystem {
         UNBOUNDED_WILD = new WildcardTypeImpl(this, true, OBJECT);
     }
 
+    @SuppressWarnings("IncompleteCopyConstructor")
+    private TypeSystem(TypeSystem other) {
+        // create a new symbol factory, with an independent cache.
+        this.parent = other;
+        this.resolver = other.resolver;
+
+        this.sharedTypes = other.sharedTypes;
+
+        this.OBJECT = other.OBJECT;
+        this.BOOLEAN = other.BOOLEAN;
+        this.CHAR = other.CHAR;
+        this.BYTE = other.BYTE;
+        this.SHORT = other.SHORT;
+        this.INT = other.INT;
+        this.LONG = other.LONG;
+        this.FLOAT = other.FLOAT;
+        this.DOUBLE = other.DOUBLE;
+        this.NO_TYPE = other.NO_TYPE;
+        this.ERROR = other.ERROR;
+        this.UNKNOWN = other.UNKNOWN;
+        this.allPrimitives = other.allPrimitives;
+        this.primitivesByKind = other.primitivesByKind;
+
+        this.UNBOUNDED_WILD = other.UNBOUNDED_WILD;
+        this.CLONEABLE = other.CLONEABLE;
+        this.SERIALIZABLE = other.SERIALIZABLE;
+        this.BOXED_VOID = other.BOXED_VOID;
+
+    }
+
     /**
-     * Returns the bootstrap symbol resolver. Concrete analysis passes
+     * Returns a new, distinct type system, whose special types are all
+     * the same (instances), but whose resolver
+     *
+     * @return A new type system, based on this one.
+     */
+    public TypeSystem newScope() {
+        return new TypeSystem(this);
+    }
+
+
+    /**
+     * Returns the symbol resolver. Concrete analysis passes
      * may decorate this with different resolvers.
      */
-    public SymbolResolver bootstrapResolver() {
+    public SymbolResolver symbolResolver() {
         return resolver;
+    }
+
+    /**
+     * Apply a transformation on the resolver of this type system.
+     */
+    void transformResolver(UnaryOperator<@NonNull SymbolResolver> map) {
+        this.resolver = map.apply(this.resolver);
+        Objects.requireNonNull(this.resolver);
     }
 
     // helpers for the constructor, cannot use typeOf, only for trusted types
@@ -524,6 +576,7 @@ public final class TypeSystem {
      * Creates a new array type from an arbitrary element type.
      *
      * <pre>{@code
+     * arrayType(null, _)       = null
      * arrayType(T, 0)          = T
      * arrayType(T, 1)          = T[]
      * arrayType(T, 3)          = T[][][]
@@ -533,15 +586,17 @@ public final class TypeSystem {
      * @param element       Element type
      * @param numDimensions Number of dimensions
      *
-     * @return A new array type
+     * @return A new array type, or null if the element type is null
      *
      * @throws IllegalArgumentException If numDimensions is negative
      * @throws IllegalArgumentException If the element type is a {@link JWildcardType},
      *                                  the null type, or {@link #NO_TYPE void}.
-     * @throws NullPointerException     If the element type is null
      */
-    public JTypeMirror arrayType(@NonNull JTypeMirror element, int numDimensions) {
+    public JTypeMirror arrayType(@Nullable JTypeMirror element, int numDimensions) {
         AssertionUtil.requireNonNegative("numDimensions", numDimensions);
+        if (element == null) {
+            return null;
+        }
         checkArrayElement(element); // note we throw even if numDimensions == 0
 
         if (numDimensions == 0) {

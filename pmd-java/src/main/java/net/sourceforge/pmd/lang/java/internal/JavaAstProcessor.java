@@ -28,6 +28,7 @@ import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.SymbolTableResolver;
+import net.sourceforge.pmd.lang.java.types.TypeInternals;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -63,18 +64,14 @@ public final class JavaAstProcessor {
     private final LanguageVersion languageVersion;
     private final TypeSystem typeSystem;
 
-    private SymbolResolver symResolver;
-
     private final UnresolvedClassStore unresolvedTypes;
 
 
     private JavaAstProcessor(TypeSystem typeSystem,
-                             SymbolResolver symResolver,
                              SemanticErrorReporter logger,
                              TypeInferenceLogger typeInfLogger,
                              LanguageVersion languageVersion) {
 
-        this.symResolver = symResolver;
         this.logger = logger;
         this.typeInferenceLogger = typeInfLogger;
         this.languageVersion = languageVersion;
@@ -137,7 +134,7 @@ public final class JavaAstProcessor {
     }
 
     public SymbolResolver getSymResolver() {
-        return symResolver;
+        return typeSystem.symbolResolver();
     }
 
     public SemanticErrorReporter getLogger() {
@@ -160,7 +157,10 @@ public final class JavaAstProcessor {
         SymbolResolver knownSyms = TimeTracker.bench("1. Symbol resolution", () -> SymbolResolutionPass.traverse(this, acu));
 
         // Now symbols are on the relevant nodes
-        this.symResolver = SymbolResolver.layer(knownSyms, this.symResolver);
+        // Improve the resolver so that it always picks the types
+        // declared in the compilation unit from our AST symbols.
+        // Note: the type system is local to this JavaAstProcessor.
+        TypeInternals.transformResolver(this.typeSystem, r -> SymbolResolver.layer(knownSyms, r));
 
         // this needs to be initialized before the symbol table resolution
         // as scopes depend on type resolution in some cases.
@@ -177,29 +177,27 @@ public final class JavaAstProcessor {
         return typeSystem;
     }
 
-    public static JavaAstProcessor create(SymbolResolver symResolver,
-                                          TypeSystem typeSystem,
+    public static JavaAstProcessor create(TypeSystem typeSystem,
                                           LanguageVersion languageVersion,
                                           SemanticErrorReporter logger) {
 
         return new JavaAstProcessor(
             typeSystem,
-            symResolver,
             logger,
             defaultTypeInfLogger(),
             languageVersion
         );
     }
 
-    public static JavaAstProcessor create(ClassLoader classLoader,
-                                          LanguageVersion languageVersion,
-                                          SemanticErrorReporter logger,
-                                          TypeInferenceLogger typeInfLogger) {
+    private static JavaAstProcessor create(ClassLoader classLoader,
+                                           LanguageVersion languageVersion,
+                                           SemanticErrorReporter logger,
+                                           TypeInferenceLogger typeInfLogger) {
+        // fixme remove this static cache
+        TypeSystem globalTypeSystem = TYPE_SYSTEMS.computeIfAbsent(classLoader, TypeSystem::usingClassLoaderClasspath);
 
-        TypeSystem typeSystem = TYPE_SYSTEMS.computeIfAbsent(classLoader, TypeSystem::usingClassLoaderClasspath);
         return new JavaAstProcessor(
-            typeSystem,
-            typeSystem.bootstrapResolver(),
+            globalTypeSystem.newScope(), // create a new local type system
             logger,
             typeInfLogger,
             languageVersion
@@ -219,7 +217,6 @@ public final class JavaAstProcessor {
                                           TypeInferenceLogger typeInfLogger) {
         return new JavaAstProcessor(
             typeSystem,
-            typeSystem.bootstrapResolver(),
             semanticLogger,
             typeInfLogger,
             languageVersion
