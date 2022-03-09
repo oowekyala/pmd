@@ -69,7 +69,7 @@ public class GetCommentOnFunction extends BaseJavaXPathFunction {
                         return new StringValue(comment.getImage());
                     }
                 }
-                return EmptyAtomicSequence.INSTANCE;
+                return EmptyAtomicSequence.getInstance();
             }
 
         };

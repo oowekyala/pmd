@@ -6,14 +6,16 @@ package net.sourceforge.pmd.lang.rule.xpath.internal;
 
 
 import java.util.List;
-import java.util.function.Predicate;
 
+import net.sf.saxon.expr.LastPositionFinder;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.pattern.AnyNodeTest;
+import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.tree.iter.AxisIterator;
 import net.sf.saxon.tree.iter.ListIterator;
-import net.sf.saxon.tree.iter.ReverseListIterator;
+import net.sf.saxon.tree.iter.ReversibleIterator;
 import net.sf.saxon.tree.util.Navigator.AxisFilter;
 import net.sf.saxon.tree.wrapper.AbstractNodeWrapper;
 import net.sf.saxon.tree.wrapper.SiblingCountingNode;
@@ -78,8 +80,10 @@ abstract class BaseNodeInfo extends AbstractNodeWrapper implements SiblingCounti
         return nodeKind;
     }
 
-    protected static AxisIterator filter(Predicate<? super NodeInfo> nodeTest, AxisIterator iter) {
-        return nodeTest == null || (nodeTest instanceof AnyNodeTest) ? iter : new AxisFilter(iter, nodeTest);
+    protected static AxisIterator filter(NodeTest nodeTest, AxisIterator iter) {
+        return (nodeTest == null || nodeTest instanceof AnyNodeTest)
+               ? iter
+               : new AxisFilter(iter, nodeTest);
     }
 
 
@@ -87,15 +91,45 @@ abstract class BaseNodeInfo extends AbstractNodeWrapper implements SiblingCounti
         return iterateList(nodes, true);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     static AxisIterator iterateList(List<? extends NodeInfo> nodes, boolean forwards) {
-        return forwards ? new ListIterator.OfNodes((List) nodes)
-                        : new RevListAxisIterator((List) nodes);
+        return new ListAxisIterator<>(forwards, nodes);
     }
 
-    private static class RevListAxisIterator extends ReverseListIterator<NodeInfo> implements AxisIterator {
-        RevListAxisIterator(List<NodeInfo> list) {
-            super(list);
+    static class ListAxisIterator<T extends NodeInfo>
+        implements SequenceIterator, LastPositionFinder, ReversibleIterator, AxisIterator {
+
+        private final java.util.ListIterator<? extends T> listIter;
+        private final boolean forward;
+        private final List<? extends T> list;
+
+        public ListAxisIterator(boolean forward, List<? extends T> list) {
+            this.forward = forward;
+            this.list = list;
+            this.listIter = list.listIterator(list.size());
+        }
+
+        @Override
+        public boolean supportsGetLength() {
+            return true;
+        }
+
+        @Override
+        public int getLength() {
+            return list.size();
+        }
+
+        @Override
+        public NodeInfo next() {
+            if (forward) {
+                return listIter.hasNext() ? listIter.next() : null;
+            } else {
+                return listIter.hasPrevious() ? listIter.previous() : null;
+            }
+        }
+
+        @Override
+        public SequenceIterator getReverseIterator() {
+            return new ListIterator.Of<>(list);
         }
     }
 }

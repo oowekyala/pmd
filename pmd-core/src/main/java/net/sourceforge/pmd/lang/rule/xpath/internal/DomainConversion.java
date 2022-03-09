@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sf.saxon.om.AtomicArray;
 import net.sf.saxon.om.AtomicSequence;
@@ -24,7 +25,6 @@ import net.sf.saxon.value.FloatValue;
 import net.sf.saxon.value.Int64Value;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.UntypedAtomicValue;
 
 
 /**
@@ -55,9 +55,10 @@ public final class DomainConversion {
         }
     }
 
-    @NonNull
-    public static AtomicSequence convert(Object obj) {
-        if (obj instanceof Collection) {
+    public static @Nullable AtomicSequence convert(Object obj) {
+        if (obj == null) {
+            return EmptyAtomicSequence.getInstance();
+        } else if (obj instanceof Collection) {
             return getSequenceRepresentation((Collection<?>) obj);
         }
         return getAtomicRepresentation(obj);
@@ -105,10 +106,10 @@ public final class DomainConversion {
     // sequences cannot be nested, this takes care of list of lists,
     // just in case
     private static void flattenInto(Collection<?> list, List<AtomicValue> values) {
-        for (Object o : list) {
+        for (@Nullable Object o : list) {
             if (o instanceof Collection) {
                 flattenInto((Collection<?>) o, values);
-            } else {
+            } else if (o != null) {
                 values.add(getAtomicRepresentation(o));
             }
         }
@@ -123,17 +124,13 @@ public final class DomainConversion {
      *
      * @return The converted AtomicValue
      */
-    @NonNull
-    public static AtomicValue getAtomicRepresentation(final Object value) {
+    public static @NonNull AtomicValue getAtomicRepresentation(final @NonNull Object value) {
 
         /*
         FUTURE When supported, we should consider refactor this implementation to use Pattern Matching
         (see http://openjdk.java.net/jeps/305) so that it looks clearer.
         */
-        if (value == null) {
-            return UntypedAtomicValue.ZERO_LENGTH_UNTYPED;
-
-        } else if (value instanceof String) {
+        if (value instanceof String) {
             return new StringValue((String) value);
         } else if (value instanceof Boolean) {
             return BooleanValue.get((Boolean) value);

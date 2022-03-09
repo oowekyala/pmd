@@ -88,7 +88,7 @@ abstract class BaseRewrittenFunction<S, N extends Node> extends BaseJavaXPathFun
 
                 Expression firstArg = arguments[0]; // this expression has been type checked so there is an argument
                 if (firstArg instanceof StringLiteral) {
-                    String name = ((StringLiteral) firstArg).getStringValue();
+                    String name = ((StringLiteral) firstArg).getString().toString();
                     try {
                         constantState = parseArgument(name);
                     } catch (XPathException e) {
