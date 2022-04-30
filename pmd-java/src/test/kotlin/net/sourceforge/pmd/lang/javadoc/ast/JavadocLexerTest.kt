@@ -4,37 +4,19 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException
 import net.sourceforge.pmd.lang.ast.test.IntelliMarker
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
-import net.sourceforge.pmd.lang.java.JavaParsingHelper
-import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
-import net.sourceforge.pmd.lang.document.TextDocument
 import net.sourceforge.pmd.lang.document.TextRegion
-import net.sourceforge.pmd.lang.java.ast.InternalApiBridge
-import net.sourceforge.pmd.lang.javadoc.JavadocParsingHelper
+import net.sourceforge.pmd.lang.java.ast.makeJavaTranslatedDocument
+import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
-import java.io.EOFException
 import kotlin.test.assertEquals
 
 
-internal fun newLexer(code: String, start: Int = 0, end: Int = code.length): JavadocLexer {
-    return JavadocLexer(makeTranslatedDocument(code.substring(start, end)))
-}
-
-private fun makeTranslatedDocument(
-    code: String,
-): TextDocument {
-    val base = TextDocument.readOnlyString(
-        code,
-        JavadocParsingHelper.DEFAULT.defaultVersion
-    )
-    return InternalApiBridge.javaTokenDoc().translate(base)
+private fun newLexer(code: String, start: Int = 0, end: Int = code.length): JavadocLexer {
+    return JavadocLexer(makeJavaTranslatedDocument(code.substring(start, end)))
 }
 
 class JavadocLexerTest : IntelliMarker, FunSpec({
@@ -85,34 +67,6 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
         lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 3, end = 11, image = "\\\\u002a/")
         lexer.nextToken shouldBe null
 
-    }
-
-    test("Test java invalid unicode escapes") {
-
-        val comment = """\u002F\u0k2a\u002a\u002a\u002F"""
-
-        val exception = shouldThrow<MalformedSourceException> {
-            makeTranslatedDocument(comment)
-        }
-
-        exception.message!!.shouldContain(Regex("line \\d+, column \\d+"))
-        exception.message!!.shouldContain("\\u0k2a")
-
-        exception.cause!!.shouldBeA<NumberFormatException> {
-            it.message!!.shouldContain("valid hexadecimal digit")
-        }
-    }
-
-    test("Test incomplete unicode escape ") {
-
-        val comment = """\u00"""
-
-        val mse = shouldThrow<MalformedSourceException> {
-            makeTranslatedDocument(comment)
-        }
-        mse.message!!.shouldContain(Regex("line \\d+, column \\d+"))
-        mse.message!!.shouldContain("\\u00")
-        mse.cause!!.shouldBeA<IndexOutOfBoundsException>()
     }
 
     test("Test brace balancing") {
