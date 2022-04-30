@@ -60,7 +60,7 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
          *
          * TODO move that to LanguageVersionHandler once #3919 (Merge CPD and PMD language) is implemented
          */
-        protected TextDocument translate(TextDocument text) throws MalformedSourceException {
+        public TextDocument translate(TextDocument text) throws MalformedSourceException {
             return text;
         }
 

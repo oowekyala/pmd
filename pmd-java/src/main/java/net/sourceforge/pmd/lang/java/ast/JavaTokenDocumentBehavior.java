@@ -49,7 +49,7 @@ final class JavaTokenDocumentBehavior extends JavaccTokenDocument.TokenDocumentB
 
 
     @Override
-    protected TextDocument translate(TextDocument text) throws MalformedSourceException {
+    public TextDocument translate(TextDocument text) throws MalformedSourceException {
         return new JavaEscapeTranslator(text).translateDocument();
     }
 

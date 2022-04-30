@@ -8,24 +8,34 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import net.sourceforge.pmd.lang.ast.TokenMgrError
+import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException
 import net.sourceforge.pmd.lang.ast.test.IntelliMarker
 import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
 import net.sourceforge.pmd.lang.document.TextDocument
 import net.sourceforge.pmd.lang.document.TextRegion
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge
 import net.sourceforge.pmd.lang.javadoc.JavadocParsingHelper
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
 import java.io.EOFException
-import java.io.IOException
 import kotlin.test.assertEquals
 
 
-internal fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
-        JavadocLexer(TextDocument.readOnlyString(code.substring(start, end),
-                JavadocParsingHelper.DEFAULT.defaultVersion))
+internal fun newLexer(code: String, start: Int = 0, end: Int = code.length): JavadocLexer {
+    return JavadocLexer(makeTranslatedDocument(code.substring(start, end)))
+}
+
+private fun makeTranslatedDocument(
+    code: String,
+): TextDocument {
+    val base = TextDocument.readOnlyString(
+        code,
+        JavadocParsingHelper.DEFAULT.defaultVersion
+    )
+    return InternalApiBridge.javaTokenDoc().translate(base)
+}
 
 class JavadocLexerTest : IntelliMarker, FunSpec({
 
@@ -55,12 +65,11 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
     test("Test java unicode escapes") {
 
         val comment = """\u002F\u002a\u002a\u002a\u002F"""
-        val opening = """\u002F\u002a\u002a"""
 
         val lexer = newLexer(comment)
 
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = opening.length, end = comment.length, image = "*/")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = 3, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = 3, end = 5, image = "*/")
         lexer.nextToken shouldBe null
 
     }
@@ -69,12 +78,11 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
     test("Test java escaped unicode escapes") {
 
         val comment = """\u002F\u002a\u002a\\u002a\u002F"""
-        val opening = """\u002F\u002a\u002a"""
 
         val lexer = newLexer(comment)
 
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
-        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = opening.length, end = comment.length, image = "\\\\u002a/")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = 3, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 3, end = 11, image = "\\\\u002a/")
         lexer.nextToken shouldBe null
 
     }
@@ -83,42 +91,28 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
 
         val comment = """\u002F\u0k2a\u002a\u002a\u002F"""
 
-        val lexer = newLexer(comment)
-
-        val tmgrError = shouldThrow<TokenMgrError> {
-            lexer.nextToken
+        val exception = shouldThrow<MalformedSourceException> {
+            makeTranslatedDocument(comment)
         }
 
-        val ioe = tmgrError.cause!!
+        exception.message!!.shouldContain(Regex("line \\d+, column \\d+"))
+        exception.message!!.shouldContain("\\u0k2a")
 
-        ioe.shouldBeA<IOException>()
-
-        ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
-        ioe.message!!.shouldContain("\\u0k2a")
-
-        ioe.cause.shouldBeA<NumberFormatException>()
-
-        ioe.cause!!.message!!.shouldContain("valid hexadecimal digit")
+        exception.cause!!.shouldBeA<NumberFormatException> {
+            it.message!!.shouldContain("valid hexadecimal digit")
+        }
     }
 
     test("Test incomplete unicode escape ") {
 
         val comment = """\u00"""
 
-        val lexer = newLexer(comment)
-
-        val tmgrError = shouldThrow<TokenMgrError> {
-            lexer.nextToken
+        val mse = shouldThrow<MalformedSourceException> {
+            makeTranslatedDocument(comment)
         }
-
-        val ioe = tmgrError.cause!!
-
-        ioe.shouldBeA<IOException>()
-
-        ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
-        ioe.message!!.shouldContain("\\u00")
-
-        ioe.cause.shouldBeA<EOFException>()
+        mse.message!!.shouldContain(Regex("line \\d+, column \\d+"))
+        mse.message!!.shouldContain("\\u00")
+        mse.cause!!.shouldBeA<IndexOutOfBoundsException>()
     }
 
     test("Test brace balancing") {
@@ -127,31 +121,31 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
         """/** some javadoc 
                 <pre>{@code { <p> } } <p> </pre> */
             """.shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "some javadoc"),
-                Tok(WHITESPACE, " "),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, "                "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "pre"),
-                Tok(HTML_GT),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
-                Tok(WHITESPACE, " "),
-                // here's it's comment data
-                Tok(COMMENT_DATA, "{ <p> } "),
-                Tok(INLINE_TAG_END),
-                Tok(COMMENT_DATA, " "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "p"),
-                Tok(HTML_GT),
-                Tok(COMMENT_DATA, " "),
-                Tok(HTML_LCLOSE),
-                Tok(HTML_IDENT, "pre"),
-                Tok(HTML_GT),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "some javadoc"),
+            Tok(WHITESPACE, " "),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, "                "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "pre"),
+            Tok(HTML_GT),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@code"),
+            Tok(WHITESPACE, " "),
+            // here's it's comment data
+            Tok(COMMENT_DATA, "{ <p> } "),
+            Tok(INLINE_TAG_END),
+            Tok(COMMENT_DATA, " "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "p"),
+            Tok(HTML_GT),
+            Tok(COMMENT_DATA, " "),
+            Tok(HTML_LCLOSE),
+            Tok(HTML_IDENT, "pre"),
+            Tok(HTML_GT),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
     test("Test line breaks") {
@@ -162,24 +156,24 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  * @param startOffset Start offset in the file text
  */
 """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "fileText"),
-                Tok(WHITESPACE, "    "),
-                Tok(COMMENT_DATA, "Full file text"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "startOffset"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "Start offset in the file text"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "fileText"),
+            Tok(WHITESPACE, "    "),
+            Tok(COMMENT_DATA, "Full file text"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "startOffset"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "Start offset in the file text"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -193,20 +187,20 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  *    those are spaces
  */
 """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "abc"),
-                Tok(WHITESPACE, "   "),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, "    "),
-                Tok(COMMENT_DATA, "^^^"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, "    "),
-                Tok(COMMENT_DATA, "those are spaces"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "abc"),
+            Tok(WHITESPACE, "   "),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, "    "),
+            Tok(COMMENT_DATA, "^^^"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, "    "),
+            Tok(COMMENT_DATA, "those are spaces"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -221,26 +215,26 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  *          Start offset in the file text
  */
 """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "fileText"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, "          "),
-                Tok(COMMENT_DATA, "Full file text"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "startOffset"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, "          "),
-                Tok(COMMENT_DATA, "Start offset in the file text"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "fileText"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, "          "),
+            Tok(COMMENT_DATA, "Full file text"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "startOffset"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, "          "),
+            Tok(COMMENT_DATA, "Start offset in the file text"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
 
@@ -249,15 +243,15 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
         """
 /** <value foo> */
 """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(WHITESPACE, " "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "value"),
-                Tok(WHITESPACE, " "),
-                Tok(HTML_IDENT, "foo"),
-                Tok(HTML_GT),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(WHITESPACE, " "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "value"),
+            Tok(WHITESPACE, " "),
+            Tok(HTML_IDENT, "foo"),
+            Tok(HTML_GT),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
 
@@ -273,25 +267,25 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  */
 
         """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "foof"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "fullText"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "}"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@code"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "foof"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "fullText"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "}"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -308,23 +302,23 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  */
 
         """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "foof"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "@ param fullText"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_END, "}"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@code"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "foof"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "@ param fullText"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_END, "}"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -337,17 +331,17 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  */
 
         """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "{@code }"),
-                Tok(INLINE_TAG_END, "}"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@code"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "{@code }"),
+            Tok(INLINE_TAG_END, "}"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -361,15 +355,15 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  */
 
         """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@inheritDoc"),
-                Tok(INLINE_TAG_END),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@inheritDoc"),
+            Tok(INLINE_TAG_END),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
 
     }
@@ -386,23 +380,23 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
  */
             
         """.trim().shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(INLINE_TAG_START),
-                Tok(TAG_NAME, "@code"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(TAG_NAME, "@param"),
-                Tok(WHITESPACE, " "),
-                Tok(PARAM_NAME, "fullText"),
-                Tok(LINE_BREAK, "\n *"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "}"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(INLINE_TAG_START),
+            Tok(TAG_NAME, "@code"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(TAG_NAME, "@param"),
+            Tok(WHITESPACE, " "),
+            Tok(PARAM_NAME, "fullText"),
+            Tok(LINE_BREAK, "\n *"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "}"),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
 
@@ -412,40 +406,40 @@ class JavadocLexerTest : IntelliMarker, FunSpec({
         """/** some javadoc 
                 <pre>{ @code { <p> } } <p> </pre> */
         """.shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "some javadoc"),
-                Tok(WHITESPACE, " "),
-                Tok(LINE_BREAK, "\n"),
-                Tok(WHITESPACE, "                "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "pre"),
-                Tok(HTML_GT),
-                // here's it's comment data
-                Tok(COMMENT_DATA, "{ @code { "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "p"),
-                Tok(HTML_GT),
-                Tok(COMMENT_DATA, " } } "),
-                Tok(HTML_LT),
-                Tok(HTML_IDENT, "p"),
-                Tok(HTML_GT),
-                Tok(COMMENT_DATA, " "),
-                Tok(HTML_LCLOSE),
-                Tok(HTML_IDENT, "pre"),
-                Tok(HTML_GT),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "some javadoc"),
+            Tok(WHITESPACE, " "),
+            Tok(LINE_BREAK, "\n"),
+            Tok(WHITESPACE, "                "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "pre"),
+            Tok(HTML_GT),
+            // here's it's comment data
+            Tok(COMMENT_DATA, "{ @code { "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "p"),
+            Tok(HTML_GT),
+            Tok(COMMENT_DATA, " } } "),
+            Tok(HTML_LT),
+            Tok(HTML_IDENT, "p"),
+            Tok(HTML_GT),
+            Tok(COMMENT_DATA, " "),
+            Tok(HTML_LCLOSE),
+            Tok(HTML_IDENT, "pre"),
+            Tok(HTML_GT),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
 
     test("Test bad character reference") {
         """/** & amp; */""".shouldHaveTokens(
-                Tok(COMMENT_START),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "& amp;"),
-                Tok(WHITESPACE, " "),
-                Tok(COMMENT_END)
+            Tok(COMMENT_START),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_DATA, "& amp;"),
+            Tok(WHITESPACE, " "),
+            Tok(COMMENT_END)
         )
     }
 
@@ -475,5 +469,9 @@ private fun String.shouldHaveTokens(vararg tokens: Tok) {
     if (diff.deltas.isEmpty()) {
         return
     }
-    throw ComparisonFailure("Tokens didn't match", tokens.joinToString(separator = ",\n"), actual.joinToString(separator = ",\n"))
+    throw ComparisonFailure(
+        "Tokens didn't match",
+        tokens.joinToString(separator = ",\n"),
+        actual.joinToString(separator = ",\n")
+    )
 }
