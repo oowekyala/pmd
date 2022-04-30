@@ -46,7 +46,7 @@ public final class JavaEscapeTranslator extends BackslashEscapeTranslator {
         int off = offOfTheU;
         try {
             char c = (char)
-                (hexVal(input.charAt(++off)) << 12 // SUPPRESS CHECKSTYLE paren pad
+                ( hexVal(input.charAt(++off)) << 12 // SUPPRESS CHECKSTYLE paren pad
                 | hexVal(input.charAt(++off)) << 8
                 | hexVal(input.charAt(++off)) << 4
                 | hexVal(input.charAt(++off))

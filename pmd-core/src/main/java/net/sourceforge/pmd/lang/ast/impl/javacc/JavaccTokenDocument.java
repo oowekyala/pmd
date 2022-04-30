@@ -65,10 +65,6 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
         }
 
 
-        protected boolean isImagePooled(JavaccToken t) {
-            return false;
-        }
-
         /**
          * Returns a string that describes the token kind.
          *

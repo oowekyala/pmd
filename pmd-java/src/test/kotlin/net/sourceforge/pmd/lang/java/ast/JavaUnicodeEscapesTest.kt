@@ -11,14 +11,14 @@ import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException
 import net.sourceforge.pmd.lang.ast.test.IntelliMarker
 import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.document.TextDocument
-import net.sourceforge.pmd.lang.javadoc.JavadocParsingHelper
+import net.sourceforge.pmd.lang.java.JavaParsingHelper
 
 fun makeJavaTranslatedDocument(
     code: String,
 ): TextDocument {
     val base = TextDocument.readOnlyString(
         code,
-        JavadocParsingHelper.DEFAULT.defaultVersion
+        JavaParsingHelper.DEFAULT.defaultVersion
     )
     return InternalApiBridge.javaTokenDoc().translate(base)
 }
