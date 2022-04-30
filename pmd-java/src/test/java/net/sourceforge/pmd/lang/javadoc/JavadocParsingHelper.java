@@ -16,7 +16,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
  */
 public class JavadocParsingHelper extends BaseParsingHelper<JavadocParsingHelper, JdocComment> {
 
-    public static final JavadocParsingHelper DEFAULT = new JavadocParsingHelper(Params.getDefaultProcess());
+    public static final JavadocParsingHelper DEFAULT = new JavadocParsingHelper(Params.getDefault());
 
     private final Language myLanguage = new JavadocLanguage();
 

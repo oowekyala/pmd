@@ -14,6 +14,7 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_CO
 import java.io.IOException;
 import java.io.Reader;
 import java.util.EnumSet;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -31,7 +32,7 @@ import net.sourceforge.pmd.lang.document.TextRegion;
 class JavadocLexer implements TokenManager<JdocToken> {
 
     // the flexer produces single chars for those tokens, we merge them here
-    private static final EnumSet<JdocTokenType> MERGED_TOKENS =
+    private static final Set<JdocTokenType> MERGED_TOKENS =
         EnumSet.of(
             COMMENT_DATA,
             HTML_COMMENT_CONTENT,
@@ -49,7 +50,8 @@ class JavadocLexer implements TokenManager<JdocToken> {
     private @Nullable JdocTokenType pendingTok;
 
     JavadocLexer(TextDocument commentText) {
-        assert commentText.getLanguageVersion().getLanguage() instanceof JavadocLanguage;
+        assert commentText.getLanguageVersion().getLanguage() instanceof JavadocLanguage
+            : "CommentText language != javadoc: " + commentText.getLanguageVersion();
 
         this.doc = new JavadocTokenDocument(commentText);
         this.curOffset = 0;
@@ -154,7 +156,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw AssertionUtil.shouldNeverBeThrown(e, "We're reading from an in-memory char slice");
+            throw AssertionUtil.shouldNotReachHere(e, "We're reading from an in-memory char slice");
         }
     }
 

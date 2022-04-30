@@ -9,11 +9,13 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.TokenMgrError
+import net.sourceforge.pmd.lang.ast.test.IntelliMarker
 import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
 import net.sourceforge.pmd.lang.document.TextDocument
 import net.sourceforge.pmd.lang.document.TextRegion
+import net.sourceforge.pmd.lang.javadoc.JavadocParsingHelper
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
 import java.io.EOFException
@@ -23,9 +25,9 @@ import kotlin.test.assertEquals
 
 internal fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
         JavadocLexer(TextDocument.readOnlyString(code.substring(start, end),
-                JavaParsingHelper.JUST_PARSE.defaultVersion))
+                JavadocParsingHelper.DEFAULT.defaultVersion))
 
-class JavadocLexerTest : FunSpec({
+class JavadocLexerTest : IntelliMarker, FunSpec({
 
 
     test("Test trailing chars are ignored") {
@@ -165,12 +167,16 @@ class JavadocLexerTest : FunSpec({
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "fileText    Full file text"),
+                Tok(PARAM_NAME, "fileText"),
+                Tok(WHITESPACE, "    "),
+                Tok(COMMENT_DATA, "Full file text"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "startOffset Start offset in the file text"),
+                Tok(PARAM_NAME, "startOffset"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "Start offset in the file text"),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
@@ -220,7 +226,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "fileText"),
+                Tok(PARAM_NAME, "fileText"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, "          "),
                 Tok(COMMENT_DATA, "Full file text"),
@@ -228,7 +234,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "startOffset"),
+                Tok(PARAM_NAME, "startOffset"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, "          "),
                 Tok(COMMENT_DATA, "Start offset in the file text"),
@@ -279,7 +285,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "fullText"),
+                Tok(PARAM_NAME, "fullText"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),
@@ -390,7 +396,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "fullText"),
+                Tok(PARAM_NAME, "fullText"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),

@@ -14,11 +14,13 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -63,6 +65,14 @@ public class CharsTest {
     }
 
     @Test
+    public void toStringBuilder() {
+        Chars bc = Chars.wrap("abcd").slice(1, 2);
+        assertEquals("bc", bc.toString());
+
+        assertEquals("bc", bc.toStringBuilder().toString());
+    }
+
+    @Test
     public void write() throws IOException {
         StringWriter writer = new StringWriter();
         Chars bc = Chars.wrap("abcd").slice(1, 2);
@@ -81,7 +91,7 @@ public class CharsTest {
         Chars bc = Chars.wrap("abcd").slice(1, 2);
 
         bc.getChars(0, arr, 1, 2);
-        assertArrayEquals(arr, new char[] {0, 'b', 'c', 0});
+        assertArrayEquals(arr, new char[] { 0, 'b', 'c', 0 });
 
         assertThrows(IndexOutOfBoundsException.class, () -> bc.getChars(2, arr, 0, 1));
         assertThrows(IndexOutOfBoundsException.class, () -> bc.getChars(-1, arr, 0, 1));
@@ -127,6 +137,23 @@ public class CharsTest {
         bc = Chars.wrap("aaaaabcbxdb").slice(5, 5);
         //                    -----
         assertEquals(2, bc.indexOf("bx", 0));
+    }
+
+    @Test
+    public void lastIndexOf() {
+        Chars bc = Chars.wrap("aaaaabcdb").slice(5, 2);
+        //                          --
+        assertEquals(0, bc.lastIndexOf('b', 0));
+        assertEquals(0, bc.lastIndexOf('b', 1));
+        assertEquals(1, bc.lastIndexOf('c', 1));
+        assertEquals(-1, bc.lastIndexOf('c', 0));
+
+        assertEquals(-1, bc.lastIndexOf('d', 0));
+
+        assertEquals(-1, bc.lastIndexOf('x', 0));
+        assertEquals(-1, bc.lastIndexOf('a', -1));
+        assertEquals(-1, bc.lastIndexOf('a', 0));
+        assertEquals(-1, bc.lastIndexOf('a', 1));
     }
 
     @Test
@@ -220,6 +247,20 @@ public class CharsTest {
     }
 
     @Test
+    public void linesStreamTest() {
+        Chars bc = Chars.wrap("aa\nb\rded\r\nlff");
+        List<String> lines = bc.lineStream().map(Chars::toString).collect(Collectors.toList());
+        assertEquals(listOf("aa", "b", "ded", "lff"), lines);
+    }
+
+    @Test
+    public void linesTest3WithCr() {
+        Chars bc = Chars.wrap("aa\rb");
+        List<String> lines = CollectionUtil.map(bc.lines(), Chars::toString);
+        assertEquals(listOf("aa", "b"), lines);
+    }
+
+    @Test
     public void testEqualsHashCode() {
 
 
@@ -283,6 +324,205 @@ public class CharsTest {
         List<String> splitList = listSplits(chars, regex);
         List<String> expected = Arrays.asList(chars.toString().split(regex));
         assertEquals("Split should behave like String#split", expected, splitList);
+    }
+
+    @Test
+    public void testSlice() {
+        // slice is offset + length
+        Chars chars = Chars.wrap("a_a_b_c_s").slice(2, 5);
+        //                          -----
+        assertEquals(Chars.wrap("_b_"), chars.slice(1, 3));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.slice(0, -1));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.slice(0, 6));
+    }
+
+    @Test
+    public void testSubsequence() {
+        // subsequence is start + end
+        Chars chars = Chars.wrap("a_a_b_c_s").slice(2, 5);
+        //                          -----
+        assertEquals(Chars.wrap("_b"), chars.subSequence(1, 3));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.slice(0, -1));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.slice(0, 6));
+    }
+
+    @Test
+    public void testSubstring() {
+        // substring is start + end
+        Chars chars = Chars.wrap("a_a_b_c_s").slice(2, 5);
+        //                          -----
+        assertEquals("_b", chars.substring(1, 3));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.substring(0, -1));
+        assertThrows(IndexOutOfBoundsException.class, () -> chars.substring(0, 6));
+    }
+
+
+    @Test
+    public void testTrimBlankLines() {
+        assertTrimBlankLinesEquals(" \n \n abc \n \n de \n \n ",
+                                   " abc \n \n de ");
+        assertTrimBlankLinesEquals("", "");
+    }
+
+    private void assertTrimBlankLinesEquals(String input, String expected) {
+        Chars actual = Chars.wrap(input).trimBlankLines();
+        assertEquals(Chars.wrap(expected), actual);
+    }
+
+
+    @Test
+    public void testReaderSingleChars() throws IOException {
+        Chars bc = Chars.wrap("a \n  \r\nbc db").slice(1, 9);
+        //                      ------------
+
+        try (Reader reader = bc.newReader()) {
+            assertEquals(' ', reader.read());
+            assertEquals('\n', reader.read());
+            assertEquals(' ', reader.read());
+            assertEquals(' ', reader.read());
+            assertEquals('\r', reader.read());
+            assertEquals('\n', reader.read());
+            assertEquals('b', reader.read());
+            assertEquals('c', reader.read());
+            assertEquals(' ', reader.read());
+            assertEquals(-1, reader.read());
+        }
+    }
+
+    @Test
+    public void testReaderBuffer() throws IOException {
+        Chars bc = Chars.wrap("a \n  \r\nbc db").slice(1, 9);
+        //                      ------------
+
+        char[] cbuf = new char[4];
+
+        try (Reader reader = bc.newReader()) {
+            assertEquals(4, reader.read(cbuf));
+            assertCharBufEquals(" \n  ", cbuf);
+            assertEquals(4, reader.read(cbuf));
+            assertCharBufEquals("\r\nbc", cbuf);
+            assertEquals(1, reader.read(cbuf));
+            assertCharBufEquals(" \nbc", cbuf);
+            assertEquals(-1, reader.read(cbuf));
+        }
+    }
+
+    @Test
+    public void testReaderSlicedBuffer() throws IOException {
+        Chars bc = Chars.wrap("a \n  \r\nbc db").slice(1, 9);
+        //                      ------------
+
+        // use \0 as padding before and after
+        char[] cbuf = new char[6];
+
+        try (Reader reader = bc.newReader()) {
+            assertEquals(4, reader.read(cbuf, 1, 4));
+            assertCharBufEquals("\0 \n  \0", cbuf);
+            assertEquals(5, reader.read(cbuf, 1, 5));
+            assertCharBufEquals("\0\r\nbc ", cbuf);
+            assertEquals(-1, reader.read(cbuf));
+            assertEquals(-1, reader.read());
+            assertEquals(-1, reader.read(cbuf, 1, 4));
+        }
+    }
+
+    @Test
+    public void testReadClosed() throws IOException {
+        Chars bc = Chars.wrap("a \n  \r\nbc db").slice(1, 9);
+        //                      ------------
+
+        Reader reader = bc.newReader();
+        reader.close();
+        assertThrows(IOException.class, reader::read);
+    }
+
+    @Test
+    public void testReaderMark() throws IOException {
+        Chars bc = Chars.wrap("abcdefghijklmnop").slice(1, 9);
+        //                      ------------
+
+        try (Reader reader = bc.newReader()) {
+            assertTrue("markSupported", reader.markSupported());
+
+            assertEquals('b', reader.read());
+            assertEquals('c', reader.read());
+            assertEquals('d', reader.read());
+            assertEquals('e', reader.read());
+
+            reader.mark(10);
+
+            assertEquals('f', reader.read());
+            assertEquals('g', reader.read());
+
+            reader.reset();
+
+            assertEquals('f', reader.read());
+            assertEquals('g', reader.read());
+
+            reader.reset(); // reset doesn't clear the mark
+
+            assertEquals('f', reader.read());
+            assertEquals('g', reader.read());
+        }
+    }
+
+    @Test
+    public void testReaderMissingMark() throws IOException {
+        Chars bc = Chars.wrap("abcdefghijklmnop").slice(1, 9);
+        //                      ------------
+
+        try (Reader reader = bc.newReader()) {
+            assertTrue("markSupported", reader.markSupported());
+
+            assertEquals('b', reader.read());
+            assertThrows(IOException.class, reader::reset);
+        }
+    }
+
+    @Test
+    public void testReaderSkip() throws IOException {
+        Chars bc = Chars.wrap("abcdefghijklmnop").slice(1, 9);
+        //                      ------------
+
+        try (Reader reader = bc.newReader()) {
+            assertEquals('b', reader.read());
+            assertEquals('c', reader.read());
+            assertEquals('d', reader.read());
+            assertEquals('e', reader.read());
+
+            reader.mark(10);
+            assertEquals(2, reader.skip(2));
+
+            assertEquals('h', reader.read());
+            assertEquals('i', reader.read());
+
+            reader.reset();
+
+            assertEquals('f', reader.read());
+            assertEquals('g', reader.read());
+        }
+    }
+
+    @Test
+    public void testReaderInvalidParams() throws IOException {
+        Chars bc = Chars.wrap("abcdefghijklmnop").slice(1, 9);
+        //                      ------------
+        char[] cbuf = new char[4];
+
+        try (Reader reader = bc.newReader()) {
+            assertTrue("markSupported", reader.markSupported());
+
+            assertEquals('b', reader.read());
+            assertThrows(NullPointerException.class, () -> reader.read(null, 0, 0));
+            assertThrows(IndexOutOfBoundsException.class, () -> reader.read(cbuf, -1, 0));
+            assertThrows(IndexOutOfBoundsException.class, () -> reader.read(cbuf, 1, 12));
+            assertThrows(IndexOutOfBoundsException.class, () -> reader.read(cbuf, 1, -1));
+        }
+    }
+
+    private static void assertCharBufEquals(String expected, char[] cbuf) {
+        String actual = new String(cbuf);
+        assertEquals(expected, actual);
     }
 
 }
