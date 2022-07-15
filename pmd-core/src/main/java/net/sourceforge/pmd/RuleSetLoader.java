@@ -154,7 +154,7 @@ public final class RuleSetLoader {
      * @throws RuleSetLoadException If any error occurs (eg, invalid syntax, or resource not found)
      */
     public RuleSet loadFromResource(String rulesetPath) {
-        return loadFromResource(new RuleSetReferenceId(rulesetPath));
+        return loadFromResource(new RuleSetReferenceId(rulesetPath, null, warnDeprecated));
     }
 
     /**
@@ -166,7 +166,7 @@ public final class RuleSetLoader {
      * @throws RuleSetLoadException If any error occurs (eg, invalid syntax)
      */
     public RuleSet loadFromString(String filename, final String rulesetXmlContent) {
-        return loadFromResource(new RuleSetReferenceId(filename) {
+        return loadFromResource(new RuleSetReferenceId(filename, null, warnDeprecated) {
             @Override
             public InputStream getInputStream(ResourceLoader rl) {
                 return new ByteArrayInputStream(rulesetXmlContent.getBytes(StandardCharsets.UTF_8));
@@ -202,6 +202,7 @@ public final class RuleSetLoader {
     public List<RuleSet> loadRuleSetsWithoutException(List<String> rulesetPaths) {
         List<RuleSet> ruleSets = new ArrayList<>(rulesetPaths.size());
         boolean anyRules = false;
+        boolean error = false;
         for (String path : rulesetPaths) {
             try {
                 RuleSet ruleset = this.loadFromResource(path);
@@ -209,16 +210,12 @@ public final class RuleSetLoader {
                 printRulesInDebug(path, ruleset);
                 ruleSets.add(ruleset);
             } catch (RuleSetLoadException e) {
-                if (e.getCause() != null) {
-                    // eg RuleSetNotFoundException
-                    reporter.errorEx("Cannot load ruleset {0}", new Object[] { path }, e.getCause());
-                } else {
-                    reporter.errorEx("Cannot load ruleset {0}", new Object[] { path }, e);
-                }
+                error = true;
+                reporter.error(e);
             }
         }
-        if (!anyRules) {
-            reporter.warn("No rules found. Maybe you misspelled a rule name? ({})",
+        if (!anyRules && !error) {
+            reporter.warn("No rules found. Maybe you misspelled a rule name? ({0})",
                           StringUtils.join(rulesetPaths, ','));
         }
         return ruleSets;
@@ -232,7 +229,7 @@ public final class RuleSetLoader {
             }
         }
         if (ruleset.getRules().isEmpty()) {
-            reporter.warn("No rules found in ruleset {}", path);
+            reporter.warn("No rules found in ruleset {0}", path);
         }
 
     }

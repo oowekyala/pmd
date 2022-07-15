@@ -20,18 +20,16 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
-import net.sourceforge.pmd.internal.util.xml.SchemaConstants;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.rule.RuleReference;
@@ -39,6 +37,8 @@ import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.properties.PropertyTypeId;
 import net.sourceforge.pmd.properties.xml.XmlMapper;
+import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.util.internal.xml.SchemaConstants;
 
 /**
  * This class represents a way to serialize a RuleSet to an XML configuration
@@ -64,7 +64,7 @@ public class RuleSetWriter {
     }
 
     public void close() {
-        IOUtils.closeQuietly(outputStream);
+        IOUtil.closeQuietly(outputStream);
     }
 
     public void write(RuleSet ruleSet) {

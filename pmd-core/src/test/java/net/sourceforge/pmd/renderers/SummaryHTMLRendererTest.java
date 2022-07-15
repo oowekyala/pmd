@@ -7,8 +7,8 @@ package net.sourceforge.pmd.renderers;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
-import java.util.function.Consumer;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.junit.Test;
 
@@ -16,9 +16,8 @@ import net.sourceforge.pmd.FooRule;
 import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.Report.ConfigurationError;
 import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.ReportTest;
 import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.lang.ast.DummyRoot;
+import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 
 public class SummaryHTMLRendererTest extends AbstractRendererTest {
@@ -120,7 +119,7 @@ public class SummaryHTMLRendererTest extends AbstractRendererTest {
     public void testShowSuppressions() throws Exception {
         Renderer renderer = getRenderer();
         renderer.setShowSuppressedViolations(true);
-        String actual = ReportTest.render(renderer, createEmptyReportWithSuppression());
+        String actual = renderReport(renderer, createEmptyReportWithSuppression());
         assertEquals("<html><head><title>PMD</title></head><body>" + PMD.EOL + "<center><h2>Summary</h2></center>"
                 + PMD.EOL + "<table align=\"center\" cellspacing=\"0\" cellpadding=\"3\">" + PMD.EOL
                 + "<tr><th>Rule name</th><th>Number of violations</th></tr>" + PMD.EOL + "</table>" + PMD.EOL
@@ -141,13 +140,13 @@ public class SummaryHTMLRendererTest extends AbstractRendererTest {
     public void testHideSuppressions() throws Exception {
         Renderer renderer = getRenderer();
         renderer.setShowSuppressedViolations(false);
-        String actual = ReportTest.render(renderer, createEmptyReportWithSuppression());
+        String actual = renderReport(renderer, createEmptyReportWithSuppression());
         assertEquals(getExpectedEmpty(), actual);
     }
 
     private Consumer<FileAnalysisListener> createEmptyReportWithSuppression() throws Exception {
         return listener -> {
-            DummyRoot root = new DummyRoot().withNoPmdComments(Collections.singletonMap(1, "test")).withFileName(getSourceCodeFilename());
+            DummyRootNode root = new DummyRootNode().withNoPmdComments(Collections.singletonMap(1, "test")).withFileName(getSourceCodeFilename());
             root.setCoords(1, 10, 4, 5);
 
             RuleContext ruleContext = RuleContext.create(listener, new FooRule());

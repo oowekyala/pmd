@@ -17,8 +17,7 @@ import org.w3c.dom.Element;
 import net.sourceforge.pmd.internal.util.PredicateUtil;
 import net.sourceforge.pmd.properties.constraints.PropertyConstraint;
 import net.sourceforge.pmd.properties.xml.XmlMapper.StableXmlMapper;
-
-import com.github.oowekyala.ooxml.messages.XmlErrorReporter;
+import net.sourceforge.pmd.util.internal.xml.PmdXmlReporter;
 
 /**
  * Serialize to and from a simple string. Examples:
@@ -77,11 +76,11 @@ class ValueSyntax<T> extends StableXmlMapper<T> {
     }
 
     @Override
-    public T fromXml(Element element, XmlErrorReporter err) {
+    public T fromXml(Element element, PmdXmlReporter err) {
         try {
             return fromString.apply(element.getTextContent());
         } catch (IllegalArgumentException e) {
-            throw err.error(element, e);
+            throw err.at(element).error(e);
         }
     }
 

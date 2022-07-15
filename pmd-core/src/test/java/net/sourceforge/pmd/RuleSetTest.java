@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FilenameUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Test;
 
@@ -40,15 +39,16 @@ import net.sourceforge.pmd.lang.Dummy2LanguageModule;
 import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
-import net.sourceforge.pmd.lang.ast.DummyRoot;
+import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.rule.RuleReference;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
+import net.sourceforge.pmd.util.IOUtil;
 
 public class RuleSetTest {
 
-    private final Language dummyLang = LanguageRegistry.getLanguage(DummyLanguageModule.NAME);
+    private final Language dummyLang = DummyLanguageModule.getInstance();
 
     @Test(expected = NullPointerException.class)
     public void testRuleSetRequiresName() {
@@ -472,7 +472,7 @@ public class RuleSetTest {
     }
 
     private RootNode makeCompilationUnits(String filename) {
-        DummyRoot node = new DummyRoot();
+        DummyRootNode node = new DummyRootNode();
         node.setCoords(1, 1, 10, 1);
         node.setImage("Foo");
         node.withFileName(filename);
@@ -496,7 +496,7 @@ public class RuleSetTest {
         assertThat(errors, hasSize(1));
         ProcessingError error = errors.get(0);
         assertThat(error.getMsg(), containsString("java.lang.IllegalStateException: Test exception while applying rule\n"));
-        assertThat(error.getMsg(), containsString("Rule applied on node=Foo"));
+        assertThat(error.getMsg(), containsString("Rule applied on node=dummyRootNode[@Image=Foo]"));
         assertThat(error.getError().getCause(), instanceOf(IllegalStateException.class));
     }
 
@@ -521,9 +521,9 @@ public class RuleSetTest {
         assertThat(errors, hasSize(1));
         ProcessingError error = errors.get(0);
         assertThat(error.getMsg(), containsString("java.lang.IllegalStateException: Test exception while applying rule\n"));
-        assertThat(error.getMsg(), containsString("Rule applied on node=Foo"));
+        assertThat(error.getMsg(), containsString("Rule applied on node=dummyRootNode[@Image=Foo]"));
         assertThat(error.getError().getCause(), instanceOf(IllegalStateException.class));
-        assertThat(FilenameUtils.normalize(error.getFile(), true), equalTo("samplefile.dummy"));
+        assertThat(IOUtil.normalizePath(error.getFile()), equalTo("samplefile.dummy"));
 
         assertThat(report.getViolations(), hasSize(1));
     }
@@ -560,28 +560,28 @@ public class RuleSetTest {
         assertThat(errors, hasSize(1));
         ProcessingError error = errors.get(0);
         assertThat(error.getMsg(), containsString("java.lang.UnsupportedOperationException: Test exception while applying rule\n"));
-        assertThat(error.getMsg(), containsString("Rule applied on node=Foo"));
+        assertThat(error.getMsg(), containsString("Rule applied on node=dummyRootNode[@Image=Foo]"));
         assertThat(error.getError().getCause(), instanceOf(UnsupportedOperationException.class));
 
         assertThat(report.getViolations(), hasSize(1));
     }
 
 
-    class MockRule extends net.sourceforge.pmd.lang.rule.MockRule {
+    static class MockRule extends net.sourceforge.pmd.lang.rule.MockRule {
 
         MockRule() {
             super();
-            setLanguage(dummyLang);
+            setLanguage(DummyLanguageModule.getInstance());
         }
 
         MockRule(String name, String description, String message, String ruleSetName, RulePriority priority) {
             super(name, description, message, ruleSetName, priority);
-            setLanguage(dummyLang);
+            setLanguage(DummyLanguageModule.getInstance());
         }
 
         MockRule(String name, String description, String message, String ruleSetName) {
             super(name, description, message, ruleSetName);
-            setLanguage(dummyLang);
+            setLanguage(DummyLanguageModule.getInstance());
         }
 
     }

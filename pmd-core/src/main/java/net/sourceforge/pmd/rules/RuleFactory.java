@@ -1,23 +1,25 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
 package net.sourceforge.pmd.rules;
 
-import static net.sourceforge.pmd.internal.util.xml.SchemaConstants.PROPERTY_TYPE;
-import static net.sourceforge.pmd.internal.util.xml.SchemaConstants.PROPERTY_VALUE;
-import static net.sourceforge.pmd.internal.util.xml.XmlErrorMessages.ERR__INVALID_LANG_VERSION;
-import static net.sourceforge.pmd.internal.util.xml.XmlErrorMessages.ERR__INVALID_LANG_VERSION_NO_NAMED_VERSION;
-import static net.sourceforge.pmd.internal.util.xml.XmlErrorMessages.ERR__PROPERTY_DOES_NOT_EXIST;
-import static net.sourceforge.pmd.internal.util.xml.XmlErrorMessages.ERR__UNSUPPORTED_VALUE_ATTRIBUTE;
-import static net.sourceforge.pmd.internal.util.xml.XmlErrorMessages.IGNORED__DUPLICATE_PROPERTY_SETTER;
-import static net.sourceforge.pmd.internal.util.xml.XmlUtil.getSingleChildIn;
+import static net.sourceforge.pmd.util.internal.xml.SchemaConstants.MAXIMUM_LANGUAGE_VERSION;
+import static net.sourceforge.pmd.util.internal.xml.SchemaConstants.MINIMUM_LANGUAGE_VERSION;
+import static net.sourceforge.pmd.util.internal.xml.SchemaConstants.NAME;
+import static net.sourceforge.pmd.util.internal.xml.SchemaConstants.PROPERTY_TYPE;
+import static net.sourceforge.pmd.util.internal.xml.SchemaConstants.PROPERTY_VALUE;
+import static net.sourceforge.pmd.util.internal.xml.XmlErrorMessages.ERR__INVALID_LANG_VERSION;
+import static net.sourceforge.pmd.util.internal.xml.XmlErrorMessages.ERR__INVALID_LANG_VERSION_NO_NAMED_VERSION;
+import static net.sourceforge.pmd.util.internal.xml.XmlErrorMessages.ERR__PROPERTY_DOES_NOT_EXIST;
+import static net.sourceforge.pmd.util.internal.xml.XmlErrorMessages.ERR__UNSUPPORTED_VALUE_ATTRIBUTE;
+import static net.sourceforge.pmd.util.internal.xml.XmlErrorMessages.IGNORED__DUPLICATE_PROPERTY_SETTER;
+import static net.sourceforge.pmd.util.internal.xml.XmlUtil.getSingleChildIn;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.w3c.dom.Attr;
@@ -27,9 +29,6 @@ import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.RuleSetReference;
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.xml.SchemaConstants;
-import net.sourceforge.pmd.internal.util.xml.XmlErrorMessages;
-import net.sourceforge.pmd.internal.util.xml.XmlUtil;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
@@ -40,9 +39,13 @@ import net.sourceforge.pmd.properties.PropertyTypeId.BuilderAndMapper;
 import net.sourceforge.pmd.properties.xml.XmlMapper;
 import net.sourceforge.pmd.util.ResourceLoader;
 import net.sourceforge.pmd.util.StringUtil;
+import net.sourceforge.pmd.util.internal.xml.PmdXmlReporter;
+import net.sourceforge.pmd.util.internal.xml.SchemaConstant;
+import net.sourceforge.pmd.util.internal.xml.SchemaConstants;
+import net.sourceforge.pmd.util.internal.xml.XmlErrorMessages;
+import net.sourceforge.pmd.util.internal.xml.XmlUtil;
 
 import com.github.oowekyala.ooxml.DomUtils;
-import com.github.oowekyala.ooxml.messages.XmlErrorReporter;
 import com.github.oowekyala.ooxml.messages.XmlException;
 
 
@@ -56,31 +59,7 @@ import com.github.oowekyala.ooxml.messages.XmlException;
 @Deprecated
 public class RuleFactory {
 
-    private static final String DEPRECATED = "deprecated";
-    private static final String NAME = "name";
-    private static final String LANGUAGE = "language";
-    private static final String MESSAGE = "message";
-    private static final String EXTERNAL_INFO_URL = "externalInfoUrl";
-    private static final String MINIMUM_LANGUAGE_VERSION = "minimumLanguageVersion";
-    private static final String MAXIMUM_LANGUAGE_VERSION = "maximumLanguageVersion";
-    private static final String SINCE = "since";
-    private static final String PROPERTIES = "properties";
-    public static final String PRIORITY = "priority";
-
-    public static final String RULE = "rule";
-    private static final String EXAMPLE = "example";
-    public static final String DESCRIPTION = "description";
-    private static final String CLASS = "class";
-
     private final ResourceLoader resourceLoader;
-
-    /**
-     * @deprecated Use {@link #RuleFactory(ResourceLoader)} instead.
-     */
-    @Deprecated
-    public RuleFactory() {
-        this(new ResourceLoader());
-    }
 
     /**
      * @param resourceLoader The resource loader to load the rule from jar
@@ -102,32 +81,40 @@ public class RuleFactory {
      *
      * @return A rule reference to the referenced rule
      */
-    public RuleReference decorateRule(Rule referencedRule, RuleSetReference ruleSetReference, Element ruleElement, XmlErrorReporter err) {
+    public RuleReference decorateRule(Rule referencedRule, RuleSetReference ruleSetReference, Element ruleElement, PmdXmlReporter err) {
         RuleReference ruleReference = new RuleReference(referencedRule, ruleSetReference);
 
-        DomUtils.getAttributeOpt(ruleElement, DEPRECATED).map(Boolean::parseBoolean).ifPresent(ruleReference::setDeprecated);
-        DomUtils.getAttributeOpt(ruleElement, NAME).ifPresent(ruleReference::setName);
-        DomUtils.getAttributeOpt(ruleElement, MESSAGE).ifPresent(ruleReference::setMessage);
-        DomUtils.getAttributeOpt(ruleElement, EXTERNAL_INFO_URL).ifPresent(ruleReference::setExternalInfoUrl);
+        SchemaConstants.DEPRECATED.getAttributeOpt(ruleElement).map(Boolean::parseBoolean).ifPresent(ruleReference::setDeprecated);
+        SchemaConstants.NAME.getAttributeOpt(ruleElement).ifPresent(ruleReference::setName);
+        SchemaConstants.MESSAGE.getAttributeOpt(ruleElement).ifPresent(ruleReference::setMessage);
+        SchemaConstants.EXTERNAL_INFO_URL.getAttributeOpt(ruleElement).ifPresent(ruleReference::setExternalInfoUrl);
 
-        for (Element node : DomUtils.elementsIn(ruleElement)) {
-            switch (node.getNodeName()) {
-            case DESCRIPTION:
+        for (Element node : DomUtils.children(ruleElement)) {
+
+            if (SchemaConstants.DESCRIPTION.matchesElt(node)) {
+
                 ruleReference.setDescription(XmlUtil.parseTextNode(node));
-                break;
-            case EXAMPLE:
+
+            } else if (SchemaConstants.EXAMPLE.matchesElt(node)) {
+
                 ruleReference.addExample(XmlUtil.parseTextNode(node));
-                break;
-            case PRIORITY:
-                ruleReference.setPriority(RulePriority.valueOf(Integer.parseInt(XmlUtil.parseTextNode(node))));
-                break;
-            case PROPERTIES:
+
+            } else if (SchemaConstants.PRIORITY.matchesElt(node)) {
+
+                RulePriority priority = parsePriority(err, node);
+                if (priority == null) {
+                    priority = RulePriority.MEDIUM;
+                }
+                ruleReference.setPriority(priority);
+
+            } else if (SchemaConstants.PROPERTIES.matchesElt(node)) {
+
                 setPropertyValues(ruleReference, node, err);
-                break;
-            default:
-                throw err.error(
-                    node,
+
+            } else {
+                err.at(node).error(
                     XmlErrorMessages.ERR__UNEXPECTED_ELEMENT_IN,
+                    node.getTagName(),
                     "rule " + ruleReference.getName()
                 );
             }
@@ -148,17 +135,18 @@ public class RuleFactory {
      *
      * @throws IllegalArgumentException if the element doesn't describe a valid rule.
      */
-    public Rule buildRule(Element ruleElement, XmlErrorReporter err) {
+    public Rule buildRule(Element ruleElement, PmdXmlReporter err) {
 
         Rule rule;
         try {
-            String clazz = getNonBlankAttribute(ruleElement, err, CLASS);
+            String clazz = SchemaConstants.CLASS.getNonBlankAttribute(ruleElement, err);
             rule = resourceLoader.loadRuleFromClassPath(clazz);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-            throw err.error(ruleElement.getAttributeNode(CLASS), e);
+            Attr node = SchemaConstants.CLASS.getAttributeNode(ruleElement);
+            throw err.at(node).error(e);
         }
 
-        rule.setName(getNonBlankAttribute(ruleElement, err, NAME));
+        rule.setName(NAME.getNonBlankAttribute(ruleElement, err));
         if (rule.getLanguage() == null) {
             setLanguage(ruleElement, err, rule);
         }
@@ -169,69 +157,71 @@ public class RuleFactory {
         rule.setMaximumLanguageVersion(getLanguageVersion(ruleElement, err, language, MAXIMUM_LANGUAGE_VERSION));
         checkVersionsAreOrdered(ruleElement, err, rule);
 
-        DomUtils.getAttributeOpt(ruleElement, SINCE).ifPresent(rule::setSince);
-        DomUtils.getAttributeOpt(ruleElement, MESSAGE).ifPresent(rule::setMessage);
-        DomUtils.getAttributeOpt(ruleElement, EXTERNAL_INFO_URL).ifPresent(rule::setExternalInfoUrl);
+        SchemaConstants.SINCE.getAttributeOpt(ruleElement).ifPresent(rule::setSince);
+        SchemaConstants.MESSAGE.getAttributeOpt(ruleElement).ifPresent(rule::setMessage);
+        SchemaConstants.EXTERNAL_INFO_URL.getAttributeOpt(ruleElement).ifPresent(rule::setExternalInfoUrl);
         rule.setDeprecated(SchemaConstants.DEPRECATED.getAsBooleanAttr(ruleElement, false));
 
-        for (Element node : DomUtils.elementsIn(ruleElement)) {
-            switch (node.getNodeName()) {
-            case DESCRIPTION:
+        for (Element node : DomUtils.children(ruleElement)) {
+            if (SchemaConstants.DESCRIPTION.matchesElt(node)) {
+
                 rule.setDescription(XmlUtil.parseTextNode(node));
-                break;
-            case EXAMPLE:
+
+            } else if (SchemaConstants.EXAMPLE.matchesElt(node)) {
+
                 rule.addExample(XmlUtil.parseTextNode(node));
-                break;
-            case PRIORITY:
-                RulePriority rp = parsePriority(err, node, XmlUtil.parseTextNode(node));
+
+            } else if (SchemaConstants.PRIORITY.matchesElt(node)) {
+
+                RulePriority rp = parsePriority(err, node);
+                if (rp == null) {
+                    rp = RulePriority.MEDIUM;
+                }
                 rule.setPriority(rp);
-                break;
-            case PROPERTIES:
+
+            } else if (SchemaConstants.PROPERTIES.matchesElt(node)) {
+
                 parsePropertiesForDefinitions(rule, node, err);
                 setPropertyValues(rule, node, err);
-                break;
-            default:
-                throw err.error(node,
-                                XmlErrorMessages.ERR__UNEXPECTED_ELEMENT_IN,
-                                "rule " + ruleElement.getAttribute(NAME));
+
+            } else {
+                throw err.at(node).error(
+                    XmlErrorMessages.ERR__UNEXPECTED_ELEMENT_IN,
+                    "rule " + NAME.getAttributeOrNull(ruleElement));
             }
         }
-
         return rule;
     }
 
-    private void checkVersionsAreOrdered(Element ruleElement, XmlErrorReporter err, Rule rule) {
+    private void checkVersionsAreOrdered(Element ruleElement, PmdXmlReporter err, Rule rule) {
         if (rule.getMinimumLanguageVersion() != null && rule.getMaximumLanguageVersion() != null
             && rule.getMinimumLanguageVersion().compareTo(rule.getMaximumLanguageVersion()) > 0) {
-            throw err.fatal(
-                ruleElement.getAttributeNode(MINIMUM_LANGUAGE_VERSION),
-                XmlErrorMessages.ERR__INVALID_VERSION_RANGE,
-                rule.getMinimumLanguageVersion(),
-                rule.getMaximumLanguageVersion()
-            );
+            throw err.at(MINIMUM_LANGUAGE_VERSION.getAttributeNode(ruleElement))
+                     .error(
+                         XmlErrorMessages.ERR__INVALID_VERSION_RANGE,
+                         rule.getMinimumLanguageVersion(),
+                         rule.getMaximumLanguageVersion()
+                     );
         }
     }
 
 
-    private @NonNull RulePriority parsePriority(XmlErrorReporter err, Element node, String trim) {
-        try {
-            int i = Integer.parseInt(trim.trim());
-            RulePriority rp = RulePriority.valueOfNullable(i);
-            if (rp == null) {
-                err.warn(node, XmlErrorMessages.WARN__INVALID_PRIORITY_VALUE, i);
-                return RulePriority.MEDIUM;
-            } else {
-                return rp;
-            }
-        } catch (NumberFormatException e) {
-            err.warn(node, XmlErrorMessages.WARN__INVALID_PRIORITY_VALUE, trim);
-            return RulePriority.MEDIUM;
+    /**
+     * Parse a priority. If invalid, report it and return null.
+     */
+    public static @Nullable RulePriority parsePriority(PmdXmlReporter err, Element node) {
+        String text = XmlUtil.parseTextNode(node);
+        RulePriority rp = RulePriority.valueOfNullable(text);
+        if (rp == null) {
+            err.at(node).error(XmlErrorMessages.ERR__INVALID_PRIORITY_VALUE, text);
+            return null;
         }
+        return rp;
     }
 
-    private LanguageVersion getLanguageVersion(Element ruleElement, XmlErrorReporter err, Language language, String attrName) {
-        if (ruleElement.hasAttribute(attrName)) {
-            String attrValue = ruleElement.getAttribute(attrName);
+    private LanguageVersion getLanguageVersion(Element ruleElement, PmdXmlReporter err, Language language, SchemaConstant attrName) {
+        if (attrName.hasAttribute(ruleElement)) {
+            String attrValue = attrName.getAttributeOrThrow(ruleElement, err);
             LanguageVersion version = language.getVersion(attrValue);
             if (version == null) {
                 String supportedVersions = language.getVersions().stream()
@@ -242,24 +232,26 @@ public class RuleFactory {
                 String message = supportedVersions.isEmpty()
                                  ? ERR__INVALID_LANG_VERSION_NO_NAMED_VERSION
                                  : ERR__INVALID_LANG_VERSION;
-                throw err.fatal(
-                    ruleElement.getAttributeNode(attrName),
-                    message,
-                    attrValue,
-                    language.getTerseName(),
-                    supportedVersions
-                );
+                throw err.at(attrName.getAttributeNode(ruleElement))
+                         .error(
+                             message,
+                             attrValue,
+                             language.getTerseName(),
+                             supportedVersions
+                         );
             }
             return version;
         }
         return null;
     }
 
-    private void setLanguage(Element ruleElement, XmlErrorReporter err, Rule rule) {
-        String langId = getNonBlankAttribute(ruleElement, err, LANGUAGE);
+    private void setLanguage(Element ruleElement, PmdXmlReporter err, Rule rule) {
+        String langId = SchemaConstants.LANGUAGE.getNonBlankAttribute(ruleElement, err);
         Language lang = LanguageRegistry.findLanguageByTerseName(langId);
         if (lang == null) {
-            throw err.fatal(ruleElement.getAttributeNode(LANGUAGE), "Invalid language ''{0}'', possible values are {1}", langId, supportedLanguages());
+            Attr node = SchemaConstants.LANGUAGE.getAttributeNode(ruleElement);
+            throw err.at(node)
+                     .error("Invalid language ''{0}'', possible values are {1}", langId, supportedLanguages());
         }
         rule.setLanguage(lang);
     }
@@ -268,28 +260,15 @@ public class RuleFactory {
         return LanguageRegistry.getLanguages().stream().map(Language::getTerseName).map(StringUtil::inSingleQuotes).collect(Collectors.joining(", "));
     }
 
-    private @NonNull String getNonBlankAttribute(Element ruleElement, XmlErrorReporter err, String attrName) {
-        String clazz = ruleElement.getAttribute(attrName);
-        if (StringUtils.isBlank(clazz)) {
-            Attr attr = ruleElement.getAttributeNode(attrName);
-            if (attr == null) {
-                throw err.fatal(ruleElement, "Missing {0} attribute", attrName);
-            } else {
-                throw err.fatal(attr, "This attribute may not be blank");
-            }
-        }
-        return clazz;
-    }
-
     /**
      * Parses the properties node and adds property definitions to the builder. Doesn't care for value overriding, that
      * will be handled after the rule instantiation.
      *
-     * @param rule        Rule builder
+     * @param rule           Rule builder
      * @param propertiesNode Node to parse
      * @param err            Error reporter
      */
-    private void parsePropertiesForDefinitions(Rule rule, Element propertiesNode, @NonNull XmlErrorReporter err) {
+    private void parsePropertiesForDefinitions(Rule rule, Element propertiesNode, @NonNull PmdXmlReporter err) {
         for (Element child : SchemaConstants.PROPERTY_ELT.getElementChildrenNamedReportOthers(propertiesNode, err)) {
             if (isPropertyDefinition(child)) {
                 rule.definePropertyDescriptor(parsePropertyDefinition(child, err));
@@ -303,21 +282,21 @@ public class RuleFactory {
      * @param rule          The rule
      * @param propertiesElt The {@literal <properties>} element
      */
-    private void setPropertyValues(Rule rule, Element propertiesElt, XmlErrorReporter err) {
+    private void setPropertyValues(Rule rule, Element propertiesElt, PmdXmlReporter err) {
         Set<String> overridden = new HashSet<>();
 
         XmlException exception = null;
         for (Element element : SchemaConstants.PROPERTY_ELT.getElementChildrenNamedReportOthers(propertiesElt, err)) {
             String name = SchemaConstants.NAME.getAttributeOrThrow(element, err);
             if (!overridden.add(name)) {
-                err.warn(element, IGNORED__DUPLICATE_PROPERTY_SETTER, name);
+                err.at(element).warn(IGNORED__DUPLICATE_PROPERTY_SETTER, name);
                 continue;
             }
 
             PropertyDescriptor<?> desc = rule.getPropertyDescriptor(name);
             if (desc == null) {
                 // todo just warn and ignore
-                throw err.error(element, ERR__PROPERTY_DOES_NOT_EXIST, name, rule.getName());
+                throw err.at(element).error(ERR__PROPERTY_DOES_NOT_EXIST, name, rule.getName());
             }
             try {
                 setRulePropertyCapture(rule, desc, element, err);
@@ -334,7 +313,7 @@ public class RuleFactory {
         }
     }
 
-    private <T> void setRulePropertyCapture(Rule rule, PropertyDescriptor<T> descriptor, Element propertyElt, XmlErrorReporter err) {
+    private <T> void setRulePropertyCapture(Rule rule, PropertyDescriptor<T> descriptor, Element propertyElt, PmdXmlReporter err) {
         T value = parsePropertyValue(propertyElt, err, descriptor.xmlMapper());
         rule.setProperty(descriptor, value);
     }
@@ -358,24 +337,24 @@ public class RuleFactory {
      *
      * @return The property descriptor
      */
-    private static PropertyDescriptor<?> parsePropertyDefinition(Element propertyElement, XmlErrorReporter err) {
+    private static PropertyDescriptor<?> parsePropertyDefinition(Element propertyElement, PmdXmlReporter err) {
 
         String typeId = SchemaConstants.PROPERTY_TYPE.getAttributeOrThrow(propertyElement, err);
 
-        PropertyTypeId factory = PropertyTypeId.lookupMnemonic(typeId);
-        if (factory == null) {
-            throw err.fatal(
-                PROPERTY_TYPE.getAttributeNode(propertyElement),
-                "Unsupported property type ''{0}''",
-                typeId
-            );
+        PropertyTypeId id = PropertyTypeId.lookupMnemonic(typeId);
+        if (id == null) {
+            throw err.at(PROPERTY_TYPE.getAttributeNode(propertyElement))
+                     .error(
+                         XmlErrorMessages.ERR__UNSUPPORTED_PROPERTY_TYPE,
+                         typeId
+                     );
         }
 
-        return propertyDefCapture(propertyElement, err, factory.getBuilderUtils());
+        return propertyDefCapture(propertyElement, err, id.getBuilderUtils());
     }
 
     private static <T> PropertyDescriptor<T> propertyDefCapture(Element propertyElement,
-                                                                XmlErrorReporter err,
+                                                                PmdXmlReporter err,
                                                                 BuilderAndMapper<T> factory) {
         // TODO support constraints like numeric range
 
@@ -391,33 +370,27 @@ public class RuleFactory {
 
         } catch (IllegalArgumentException e) {
             // builder threw, rethrow with XML location
-            throw err.error(propertyElement, e.getMessage());
+            throw err.at(propertyElement).error(e.getMessage());
         }
     }
 
-    private static <T> T parsePropertyValue(Element propertyElt, XmlErrorReporter err, XmlMapper<T> syntax) {
-        @Nullable String defaultAttr = PROPERTY_VALUE.getAttributeOpt(propertyElt);
+    private static <T> T parsePropertyValue(Element propertyElt, PmdXmlReporter err, XmlMapper<T> syntax) {
+        @Nullable String defaultAttr = PROPERTY_VALUE.getAttributeOrNull(propertyElt);
         if (defaultAttr != null) {
             Attr attrNode = PROPERTY_VALUE.getAttributeNode(propertyElt);
-
-            // the attribute syntax could be deprecated.
-            //   err.warn(attrNode,
-            //            WARN__DEPRECATED_USE_OF_ATTRIBUTE,
-            //            PROPERTY_VALUE.xmlName(),
-            //            String.join("\nor\n", syntax.getExamples()));
 
             try {
                 return syntax.fromString(defaultAttr);
             } catch (IllegalArgumentException e) {
-                throw err.error(attrNode, e);
+                throw err.at(attrNode).error(e);
             } catch (UnsupportedOperationException e) {
-                throw err.error(attrNode,
+                throw err.at(attrNode).error(
                                 ERR__UNSUPPORTED_VALUE_ATTRIBUTE,
                                 String.join("\nor\n", syntax.getExamples()));
             }
 
         } else {
-            Element child = getSingleChildIn(propertyElt, true, err, syntax.getReadElementNames());
+            Element child = getSingleChildIn(propertyElt, true, err, XmlUtil.namesToConstants(syntax.getReadElementNames()));
             // this will report the correct error if any
             return syntax.fromXml(child, err);
         }

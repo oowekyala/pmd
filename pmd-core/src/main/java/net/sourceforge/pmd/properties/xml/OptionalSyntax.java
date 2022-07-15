@@ -15,8 +15,7 @@ import org.w3c.dom.Element;
 
 import net.sourceforge.pmd.properties.constraints.PropertyConstraint;
 import net.sourceforge.pmd.util.CollectionUtil;
-
-import com.github.oowekyala.ooxml.messages.XmlErrorReporter;
+import net.sourceforge.pmd.util.internal.xml.PmdXmlReporter;
 
 /**
  * Serialize an optional value. If the value is itself an {@code Optional<S>},
@@ -69,7 +68,7 @@ final class OptionalSyntax<T> extends XmlMapper<Optional<T>> {
     }
 
     @Override
-    public Optional<T> fromXml(Element element, XmlErrorReporter err) {
+    public Optional<T> fromXml(Element element, PmdXmlReporter err) {
         if (EMPTY_NAME.equals(element.getTagName())) {
             return Optional.empty();
         } else {
