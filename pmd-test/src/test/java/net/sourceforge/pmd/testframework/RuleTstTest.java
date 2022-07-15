@@ -5,12 +5,13 @@
 package net.sourceforge.pmd.testframework;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -20,13 +21,14 @@ import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.AbstractRule;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.test.lang.DummyLanguageModule.DummyRootNode;
 
 public class RuleTstTest {
     private LanguageVersion dummyLanguage = LanguageRegistry.findLanguageByTerseName("dummy").getDefaultVersion();
 
-    private Rule rule = mock(Rule.class);
+    private Rule rule = spy(AbstractRule.class);
 
     private RuleTst ruleTester = new RuleTst() {
     };
@@ -42,12 +44,9 @@ public class RuleTstTest {
 
         verify(rule).start(any(RuleContext.class));
         verify(rule).end(any(RuleContext.class));
-        verify(rule).getLanguage();
-        verify(rule, times(2)).getTargetSelector();
-        verify(rule).getMinimumLanguageVersion();
-        verify(rule).getMaximumLanguageVersion();
+        // verify(rule, times(2)).getTargetSelector();
         verify(rule).apply(any(Node.class), any(RuleContext.class));
-        verify(rule, times(4)).getName();
+        verify(rule, atLeastOnce()).getName();
         verify(rule).getPropertiesByPropertyDescriptor();
     }
 
@@ -58,6 +57,10 @@ public class RuleTstTest {
         when(rule.getMessage()).thenReturn("test rule");
         when(rule.getTargetSelector()).thenReturn(RuleTargetSelector.forRootOnly());
         when(rule.deepCopy()).thenReturn(rule);
+        // These properties are apparently required in the contract of Rule
+        // -> TODO make a base PropertyBundle class for rule properties and declare them there
+        when(rule.getProperty(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR)).thenReturn(Optional.empty());
+        when(rule.getProperty(Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR)).thenReturn(Optional.empty());
 
         Mockito.doAnswer(invocation -> {
             RuleContext context = invocation.getArgument(1, RuleContext.class);

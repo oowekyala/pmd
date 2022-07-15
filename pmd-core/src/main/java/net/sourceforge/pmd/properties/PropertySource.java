@@ -7,6 +7,8 @@ package net.sourceforge.pmd.properties;
 import java.util.List;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 
 /**
  * Entity that manages a list of properties. Properties are described by
@@ -73,14 +75,13 @@ public interface PropertySource {
 
     /**
      * Get the typed value for the given property.
-     * Multi valued properties return immutable lists.
      *
      * @param <T>                The underlying type of the property descriptor.
      * @param propertyDescriptor The property descriptor.
      *
      * @return The property value.
      */
-    <T> T getProperty(PropertyDescriptor<T> propertyDescriptor);
+    <T> @NonNull T getProperty(PropertyDescriptor<T> propertyDescriptor);
 
 
     /**

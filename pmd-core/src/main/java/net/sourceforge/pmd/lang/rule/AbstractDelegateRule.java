@@ -7,6 +7,8 @@ package net.sourceforge.pmd.lang.rule;
 import java.util.List;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RulePriority;
@@ -196,7 +198,7 @@ public abstract class AbstractDelegateRule implements Rule {
     }
 
     @Override
-    public <T> T getProperty(PropertyDescriptor<T> propertyDescriptor) {
+    public <T> @NonNull T getProperty(PropertyDescriptor<T> propertyDescriptor) {
         return rule.getProperty(propertyDescriptor);
     }
 

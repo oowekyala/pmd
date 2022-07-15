@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 
 /**
@@ -121,14 +124,16 @@ public abstract class AbstractPropertySource implements PropertySource {
 
 
     @Override
-    public <T> T getProperty(PropertyDescriptor<T> propertyDescriptor) {
+    public <T> @NonNull T getProperty(PropertyDescriptor<T> propertyDescriptor) {
         checkValidPropertyDescriptor(propertyDescriptor);
         T result = propertyDescriptor.defaultValue();
+
         if (propertyValuesByDescriptor.containsKey(propertyDescriptor)) {
             @SuppressWarnings("unchecked")
             T value = (T) propertyValuesByDescriptor.get(propertyDescriptor);
             result = value;
         }
+        Objects.requireNonNull(result, "Required property " + propertyDescriptor.name() + " has no value!");
         return result;
     }
 
