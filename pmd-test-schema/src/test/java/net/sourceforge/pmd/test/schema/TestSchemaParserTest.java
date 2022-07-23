@@ -110,6 +110,34 @@ public class TestSchemaParserTest {
               + "                            ^^^^ Unknown property, known property names are violationSuppressRegex, violationSuppressXPath, testIntProperty\n"));
     }
 
+    @Test
+    public void testLangProperties() throws IOException {
+        String file = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<test-data\n"
+                + "        xmlns=\"http://pmd.sourceforge.net/rule-tests\"\n"
+                + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "        xsi:schemaLocation=\"http://pmd.sourceforge.net/rule-tests net/sourceforge/pmd/test/schema/rule-tests_1_0_0.xsd\">\n"
+                + "    <test-code>\n"
+                + "        <description>equality operators with Double.NaN</description>\n"
+                + "        <lang-properties>\n"
+                + "            <property name='invalid_property'>foo</property>\n"
+                + "        </lang-properties>\n"
+                + "        <expected-problems>0</expected-problems>\n"
+                + "        <code><![CDATA[\n"
+                + "            public class Foo {\n"
+                + "            }\n"
+                + "            ]]></code>\n"
+                + "    </test-code>\n"
+                + "</test-data>\n";
+
+        errStreamCaptor.enableLog();
+        assertThrows(IllegalStateException.class, () -> parseFile(file));
+
+        MatcherAssert.assertThat(errStreamCaptor.getLog(), containsString(
+                "  9|             <property name='invalid_property'>foo</property>\n"
+              + "                           ^^^^ Unknown property, known property names are auxClasspath\n"));
+    }
+
     private RuleTestCollection parseFile(String file) throws IOException {
         MockRule mockRule = new MockRule();
         mockRule.setLanguage(PlainTextLanguage.getInstance());

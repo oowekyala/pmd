@@ -20,6 +20,7 @@ public class RuleTestDescriptor {
     private String description;
     private LanguageVersion languageVersion;
     private final Properties properties = new Properties();
+    private final Properties langProperties = new Properties();
     private final int index;
     private final Rule rule;
     private String code;
@@ -39,6 +40,10 @@ public class RuleTestDescriptor {
 
     public Properties getProperties() {
         return properties;
+    }
+
+    public Properties getLangProperties() {
+        return langProperties;
     }
 
     public boolean isDisabled() {
@@ -115,4 +120,5 @@ public class RuleTestDescriptor {
     public void setFocused(boolean focused) {
         this.focused = focused;
     }
+
 }

@@ -20,9 +20,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.properties.AbstractPropertySource;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
+import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.test.schema.TestSchemaParser.PmdXmlReporter;
 
@@ -106,8 +109,16 @@ class BaseTestParserImpl {
 
         descriptor.setFocused(focused);
 
+        {
+            Element langProps = getSingleChild(testCode, "lang-properties", false, err);
+            if (langProps != null) {
+                PropertySource ps = getLanguageProperties(descriptor);
+                Properties langProperties = parseProperties(langProps, "property", ps, err);
+                descriptor.getLangProperties().putAll(langProperties);
+            }
+        }
 
-        Properties properties = parseRuleProperties(testCode, descriptor.getRule(), err);
+        Properties properties = parseProperties(testCode, "rule-property", descriptor.getRule(), err);
         descriptor.getProperties().putAll(properties);
 
         parseExpectedProblems(testCode, descriptor, err);
@@ -123,6 +134,28 @@ class BaseTestParserImpl {
         if (lversion != null) {
             descriptor.setLanguageVersion(lversion);
         }
+    }
+
+    private PropertySource getLanguageProperties(RuleTestDescriptor descriptor) {
+        Language language = descriptor.getRule().getLanguage();
+        // pretend this is the language instance, replace in pmd 7
+        return new AbstractPropertySource() {
+            {
+                definePropertyDescriptor(PropertyFactory.stringProperty("auxClasspath")
+                                                        .desc("like --aux-classpath")
+                                                        .defaultValue("")
+                                                        .build());
+            }
+            @Override
+            protected String getPropertySourceType() {
+                return "language";
+            }
+
+            @Override
+            public String getName() {
+                return language.getName();
+            }
+        };
     }
 
     private void parseExpectedProblems(Element testCode, RuleTestDescriptor descriptor, PmdXmlReporter err) {
@@ -179,8 +212,9 @@ class BaseTestParserImpl {
             // Should have a coderef
             List<Element> coderefs = DomUtils.childrenNamed(testCode, "code-ref");
             if (coderefs.isEmpty()) {
-                throw new RuntimeException(
-                    "Required tag is missing from the test-xml. Supply either a code or a code-ref tag");
+                err.at(testCode).error("Required tag is missing from the test-xml. "
+                                       + "Supply either a code or a code-ref tag");
+                return null;
             }
             Element coderef = coderefs.get(0);
             Attr id = getRequiredAttribute("id", coderef, err);
@@ -214,9 +248,9 @@ class BaseTestParserImpl {
         return null;
     }
 
-    private Properties parseRuleProperties(Element testCode, PropertySource knownProps, PmdXmlReporter err) {
+    private Properties parseProperties(Element parent, String name, PropertySource knownProps, PmdXmlReporter err) {
         Properties properties = new Properties();
-        for (Element ruleProperty : DomUtils.childrenNamed(testCode, "rule-property")) {
+        for (Element ruleProperty : DomUtils.childrenNamed(parent, name)) {
             Node nameAttr = getRequiredAttribute("name", ruleProperty, err);
             if (nameAttr == null) {
                 continue;
@@ -224,7 +258,7 @@ class BaseTestParserImpl {
             String propertyName = nameAttr.getNodeValue();
             if (knownProps.getPropertyDescriptor(propertyName) == null) {
                 String knownNames = knownProps.getPropertyDescriptors().stream().map(PropertyDescriptor::name)
-                        .collect(Collectors.joining(", "));
+                                              .collect(Collectors.joining(", "));
                 err.at(nameAttr).error("Unknown property, known property names are {0}", knownNames);
                 continue;
             }
@@ -232,6 +266,7 @@ class BaseTestParserImpl {
         }
         return properties;
     }
+
 
     private Attr getRequiredAttribute(String name, Element ruleProperty, PmdXmlReporter err) {
         Attr nameAttr = (Attr) ruleProperty.getAttributes().getNamedItem(name);

@@ -87,7 +87,7 @@ public abstract class RuleTst {
         Map<PropertyDescriptor<?>, Object> oldProperties = rule.getPropertiesByPropertyDescriptor();
         try {
             int res;
-            Report report;
+            Report report = new Report();
             try {
                 // Set test specific properties onto the Rule
                 if (test.getProperties() != null) {
@@ -104,7 +104,7 @@ public abstract class RuleTst {
                     }
                 }
 
-                report = processUsingStringReader(test, rule);
+                runTestFromString(test.getCode(), rule, report, test.getLanguageVersion(), test.auxclasspathPrefix);
                 res = report.size();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -231,13 +231,21 @@ public abstract class RuleTst {
     @InternalApi
     @Deprecated
     public void runTestFromString(String code, Rule rule, Report report, LanguageVersion languageVersion,
-            boolean isUseAuxClasspath) {
+                                  boolean isUseAuxClasspath) {
+        runTestFromString(code, rule, report, languageVersion, null);
+    }
+
+    void runTestFromString(String code, Rule rule, Report report, LanguageVersion languageVersion,
+                                  String auxClasspathPrefix) {
         try {
             PMDConfiguration configuration = new PMDConfiguration();
             configuration.setDefaultLanguageVersion(languageVersion);
             configuration.setIgnoreIncrementalAnalysis(true);
             // regardless of isUseAuxClasspath the auxclasspath is always used (#3976 / #3302)
             // configure the "auxclasspath" option for unit testing
+            if (auxClasspathPrefix != null) {
+                configuration.prependAuxClasspath(auxClasspathPrefix);
+            }
             configuration.prependAuxClasspath(".");
             RuleContext ctx = new RuleContext();
             ctx.setReport(report);

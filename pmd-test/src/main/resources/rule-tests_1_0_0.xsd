@@ -23,15 +23,14 @@
     <complexType name="testType">
         <sequence>
             <element name="description" type="string"/>
-            <element name="rule-property" minOccurs="0" maxOccurs="unbounded">
+            <element name="lang-properties" minOccurs="0" maxOccurs="1">
                 <complexType>
-                    <simpleContent>
-                        <extension base="string">
-                            <attribute name="name" type="string" use="required"/>
-                        </extension>
-                    </simpleContent>
+                    <sequence>
+                        <element name="property" minOccurs="1" maxOccurs="unbounded" type="tns:propertyType"/>
+                    </sequence>
                 </complexType>
             </element>
+            <element name="rule-property" minOccurs="0" maxOccurs="unbounded" type="tns:propertyType"/>
 
             <element name="expected-problems" type="nonNegativeInteger"/>
             <element name="expected-linenumbers" type="string" minOccurs="0"/>
@@ -106,6 +105,14 @@
         <simpleContent>
             <extension base="string">
                 <attribute name="id" type="ID" use="required"/>
+            </extension>
+        </simpleContent>
+    </complexType>
+
+    <complexType name="propertyType">
+        <simpleContent>
+            <extension base="string">
+                <attribute name="name" type="string" use="required"/>
             </extension>
         </simpleContent>
     </complexType>

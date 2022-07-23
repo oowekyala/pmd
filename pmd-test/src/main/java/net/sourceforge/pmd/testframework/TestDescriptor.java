@@ -36,6 +36,8 @@ public class TestDescriptor {
     private boolean useAuxClasspath = true;
     private int numberInDocument = -1;
 
+    String auxclasspathPrefix;
+
     public TestDescriptor() {
         // Empty default descriptor added to please mvn surefire plugin
     }
@@ -65,6 +67,7 @@ public class TestDescriptor {
         this.numberInDocument = td.getIndex();
         this.properties = td.getProperties();
         this.languageVersion = td.getLanguageVersion();
+        this.auxclasspathPrefix = td.getLangProperties().getProperty("auxClasspath");
     }
 
     public int getNumberInDocument() {
