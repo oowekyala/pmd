@@ -4,6 +4,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
 
+    <default-lang-properties>
+        <property name="auxClasspath">
+            <value>${extraTestDepsDirectory}/slf4j-api.jar,${extraTestDepsDirectory}/log4j-api.jar</value>
+        </property>
+    </default-lang-properties>
+
     <test-code>
         <description>missing argument</description>
         <expected-problems>1</expected-problems>

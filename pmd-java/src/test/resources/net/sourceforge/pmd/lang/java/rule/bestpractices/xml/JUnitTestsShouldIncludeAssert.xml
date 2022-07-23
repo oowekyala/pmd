@@ -426,6 +426,11 @@ class Style {
 
     <test-code>
         <description>#1435 Treat AssertJ soft assertions as assert expressions</description>
+        <lang-properties>
+            <property name="auxClasspath">
+                <value>${extraTestDepsDirectory}/assertj-core.jar</value>
+            </property>
+        </lang-properties>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
 import org.assertj.core.api.SoftAssertions;

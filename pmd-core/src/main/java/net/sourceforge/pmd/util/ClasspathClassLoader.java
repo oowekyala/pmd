@@ -100,6 +100,9 @@ public class ClasspathClassLoader extends URLClassLoader {
 
     private static URL createURLFromPath(String path) throws MalformedURLException {
         File file = new File(path);
+        if (!file.exists()) {
+            LOG.log(Level.FINE, "Classpath entry does not exist: {0}", path);
+        }
         return file.getAbsoluteFile().toURI().normalize().toURL();
     }
 
