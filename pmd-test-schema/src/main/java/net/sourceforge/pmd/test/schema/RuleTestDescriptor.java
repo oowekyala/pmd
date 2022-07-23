@@ -20,7 +20,7 @@ public class RuleTestDescriptor {
     private String description;
     private LanguageVersion languageVersion;
     private final Properties properties = new Properties();
-    private final Properties langProperties = new Properties();
+    private final Properties langProperties;
     private final int index;
     private final Rule rule;
     private String code;
@@ -28,10 +28,11 @@ public class RuleTestDescriptor {
     private List<Integer> expectedLineNumbers;
     private List<String> expectedMessages;
 
-    public RuleTestDescriptor(int index, Rule rule) {
+    public RuleTestDescriptor(int index, Rule rule, Properties defaultLangProps) {
         this.index = index;
         this.rule = rule;
         this.languageVersion = rule.getLanguage().getDefaultVersion();
+        this.langProperties = defaultLangProps;
     }
 
     public Rule getRule() {

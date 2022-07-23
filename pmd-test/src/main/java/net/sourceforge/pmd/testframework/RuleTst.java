@@ -20,7 +20,6 @@ import java.util.Map;
 import org.xml.sax.InputSource;
 
 import net.sourceforge.pmd.PMDConfiguration;
-import net.sourceforge.pmd.PMDException;
 import net.sourceforge.pmd.Report;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
@@ -213,12 +212,6 @@ public abstract class RuleTst {
         System.out.println("--------------------------------------------------------------");
     }
 
-    private Report processUsingStringReader(TestDescriptor test, Rule rule) throws PMDException {
-        Report report = new Report();
-        runTestFromString(test, rule, report);
-        return report;
-    }
-
     /**
      * Run the rule on the given code and put the violations in the report.
      */
@@ -244,7 +237,10 @@ public abstract class RuleTst {
             // regardless of isUseAuxClasspath the auxclasspath is always used (#3976 / #3302)
             // configure the "auxclasspath" option for unit testing
             if (auxClasspathPrefix != null) {
-                configuration.prependAuxClasspath(auxClasspathPrefix);
+                // Since there is no platform independent classpath separator,
+                // we use a comma in the xml.
+                String prefixAsClasspath = auxClasspathPrefix.replace(',', File.pathSeparatorChar);
+                configuration.prependAuxClasspath(prefixAsClasspath);
             }
             configuration.prependAuxClasspath(".");
             RuleContext ctx = new RuleContext();

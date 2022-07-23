@@ -7,29 +7,32 @@
 
     <element name="test-data">
         <complexType>
-            <choice maxOccurs="unbounded">
-                <element name="test-code" minOccurs="0" maxOccurs="unbounded" type="tns:testType"/>
-                <element name="code-fragment" minOccurs="0" maxOccurs="unbounded" type="tns:codeFragmentType">
+            <sequence>
+                <element name="default-lang-properties" minOccurs="0" maxOccurs="1" type="tns:propertySectionType">
                     <annotation>
                         <documentation>
-                            A code fragment that can be referred to by several tests.
+                            Default value of the language properties. Are overridden by language properties of individual tests.
                         </documentation>
                     </annotation>
                 </element>
-            </choice>
+                <choice maxOccurs="unbounded">
+                    <element name="test-code" minOccurs="0" maxOccurs="unbounded" type="tns:testType"/>
+                    <element name="code-fragment" minOccurs="0" maxOccurs="unbounded" type="tns:codeFragmentType">
+                        <annotation>
+                            <documentation>
+                                A code fragment that can be referred to by several tests.
+                            </documentation>
+                        </annotation>
+                    </element>
+                </choice>
+            </sequence>
         </complexType>
     </element>
 
     <complexType name="testType">
         <sequence>
             <element name="description" type="string"/>
-            <element name="lang-properties" minOccurs="0" maxOccurs="1">
-                <complexType>
-                    <sequence>
-                        <element name="property" minOccurs="1" maxOccurs="unbounded" type="tns:propertyType"/>
-                    </sequence>
-                </complexType>
-            </element>
+            <element name="lang-properties" minOccurs="0" maxOccurs="1" type="tns:propertySectionType" />
             <element name="rule-property" minOccurs="0" maxOccurs="unbounded" type="tns:propertyType"/>
 
             <element name="expected-problems" type="nonNegativeInteger"/>
@@ -109,12 +112,18 @@
         </simpleContent>
     </complexType>
 
+    <complexType name="propertySectionType">
+        <sequence>
+            <element name="property" minOccurs="1" maxOccurs="unbounded" type="tns:propertyType"/>
+        </sequence>
+    </complexType>
+
     <complexType name="propertyType">
-        <simpleContent>
-            <extension base="string">
-                <attribute name="name" type="string" use="required"/>
-            </extension>
-        </simpleContent>
+        <sequence>
+            <element name="value" type="string" minOccurs="0"/>
+        </sequence>
+        <attribute name="name" type="string"/>
+        <attribute name="value" type="string" default=""/>
     </complexType>
 
 </schema>

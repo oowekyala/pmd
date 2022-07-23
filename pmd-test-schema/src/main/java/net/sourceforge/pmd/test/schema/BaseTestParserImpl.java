@@ -43,13 +43,17 @@ class BaseTestParserImpl {
     public RuleTestCollection parseDocument(Rule rule, Document doc, PmdXmlReporter err) {
         Element root = doc.getDocumentElement();
 
+        Properties defaultLangProps = parsePropertiesSection(getLanguageProperties(rule.getLanguage()), err, root,
+                                                             "default-lang-properties");
+
+
         Map<String, Element> codeFragments = parseCodeFragments(err, root);
 
         Set<String> usedFragments = new HashSet<>();
         List<Element> testCodes = DomUtils.childrenNamed(root, "test-code");
         RuleTestCollection result = new RuleTestCollection();
         for (int i = 0; i < testCodes.size(); i++) {
-            RuleTestDescriptor descriptor = new RuleTestDescriptor(i, rule.deepCopy());
+            RuleTestDescriptor descriptor = new RuleTestDescriptor(i, rule.deepCopy(), defaultLangProps);
 
             try (PmdXmlReporter errScope = err.newScope()) {
                 parseSingleTest(testCodes.get(i), descriptor, codeFragments, usedFragments, errScope);
@@ -63,6 +67,17 @@ class BaseTestParserImpl {
         codeFragments.forEach((id, node) -> err.at(node).warn("Unused code fragment"));
 
         return result;
+    }
+
+    private Properties parsePropertiesSection(PropertySource props,
+                                              PmdXmlReporter err,
+                                              Element root,
+                                              String sectionName) {
+        Element defaultProps = getSingleChild(root, sectionName, false, err);
+        if (defaultProps != null) {
+            return parseProperties(defaultProps, "property", props, err);
+        }
+        return new Properties();
     }
 
     private Map<String, Element> parseCodeFragments(PmdXmlReporter err, Element root) {
@@ -99,7 +114,7 @@ class BaseTestParserImpl {
         parseBoolAttribute(testCode, "useAuxClasspath", true, err, "Attribute 'useAuxClasspath' is deprecated and ignored, assumed true");
 
         boolean disabled = parseBoolAttribute(testCode, "disabled", false, err, null)
-                          | !parseBoolAttribute(testCode, "regressionTest", true, err, "Attribute ''regressionTest'' is deprecated, use ''ignored'' with inverted value");
+                           | !parseBoolAttribute(testCode, "regressionTest", true, err, "Attribute ''regressionTest'' is deprecated, use ''ignored'' with inverted value");
 
         descriptor.setDisabled(disabled);
 
@@ -109,15 +124,16 @@ class BaseTestParserImpl {
 
         descriptor.setFocused(focused);
 
-        {
-            Element langProps = getSingleChild(testCode, "lang-properties", false, err);
-            if (langProps != null) {
-                PropertySource ps = getLanguageProperties(descriptor);
-                Properties langProperties = parseProperties(langProps, "property", ps, err);
-                descriptor.getLangProperties().putAll(langProperties);
-            }
-        }
+        descriptor.getLangProperties().putAll(
+            parsePropertiesSection(
+                getLanguageProperties(descriptor.getRule().getLanguage()),
+                err,
+                testCode,
+                "lang-properties"
+            )
+        );
 
+        /// todo also make those properties inside a section.
         Properties properties = parseProperties(testCode, "rule-property", descriptor.getRule(), err);
         descriptor.getProperties().putAll(properties);
 
@@ -136,8 +152,7 @@ class BaseTestParserImpl {
         }
     }
 
-    private PropertySource getLanguageProperties(RuleTestDescriptor descriptor) {
-        Language language = descriptor.getRule().getLanguage();
+    private PropertySource getLanguageProperties(Language language) {
         // pretend this is the language instance, replace in pmd 7
         return new AbstractPropertySource() {
             {
@@ -146,6 +161,8 @@ class BaseTestParserImpl {
                                                         .defaultValue("")
                                                         .build());
             }
+
+
             @Override
             protected String getPropertySourceType() {
                 return "language";
@@ -250,8 +267,8 @@ class BaseTestParserImpl {
 
     private Properties parseProperties(Element parent, String name, PropertySource knownProps, PmdXmlReporter err) {
         Properties properties = new Properties();
-        for (Element ruleProperty : DomUtils.childrenNamed(parent, name)) {
-            Node nameAttr = getRequiredAttribute("name", ruleProperty, err);
+        for (Element propertyElt : DomUtils.childrenNamed(parent, name)) {
+            Node nameAttr = getRequiredAttribute("name", propertyElt, err);
             if (nameAttr == null) {
                 continue;
             }
@@ -262,7 +279,17 @@ class BaseTestParserImpl {
                 err.at(nameAttr).error("Unknown property, known property names are {0}", knownNames);
                 continue;
             }
-            properties.setProperty(propertyName, parseTextNode(ruleProperty));
+            String value = getSingleChildText(propertyElt, "value", false, err);
+            if (value == null) {
+                if (propertyElt.hasAttribute("value")) {
+                    value = propertyElt.getAttribute("value");
+                }
+            }
+            if (value == null) {
+                value = parseTextNode(propertyElt);
+            }
+
+            properties.setProperty(propertyName, value);
         }
         return properties;
     }
