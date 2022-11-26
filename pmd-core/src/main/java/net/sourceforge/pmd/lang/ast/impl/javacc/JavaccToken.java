@@ -175,6 +175,11 @@ public class JavaccToken implements GenericToken<JavaccToken> {
     }
 
     @Override
+    public boolean isEof() {
+        return kind == EOF;
+    }
+
+    @Override
     public String toString() {
         return document.describeKind(kind) + ": " + getImage();
     }

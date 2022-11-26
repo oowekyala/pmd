@@ -18,6 +18,8 @@ import net.sourceforge.pmd.lang.document.TextRegion;
  */
 public final class CharStream {
 
+    private static final EOFException EOF = new EOFException();
+
     private final JavaccTokenDocument tokenDoc;
     private final TextDocument textDoc;
     private final Chars chars;
@@ -52,7 +54,7 @@ public final class CharStream {
      */
     public char readChar() throws EOFException {
         if (curOffset == chars.length()) {
-            throw new EOFException();
+            throw EOF;
         }
         return chars.charAt(curOffset++);
     }

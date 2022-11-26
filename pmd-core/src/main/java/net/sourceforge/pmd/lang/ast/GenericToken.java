@@ -136,4 +136,11 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
         return () -> IteratorUtil.generate(from.getPreviousComment(), GenericToken::getPreviousComment);
     }
 
+
+    /**
+     * Return true if this is an end-of-file token. Such a token should
+     * have no text and is ignored by CPD tokenizers.
+     */
+    boolean isEof();
+
 }

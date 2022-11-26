@@ -79,7 +79,7 @@ IDENT_START=[:jletter:]
 
 <YYINITIAL>             "/**"                  { yybegin(COMMENT_DATA_START); return JdocTokenType.COMMENT_START; }
 
-<COMMENT_DATA,javadocjfl
+<COMMENT_DATA,
  COMMENT_DATA_START>    "</" / {HTML_TAG_NAME} { yybegin(IN_HTML);           return JdocTokenType.HTML_LCLOSE; }
 
 <COMMENT_DATA,

@@ -16,18 +16,17 @@ import org.junit.jupiter.api.Test;
 
 class MatchAlgorithmTest {
 
-    private static final String LINE_1 = "public class Foo { ";
-    private static final String LINE_2 = " public void bar() {";
     private static final String LINE_3 = "  System.out.println(\"hello\");";
-    private static final String LINE_4 = "  System.out.println(\"hello\");";
-    private static final String LINE_5 = "  int i = 5";
-    private static final String LINE_6 = "  System.out.print(\"hello\");";
-    private static final String LINE_7 = " }";
-    private static final String LINE_8 = "}";
 
     private static String getSampleCode() {
-        return LINE_1 + "\n" + LINE_2 + "\n" + LINE_3 + "\n" + LINE_4 + "\n" + LINE_5 + "\n" + LINE_6
-                + "\n" + LINE_7 + "\n" + LINE_8;
+        return "public class Foo { \n"
+            + " public void bar() {\n"
+            + LINE_3 + "\n"
+            + LINE_3 + "\n"
+            + "  int i = 5\n"
+            + "  System.out.print(\"hello\");\n"
+            + " }\n"
+            + "}";
     }
 
     @Test
@@ -58,7 +57,7 @@ class MatchAlgorithmTest {
 
         assertEquals(4, mark2.getBeginLine());
         assertEquals("Foo.java", mark2.getFilename());
-        assertEquals(LINE_4, mark2.getSourceCodeSlice());
+        assertEquals(LINE_3, mark2.getSourceCodeSlice());
     }
 
     @Test

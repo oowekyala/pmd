@@ -65,7 +65,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
             ?: throw AssertionError("Unsupported version $version for language $language")
     }
 
-    val language: Language
+    open val language: Language
         get() =
             params.languageRegistry.getLanguageByFullName(langName)
                 ?: run {

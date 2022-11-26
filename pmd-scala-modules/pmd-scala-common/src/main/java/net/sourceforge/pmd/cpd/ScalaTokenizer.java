@@ -162,11 +162,6 @@ public class ScalaTokenizer implements Tokenizer {
             super(tokenManager);
         }
 
-        @Override
-        protected boolean shouldStopProcessing(ScalaTokenAdapter currentToken) {
-            return currentToken == null;
-        }
-
     }
 
 }

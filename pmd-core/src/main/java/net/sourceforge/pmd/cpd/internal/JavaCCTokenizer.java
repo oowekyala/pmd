@@ -51,7 +51,7 @@ public abstract class JavaCCTokenizer implements Tokenizer {
             TokenManager<JavaccToken> tokenManager = getLexerForSource(textDoc);
             final TokenFilter<JavaccToken> tokenFilter = getTokenFilter(tokenManager);
             JavaccToken currentToken = tokenFilter.getNextToken();
-            while (currentToken != null) {
+            while (currentToken != null && !currentToken.isEof()) { // kind 0 is EOF
                 tokenEntries.add(processToken(tokenEntries, currentToken));
                 currentToken = tokenFilter.getNextToken();
             }

@@ -55,6 +55,11 @@ class BaseTokenFilterTest {
         }
 
         @Override
+        public boolean isEof() {
+            return false;
+        }
+
+        @Override
         public FileLocation getReportLocation() {
             return FileLocation.range(TextFile.UNKNOWN_FILENAME, TextRange2d.range2d(1, 1, 1, 1));
         }
