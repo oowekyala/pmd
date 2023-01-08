@@ -18,6 +18,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocInheritDoc;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocSnippet;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocValue;
 
@@ -89,6 +90,19 @@ enum KnownInlineTagParser implements InlineTagParser {
             parser.parseReference(firstTok, tag);
             expectInlineTagEnd(parser, tag);
             return tag;
+        }
+
+    },
+
+    SNIPPET("@snippet") {
+        @Override
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
+            parser.nextNonWs();
+            JdocToken firstTok = parser.head().getPrevious();
+            assert firstTok != null;
+
+            String data = consumeInlineTag(parser);
+            return new JdocSnippet(data);
         }
 
     },

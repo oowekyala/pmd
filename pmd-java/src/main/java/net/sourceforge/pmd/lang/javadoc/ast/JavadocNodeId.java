@@ -15,6 +15,8 @@ enum JavadocNodeId {
     LITERAL_TAG("InlineTag"),
     LINK_TAG("InlineTag"),
     VALUE_TAG("InlineTag"),
+    INHERIT_DOC_TAG("InlineTag"),
+    SNIPPET_TAG("InlineTag"),
     UNKNOWN_INLINE_TAG("UnknownInlineTag"),
 
 
