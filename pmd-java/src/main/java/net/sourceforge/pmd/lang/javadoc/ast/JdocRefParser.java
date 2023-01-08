@@ -101,6 +101,7 @@ class JdocRefParser extends BaseJavadocParser {
 
             if (tokIs(REF_COMMA)) {
                 advance();
+                skipWhitespace();
             } else {
                 break;
             }

@@ -102,6 +102,12 @@ fun TreeNodeWrapper<Node, out JavadocNode>.fieldRef(name: String, spec: NodeSpec
             spec()
         }
 
+fun TreeNodeWrapper<Node, out JavadocNode>.jdocMethodRef(name: String, spec: NodeSpec<JdocRef.JdocExecutableRef> = EmptyAssertions) =
+        child<JdocRef.JdocExecutableRef> {
+            it::getName shouldBe name
+            spec()
+        }
+
 fun TreeNodeWrapper<Node, out JavadocNode>.unknownInline(name: String, spec: NodeSpec<JdocInlineTag.JdocUnknownInlineTag> = EmptyAssertions) =
         child<JdocInlineTag.JdocUnknownInlineTag> {
             it::getTagName shouldBe name
