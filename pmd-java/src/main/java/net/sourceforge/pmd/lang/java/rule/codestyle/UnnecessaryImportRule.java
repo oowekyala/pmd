@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,9 +26,11 @@ import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainIterator;
+import net.sourceforge.pmd.lang.java.types.JArrayType;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -38,6 +38,9 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
@@ -64,39 +67,6 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
     private final Set<ImportWrapper> staticImportsOnDemand = new HashSet<>();
     private final Set<ImportWrapper> unnecessaryJavaLangImports = new HashSet<>();
     private final Set<ImportWrapper> unnecessaryImportsFromSamePackage = new HashSet<>();
-
-    /*
-     * Patterns to match the following constructs:
-     *
-     * @see package.class#member(param, param) label
-     * {@linkplain package.class#member(param, param) label}
-     * {@link package.class#member(param, param) label}
-     * {@link package.class#field}
-     * {@value package.class#field}
-     *
-     * @throws package.class label
-     * @exception package.class label
-     */
-
-    /* package.class#member(param, param) */
-    private static final String TYPE_PART_GROUP = "((?:\\p{Alpha}\\w*\\.)*(?:\\p{Alpha}\\w*))?(?:#\\w*(?:\\(([.\\w\\s,\\[\\]]*)\\))?)?";
-
-    private static final Pattern SEE_PATTERN = Pattern.compile("@see\\s+" + TYPE_PART_GROUP);
-
-
-    private static final Pattern LINK_PATTERNS = Pattern.compile("\\{@link(?:plain)?\\s+" + TYPE_PART_GROUP + "[\\s\\}]");
-
-    private static final Pattern VALUE_PATTERN = Pattern.compile("\\{@value\\s+(\\p{Alpha}\\w*)[\\s#\\}]");
-
-    private static final Pattern THROWS_PATTERN = Pattern.compile("@throws\\s+(\\p{Alpha}\\w*)");
-
-    private static final Pattern EXCEPTION_PATTERN = Pattern.compile("@exception\\s+(\\p{Alpha}\\w*)");
-
-    /* // @link substring="a" target="package.class#member(param, param)" */
-    private static final Pattern LINK_IN_SNIPPET = Pattern
-        .compile("//\\s*@link\\s+(?:.*?)?target=[\"']?" + TYPE_PART_GROUP + "[\"']?");
-
-    private static final Pattern[] PATTERNS = { SEE_PATTERN, LINK_PATTERNS, VALUE_PATTERN, THROWS_PATTERN, EXCEPTION_PATTERN, LINK_IN_SNIPPET };
 
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
@@ -169,32 +139,30 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
     }
 
     private void visitComments(ASTCompilationUnit node) {
-        // todo improve that when we have a javadoc parser
         for (JavaComment comment : node.getComments()) {
             if (!(comment instanceof JavadocComment)) {
                 continue;
             }
-            for (Pattern p : PATTERNS) {
-                Matcher m = p.matcher(comment.getImage());
-                while (m.find()) {
-                    String fullname = m.group(1);
-
-                    if (fullname != null) { // may be null for "@see #" and "@link #"
-                        removeReferenceSingleImport(fullname);
+            JdocComment jdocTree = ((JavadocComment) comment).getJdocTree();
+            for (JdocRef jdocRef : jdocTree.descendants(JdocRef.class)) {
+                if (jdocRef instanceof JdocClassRef) {
+                    String simpleRef = ((JdocClassRef) jdocRef).getSimpleRef();
+                    if (simpleRef.isEmpty()) {
+                        continue;
                     }
-
-                    if (m.groupCount() > 1) {
-                        fullname = m.group(2);
-                        if (fullname != null) {
-                            for (String param : fullname.split("\\s*,\\s*")) {
-                                removeReferenceSingleImport(param);
-                            }
-                        }
+                    JTypeMirror resolved = ((JdocClassRef) jdocRef).resolveRef();
+                    if (resolved == null) {
+                        removeReferenceSingleImport(simpleRef);
+                        continue;
                     }
-
-                    if (allSingleNameImports.isEmpty()) {
-                        return;
+                    if (resolved instanceof JArrayType) {
+                        resolved = ((JArrayType) resolved).getElementType();
                     }
+                    JTypeDeclSymbol symbol = resolved.getSymbol();
+                    ShadowChainIterator<JTypeMirror, ScopeInfo> scopeIter =
+                        jdocTree.getJavaSymbolTable().types()
+                                .iterateResults(symbol.getSimpleName());
+                    checkScopeChain(false, symbol, scopeIter, ts -> true, false);
                 }
             }
         }
