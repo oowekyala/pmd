@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.types;
 
-import static java.util.Collections.emptyList;
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
 import static net.sourceforge.pmd.util.CollectionUtil.immutableSetOf;
 
 import java.io.Serializable;
@@ -21,6 +21,8 @@ import java.util.function.UnaryOperator;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
@@ -32,6 +34,7 @@ import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Classpath;
@@ -289,7 +292,7 @@ public final class TypeSystem {
         // make it really untouchable
         this.sharedTypes = Collections.unmodifiableMap(new HashMap<>(shared));
 
-        UNBOUNDED_WILD = new WildcardTypeImpl(this, true, OBJECT);
+        UNBOUNDED_WILD = new WildcardTypeImpl(this, true, OBJECT, HashTreePSet.empty());
     }
 
     @SuppressWarnings("IncompleteCopyConstructor")
@@ -353,7 +356,7 @@ public final class TypeSystem {
 
     private JClassType addSpecial(Class<?> klass, Map<JClassSymbol, JTypeMirror> shared) {
         JClassSymbol sym = getBootStrapSymbol(klass);
-        JClassType nonErased = new ClassTypeImpl(this, sym, emptyList(), false);
+        JClassType nonErased = new ClassTypeImpl(this, sym, HashTreePSet.empty());
         shared.put(sym, nonErased);
         return nonErased;
     }
@@ -365,7 +368,7 @@ public final class TypeSystem {
     }
 
     private @NonNull JPrimitiveType createPrimitive(PrimitiveTypeKind kind, Class<?> box) {
-        return new JPrimitiveType(this, kind, new RealPrimitiveSymbol(this, kind), getBootStrapSymbol(box));
+        return new JPrimitiveType(this, kind, new RealPrimitiveSymbol(this, kind), getBootStrapSymbol(box), HashTreePSet.empty());
     }
 
 
@@ -504,7 +507,7 @@ public final class TypeSystem {
                 assert component != null : "the symbol necessarily has an array component symbol";
                 return arrayType(component, classSym);
             } else {
-                return new ClassTypeImpl(this, classSym, emptyList(), !isErased);
+                return new ClassTypeImpl(this, classSym, emptyList(), isErased, HashTreePSet.empty());
             }
         } else if (symbol instanceof JTypeParameterSymbol) {
             return ((JTypeParameterSymbol) symbol).getTypeMirror();
@@ -516,7 +519,7 @@ public final class TypeSystem {
     JClassType forceErase(JClassType t) {
         JClassType erasure = t.getErasure();
         if (erasure == t) {
-            return new ErasedClassType(this, t.getSymbol());
+            return new ErasedClassType(this, t.getSymbol(), t.getTypeAnnotations());
         }
         return erasure;
     }
@@ -564,11 +567,11 @@ public final class TypeSystem {
      */
     // todo how does this behave with nested generic types
     public @NonNull JTypeMirror parameterise(@NonNull JClassSymbol klass, @NonNull List<? extends JTypeMirror> typeArgs) {
-        if (!klass.isGeneric() && typeArgs.isEmpty()) {
+        if (typeArgs.isEmpty()) {
             return rawType(klass); // note this ensures that OBJECT and such is preserved
         }
         // if the type arguments are mismatched, the constructor will throw
-        return new ClassTypeImpl(this, klass, CollectionUtil.defensiveUnmodifiableCopy(typeArgs), false);
+        return new ClassTypeImpl(this, klass, CollectionUtil.defensiveUnmodifiableCopy(typeArgs), true, HashTreePSet.empty());
     }
 
 
@@ -628,7 +631,7 @@ public final class TypeSystem {
     /** Trusted constructor. */
     private JArrayType arrayType(@NonNull JTypeMirror component, @Nullable JClassSymbol symbol) {
         checkArrayElement(component);
-        return new JArrayType(this, component, symbol);
+        return new JArrayType(this, component, symbol, HashTreePSet.empty());
     }
 
 
@@ -692,7 +695,7 @@ public final class TypeSystem {
             throw new IllegalArgumentException("<" + bound + "> cannot be a wildcard bound");
         }
         return isUpperBound && bound == OBJECT ? UNBOUNDED_WILD
-                                               : new WildcardTypeImpl(this, isUpperBound, bound);
+                                               : new WildcardTypeImpl(this, isUpperBound, bound, HashTreePSet.empty());
     }
 
     /**
@@ -768,12 +771,12 @@ public final class TypeSystem {
     }
 
     // package-private
-    JClassType erasedType(JClassSymbol symbol) {
+    JClassType erasedType(@NonNull JClassSymbol symbol) {
         JTypeMirror t = specialCache(symbol);
         if (t != null) {
             return (JClassType) t.getErasure();
         } else {
-            return new ErasedClassType(this, symbol);
+            return new ErasedClassType(this, symbol, HashTreePSet.empty());
         }
     }
 
@@ -783,7 +786,10 @@ public final class TypeSystem {
      * intended to be used by the implementor of {@link JTypeParameterSymbol}.
      */
     public JTypeVar newTypeVar(JTypeParameterSymbol symbol) {
-        return new TypeVarImpl.RegularTypeVar(this, symbol);
+        // note: here we don't pass the symbol's annotations. These stay on
+        // the symbol as they can be visually noisy since they would be
+        // repeated at each use-site
+        return new TypeVarImpl.RegularTypeVar(this, symbol, HashTreePSet.empty());
     }
 
     private static final class NullType implements JTypeMirror {
@@ -792,6 +798,16 @@ public final class TypeSystem {
 
         NullType(TypeSystem ts) {
             this.ts = ts;
+        }
+
+        @Override
+        public JTypeMirror withAnnotations(PSet<SymAnnot> newTypeAnnots) {
+            return this;
+        }
+
+        @Override
+        public PSet<SymAnnot> getTypeAnnotations() {
+            return HashTreePSet.empty();
         }
 
         @Override

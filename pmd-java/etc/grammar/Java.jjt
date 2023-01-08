@@ -1579,7 +1579,7 @@ void TypeArgument() #void:
 void WildcardType():
 {}
 {
-    "?" [  ("extends" {jjtThis.setUpperBound(true);}| "super") AnnotatedRefType() ]
+    "?" [  ("extends" | "super"  {jjtThis.setLowerBound(true);}) AnnotatedRefType() ]
 }
 
 

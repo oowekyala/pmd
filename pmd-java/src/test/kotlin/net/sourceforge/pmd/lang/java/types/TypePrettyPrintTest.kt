@@ -41,7 +41,7 @@ class TypePrettyPrintTest : FunSpec({
 
     test("pretty print with simple names") {
 
-        fun JTypeMirror.pp() = TypePrettyPrint.prettyPrint(this, withSimpleNames())
+        fun JTypeMirror.pp() = TypePrettyPrint.prettyPrintWithSimpleNames(this)
 
         with(TypeDslOf(ts)) {
             ts.OBJECT.pp() shouldBe "Object"
