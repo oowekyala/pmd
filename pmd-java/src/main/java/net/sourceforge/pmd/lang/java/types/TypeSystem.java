@@ -327,7 +327,8 @@ public final class TypeSystem {
 
     /**
      * Returns a new, distinct type system, whose special types are all
-     * the same (instances), but whose resolver
+     * the same (instances), but whose resolver can be overwritten, eg
+     * to use types defined in the current compilation unit.
      *
      * @return A new type system, based on this one.
      */

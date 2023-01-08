@@ -38,7 +38,7 @@ public abstract class TokenDocument<T extends GenericToken<T>> {
     public abstract T getFirstToken();
 
 
-    protected static IllegalStateException documentNotReady() {
+    protected static IllegalStateException documentNotReadyException() {
         return new IllegalStateException("Document has not been opened");
     }
 

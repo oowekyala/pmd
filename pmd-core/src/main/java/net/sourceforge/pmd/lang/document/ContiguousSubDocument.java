@@ -9,6 +9,8 @@ import java.util.Objects;
 import net.sourceforge.pmd.lang.LanguageVersion;
 
 /**
+ * An implementation of a text document that is a view over a contiguous
+ * region of another document.
  * See {@link TextDocument#subDocument(TextRegion, LanguageVersion)}.
  */
 final class ContiguousSubDocument extends BaseMappedDocument {

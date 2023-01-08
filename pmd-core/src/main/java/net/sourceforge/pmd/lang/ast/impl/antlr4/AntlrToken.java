@@ -63,6 +63,11 @@ public class AntlrToken implements GenericToken<AntlrToken> {
     }
 
     @Override
+    public boolean isEof() {
+        return token.getType() == Token.EOF;
+    }
+
+    @Override
     public int compareTo(AntlrToken o) {
         return getRegion().compareTo(o.getRegion());
     }
@@ -73,10 +78,5 @@ public class AntlrToken implements GenericToken<AntlrToken> {
 
     public boolean isDefault() {
         return token.getChannel() == Lexer.DEFAULT_TOKEN_CHANNEL;
-    }
-
-    @Override
-    public boolean isEof() {
-        return token.getType() == Token.EOF;
     }
 }

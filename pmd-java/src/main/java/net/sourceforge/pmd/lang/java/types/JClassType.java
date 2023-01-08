@@ -231,23 +231,6 @@ public interface JClassType extends JTypeMirror {
 
 
     /**
-     * Select an inner type from the simple name of its class. Returns
-     * null if there is no such inner class.
-     *
-     * @param innerClassSimpleName The simple name of the inner class to be selected
-     * @param targs                The type arguments. See {@link #selectInner(JClassSymbol, List)}.
-     *
-     * @return A type for the inner type
-     */
-    default @Nullable JClassType selectInner(String innerClassSimpleName, List<? extends JTypeMirror> targs) {
-        JClassSymbol innerClass = getSymbol().getDeclaredClass(innerClassSimpleName);
-        if (innerClass == null) {
-            return null;
-        }
-        return selectInner(innerClass, targs);
-    }
-
-    /**
      * Returns the generic superclass type. Returns null if this is
      * {@link TypeSystem#OBJECT Object}. Returns {@link TypeSystem#OBJECT}
      * if this is an interface type.

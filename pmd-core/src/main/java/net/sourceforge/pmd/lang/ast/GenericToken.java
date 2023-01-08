@@ -75,6 +75,14 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
     /** Returns a text region with the coordinates of this token. */
     TextRegion getRegion();
 
+    /**
+     * Returns true if this token is an end-of-file token. This is the
+     * last token of token sequences that have been fully lexed. Such
+     * a token should have the empty string as text, and be ignored by
+     * CPD tokenizers.
+     */
+    boolean isEof();
+
 
     /**
      * Returns true if this token is implicit, ie was inserted artificially
@@ -135,12 +143,5 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
     static <T extends GenericToken<T>> Iterable<T> previousSpecials(T from) {
         return () -> IteratorUtil.generate(from.getPreviousComment(), GenericToken::getPreviousComment);
     }
-
-
-    /**
-     * Return true if this is an end-of-file token. Such a token should
-     * have no text and is ignored by CPD tokenizers.
-     */
-    boolean isEof();
 
 }

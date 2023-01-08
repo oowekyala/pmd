@@ -81,7 +81,7 @@
                 <inherited>true</inherited>
                 <executions>
                     <execution>
-                        <id>generate-java</id>
+                        <id>generate-java-ast</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>run</goal>
@@ -106,7 +106,7 @@
                 <version>1.7.0</version>
                 <executions>
                     <execution>
-                        <id>javadoc-lexer</id>
+                        <id>generate-javadoc-lexer</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>

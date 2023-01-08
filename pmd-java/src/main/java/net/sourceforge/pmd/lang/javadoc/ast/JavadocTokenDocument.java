@@ -29,7 +29,7 @@ public final class JavadocTokenDocument extends TokenDocument<JdocToken> {
     @Override
     public JdocToken getFirstToken() {
         if (!isOpen()) {
-            throw documentNotReady();
+            throw documentNotReadyException();
         }
         return first;
     }

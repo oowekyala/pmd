@@ -160,7 +160,7 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
     @Override
     public JavaccToken getFirstToken() {
         if (first == null || first.next == null) {
-            throw documentNotReady();
+            throw documentNotReadyException();
         }
         return first.next;
     }
