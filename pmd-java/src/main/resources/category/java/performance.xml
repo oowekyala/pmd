@@ -161,10 +161,9 @@ Solution: Use `new Date()`, Java 8+ `java.time.LocalDateTime.now()` or `ZonedDat
             <property name="xpath">
                 <value><![CDATA[
 //MethodCall[pmd-java:matchesSig("java.util.Calendar#getTime()") or pmd-java:matchesSig("java.util.Calendar#getTimeInMillis()")]
-  [*[1][local-name() = ('MethodCall', 'ConstructorCall')]
-                               [pmd-java:matchesSig("java.util.Calendar#getInstance()")
-                             or pmd-java:matchesSig("java.util.GregorianCalendar#getInstance()")
-                             or pmd-java:matchesSig("java.util.GregorianCalendar#new()")]
+  [*[pmd-java:matchesSig("java.util.Calendar#getInstance()")
+     or pmd-java:matchesSig("java.util.GregorianCalendar#getInstance()")
+     or pmd-java:matchesSig("java.util.GregorianCalendar#new()")]
   ]
 |
 //MethodCall[pmd-java:matchesSig("java.util.Calendar#getTime()") or pmd-java:matchesSig("java.util.Calendar#getTimeInMillis()")]
@@ -183,7 +182,7 @@ Solution: Use `new Date()`, Java 8+ `java.time.LocalDateTime.now()` or `ZonedDat
        or pmd-java:matchesSig("java.util.GregorianCalendar#new()")]]]
     )
   )]
-  ]]
+  ]
 |
 //ConstructorCall[pmd-java:typeIs("org.joda.time.DateTime") or pmd-java:typeIs("org.joda.time.LocalDateTime")]
   [ArgumentList[(MethodCall | ConstructorCall)

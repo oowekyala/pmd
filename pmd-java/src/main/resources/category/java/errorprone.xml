@@ -551,9 +551,7 @@ Each caught exception type should be handled in its own catch clause.
             <property name="xpath">
                 <value>
 <![CDATA[
-//CatchParameter
-    /following-sibling::Block//InfixExpression[@Operator = 'instanceof']
-        /VariableAccess[@Name = ./ancestor::Block/preceding-sibling::CatchParameter/@Name]
+//InfixExpression[@Operator = 'instanceof' and VariableAccess[pmd-java:declaratorId()[@ExceptionBlockParameter=true()]]]
             /following-sibling::TypeExpression/*
 ]]>
                 </value>
@@ -748,10 +746,10 @@ int j = -~7;
           class="net.sourceforge.pmd.lang.java.rule.errorprone.AvoidUsingOctalValuesRule"
           externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_errorprone.html#avoidusingoctalvalues">
         <description>
-Integer literals that start with zero are interpreted as octal (base-8) values in Java, which can lead to 
-unexpected behavior and bugs. Most developers expect decimal (base-10) interpretation, making octal literals 
+Integer literals that start with zero are interpreted as octal (base-8) values in Java, which can lead to
+unexpected behavior and bugs. Most developers expect decimal (base-10) interpretation, making octal literals
 a common source of confusion and errors. For example, 012 equals 10 in decimal, not 12 as might be expected.
-This rule helps prevent such mistakes by flagging integer literals that could be misinterpreted as decimal values. 
+This rule helps prevent such mistakes by flagging integer literals that could be misinterpreted as decimal values.
 Use decimal literals without leading zeros, or use explicit prefixes like 0x for hexadecimal or 0b for binary values to make the intended base clear.
         </description>
         <priority>3</priority>
@@ -1141,7 +1139,7 @@ numbers.remove("string"); // violation: String cannot be in Integer list
 Map<String, Integer> map = new HashMap<>();
 map.get(42); // violation: Integer key cannot be in String-keyed map
 
-Set<String> names = new HashSet<>(); 
+Set<String> names = new HashSet<>();
 names.contains(123); // violation: Integer cannot be in String set
 ]]>
         </example>
@@ -2654,8 +2652,8 @@ with the restriction that the logger needs to be passed into the constructor.
             and not(pmd-java:modifiers() = 'static')
             and not(ancestor::ClassBody/ConstructorDeclaration
                 //AssignmentExpression[@Operator = '=']
-                    [FieldAccess[1]/@Name = $loggerName or VariableAccess[1]/@Name = $loggerName]
-                    [*[2][@Name = ancestor::ConstructorDeclaration//FormalParameter/VariableId/@Name]])
+                    [*[1][pmd-java:declaratorId()[@Name = $loggerName]]]
+                    [*[2][pmd-java:declaratorId()[@FormalParameter = true()]]])
         )
     ]
 ]]>
@@ -2720,15 +2718,15 @@ public class Foo {
         Calendar cal = Calendar.getInstance();
         cal.set(2024, Calendar.JANUARY, 15); // Month indexing is confusing (0-based)
         cal.add(Calendar.DAY_OF_MONTH, 7);
-        
+
         Calendar specific = new GregorianCalendar(2024, 0, 15); // Also problematic
     }
-    
+
     void preferred() {
         // Preferred - using modern java.time API
         LocalDate date = LocalDate.of(2024, 1, 15); // Month indexing is intuitive (1-based)
         LocalDate weekLater = date.plusDays(7);
-        
+
         LocalDateTime dateTime = LocalDateTime.now();
         ZonedDateTime zonedDateTime = ZonedDateTime.now();
     }
@@ -2783,18 +2781,18 @@ public class Foo {
         Date now = new Date();
         Date epoch = new Date(0L);
         Date custom = new Date(124, 0, 15); // Deprecated constructor: year=1900+124=2024, month=0=January
-        
+
         // Mutable operations are error-prone
         now.setTime(System.currentTimeMillis());
     }
-    
+
     void preferred() {
         // Preferred - using modern java.time API
         Instant now = Instant.now(); // For timestamps
         LocalDate today = LocalDate.now(); // For date only
         LocalDateTime dateTime = LocalDateTime.now(); // For date and time
         ZonedDateTime zonedDateTime = ZonedDateTime.now(); // With timezone
-        
+
         // Immutable operations are safer
         LocalDate tomorrow = today.plusDays(1);
         LocalDateTime nextHour = dateTime.plusHours(1);
