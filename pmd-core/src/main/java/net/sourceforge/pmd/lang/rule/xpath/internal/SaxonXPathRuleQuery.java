@@ -42,6 +42,7 @@ import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.sxpath.XPathVariable;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.util.DocumentNumberAllocator;
 
 
 /**
@@ -57,6 +58,7 @@ public class SaxonXPathRuleQuery {
     private static final Logger LOG = LoggerFactory.getLogger(SaxonXPathRuleQuery.class);
 
     private static final NamePool NAME_POOL = new NamePool();
+    private static final DocumentNumberAllocator DOCUMENT_NUMBER_ALLOCATOR = new DocumentNumberAllocator();
 
     /** Cache key for the wrapped tree for saxon. */
     private static final SimpleDataKey<AstTreeInfo> SAXON_TREE_CACHE_KEY = DataMap.simpleDataKey("saxon.tree");
@@ -187,6 +189,7 @@ public class SaxonXPathRuleQuery {
 
         this.configuration = Configuration.newConfiguration();
         this.configuration.setNamePool(getNamePool());
+        this.configuration.setDocumentNumberAllocator(DOCUMENT_NUMBER_ALLOCATOR);
 
         StaticContextWithProperties staticCtx = new StaticContextWithProperties(this.configuration);
         staticCtx.setXPathLanguageLevel(version == XPathVersion.XPATH_3_1 ? 31 : 20);

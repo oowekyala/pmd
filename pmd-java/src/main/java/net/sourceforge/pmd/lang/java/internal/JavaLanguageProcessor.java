@@ -121,7 +121,8 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             GetModifiersFun.GET_EXPLICIT,
             MetricFunction.INSTANCE,
             GetCommentOnFunction.INSTANCE,
-            GetDeclarationFun.INSTANCE
+            GetDeclarationFun.INSTANCE,
+            GetUsagesFun.INSTANCE
         );
 
     public void setTypeSystem(TypeSystem ts) {

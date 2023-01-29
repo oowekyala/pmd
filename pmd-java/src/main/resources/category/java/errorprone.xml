@@ -465,9 +465,7 @@ Each caught exception type should be handled in its own catch clause.
             <property name="xpath">
                 <value>
 <![CDATA[
-//CatchParameter
-    /following-sibling::Block//InfixExpression[@Operator = 'instanceof']
-        /VariableAccess[@Name = ./ancestor::Block/preceding-sibling::CatchParameter/@Name]
+//InfixExpression[@Operator = 'instanceof' and VariableAccess[pmd-java:declaratorId()[@ExceptionBlockParameter=true()]]]
 ]]>
                 </value>
             </property>
@@ -2674,8 +2672,8 @@ with the restriction that the logger needs to be passed into the constructor.
             and not(pmd-java:modifiers() = 'static')
             and not(ancestor::ClassOrInterfaceBody/ConstructorDeclaration
                 //AssignmentExpression[@Operator = '=']
-                    [FieldAccess[1]/@Name = $loggerName or VariableAccess[1]/@Name = $loggerName]
-                    [*[2][@Name = ancestor::ConstructorDeclaration//FormalParameter/VariableDeclaratorId/@Name]])
+                    [*[1][pmd-java:declaratorId()[@Name = $loggerName]]]
+                    [*[2][pmd-java:declaratorId()[@FormalParameter = true()]]])
         )
     ]
 ]]>

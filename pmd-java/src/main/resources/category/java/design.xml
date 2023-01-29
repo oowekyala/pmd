@@ -810,14 +810,12 @@ in each object at runtime.
 //FieldDeclaration
     [pmd-java:modifiers() = 'final']
     [not(pmd-java:modifiers() = 'static')]
-    [not(.//Annotation[pmd-java:typeIs('lombok.Builder.Default')])]
-    /VariableDeclarator[*[pmd-java:nodeIs('Literal')]
-         or VariableAccess[@Name = //FieldDeclaration[pmd-java:modifiers() = 'static']/VariableDeclarator/VariableDeclaratorId/@Name]
-         or FieldAccess
-         or ArrayAllocation/ArrayType/ArrayDimensions/ArrayDimExpr/NumericLiteral[@IntLiteral = true()][@Image = "0"]]
+    [not(pmd-java:hasAnnotation('lombok.Builder.Default'))]
+    /VariableDeclarator[
+            *[pmd-java:nodeIs('Literal') or pmd-java:declaratorId()[pmd-java:modifiers() = 'static' and @Field = true()]]
+         or ArrayAllocation/ArrayType/ArrayDimensions/ArrayDimExpr/NumericLiteral[@IntLiteral = true()][@ConstValue = 0]]
     /VariableDeclaratorId
-        [not(@Name = //MethodDeclaration[not(pmd-java:modifiers() = 'static')]
-            //SynchronizedStatement/(VariableAccess|FieldAccess[ThisExpression])/@Name)]
+        [not(pmd-java:localUsages()[parent::SynchronizedStatement/ancestor::MethodDeclaration[not(pmd-java:modifiers() = 'static')]])]
 ]]>
                 </value>
             </property>
