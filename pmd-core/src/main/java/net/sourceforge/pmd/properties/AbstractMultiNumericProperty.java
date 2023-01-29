@@ -41,7 +41,7 @@ import net.sourceforge.pmd.properties.modules.NumericPropertyModule;
      */
     AbstractMultiNumericProperty(String theName, String theDescription, T lower, T upper, List<T> theDefault,
                                  float theUIOrder, boolean isDefinedExternally) {
-        super(theName, theDescription, theDefault, theUIOrder, isDefinedExternally);
+        super(theName, theDescription, theDefault, theUIOrder, DEFAULT_NUMERIC_DELIMITER, isDefinedExternally);
 
         module = new NumericPropertyModule<>(lower, upper);
         for (T num : theDefault) {

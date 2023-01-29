@@ -510,7 +510,7 @@ the property ignoreMagicNumbers is not taken into account, if there are multiple
         <properties>
             <property name="ignoreMagicNumbers"
                       description="Comma-separated list of magic numbers, that should be ignored"
-                      type="String" value="-1,0"/>
+                      type="List[Double]" value="-1,0" min="-Infinity" max="Infinity"/>
             <property name="ignoreExpressions"
                       description="If true, only literals in simple if conditions are considered. Otherwise literals in expressions are checked, too."
                       type="Boolean" value="true"/>
@@ -518,27 +518,24 @@ the property ignoreMagicNumbers is not taken into account, if there are multiple
                 <value>
 <![CDATA[
 (: simple case - no deep expressions - this is always executed :)
-//IfStatement/*[1]/*[pmd-java:nodeIs('Literal')]
-    [not(pmd-java:nodeIs('NullLiteral'))]
-    [not(pmd-java:nodeIs('BooleanLiteral'))]
-    [empty(index-of(tokenize($ignoreMagicNumbers, '\s*,\s*'), @Image))]
+//IfStatement/*[1]/*
+    [self::CharLiteral or self::StringLiteral or self::NumericLiteral]
+    [not(self::NumericLiteral and (some $number in $ignoreMagicNumbers satisfies @ConstValue = $number))]
 |
 (: consider also deeper expressions :)
-//IfStatement[$ignoreExpressions = false()]/*[1]//*[not(self::UnaryExpression[@Operator = '-'])]/*[pmd-java:nodeIs('Literal')]
-    [not(pmd-java:nodeIs('NullLiteral'))]
-    [not(pmd-java:nodeIs('BooleanLiteral'))]
-    [empty(index-of(tokenize($ignoreMagicNumbers, '\s*,\s*'), @Image))]
-|
-(: consider negative literals :)
-//IfStatement[$ignoreExpressions = false()]/*[1]//UnaryExpression[@Operator = '-']/*[pmd-java:nodeIs('Literal')]
-    [not(pmd-java:nodeIs('NullLiteral'))]
-    [not(pmd-java:nodeIs('BooleanLiteral'))]
-    [empty(index-of(tokenize($ignoreMagicNumbers, '\s*,\s*'), concat('-', @Image)))]
+//IfStatement[$ignoreExpressions = false()]/*[1]//*
+    [self::CharLiteral or self::StringLiteral or self::NumericLiteral]
+    [not(self::NumericLiteral and (
+        if (parent::UnaryExpression[@Operator='-']) then
+            (: consider negated literals :)
+            (some $number in $ignoreMagicNumbers satisfies @ConstValue = -$number)
+        else
+            (some $number in $ignoreMagicNumbers satisfies @ConstValue = $number)
+    ))]
 |
 (: consider multiple literals in expressions :)
-//IfStatement[$ignoreExpressions = false()]/*[1][count(*[pmd-java:nodeIs('Literal')]
-    [not(pmd-java:nodeIs('NullLiteral'))]
-    [not(pmd-java:nodeIs('BooleanLiteral'))]) > 1]
+//IfStatement[$ignoreExpressions = false()]/*[1]
+    [count(*[self::CharLiteral or self::StringLiteral or self::NumericLiteral]) > 1]
 ]]>
                 </value>
             </property>

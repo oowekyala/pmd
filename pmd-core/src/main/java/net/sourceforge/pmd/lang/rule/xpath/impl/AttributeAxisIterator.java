@@ -39,7 +39,7 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
 
     /* Constants used to determine which methods are accessors */
     private static final Set<Class<?>> CONSIDERED_RETURN_TYPES
-            = new HashSet<>(Arrays.<Class<?>>asList(Integer.TYPE, Boolean.TYPE, Double.TYPE, String.class,
+            = new HashSet<>(Arrays.<Class<?>>asList(Integer.TYPE, Boolean.TYPE, Double.TYPE, Number.class, String.class,
                     Long.TYPE, Character.TYPE, Float.TYPE));
 
     private static final Set<String> FILTERED_OUT_NAMES
