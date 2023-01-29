@@ -19,6 +19,7 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.BaseContextNodeTestFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetCommentOnFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetDeclarationFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetModifiersFun;
+import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetUsagesFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
