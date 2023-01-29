@@ -68,7 +68,7 @@ If you want to copy/move elements inside the _same_ array (e.g. shift the elemen
             <property name="xpath">
                 <value>
 <![CDATA[
-//(ForStatement[ForUpdate//(UnaryExpression[@Operator=('++','--')] | AssignmentExpression[@Operator = ('+=', '-=')][NumericLiteral[@Image = '1']])]
+//(ForStatement[ForUpdate//(UnaryExpression[@Operator=('++','--')] | AssignmentExpression[@Operator = ('+=', '-=')][NumericLiteral[@ConstValue = 1]])]
  | WhileStatement | DoStatement)
     [not(.//ContinueStatement)]
     [not(.//BreakStatement)]
@@ -83,24 +83,14 @@ If you want to copy/move elements inside the _same_ array (e.g. shift the elemen
                                         sort(distinct-values(ArrayAccess[1]/(VariableAccess[2]|InfixExpression//VariableAccess)
                                             (: don't consider array length accesses :)
                                             [not(parent::FieldAccess[@Name='length'])]
-                                            [
-                                               (: exclude referenced constants :)
-                                               not(@Name = (ancestor::MethodDeclaration|//FieldDeclaration)//VariableDeclarator[NumericLiteral][not(../../../parent::ForInit)]/VariableDeclaratorId/@Name)
-                                               or
-                                               (: include loop variable :)
-                                               @Name = ancestor::ForStatement/ForInit/LocalVariableDeclaration/VariableDeclarator/VariableDeclaratorId/@Name
-                                            ]
+                                            (: exclude referenced constants :)
+                                            [not(pmd-java:declaratorId()[../NumericLiteral and @Final = true()])]
                                             /@Name)),
                                         sort(distinct-values(ArrayAccess[2]/(VariableAccess[2]|InfixExpression//VariableAccess)
                                             (: don't consider array length accesses :)
                                             [not(parent::FieldAccess[@Name='length'])]
-                                            [
-                                               (: exclude referenced constants :)
-                                               not(@Name = (ancestor::MethodDeclaration|//FieldDeclaration)//VariableDeclarator[NumericLiteral][not(../../../parent::ForInit)]/VariableDeclaratorId/@Name)
-                                               or
-                                               (: include loop variable :)
-                                               @Name = ancestor::ForStatement/ForInit/LocalVariableDeclaration/VariableDeclarator/VariableDeclaratorId/@Name
-                                            ]
+                                            (: exclude referenced constants :)
+                                            [not(pmd-java:declaratorId()[../NumericLiteral and @Final = true()])]
                                             /@Name))
                                       )]
      )=1]
