@@ -166,6 +166,22 @@ langs:
           - code: "//TypeParameter[metric('idontexist') > 50]"
             outcome: "Error: no such metric"
 
+      - name: declaratorId
+        returnType: "xs:node?"
+        shortDescription: "Return the variable declarator id node if the context node is a variable or field access."
+        description: >-
+          Fetch the declaration node of a variable or field access. This returns an empty sequence if
+          the context node is not a variable or field access, or if the referenced variable is a field
+          declared outside of the current compilation unit.
+
+          The returned node is of type {% jdoc jast::ASTVariableDeclaratorId %}.
+
+        notes: "The context node must be an {% jdoc jast::ASTNamedReferenceExpr %}, otherwise this returns an empty sequence."
+        examples:
+          - code: '//VariableAccess[pmd-java:declaratorId()[pmd-java:modifiers() = "final"]]'
+            outcome: "Matches (unqualified) variable accesses on a final variable or field."
+          - code: '//InfixExpression[*[pmd-java:declaratorId()[../StringLiteral[@Empty=true()]]]]'
+            outcome: "Matches infix expressions that involve a variable access to a variable initialized with an empty string."
       - name: hasAnnotation
         returnType: "xs:boolean"
         shortDescription: "Tests whether an annotation is present on the node"

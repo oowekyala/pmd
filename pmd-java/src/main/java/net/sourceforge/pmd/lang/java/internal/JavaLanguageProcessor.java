@@ -17,6 +17,7 @@ import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.internal.JavaLanguageProperties.InferenceLoggingVerbosity;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.BaseContextNodeTestFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetCommentOnFunction;
+import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetDeclarationFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetModifiersFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
@@ -118,7 +119,8 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             GetModifiersFun.GET_EFFECTIVE,
             GetModifiersFun.GET_EXPLICIT,
             MetricFunction.INSTANCE,
-            GetCommentOnFunction.INSTANCE
+            GetCommentOnFunction.INSTANCE,
+            GetDeclarationFun.INSTANCE
         );
 
     public void setTypeSystem(TypeSystem ts) {
