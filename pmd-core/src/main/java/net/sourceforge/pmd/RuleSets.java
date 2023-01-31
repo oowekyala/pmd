@@ -17,9 +17,9 @@ import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.rule.internal.RuleApplicator;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
-import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * Grouping of Rules per Language in a RuleSet.
@@ -49,7 +49,7 @@ public class RuleSets {
         this.ruleSets = Collections.unmodifiableList(rsets);
     }
 
-    public RuleSets(Collection<RuleSet> ruleSets) {
+    public RuleSets(Collection<? extends RuleSet> ruleSets) {
         this.ruleSets = Collections.unmodifiableList(new ArrayList<>(ruleSets));
     }
 
@@ -107,7 +107,7 @@ public class RuleSets {
      */
     public boolean applies(TextFile file) {
         for (RuleSet ruleSet : ruleSets) {
-            if (ruleSet.applies(file.getPathId())) {
+            if (ruleSet.applies(file)) {
                 return true;
             }
         }
@@ -131,7 +131,7 @@ public class RuleSets {
             this.ruleApplicator = prepareApplicator();
         }
 
-        try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.RULE_AST_INDEXATION)) {
+        try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.RULE_AST_INDEXATION)) {
             ruleApplicator.index(root);
         }
 

@@ -29,13 +29,7 @@ public final class ASTForStatement extends AbstractStatement implements ASTLoopS
     }
 
 
-    /**
-     * Returns the node that represents the condition of this loop.
-     * This may be any expression of type boolean.
-     *
-     * <p>If there is no specified guard, then returns null.
-     */
-    @Nullable
+    @Override
     public ASTExpression getCondition() {
         return getFirstChildOfType(ASTExpression.class);
     }
@@ -54,13 +48,9 @@ public final class ASTForStatement extends AbstractStatement implements ASTLoopS
      * Returns the statement nested within the update clause, if it exists.
      */
     public @Nullable ASTStatementExpressionList getUpdate() {
-        ASTForUpdate update = getFirstChildOfType(ASTForUpdate.class);
+        ASTForUpdate update = firstChild(ASTForUpdate.class);
         return update == null ? null : update.getExprList();
     }
 
-    /** Returns the statement that represents the body of this loop. */
-    public ASTStatement getBody() {
-        return (ASTStatement) getChild(getNumChildren() - 1);
-    }
 
 }

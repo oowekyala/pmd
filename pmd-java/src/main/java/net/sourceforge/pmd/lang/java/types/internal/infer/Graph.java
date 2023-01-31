@@ -7,18 +7,19 @@ package net.sourceforge.pmd.lang.java.types.internal.infer;
 import static java.lang.Math.min;
 import static net.sourceforge.pmd.util.CollectionUtil.union;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Stack;
 
-import net.sourceforge.pmd.internal.GraphUtils;
-import net.sourceforge.pmd.internal.GraphUtils.DotColor;
+import net.sourceforge.pmd.util.GraphUtil;
+import net.sourceforge.pmd.util.GraphUtil.DotColor;
 
 /**
  * A graph to walk over ivar dependencies in an efficient way.
@@ -156,7 +157,7 @@ class Graph<T> {
 
     @Override
     public String toString() {
-        return GraphUtils.toDot(
+        return GraphUtil.toDot(
             vertices,
             this::successorsOf,
             v -> DotColor.BLACK,
@@ -164,14 +165,14 @@ class Graph<T> {
         );
     }
 
-    private static class TarjanState<T> {
+    private static final class TarjanState<T> {
 
         int index;
-        Stack<Vertex<T>> stack = new Stack<>();
+        Deque<Vertex<T>> stack = new ArrayDeque<>();
 
     }
 
-    static class Vertex<T> {
+    static final class Vertex<T> {
 
         private final Graph<T> owner;
         private final Set<T> data;
@@ -193,7 +194,7 @@ class Graph<T> {
 
         /** Absorbs the given node into this node. */
         private void absorb(Vertex<T> toMerge) {
-            if (this == toMerge) {
+            if (this == toMerge) { // NOPMD CompareObjectsWithEquals
                 return;
             }
             this.data.addAll(toMerge.data);

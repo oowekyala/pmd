@@ -13,9 +13,9 @@ import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.Locator;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.document.FileLocation;
+import net.sourceforge.pmd.lang.document.Locator;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 /**
  * A light-weight mirror of an AST, that can be kept in memory when we're

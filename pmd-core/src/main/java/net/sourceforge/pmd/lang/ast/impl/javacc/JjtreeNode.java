@@ -7,8 +7,6 @@ package net.sourceforge.pmd.lang.ast.impl.javacc;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.Reportable;
 
 /**
  * Base interface for nodes that are produced by a JJTree parser. Our
@@ -17,11 +15,10 @@ import net.sourceforge.pmd.util.document.Reportable;
  *
  * @param <N> Self type
  */
-public interface JjtreeNode<N extends JjtreeNode<N>> extends GenericNode<N>, TextAvailableNode, Reportable {
+public interface JjtreeNode<N extends JjtreeNode<N>> extends GenericNode<N>, TextAvailableNode {
 
-    @Override
-    Chars getText();
 
+    // todo token accessors should most likely be protected in PMD 7.
 
     JavaccToken getFirstToken();
 

@@ -4,46 +4,50 @@
 
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
-import static net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.CtorStub;
-import static net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.MethodStub;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterOwnerSymbol;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.SymbolEquality;
-import net.sourceforge.pmd.lang.java.symbols.internal.SymbolToStrings;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.CtorStub;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.MethodStub;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyClassSignature;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
 import net.sourceforge.pmd.lang.java.types.LexicalScope;
 import net.sourceforge.pmd.lang.java.types.Substitution;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 
-final class ClassStub implements JClassSymbol, AsmStub {
+final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
     static final int UNKNOWN_ARITY = 0;
 
     private final AsmSymbolResolver resolver;
-    private final String internalName;
-    private final Loader loader;
 
-    private Names names;        // lazy (doesn't need parsing)
+    private final Names names;
 
     // all the following are lazy and depend on the parse lock
 
@@ -57,23 +61,40 @@ final class ClassStub implements JClassSymbol, AsmStub {
     private List<JClassSymbol> memberClasses = new ArrayList<>();
     private List<JMethodSymbol> methods = new ArrayList<>();
     private List<JConstructorSymbol> ctors = new ArrayList<>();
+    private List<JFieldSymbol> enumConstants = null;
+
+    private PSet<SymAnnot> annotations = HashTreePSet.empty();
+
+    private PSet<String> annotAttributes;
 
     private final ParseLock parseLock;
 
+    /** Note that '.' is forbidden because in internal names they're replaced by slashes '/'. */
+    private static final Pattern INTERNAL_NAME_FORBIDDEN_CHARS = Pattern.compile("[;<>\\[.]");
+
+    private static boolean isValidInternalName(String internalName) {
+        return !internalName.isEmpty() && !INTERNAL_NAME_FORBIDDEN_CHARS.matcher(internalName).find();
+    }
 
     ClassStub(AsmSymbolResolver resolver, String internalName, @NonNull Loader loader, int observedArity) {
+        assert isValidInternalName(internalName) : internalName;
+
         this.resolver = resolver;
-        this.internalName = internalName;
-        this.loader = loader;
+        this.names = new Names(internalName);
 
         this.parseLock = new ParseLock() {
+            // note to devs: to debug the parsing logic you might have
+            // to replace the implementation of toString temporarily,
+            // otherwise an IDE could call toString just to show the item
+            // in the debugger view (which could cause parsing of the class file).
+
             @Override
             protected boolean doParse() throws IOException {
                 try (InputStream instream = loader.getInputStream()) {
                     if (instream != null) {
                         ClassReader classReader = new ClassReader(instream);
                         ClassStubBuilder builder = new ClassStubBuilder(ClassStub.this, resolver);
-                        classReader.accept(builder, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
+                        classReader.accept(builder, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
                         return true;
                     } else {
                         return false;
@@ -95,6 +116,22 @@ final class ClassStub implements JClassSymbol, AsmStub {
                 ctors = Collections.unmodifiableList(ctors);
                 fields = Collections.unmodifiableList(fields);
                 memberClasses = Collections.unmodifiableList(memberClasses);
+                enumConstants = CollectionUtil.makeUnmodifiableAndNonNull(enumConstants);
+
+                if (EnclosingInfo.NO_ENCLOSING.equals(enclosingInfo)) {
+                    if (names.canonicalName == null || names.simpleName == null) {
+                        // This happens if the simple name contains dollars,
+                        // in which case we might have an enclosing class, and
+                        // we can only tell now (no enclosingInfo) that that's
+                        // not the case.
+                        names.finishOuterClass();
+                    }
+                }
+                annotAttributes = (accessFlags & Opcodes.ACC_ANNOTATION) != 0
+                                  ? getDeclaredMethods().stream().filter(JMethodSymbol::isAnnotationAttribute)
+                                                        .map(JElementSymbol::getSimpleName)
+                                                        .collect(CollectionUtil.toPersistentSet())
+                                  : HashTreePSet.empty();
             }
 
             @Override
@@ -102,10 +139,6 @@ final class ClassStub implements JClassSymbol, AsmStub {
                 return signature != null && enclosingInfo != null;
             }
         };
-    }
-
-    Loader getLoader() {
-        return loader;
     }
 
     @Override
@@ -119,6 +152,15 @@ final class ClassStub implements JClassSymbol, AsmStub {
                    @Nullable String superName,
                    String[] interfaces) {
         this.signature = new LazyClassSignature(this, signature, superName, interfaces);
+    }
+
+    /**
+     * Called if this is an inner class (their simple name cannot be
+     * derived from splitting the internal/binary name on dollars, as
+     * the simple name may itself contain dollars).
+     */
+    void setSimpleName(String simpleName) {
+        this.names.simpleName = simpleName;
     }
 
     void setModifiers(int accessFlags, boolean fromClassInfo) {
@@ -169,26 +211,34 @@ final class ClassStub implements JClassSymbol, AsmStub {
             myAccess = myAccess & ~Opcodes.ACC_PUBLIC;
         }
         this.accessFlags = myAccess | accessFlags;
+
+        if ((accessFlags & Opcodes.ACC_ENUM) != 0) {
+            this.enumConstants = new ArrayList<>();
+        }
     }
 
-    void setOuterClass(String outerName, @Nullable String methodName, @Nullable String methodDescriptor) {
+    void setOuterClass(ClassStub outer, @Nullable String methodName, @Nullable String methodDescriptor) {
         if (enclosingInfo == null) {
-            if (outerName == null) {
+            if (outer == null) {
+                assert methodName == null && methodDescriptor == null
+                    : "Enclosing method requires enclosing class";
                 this.enclosingInfo = EnclosingInfo.NO_ENCLOSING;
             } else {
-                this.enclosingInfo = new EnclosingInfo(resolver.resolveFromInternalNameCannotFail(outerName), methodName, methodDescriptor);
+                this.enclosingInfo = new EnclosingInfo(outer, methodName, methodDescriptor);
             }
         }
     }
 
     void addField(FieldStub fieldStub) {
         fields.add(fieldStub);
+
+        if (fieldStub.isEnumConstant() && enumConstants != null) {
+            enumConstants.add(fieldStub);
+        }
     }
 
     void addMemberClass(ClassStub classStub) {
-        if (classStub.enclosingInfo == null) {
-            classStub.enclosingInfo = new EnclosingInfo(this, null, null);
-        }
+        classStub.setOuterClass(this, null, null);
         memberClasses.add(classStub);
     }
 
@@ -199,6 +249,12 @@ final class ClassStub implements JClassSymbol, AsmStub {
     void addCtor(CtorStub methodStub) {
         ctors.add(methodStub);
     }
+
+    @Override
+    public void addAnnotation(SymAnnot annot) {
+        annotations = annotations.plus(annot);
+    }
+
 
     // </editor-fold>
 
@@ -234,6 +290,12 @@ final class ClassStub implements JClassSymbol, AsmStub {
     }
 
     @Override
+    public boolean isGeneric() {
+        parseLock.ensureParsed();
+        return signature.isGeneric();
+    }
+
+    @Override
     public LexicalScope getLexicalScope() {
         if (scope == null) {
             scope = JClassSymbol.super.getLexicalScope();
@@ -266,6 +328,28 @@ final class ClassStub implements JClassSymbol, AsmStub {
     }
 
     @Override
+    public PSet<SymAnnot> getDeclaredAnnotations() {
+        parseLock.ensureParsed();
+        return annotations;
+    }
+
+    @Override
+    public PSet<String> getAnnotationAttributeNames() {
+        parseLock.ensureParsed();
+        return annotAttributes;
+    }
+
+    @Override
+    public @Nullable SymbolicValue getDefaultAnnotationAttributeValue(String attrName) {
+        parseLock.ensureParsed();
+        if (!annotAttributes.contains(attrName)) {
+            // this is a shortcut, because the default impl checks each method
+            return null;
+        }
+        return JClassSymbol.super.getDefaultAnnotationAttributeValue(attrName);
+    }
+
+    @Override
     public @Nullable JClassSymbol getEnclosingClass() {
         parseLock.ensureParsed();
         return enclosingInfo.getEnclosingClass();
@@ -278,6 +362,12 @@ final class ClassStub implements JClassSymbol, AsmStub {
     }
 
     @Override
+    public @NonNull List<JFieldSymbol> getEnumConstants() {
+        parseLock.ensureParsed();
+        return enumConstants;
+    }
+
+    @Override
     public JTypeParameterOwnerSymbol getEnclosingTypeParameterOwner() {
         parseLock.ensureParsed();
         return enclosingInfo.getEnclosing();
@@ -285,7 +375,9 @@ final class ClassStub implements JClassSymbol, AsmStub {
 
     @Override
     public String toString() {
-        return SymbolToStrings.ASM.toString(this);
+        // do not use SymbolToString as it triggers the class parsing,
+        // making tests undebuggable
+        return getInternalName();
     }
 
     @Override
@@ -301,13 +393,10 @@ final class ClassStub implements JClassSymbol, AsmStub {
     // <editor-fold  defaultstate="collapsed" desc="Names">
 
     public String getInternalName() {
-        return internalName;
+        return getNames().internalName;
     }
 
     private Names getNames() {
-        if (names == null) {
-            this.names = new Names(internalName);
-        }
         return names;
     }
 
@@ -316,10 +405,47 @@ final class ClassStub implements JClassSymbol, AsmStub {
         return getNames().binaryName;
     }
 
-    @Nullable
+    /**
+     * Simpler check than computing the canonical name.
+     */
+    boolean hasCanonicalName() {
+        if (names.canonicalName != null) {
+            return true;
+        }
+        parseLock.ensureParsed();
+        if (isAnonymousClass() || isLocalClass()) {
+            return false;
+        }
+        JClassSymbol enclosing = getEnclosingClass();
+        return enclosing == null // top-level class
+            || enclosing instanceof ClassStub
+            && ((ClassStub) enclosing).hasCanonicalName();
+    }
+
     @Override
     public String getCanonicalName() {
-        return getNames().canonicalName;
+        String canoName = names.canonicalName;
+        if (canoName == null) {
+            canoName = computeCanonicalName();
+            names.canonicalName = canoName;
+        }
+        return canoName;
+    }
+
+    private @Nullable String computeCanonicalName() {
+        parseLock.ensureParsed();
+        if (names.canonicalName != null) {
+            return names.canonicalName;
+        }
+        JClassSymbol enclosing = getEnclosingClass();
+        if (enclosing == null) {
+            return names.packageName + '.' + getSimpleName();
+        }
+        String outerName = enclosing.getCanonicalName();
+        if (outerName == null) {
+            return null;
+        }
+        return outerName + '.' + getSimpleName();
     }
 
     @Override
@@ -329,7 +455,12 @@ final class ClassStub implements JClassSymbol, AsmStub {
 
     @Override
     public @NonNull String getSimpleName() {
-        return getNames().simpleName;
+        String mySimpleName = names.simpleName;
+        if (mySimpleName == null) {
+            parseLock.ensureParsed();
+            return Objects.requireNonNull(names.simpleName, "Null simple name after parsing");
+        }
+        return mySimpleName;
     }
 
     @Override
@@ -401,7 +532,7 @@ final class ClassStub implements JClassSymbol, AsmStub {
 
     @Override
     public boolean isLocalClass() {
-        return false; // local classes are not reachable, technically someone can try to fetch them
+        return enclosingInfo.isLocal();
     }
 
     @Override
@@ -409,25 +540,54 @@ final class ClassStub implements JClassSymbol, AsmStub {
         return getSimpleName().isEmpty();
     }
 
+
     // </editor-fold>
 
 
     static class Names {
 
         final String binaryName;
-        final String canonicalName;
+        final String internalName;
         final String packageName;
-        final String simpleName;
+        /** If null, the class requires parsing to find out the actual canonical name. */
+        @Nullable String canonicalName;
+        /** If null, the class requires parsing to find out the actual simple name. */
+        @Nullable String simpleName;
 
         Names(String internalName) {
-            int packageEnd = Integer.max(0, internalName.lastIndexOf('/'));
+            assert isValidInternalName(internalName) : internalName;
+            int packageEnd = internalName.lastIndexOf('/');
 
-            binaryName = internalName.replace('/', '.');
-            packageName = binaryName.substring(0, packageEnd);
-            canonicalName = binaryName.replace('$', '.');
+            this.internalName = internalName;
+            this.binaryName = internalName.replace('/', '.');
+            if (packageEnd == -1) {
+                this.packageName = "";
+            } else {
+                this.packageName = binaryName.substring(0, packageEnd);
+            }
 
-            int lastDot = canonicalName.lastIndexOf('.');
-            simpleName = canonicalName.substring(lastDot + 1);
+            if (binaryName.indexOf('$', packageEnd + 1) >= 0) {
+                // Contains a dollar in class name (after package)
+                // Requires parsing to find out the actual simple name,
+                // this might be an inner class, or simply a class with
+                // a dollar in its name.
+
+                // ASSUMPTION: all JVM languages use the $ convention
+                // to separate inner classes. Java compilers do so but
+                // not necessarily true of all compilers/languages.
+                this.canonicalName = null;
+                this.simpleName = null;
+            } else {
+                // fast path
+                this.canonicalName = binaryName;
+                this.simpleName = binaryName.substring(packageEnd + 1);
+            }
+        }
+
+        public void finishOuterClass() {
+            int packageEnd = internalName.lastIndexOf('/');
+            this.simpleName = binaryName.substring(packageEnd + 1); // if -1, start from 0
+            this.canonicalName = binaryName;
         }
     }
 
@@ -445,6 +605,9 @@ final class ClassStub implements JClassSymbol, AsmStub {
             this.methodDescriptor = methodDescriptor;
         }
 
+        boolean isLocal() {
+            return methodName != null || methodDescriptor != null;
+        }
 
         public @Nullable JClassSymbol getEnclosingClass() {
             return stub;
@@ -471,6 +634,25 @@ final class ClassStub implements JClassSymbol, AsmStub {
             } else {
                 return getEnclosingClass();
             }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            EnclosingInfo that = (EnclosingInfo) o;
+            return Objects.equals(stub, that.stub)
+                && Objects.equals(methodName, that.methodName)
+                && Objects.equals(methodDescriptor, that.methodDescriptor);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(stub, methodName, methodDescriptor);
         }
     }
 }

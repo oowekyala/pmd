@@ -16,11 +16,15 @@ import java.util.stream.Stream;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
  * An intersection type. Intersections type act as the
@@ -29,6 +33,7 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
  *
  * <p>https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.9
  */
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 public final class JIntersectionType implements JTypeMirror {
 
 
@@ -57,6 +62,19 @@ public final class JIntersectionType implements JTypeMirror {
 
     }
 
+    @Override
+    public PSet<SymAnnot> getTypeAnnotations() {
+        return HashTreePSet.empty();
+    }
+
+    @Override
+    public JTypeMirror withAnnotations(PSet<SymAnnot> newTypeAnnots) {
+        return new JIntersectionType(
+            ts,
+            primaryBound.withAnnotations(newTypeAnnots),
+            CollectionUtil.map(components, c -> c.withAnnotations(newTypeAnnots))
+        );
+    }
 
     /**
      * Returns the list of components. Their erasure must be pairwise disjoint.
@@ -175,7 +193,8 @@ public final class JIntersectionType implements JTypeMirror {
     }
 
     private static void checkWellFormed(JTypeMirror primary, List<? extends JTypeMirror> flattened) {
-        assert flattened.get(0) == primary || primary == primary.getTypeSystem().OBJECT;
+        assert flattened.get(0) == primary || primary == primary.getTypeSystem().OBJECT
+            : "Not a well-formed intersection " + flattened;
         for (int i = 0; i < flattened.size(); i++) {
             JTypeMirror ci = flattened.get(i);
             Objects.requireNonNull(ci, "Null intersection component");
@@ -185,7 +204,7 @@ public final class JIntersectionType implements JTypeMirror {
                 }
             } else if (ci instanceof JClassType) {
                 // must be an interface, as per isExclusiveBlabla
-                assert ci.isInterface();
+                assert ci.isInterface() || TypeOps.hasUnresolvedSymbol(ci);
             } else {
                 throw malformedIntersection(primary, flattened);
             }

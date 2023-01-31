@@ -12,9 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.cpd.internal.JavaCCTokenizer;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.EscapeTranslator;
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.MalformedSourceException;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 /**
  * Token document for Javacc implementations. This is a helper object
@@ -33,6 +31,9 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
         this.behavior = behavior;
     }
 
+    /**
+     * Overridable configuration of a token document.
+     */
     public static class TokenDocumentBehavior {
 
         public static final TokenDocumentBehavior DEFAULT = new TokenDocumentBehavior(Collections.emptyList());
@@ -45,8 +46,9 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
         /**
          * Returns true if the lexer should accumulate the image of MORE
          * tokens into the StringBuilder jjimage. This is useless in our
-         * current implementations. The default returns false, which makes
-         * {@link CharStream#appendSuffix(StringBuilder, int)} a noop.
+         * current implementations, because the image of tokens can be cut
+         * out using text coordinates, so doesn't need to be put into a separate string.
+         * The default returns false, which makes {@link CharStream#appendSuffix(StringBuilder, int)} a noop.
          */
         public boolean useMarkSuffix() {
             return false;
@@ -59,15 +61,13 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
          * @param text Source doc
          *
          * @see EscapeTranslator
+         *
+         * TODO move that to LanguageVersionHandler once #3919 (Merge CPD and PMD language) is implemented
          */
-        protected TextDocument translate(TextDocument text) throws MalformedSourceException {
+        public TextDocument translate(TextDocument text) throws MalformedSourceException {
             return text;
         }
 
-
-        protected boolean isImagePooled(JavaccToken t) {
-            return false;
-        }
 
         /**
          * Returns a string that describes the token kind.
@@ -166,7 +166,7 @@ public final class JavaccTokenDocument extends TokenDocument<JavaccToken> {
     }
 
     /**
-     * @see TokenDocumentBehavior#describeKind(int) 
+     * @see TokenDocumentBehavior#describeKind(int)
      */
     public @NonNull String describeKind(int kind) {
         return behavior.describeKind(kind);

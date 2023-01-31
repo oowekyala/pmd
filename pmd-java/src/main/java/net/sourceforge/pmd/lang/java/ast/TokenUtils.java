@@ -24,7 +24,6 @@ final class TokenUtils {
 
     }
 
-
     public static <T extends GenericToken<T>> T nthFollower(T token, int n) {
         if (n < 0) {
             throw new IllegalArgumentException("Negative index?");

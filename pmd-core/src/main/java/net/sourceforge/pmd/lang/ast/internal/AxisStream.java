@@ -18,10 +18,10 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Stream that iterates over one axis of the tree.
@@ -469,6 +469,15 @@ abstract class AxisStream<T extends Node> extends IteratorBasedNStream<T> {
             int newLow = min(low + n, node.getNumChildren());
             int newLen = max(len - n, 0);
             return StreamImpl.sliceChildren(node, filter, newLow, newLen);
+        }
+
+        @Override
+        public NodeStream<Node> dropLast(int n) {
+            AssertionUtil.requireNonNegative("n", n);
+            if (n == 0) {
+                return this;
+            }
+            return take(max(len - n, 0));
         }
 
         @Override

@@ -5,14 +5,10 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 import java.util.Iterator;
-import java.util.Set;
 
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
-import net.sourceforge.pmd.lang.java.symbols.JElementSymbol;
-import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
-import net.sourceforge.pmd.util.CollectionUtil;
 
 
 /**
@@ -69,33 +65,23 @@ public interface ASTSwitchLike extends JavaNode, Iterable<ASTSwitchBranch> {
      * the tested expression could not be resolved.
      */
     default boolean isExhaustiveEnumSwitch() {
-        JTypeDeclSymbol type = getTestedExpression().getTypeMirror().getSymbol();
-
-        if (!(type instanceof JClassSymbol)) {
-            return false;
+        JTypeDeclSymbol symbol = getTestedExpression().getTypeMirror().getSymbol();
+        if (symbol instanceof JClassSymbol && ((JClassSymbol) symbol).isEnum()) {
+            long numConstants = ((JClassSymbol) symbol).getEnumConstants().size();
+            // we assume there's no duplicate labels
+            int numLabels = getBranches().sumByInt(it -> it.getLabel().getNumChildren());
+            return numLabels == numConstants;
         }
-
-        if (((JClassSymbol) type).isEnum() && !type.isUnresolved()) {
-            Set<String> enumConstantNames = ((JClassSymbol) type).getDeclaredFields()
-                                                                 .stream()
-                                                                 .filter(JFieldSymbol::isEnumConstant)
-                                                                 .map(JElementSymbol::getSimpleName)
-                                                                 .collect(CollectionUtil.toMutableSet());
-
-            for (ASTSwitchBranch branch : this) {
-                // since this is an enum switch, the labels are necessarily
-                // the simple name of some enum constant.
-                for (ASTExpression expr : branch.getLabel().getExprList()) {
-                    if (expr instanceof ASTVariableAccess) {
-                        enumConstantNames.remove(((ASTVariableAccess) expr).getName());
-                    }
-                }
-            }
-
-            return enumConstantNames.isEmpty();
-        }
-
         return false;
+    }
+
+    /**
+     * Returns true if this switch statement tests an expression
+     * having an enum type.
+     */
+    default boolean isEnumSwitch() {
+        JTypeDeclSymbol type = getTestedExpression().getTypeMirror().getSymbol();
+        return type instanceof JClassSymbol && ((JClassSymbol) type).isEnum();
     }
 
 
@@ -103,4 +89,14 @@ public interface ASTSwitchLike extends JavaNode, Iterable<ASTSwitchBranch> {
     default Iterator<ASTSwitchBranch> iterator() {
         return children(ASTSwitchBranch.class).iterator();
     }
+
+    /**
+     * Returns true if this a switch which uses fallthrough branches
+     * (old school {@code case label: break;}) and not arrow branches.
+     * If the switch has no branches, returns false.
+     */
+    default boolean isFallthroughSwitch() {
+        return getBranches().filterIs(ASTSwitchFallthroughBranch.class).nonEmpty();
+    }
+
 }

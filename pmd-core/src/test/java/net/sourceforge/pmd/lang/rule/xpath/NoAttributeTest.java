@@ -2,33 +2,29 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-/*
- * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
- */
-
 package net.sourceforge.pmd.lang.rule.xpath;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.DummyNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute.NoAttrScope;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * @author Clément Fournier
  */
-public class NoAttributeTest {
+class NoAttributeTest {
 
 
     @Test
-    public void testNoAttrInherited() {
+    void testNoAttrInherited() {
         Node child = new NodeNoInherited();
 
         Set<String> attrNames = IteratorUtil.toList(child.getXPathAttributesIterator()).stream().map(Attribute::getName).collect(Collectors.toSet());
@@ -45,7 +41,7 @@ public class NoAttributeTest {
 
 
     @Test
-    public void testNoAttrAll() {
+    void testNoAttrAll() {
 
         assertTrue(0 < IteratorUtil.count(new NodeAllAttr(12).getXPathAttributesIterator()));
 
@@ -59,7 +55,7 @@ public class NoAttributeTest {
     }
 
     @Test
-    public void testNoAttrAllIsNotInherited() {
+    void testNoAttrAllIsNotInherited() {
 
         NodeNoAttrAllChild child = new NodeNoAttrAllChild();
 

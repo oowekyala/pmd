@@ -6,13 +6,8 @@ package net.sourceforge.pmd.lang.ast.test
 
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.shouldNotBe
-import net.sourceforge.pmd.lang.ast.impl.AbstractNode
-import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.TextAvailableNode
-import net.sourceforge.pmd.lang.ast.impl.javacc.AbstractJjtreeNode
-import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken
-import java.util.*
 
 
 /**
@@ -22,9 +17,14 @@ import java.util.*
 val TextAvailableNode.textStr: String
     get() = text.toString()
 
-infix fun TextAvailableNode.textEquals(str:String) {
+infix fun TextAvailableNode.shouldHaveText(str: String) {
     this::textStr shouldBe str
 }
+inline fun <reified T : Node> Node.getDescendantsOfType(): List<T> = descendants(T::class.java).toList()
+inline fun <reified T : Node> Node.getFirstDescendantOfType(): T = descendants(T::class.java).firstOrThrow()
+
+fun Node.textOfReportLocation(): String? =
+        reportLocation.regionInFile?.let(textDocument::sliceOriginalText)?.toString()
 
 
 fun Node.assertTextRangeIsOk() {
@@ -41,8 +41,8 @@ fun Node.assertTextRangeIsOk() {
 
 fun Node.assertBounds(bline: Int, bcol: Int, eline: Int, ecol: Int) {
     reportLocation.apply {
-        this::getBeginLine shouldBe bline
-        this::getBeginColumn shouldBe bcol
+        this::getStartLine shouldBe bline
+        this::getStartColumn shouldBe bcol
         this::getEndLine shouldBe eline
         this::getEndColumn shouldBe ecol
     }

@@ -51,11 +51,11 @@ class C {
                 }
 
                 it.methodType shouldBe it.typeSystem.UNRESOLVED_METHOD
-                it.typeMirror shouldBe it.typeNode.typeMirror
+                it shouldHaveType it.typeNode.typeMirror
 
                 argList {
                     methodCall("getMessage") {
-                        it.typeMirror shouldBe it.typeSystem.STRING
+                        it shouldHaveType it.typeSystem.STRING
                         variableAccess("ioe")
                         argList {}
                     }
@@ -96,7 +96,7 @@ class C {
                 }
 
                 it.methodType shouldBe it.typeSystem.UNRESOLVED_METHOD
-                it.typeMirror shouldBe it.typeNode.typeMirror
+                it shouldHaveType it.typeNode.typeMirror
 
                 argList {}
             }
@@ -141,7 +141,7 @@ class C {
                         classType("Unresolved")
 
                         it.methodType shouldBe it.typeSystem.UNRESOLVED_METHOD
-                        it.typeMirror shouldBe it.typeNode.typeMirror
+                        it shouldHaveType it.typeNode.typeMirror
 
                         argList {}
                     }
@@ -187,7 +187,7 @@ class C {
 
                 it.methodType shouldBe it.typeSystem.UNRESOLVED_METHOD
                 it.overloadSelectionInfo.isFailed shouldBe true
-                it.typeMirror shouldBe t_UnresolvedOfString
+                it shouldHaveType t_UnresolvedOfString
 
                 argList {}
             }
@@ -229,7 +229,7 @@ class C {
 
                 argList {
                     fieldAccess("SOME_INT") {
-                        it.typeMirror shouldBe it.typeSystem.UNKNOWN
+                        it shouldHaveType it.typeSystem.UNKNOWN
                         typeExpr {
                             classType("Unresolved")
                         }
@@ -388,7 +388,8 @@ class C {
 
         val call = acu.firstMethodCall()
 
-        spy.shouldBeAmbiguous {
+        spy.shouldBeAmbiguous(call)
+        acu.withTypeDsl {
             call.shouldMatchN {
                 methodCall("append") {
 
@@ -401,7 +402,7 @@ class C {
 
                     argList {
                         fieldAccess("SOMETHING") {
-                            it.typeMirror shouldBe it.typeSystem.UNKNOWN
+                            it shouldHaveType it.typeSystem.UNKNOWN
                             typeExpr {
                                 classType("Unresolved")
                             }
@@ -449,7 +450,7 @@ class C {
                     argList {
                         fieldAccess("SOMETHING") {
                             with(it.typeDsl) {
-                                it.typeMirror shouldBe ts.UNKNOWN
+                                it shouldHaveType ts.UNKNOWN
                                 it.referencedSym shouldBe null
                             }
                             typeExpr {
@@ -486,7 +487,7 @@ class C {
         field.shouldMatchN {
             fieldAccess("SOMETHING") {
                 with(it.typeDsl) {
-                    it.typeMirror shouldBe int
+                    it shouldHaveType int
                     it.referencedSym shouldBe null
                 }
                 typeExpr {
@@ -497,7 +498,7 @@ class C {
         unqual.shouldMatchN {
             variableAccess("SOMETHING") {
                 with(it.typeDsl) {
-                    it.typeMirror shouldBe ts.STRING
+                    it shouldHaveType ts.STRING
                     it.referencedSym shouldBe null
                 }
             }
@@ -527,7 +528,7 @@ class C {
         a.shouldMatchN {
             variableAccess("A") {
                 with(it.typeDsl) {
-                    it.typeMirror shouldBe int
+                    it shouldHaveType int
                     it.referencedSym shouldBe null
                 }
             }
@@ -535,7 +536,7 @@ class C {
         b.shouldMatchN {
             variableAccess("B") {
                 with(it.typeDsl) {
-                    it.typeMirror shouldBe int
+                    it shouldHaveType int
                     it.referencedSym shouldBe null
                 }
             }
@@ -562,17 +563,93 @@ class C {
         val (lambda) = acu.descendants(ASTLambdaExpression::class.java).toList()
         val (mref) = acu.descendants(ASTMethodReference::class.java).toList()
 
-        spy.shouldTriggerNoApplicableMethods {
-            lambda.typeMirror shouldBe ts.UNKNOWN
+        val (lambdaCall, mrefCall) = acu.descendants(ASTMethodCall::class.java).toList()
+
+        spy.shouldHaveNoApplicableMethods(lambdaCall)
+        spy.shouldHaveNoApplicableMethods(mrefCall)
+
+        acu.withTypeDsl {
+            lambda shouldHaveType ts.UNKNOWN
             lambda.functionalMethod shouldBe ts.UNRESOLVED_METHOD
-        }
 
-        spy.resetInteractions()
-
-        spy.shouldTriggerNoApplicableMethods {
-            mref.typeMirror shouldBe ts.UNKNOWN
+            mref shouldHaveType ts.UNKNOWN
             mref.functionalMethod shouldBe ts.UNRESOLVED_METHOD
             mref.referencedMethod shouldBe ts.UNRESOLVED_METHOD
+        }
+    }
+
+    parserTest("No context for lambda/mref") {
+
+        val (acu, spy) = parser.parseWithTypeInferenceSpy(
+                """
+                class Foo {
+
+                    void foo(UnresolvedLambdaTarget lambda) { }
+
+                    void bar() {
+                        () -> null;
+                        return this::foo; // return onto void
+                    }
+
+                }
+                """.trimIndent()
+        )
+
+        val (lambda) = acu.descendants(ASTLambdaExpression::class.java).toList()
+        val (mref) = acu.descendants(ASTMethodReference::class.java).toList()
+
+        spy.shouldHaveNoLambdaCtx(lambda)
+        spy.shouldHaveNoLambdaCtx(mref)
+
+        acu.withTypeDsl {
+            lambda shouldHaveType ts.UNKNOWN
+            lambda.functionalMethod shouldBe ts.UNRESOLVED_METHOD
+
+            mref shouldHaveType ts.UNKNOWN
+            mref.functionalMethod shouldBe ts.UNRESOLVED_METHOD
+            mref.referencedMethod shouldBe ts.UNRESOLVED_METHOD
+        }
+    }
+
+
+    parserTest("Wrong syntax, return with expr in void method") {
+
+        val (acu, spy) = parser.parseWithTypeInferenceSpy("""
+                class Foo {
+                    void foo() { return foo; }
+                    static { return p1; }
+                    Foo() { return p2; }
+                }
+        """)
+
+        for (vaccess in acu.descendants(ASTVariableAccess::class.java)) {
+            spy.shouldBeOk {
+                vaccess shouldHaveType ts.UNKNOWN
+            }
+        }
+    }
+
+    parserTest("Lambda with wrong form") {
+
+        val (acu, _) = parser.parseWithTypeInferenceSpy("""
+                interface Lambda {
+                    void call();
+                }
+                class Foo {
+                    {
+                        Lambda l = () -> {}; // ok
+                        Lambda l = x -> {};  // wrong form!
+                    }
+                }
+        """)
+
+        val (ok, wrong) = acu.descendants(ASTLambdaExpression::class.java).toList()
+        val t_Lambda = acu.typeDeclarations.firstOrThrow().typeMirror
+
+        acu.withTypeDsl {
+            ok shouldHaveType t_Lambda
+            wrong shouldHaveType t_Lambda
+            wrong.parameters[0] shouldHaveType ts.UNKNOWN
         }
     }
 

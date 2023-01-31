@@ -7,10 +7,10 @@ package net.sourceforge.pmd.cpd;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.EscapeTranslator;
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.MalformedSourceException;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.ast.impl.javacc.EscapeTranslator;
+import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 /**
  *
@@ -24,7 +24,7 @@ class CppBlockSkipper extends EscapeTranslator {
         return Pattern.compile("^(?i)" + Pattern.quote(marker), Pattern.MULTILINE);
     }
 
-    public CppBlockSkipper(TextDocument original, Pattern skipStartMarker, Pattern skipEndMarker) {
+    CppBlockSkipper(TextDocument original, Pattern skipStartMarker, Pattern skipEndMarker) {
         super(original);
         skipStart = skipStartMarker;
         skipEnd = skipEndMarker;

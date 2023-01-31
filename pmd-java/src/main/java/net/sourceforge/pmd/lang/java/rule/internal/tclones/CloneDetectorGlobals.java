@@ -14,9 +14,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.util.StringUtil;
-import net.sourceforge.pmd.util.document.FileLocation;
 
 /**
  *
@@ -46,7 +47,7 @@ final class CloneDetectorGlobals {
         if (considered) {
             // `compute` guarantees atomic access to the list so it doesn't need synchronization
             buckets.compute(bucketH(tree.deepHash()),
-                            (key, list) -> appendList(tree, list));
+                            (key, list) -> append(list, tree));
         }
     }
 
@@ -54,7 +55,7 @@ final class CloneDetectorGlobals {
         return tree.mass() >= minMass;
     }
 
-    private static <T> List<T> appendList(T tree, List<T> list) {
+    private static <T> List<T> append(@Nullable List<T> list, T tree) {
         if (list == null) {
             list = new ArrayList<>(1);
         }
@@ -115,7 +116,7 @@ final class CloneDetectorGlobals {
             }
 
             List<CloneSpec> list = clones.get(t1);
-            List<CloneSpec> list2 = appendList(new CloneSpec(similarity, t2), list);
+            List<CloneSpec> list2 = append(list, new CloneSpec(similarity, t2));
             if (list != list2) {
                 clones.put(t1, list2);
             }

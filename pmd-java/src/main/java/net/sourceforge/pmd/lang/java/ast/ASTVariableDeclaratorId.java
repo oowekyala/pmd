@@ -4,18 +4,17 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.annotation.Experimental;
-import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
-import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 import net.sourceforge.pmd.lang.rule.xpath.DeprecatedAttribute;
-import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
 // @formatter:off
 /**
@@ -31,13 +30,9 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
  *    <li> Resource declarations occurring in try-with-resources statements.
  * </ul>
  *
- * <p>Since this node conventionally represents the declared variable in PMD, our symbol table
- * populates it with a {@link VariableNameDeclaration}, and its usages can be accessed through
- * the method {@link #getUsages()}.
- *
- * <p>Type resolution assigns the type of the variable to this node. See {@link #getType()}'s
- * documentation for the contract of this method.
- *
+ * <p>Since this node conventionally represents the declared variable in PMD,
+ * it owns a {@link JVariableSymbol} and can provide access to
+ * {@linkplain #getLocalUsages() variable usages}.
  *
  * <pre class="grammar">
  *
@@ -49,7 +44,7 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 // @formatter:on
 public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator<JVariableSymbol> implements AccessNode, SymbolDeclaratorNode, FinalizableNode {
 
-    private VariableNameDeclaration nameDeclaration;
+    private List<ASTNamedReferenceExpr> usages = Collections.emptyList();
 
     ASTVariableDeclaratorId(int id) {
         super(id);
@@ -61,20 +56,22 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
     }
 
     /**
-     * Note: this might be <code>null</code> in certain cases.
+     * Returns an unmodifiable list of the usages of this variable that
+     * are made in this file. Note that for a record component, this returns
+     * usages both for the formal parameter symbol and its field counterpart.
+     *
+     * <p>Note that a variable initializer is not part of the usages
+     * (though this should be evident from the return type).
      */
-    public VariableNameDeclaration getNameDeclaration() {
-        return nameDeclaration;
+    public List<ASTNamedReferenceExpr> getLocalUsages() {
+        return usages;
     }
 
-    @InternalApi
-    @Deprecated
-    public void setNameDeclaration(VariableNameDeclaration decl) {
-        nameDeclaration = decl;
-    }
-
-    public List<NameOccurrence> getUsages() {
-        return getScope().getDeclarations(VariableNameDeclaration.class).get(nameDeclaration);
+    void addUsage(ASTNamedReferenceExpr usage) {
+        if (usages.isEmpty()) {
+            usages = new ArrayList<>(4); //make modifiable
+        }
+        usages.add(usage);
     }
 
     /**
@@ -91,16 +88,9 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
     @NonNull
     @Override
     public ASTModifierList getModifiers() {
-        if (isPatternBinding()) {
-            JavaNode firstChild = getFirstChild();
-            assert firstChild != null : "Binding variable has no modifiers!";
-            return (ASTModifierList) firstChild;
-        }
-
         // delegates modifiers
         return getModifierOwnerParent().getModifiers();
     }
-
 
     @Override
     public Visibility getVisibility() {
@@ -108,12 +98,11 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
                                   : getModifierOwnerParent().getVisibility();
     }
 
+
     private AccessNode getModifierOwnerParent() {
         JavaNode parent = getParent();
         if (parent instanceof ASTVariableDeclarator) {
             return (AccessNode) parent.getParent();
-        } else if (parent instanceof ASTTypeTestPattern) {
-            return this; // this is pretty weird
         }
         return (AccessNode) parent;
     }
@@ -169,10 +158,31 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
 
 
     /**
-     * Returns true if this node declares a local variable.
+     * Returns true if this node declares a local variable from within
+     * a regular {@link ASTLocalVariableDeclaration}.
      */
     public boolean isLocalVariable() {
-        return getNthParent(2) instanceof ASTLocalVariableDeclaration;
+        return getNthParent(2) instanceof ASTLocalVariableDeclaration
+            && !isResourceDeclaration()
+            && !isForeachVariable();
+    }
+
+    /**
+     * Returns true if this node is a variable declared in a
+     * {@linkplain ASTForeachStatement foreach loop}.
+     */
+    public boolean isForeachVariable() {
+        // Foreach/LocalVarDecl/VarDeclarator/VarDeclId
+        return getNthParent(3) instanceof ASTForeachStatement;
+    }
+
+    /**
+     * Returns true if this node is a variable declared in the init clause
+     * of a {@linkplain ASTForStatement for loop}.
+     */
+    public boolean isForLoopVariable() {
+        // For/ForInit/LocalVarDecl/VarDeclarator/VarDeclId
+        return getNthParent(3) instanceof ASTForInit;
     }
 
 
@@ -187,8 +197,10 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
 
 
     /**
-     * Returns true if this node declares a field.
-     * TODO should this return true if this is an enum constant?
+     * Returns true if this node declares a field from a regular
+     * {@link ASTFieldDeclaration}. This returns false for enum
+     * constants (use {@link JVariableSymbol#isField() getSymbol().isField()}
+     * if you want that).
      */
     public boolean isField() {
         return getNthParent(2) instanceof ASTFieldDeclaration;
@@ -239,7 +251,6 @@ public final class ASTVariableDeclaratorId extends AbstractTypedSymbolDeclarator
      * Returns true if this is a binding variable in a
      * {@linkplain ASTPattern pattern}.
      */
-    @Experimental
     public boolean isPatternBinding() {
         return getParent() instanceof ASTPattern;
     }

@@ -4,9 +4,9 @@
 
 package net.sourceforge.pmd.cpd;
 
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.BackslashEscapeTranslator;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.ast.impl.javacc.BackslashEscapeTranslator;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 public class CppEscapeTranslator extends BackslashEscapeTranslator {
 
@@ -24,7 +24,8 @@ public class CppEscapeTranslator extends BackslashEscapeTranslator {
         if (input.charAt(off) == NEWLINE) {
             return recordEscape(backSlashOff, off + 1, Chars.EMPTY);
         } else if (input.charAt(off) == CARRIAGE_RETURN) {
-            if (input.charAt(++off) == NEWLINE) {
+            off++;
+            if (input.charAt(off) == NEWLINE) {
                 return recordEscape(backSlashOff, off + 1, Chars.EMPTY);
             }
         }

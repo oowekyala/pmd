@@ -4,58 +4,37 @@
 
 package net.sourceforge.pmd.processor;
 
-import static net.sourceforge.pmd.util.CollectionUtil.listOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.PmdAnalysis;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleSet;
-import net.sourceforge.pmd.RulesetsFactoryUtils;
 import net.sourceforge.pmd.cache.AnalysisCache;
 import net.sourceforge.pmd.cache.NoopAnalysisCache;
-import net.sourceforge.pmd.lang.LanguageRegistry;
-import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener.ViolationCounterListener;
-import net.sourceforge.pmd.util.document.TextFile;
 
-public class GlobalListenerTest {
-
-    static RuleSet mockRuleset(Rule rule) {
-        return RulesetsFactoryUtils.defaultFactory().createSingleRuleRuleSet(rule);
-    }
-
-    private final LanguageVersion dummyVersion = LanguageRegistry.getDefaultLanguage().getDefaultVersion();
+class GlobalListenerTest {
 
     static final int NUM_DATA_SOURCES = 3;
 
-    List<TextFile> mockDataSources() {
-        return listOf(
-            TextFile.forCharSeq("abc", "fname1.dummy", dummyVersion),
-            TextFile.forCharSeq("abcd", "fname2.dummy", dummyVersion),
-            TextFile.forCharSeq("abcd", "fname21.dummy", dummyVersion)
-        );
-    }
-
     @Test
-    public void testViolationCounter() throws Exception {
+    void testViolationCounter() throws Exception {
 
         PMDConfiguration config = newConfig();
 
@@ -70,7 +49,7 @@ public class GlobalListenerTest {
     }
 
     @Test
-    public void testViolationCounterOnMulti() throws Exception {
+    void testViolationCounterOnMulti() throws Exception {
 
         PMDConfiguration config = newConfig();
         config.setThreads(2);
@@ -88,7 +67,7 @@ public class GlobalListenerTest {
     }
 
     @Test
-    public void testAnalysisCache() throws Exception {
+    void testAnalysisCache() throws Exception {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
@@ -98,12 +77,12 @@ public class GlobalListenerTest {
         runPmd(config, GlobalAnalysisListener.noop(), rule);
 
         verify(mockCache).checkValidity(any(), any());
-        verify(mockCache).persist();
+        verify(mockCache, times(1)).persist();
         verify(mockCache, times(NUM_DATA_SOURCES)).isUpToDate(any());
     }
 
     @Test
-    public void testCacheWithFailure() throws Exception {
+    void testCacheWithFailure() throws Exception {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
@@ -114,12 +93,12 @@ public class GlobalListenerTest {
 
         // cache methods are called regardless
         verify(mockCache).checkValidity(any(), any());
-        verify(mockCache).persist();
+        verify(mockCache, times(1)).persist();
         verify(mockCache, times(NUM_DATA_SOURCES)).isUpToDate(any());
     }
 
     @Test
-    public void testCacheWithPropagatedException() throws Exception {
+    void testCacheWithPropagatedException() throws Exception {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
@@ -136,7 +115,7 @@ public class GlobalListenerTest {
 
         // cache methods are called regardless
         verify(mockCache).checkValidity(any(), any());
-        verify(mockCache).persist();
+        verify(mockCache, times(1)).persist();
         verify(mockCache, times(1)).isUpToDate(any());
     }
 
@@ -149,16 +128,14 @@ public class GlobalListenerTest {
         return config;
     }
 
-    private void runPmd(PMDConfiguration config, GlobalAnalysisListener listener, Rule rule) throws Exception {
-        try {
-            PMD.processTextFiles(
-                config,
-                listOf(mockRuleset(rule)),
-                mockDataSources(),
-                listener
-            );
-        } finally {
-            listener.close();
+    private void runPmd(PMDConfiguration config, GlobalAnalysisListener listener, Rule rule) {
+        try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
+            pmd.addRuleSet(RuleSet.forSingleRule(rule));
+            pmd.files().addSourceFile("fname1.dummy", "abc");
+            pmd.files().addSourceFile("fname2.dummy", "abcd");
+            pmd.files().addSourceFile("fname21.dummy", "abcd");
+            pmd.addListener(listener);
+            pmd.performAnalysis();
         }
     }
 
@@ -168,7 +145,7 @@ public class GlobalListenerTest {
         @Override
         public void apply(Node node, RuleContext ctx) {
             if (node.getTextDocument().getDisplayName().contains("1")) {
-                addViolation(ctx, node);
+                ctx.addViolation(node);
             }
         }
     }

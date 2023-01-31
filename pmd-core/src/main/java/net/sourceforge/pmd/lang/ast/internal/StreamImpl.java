@@ -16,7 +16,6 @@ import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.NodeStream.DescendantNodeStream;
@@ -28,10 +27,11 @@ import net.sourceforge.pmd.lang.ast.internal.AxisStream.FilteredAncestorOrSelfSt
 import net.sourceforge.pmd.lang.ast.internal.AxisStream.FilteredChildrenStream;
 import net.sourceforge.pmd.lang.ast.internal.AxisStream.FilteredDescendantStream;
 import net.sourceforge.pmd.lang.ast.internal.GreedyNStream.GreedyKnownNStream;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 public final class StreamImpl {
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "PMD.UseDiamondOperator"})
     private static final DescendantNodeStream EMPTY = new EmptyNodeStream();
 
     private StreamImpl() {
@@ -119,7 +119,7 @@ public final class StreamImpl {
 
         if (length == 0) {
             return empty();
-        } else if (filtermap == Filtermap.NODE_IDENTITY) {
+        } else if (filtermap == Filtermap.NODE_IDENTITY) { // NOPMD CompareObjectsWithEquals
             @SuppressWarnings("unchecked")
             NodeStream<T> res = length == 1 ? (NodeStream<T>) singleton(parent.getChild(from))
                                            : (NodeStream<T>) new ChildrenStream(parent, from, length);
@@ -144,7 +144,7 @@ public final class StreamImpl {
             return empty();
         }
 
-        if (target == Filtermap.NODE_IDENTITY) {
+        if (target == Filtermap.NODE_IDENTITY) { // NOPMD CompareObjectsWithEquals
             return (NodeStream<T>) new AncestorOrSelfStream(node);
         }
 
@@ -179,7 +179,7 @@ public final class StreamImpl {
     }
 
 
-    private static class EmptyNodeStream<N extends Node> extends IteratorBasedNStream<N> implements DescendantNodeStream<N> {
+    private static final class EmptyNodeStream<N extends Node> extends IteratorBasedNStream<N> implements DescendantNodeStream<N> {
 
         @Override
         protected <R extends Node> NodeStream<R> mapIter(Function<Iterator<N>, Iterator<R>> fun) {

@@ -5,10 +5,10 @@
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
 import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.document.Locator;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.util.document.Locator;
 
 /**
  *

@@ -9,9 +9,9 @@ import java.util.Set;
 
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.document.Locator;
+import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTree.MiniTreeBuilder;
-import net.sourceforge.pmd.util.document.Locator;
-import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
  * Proxy to a {@link CloneDetectorGlobals} scoped to a single file.

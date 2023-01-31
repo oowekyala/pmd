@@ -63,6 +63,10 @@ public abstract class ASTList<N extends JavaNode> extends AbstractJavaNode imple
         return toStream().count();
     }
 
+    public boolean isEmpty() {
+        return toStream().isEmpty();
+    }
+
     /**
      * Returns a list containing the element of this node.
      */
@@ -114,6 +118,19 @@ public abstract class ASTList<N extends JavaNode> extends AbstractJavaNode imple
         return list == null ? 0 : list.size();
     }
 
+
+    /**
+     * Returns the element if there is exactly one, otherwise returns null.
+     *
+     * @param list List node
+     * @param <N>  Type of elements
+     *
+     * @return An element, or null.
+     */
+    public static <N extends JavaNode> @Nullable N singleOrNull(@Nullable ASTList<N> list) {
+        return list == null || list.size() != 1 ? null : list.get(0);
+    }
+
     /**
      * Super type for *nonempty* lists that *only* have nodes of type {@code <T>}
      * as a child.
@@ -150,9 +167,5 @@ public abstract class ASTList<N extends JavaNode> extends AbstractJavaNode imple
             return children();
         }
 
-        @Override
-        public T getChild(int index) {
-            return (T) super.getChild(index);
-        }
     }
 }

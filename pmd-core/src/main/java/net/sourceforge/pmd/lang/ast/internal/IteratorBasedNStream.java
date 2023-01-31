@@ -22,11 +22,11 @@ import java.util.stream.StreamSupport;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Implementations are based on the iterator rather than the stream.
@@ -123,12 +123,18 @@ abstract class IteratorBasedNStream<T extends Node> implements NodeStream<T> {
     }
 
     @Override
+    public NodeStream<T> dropLast(int n) {
+        AssertionUtil.requireNonNegative("n", n);
+        return n == 0 ? this : mapIter(iter -> IteratorUtil.dropLast(iter, n));
+    }
+
+    @Override
     public NodeStream<T> takeWhile(Predicate<? super T> predicate) {
         return mapIter(iter -> IteratorUtil.takeWhile(iter, predicate));
     }
 
     @Override
-    public <R, A> R collect(Collector<? super T, A, R> collector) {
+    public final <R, A> R collect(Collector<? super T, A, R> collector) {
         A container = collector.supplier().get();
         BiConsumer<A, ? super T> accumulator = collector.accumulator();
         forEach(u -> accumulator.accept(container, u));
@@ -234,7 +240,7 @@ abstract class IteratorBasedNStream<T extends Node> implements NodeStream<T> {
             + "]";
     }
 
-    private class IteratorMapping<S extends Node> extends IteratorBasedNStream<S> {
+    private final class IteratorMapping<S extends Node> extends IteratorBasedNStream<S> {
 
         private final Function<Iterator<T>, Iterator<S>> fun;
 

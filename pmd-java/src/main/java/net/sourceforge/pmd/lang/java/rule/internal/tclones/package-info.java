@@ -35,7 +35,7 @@
  * So {@code foo} is placed in the same bucket as
  * <pre>{@code
  * boolean bar(int i, int j) {
- *   return i + i % j;
+ *   return i + i % 5;
  * }
  * }</pre>
  *

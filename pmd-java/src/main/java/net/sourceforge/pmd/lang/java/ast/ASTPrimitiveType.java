@@ -6,8 +6,6 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.lang.java.symboltable.ClassScope;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 
@@ -24,17 +22,6 @@ import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 public final class ASTPrimitiveType extends AbstractJavaTypeNode implements ASTType {
 
     private PrimitiveTypeKind kind;
-
-    /**
-     * @deprecated Made public for one shady usage in {@link ClassScope}
-     */
-    @Deprecated
-    @InternalApi
-    public ASTPrimitiveType(PrimitiveTypeKind type) {
-        super(JavaParserImplTreeConstants.JJTPRIMITIVETYPE);
-        setKind(type);
-    }
-
 
     ASTPrimitiveType(int id) {
         super(id);
@@ -55,13 +42,6 @@ public final class ASTPrimitiveType extends AbstractJavaTypeNode implements ASTT
     public String getImage() {
         return null;
     }
-
-    @Override
-    @Deprecated
-    public String getTypeImage() {
-        return getKind().getSimpleName();
-    }
-
 
     @Override
     protected <P, R> R acceptVisitor(JavaVisitor<? super P, ? extends R> visitor, P data) {

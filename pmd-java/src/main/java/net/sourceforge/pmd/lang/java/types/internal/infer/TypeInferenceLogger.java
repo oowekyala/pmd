@@ -6,9 +6,10 @@
 package net.sourceforge.pmd.lang.java.types.internal.infer;
 
 import java.io.PrintStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +23,7 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.TypePrettyPrint;
+import net.sourceforge.pmd.lang.java.types.TypePrettyPrint.TypePrettyPrinter;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.CtorInvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror.MethodCtDecl;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
@@ -189,7 +191,7 @@ public interface TypeInferenceLogger {
 
         @Override
         public void logResolutionFail(ResolutionFailure exception) {
-            if (exception.getCallSite() instanceof MethodCallSite && exception != ResolutionFailure.UNKNOWN) {
+            if (exception.getCallSite() instanceof MethodCallSite && exception != ResolutionFailure.UNKNOWN) { // NOPMD CompareObjectsWithEquals
                 ((MethodCallSite) exception.getCallSite()).acceptFailure(exception);
             }
         }
@@ -290,7 +292,7 @@ public interface TypeInferenceLogger {
         }
 
         protected @NonNull String ppMethod(JMethodSig sig) {
-            return TypePrettyPrint.prettyPrint(sig, false);
+            return TypePrettyPrint.prettyPrint(sig, new TypePrettyPrinter().printMethodHeader(false));
         }
 
         protected @NonNull String ppHighlight(JMethodSig sig) {
@@ -313,7 +315,7 @@ public interface TypeInferenceLogger {
     class VerboseLogger extends SimpleLogger {
 
 
-        private final Stack<Integer> marks = new Stack<>();
+        private final Deque<Integer> marks = new ArrayDeque<>();
 
         public VerboseLogger(PrintStream out) {
             super(out);

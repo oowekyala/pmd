@@ -5,6 +5,12 @@
 package net.sourceforge.pmd.lang.java.types;
 
 import static java.util.Arrays.asList;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.BYTE;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.CHAR;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.DOUBLE;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.FLOAT;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.LONG;
+import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.SHORT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +23,7 @@ import net.sourceforge.pmd.util.CollectionUtil;
 /**
  * Utility class for type conversions, as defined in <a href="https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html">JLS§5</a>.
  */
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 public final class TypeConversion {
 
     private TypeConversion() {
@@ -45,7 +52,7 @@ public final class TypeConversion {
 
         TypeSystem ts = t.getTypeSystem();
 
-        if (t == ts.BYTE || t == ts.SHORT || t == ts.CHAR) {
+        if (t.isPrimitive(BYTE) || t.isPrimitive(SHORT) || t.isPrimitive(CHAR)) {
             return ts.INT;
         }
 
@@ -74,11 +81,11 @@ public final class TypeConversion {
 
         TypeSystem ts = t.getTypeSystem();
 
-        if (t1 == ts.DOUBLE || s1 == ts.DOUBLE) {
+        if (t1.isPrimitive(DOUBLE) || s1.isPrimitive(DOUBLE)) {
             return ts.DOUBLE;
-        } else if (t1 == ts.FLOAT || s1 == ts.FLOAT) {
+        } else if (t1.isPrimitive(FLOAT) || s1.isPrimitive(FLOAT)) {
             return ts.FLOAT;
-        } else if (t1 == ts.LONG || s1 == ts.LONG) {
+        } else if (t1.isPrimitive(LONG) || s1.isPrimitive(LONG)) {
             return ts.LONG;
         } else if (t1.isNumeric() && s1.isNumeric()) {
             return ts.INT;
@@ -90,9 +97,21 @@ public final class TypeConversion {
 
     /**
      * Is t convertible to s by boxing/unboxing/widening conversion?
-     * Only t can be undergo conversion.
+     * Only t can undergo conversion.
      */
-    public static boolean isConvertibleThroughBoxing(JTypeMirror t, JTypeMirror s) {
+    public static boolean isConvertibleUsingBoxing(JTypeMirror t, JTypeMirror s) {
+        return isConvertibleCommon(t, s, false);
+    }
+
+    /**
+     * Is t convertible to s by boxing/unboxing conversion?
+     * Only t can undergo conversion.
+     */
+    public static boolean isConvertibleInCastContext(JTypeMirror t, JTypeMirror s) {
+        return isConvertibleCommon(t, s, true);
+    }
+
+    private static boolean isConvertibleCommon(JTypeMirror t, JTypeMirror s, boolean isCastContext) {
         TypeSystem ts = t.getTypeSystem();
         if (t == ts.UNKNOWN || t == ts.ERROR) {
             return true;
@@ -106,8 +125,13 @@ public final class TypeConversion {
             return t.isConvertibleTo(s).bySubtyping();
         }
 
-        return t.isPrimitive() ? t.box().isConvertibleTo(s).somehow()
-                               : t.unbox().isConvertibleTo(s).somehow();
+        if (isCastContext) {
+            return t.isPrimitive() ? t.box().isConvertibleTo(s).bySubtyping()
+                                   : t.isConvertibleTo(s.box()).bySubtyping();
+        } else {
+            return t.isPrimitive() ? t.box().isConvertibleTo(s).somehow()
+                                   : t.unbox().isConvertibleTo(s).somehow();
+        }
     }
 
 
@@ -145,8 +169,6 @@ public final class TypeConversion {
         List<JTypeMirror> typeArgs = type.getTypeArgs();
         List<JTypeVar> typeParams = type.getFormalTypeParams();
 
-        assert typeParams.size() == typeArgs.size() : "Type is not well formed " + type + " (expects " + typeParams.size() + " params)";
-
         // This is the algorithm described at https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.10
 
         // Let G name a generic type declaration (§8.1.2, §9.1.2)
@@ -162,11 +184,14 @@ public final class TypeConversion {
 
         List<JTypeMirror> freshVars = makeFreshVars(type);
 
+        // types may be non-well formed if the symbol is unresolved
+        // in this case the typeParams list is most likely empty
+        boolean wellFormed = typeParams.size() == freshVars.size();
+
         // Map of Ai to Si, for the substitution
-        Substitution subst = Substitution.mapping(typeParams, freshVars);
+        Substitution subst = wellFormed ? Substitution.mapping(typeParams, freshVars) : Substitution.EMPTY;
 
         for (int i = 0; i < typeArgs.size(); i++) {
-            JTypeVar param = typeParams.get(i);         // Ai
             JTypeMirror fresh = freshVars.get(i);       // Si
             JTypeMirror arg = typeArgs.get(i);          // Ti
 
@@ -177,7 +202,7 @@ public final class TypeConversion {
                 JWildcardType w = (JWildcardType) arg;        // Ti alias
                 TypeVarImpl.CapturedTypeVar freshVar = (TypeVarImpl.CapturedTypeVar) fresh; // Si alias
 
-                JTypeMirror prevUpper = param.getUpperBound(); // Ui
+                JTypeMirror prevUpper = wellFormed ? typeParams.get(i).getUpperBound() : ts.OBJECT; // Ui
                 JTypeMirror substituted = TypeOps.subst(prevUpper, subst);
 
                 if (w.isUnbounded()) {
@@ -217,10 +242,8 @@ public final class TypeConversion {
      * wildcards as type arguments. Capture variables don't count.
      */
     public static boolean isWilcardParameterized(JTypeMirror t) {
-        if (!(t instanceof JClassType)) {
-            return false;
-        }
-        return CollectionUtil.any(((JClassType) t).getTypeArgs(), it -> it instanceof JWildcardType);
+        return t instanceof JClassType
+                && CollectionUtil.any(((JClassType) t).getTypeArgs(), it -> it instanceof JWildcardType);
     }
 
 

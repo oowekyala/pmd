@@ -11,6 +11,8 @@ import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTBodyDeclaration;
@@ -19,7 +21,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
-import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTRecordComponent;
@@ -28,6 +29,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
@@ -51,6 +53,8 @@ final class AstClassSym
     private final List<JMethodSymbol> declaredMethods;
     private final List<JConstructorSymbol> declaredCtors;
     private final List<JFieldSymbol> declaredFields;
+    private final List<JFieldSymbol> enumConstants; // subset of declaredFields
+    private final PSet<String> annotAttributes;
 
     AstClassSym(ASTAnyTypeDeclaration node,
                 AstSymFactory factory,
@@ -65,8 +69,9 @@ final class AstClassSym
         final List<JMethodSymbol> myMethods = new ArrayList<>();
         final List<JConstructorSymbol> myCtors = new ArrayList<>();
         final List<JFieldSymbol> myFields = new ArrayList<>();
-
+        final List<JFieldSymbol> enumConstants;
         final List<JFieldSymbol> recordComponents;
+
         if (isRecord()) {
             ASTRecordComponentList components = Objects.requireNonNull(node.getRecordComponents(),
                                                                        "Null component list for " + node);
@@ -79,10 +84,18 @@ final class AstClassSym
 
         } else {
             recordComponents = Collections.emptyList();
-            if (node instanceof ASTEnumDeclaration) {
-                node.getEnumConstants()
-                    .forEach(constant -> myFields.add(new AstFieldSym(constant.getVarId(), factory, this)));
-            }
+        }
+
+        if (isEnum()) {
+            enumConstants = new ArrayList<>();
+            node.getEnumConstants()
+                .forEach(constant -> {
+                    AstFieldSym fieldSym = new AstFieldSym(constant.getVarId(), factory, this);
+                    enumConstants.add(fieldSym);
+                    myFields.add(fieldSym);
+                });
+        } else {
+            enumConstants = null;
         }
 
 
@@ -104,6 +117,7 @@ final class AstClassSym
                 }
             }
         }
+        
 
         if (!recordComponents.isEmpty()) {
             // then the recordsComponents contains all record components
@@ -127,6 +141,10 @@ final class AstClassSym
         this.declaredMethods = Collections.unmodifiableList(myMethods);
         this.declaredCtors = Collections.unmodifiableList(myCtors);
         this.declaredFields = Collections.unmodifiableList(myFields);
+        this.enumConstants = CollectionUtil.makeUnmodifiableAndNonNull(enumConstants);
+        this.annotAttributes = isAnnotation()
+                               ? getDeclaredMethods().stream().filter(JMethodSymbol::isAnnotationAttribute).map(JElementSymbol::getSimpleName).collect(CollectionUtil.toPersistentSet())
+                               : HashTreePSet.empty();
     }
 
     private List<JFieldSymbol> mapComponentsToMutableList(AstSymFactory factory, ASTRecordComponentList components) {
@@ -194,6 +212,11 @@ final class AstClassSym
         return declaredFields;
     }
 
+    @Override
+    public @NonNull List<JFieldSymbol> getEnumConstants() {
+        return enumConstants;
+    }
+    
     @Override
     public @Nullable JClassType getSuperclassType(Substitution substitution) {
         TypeSystem ts = getTypeSystem();
@@ -331,4 +354,8 @@ final class AstClassSym
         return node.isAnonymous();
     }
 
+    @Override
+    public PSet<String> getAnnotationAttributeNames() {
+        return annotAttributes;
+    }
 }

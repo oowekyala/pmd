@@ -8,19 +8,19 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.lang.rule.xpath.PmdXPathException.Phase;
 
 /**
  * @author Clément Fournier
- * @since 6.0.0
+ * @since 7.0.0
  */
-public class NodeIsFunctionTest extends BaseXPathFunctionTest {
+class NodeIsFunctionTest extends BaseXPathFunctionTest {
 
     @Test
-    public void testWellFormedNodeName() {
+    void testWellFormedNodeName() {
         Rule rule = makeXpathRuleFromXPath("//ClassOrInterfaceDeclaration[pmd-java:nodeIs('ClassOrInterfaceDeclaration')]");
         String code = "class Foo { Foo() {} void bar() {}}";
 
@@ -28,7 +28,7 @@ public class NodeIsFunctionTest extends BaseXPathFunctionTest {
     }
 
     @Test
-    public void testNodeNameStaticallyUnknown() {
+    void testNodeNameStaticallyUnknown() {
         Rule rule = makeXpathRuleFromXPath("//ClassOrInterfaceDeclaration[pmd-java:nodeIs(name())]");
         String code = "class Foo { Foo() {} void bar() {}}";
 
@@ -37,7 +37,7 @@ public class NodeIsFunctionTest extends BaseXPathFunctionTest {
 
 
     @Test
-    public void testWellFormedNodeNameForSupertype() {
+    void testWellFormedNodeNameForSupertype() {
         Rule rule = makeXpathRuleFromXPath("//ClassOrInterfaceDeclaration[pmd-java:nodeIs('AnyTypeDeclaration')]");
         String code = "class Foo { Foo() {} void bar() {}}";
 
@@ -47,7 +47,7 @@ public class NodeIsFunctionTest extends BaseXPathFunctionTest {
 
 
     @Test
-    public void testNonExistentNodeName() {
+    void testNonExistentNodeName() {
         // note that this would fail with a type error (boolean > integer)
         // if nodeIs fails to fail
         testWithExpectedException(
@@ -62,7 +62,7 @@ public class NodeIsFunctionTest extends BaseXPathFunctionTest {
 
 
     @Test
-    public void testNonExistentNodeNameStaticallyUnknown() {
+    void testNonExistentNodeNameStaticallyUnknown() {
         testWithExpectedException(
             "//MethodDeclaration[pmd-java:nodeIs(name() || 'qqq')]",
             "class Moo { void foo() {if(true){}} }",

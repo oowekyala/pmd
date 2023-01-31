@@ -5,15 +5,17 @@ require 'fileutils'
 
 @logger = Logger.new(STDOUT)
 
-def get_args(base_branch)
+def get_args(base_branch, autogen = TRUE, patch_config = './pmd/.ci/files/all-regression-rules.xml')
   ['--local-git-repo', './pmd',
    '--list-of-project', './pmd/.ci/files/project-list.xml',
    '--base-branch', base_branch,
    '--patch-branch', 'HEAD',
-   '--patch-config', './pmd/.ci/files/all-java.xml',
+   '--patch-config', patch_config,
    '--mode', 'online',
-   '--auto-gen-config',
+   autogen ? '--auto-gen-config' : '--filter-with-patch-config',
    '--keep-reports',
+   '--error-recovery',
+   '--baseline-download-url', 'https://pmd-code.org/pmd-regression-tester/',
    # '--debug',
    ]
 end
@@ -21,13 +23,13 @@ end
 def run_pmdtester
   Dir.chdir('..') do
     begin
-      @base_branch = ENV['TRAVIS_BRANCH']
+      @base_branch = ENV['PMD_CI_BRANCH']
+      @logger.info "\n\n--------------------------------------"
       @logger.info "Run against PR base #{@base_branch}"
-      runner = PmdTester::Runner.new(get_args(@base_branch))
-      @new_errors, @removed_errors, @new_violations, @removed_violations, @new_configerrors, @removed_configerrors = runner.run
+      @summary = PmdTester::Runner.new(get_args(@base_branch)).run
 
       unless Dir.exist?('target/reports/diff')
-        message("No java rules are changed!", sticky: true)
+        message("No regression tested rules have been changed.", sticky: true)
         return
       end
 
@@ -36,11 +38,12 @@ def run_pmdtester
       message1 = create_message
 
       # run against master branch (if the PR is not already against master)
-      unless ENV['TRAVIS_BRANCH'] == 'master'
+      unless ENV['PMD_CI_BRANCH'] == 'master'
         @base_branch = 'master'
+        @logger.info "\n\n--------------------------------------"
         @logger.info "Run against #{@base_branch}"
-        runner = PmdTester::Runner.new(get_args(@base_branch))
-        @new_errors, @removed_errors, @new_violations, @removed_violations, @new_configerrors, @removed_configerrors = runner.run
+        @summary = PmdTester::Runner.new(get_args(@base_branch, FALSE, 'target/diff1/patch_config.xml')).run
+
         # move the generated report out of the way
         FileUtils.mv 'target/reports/diff', 'target/diff2'
         message2 = create_message
@@ -69,22 +72,28 @@ end
 
 def create_message
   "Compared to #{@base_branch}:\n"\
-  "This changeset introduces "\
-  "#{@new_violations} new violations, #{@new_errors} new errors and "\
-  "#{@new_configerrors} new configuration errors,\n"\
-  "removes #{@removed_violations} violations, #{@removed_errors} errors and "\
-  "#{@removed_configerrors} configuration errors.\n"
+  "This changeset " \
+  "changes #{@summary[:violations][:changed]} violations,\n" \
+  "introduces #{@summary[:violations][:new]} new violations, " \
+  "#{@summary[:errors][:new]} new errors and " \
+  "#{@summary[:configerrors][:new]} new configuration errors,\n" \
+  "removes #{@summary[:violations][:removed]} violations, "\
+  "#{@summary[:errors][:removed]} errors and " \
+  "#{@summary[:configerrors][:removed]} configuration errors.\n"
 end
 
 def upload_report
   Dir.chdir('target') do
-    tar_filename = "pr-#{ENV['PMD_CI_PULL_REQUEST_NUMBER']}-diff-report-#{Time.now.strftime("%Y-%m-%dT%H-%M-%SZ")}.tar"
+    tar_filename = "pr-#{ENV['PMD_CI_PULL_REQUEST_NUMBER']}-diff-report-#{Time.now.strftime("%Y-%m-%dT%H-%M-%SZ")}.tar.gz"
 
-    `tar -cf #{tar_filename} diff1/ diff2/`
+    `tar czf #{tar_filename} diff1/ diff2/`
+    tar_size = (10 * File.size(tar_filename) / 1024 / 1024)/10.0
+    @logger.info "Uploading file #{tar_filename} (#{tar_size}mb) now..."
     report_url = `curl -u #{ENV['PMD_CI_CHUNK_TOKEN']} -T #{tar_filename} https://chunk.io`
     if $?.success?
-      @logger.info "Successfully uploaded #{tar_filename} to chunk.io"
-      report_url.chomp
+      report_url.chomp!
+      @logger.info "Successfully uploaded #{tar_filename} to #{report_url}"
+      report_url
     else
       @logger.error "Error while uploading #{tar_filename} to chunk.io: #{report_url}"
       warn("Uploading the diff report failed, this message is mainly used to remind the maintainers of PMD.")

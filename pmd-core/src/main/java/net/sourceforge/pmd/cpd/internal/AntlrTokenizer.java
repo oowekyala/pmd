@@ -18,8 +18,8 @@ import net.sourceforge.pmd.cpd.Tokens;
 import net.sourceforge.pmd.cpd.token.AntlrTokenFilter;
 import net.sourceforge.pmd.lang.ast.impl.antlr4.AntlrToken;
 import net.sourceforge.pmd.lang.ast.impl.antlr4.AntlrTokenManager;
-import net.sourceforge.pmd.util.document.CpdCompat;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.document.CpdCompat;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 /**
  * Generic implementation of a {@link Tokenizer} useful to any Antlr grammar.
@@ -39,7 +39,7 @@ public abstract class AntlrTokenizer implements Tokenizer {
 
             AntlrToken currentToken = tokenFilter.getNextToken();
             while (currentToken != null) {
-                processToken(tokenEntries, sourceCode.getFileName(), currentToken);
+                processToken(tokenEntries, currentToken);
                 currentToken = tokenFilter.getNextToken();
             }
 
@@ -54,8 +54,8 @@ public abstract class AntlrTokenizer implements Tokenizer {
         return new AntlrTokenFilter(tokenManager);
     }
 
-    private void processToken(final Tokens tokenEntries, String fileName, final AntlrToken token) {
-        final TokenEntry tokenEntry = new TokenEntry(token.getImage(), fileName, token.getReportLocation());
+    private void processToken(final Tokens tokenEntries, final AntlrToken token) {
+        final TokenEntry tokenEntry = new TokenEntry(token.getImage(), token.getReportLocation());
         tokenEntries.add(tokenEntry);
     }
 }

@@ -7,6 +7,10 @@ package net.sourceforge.pmd.lang.rule.internal;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.commons.lang3.exception.ExceptionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sourceforge.pmd.Report.ProcessingError;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
@@ -18,10 +22,13 @@ import net.sourceforge.pmd.internal.SystemProps;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
+import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.StringUtil;
 
 /** Applies a set of rules to a set of ASTs. */
 public class RuleApplicator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RuleApplicator.class);
     // we reuse the type lattice from run to run, eventually it converges
     // towards the final topology (all node types have been encountered)
     // This has excellent performance! Indexing time is insignificant
@@ -49,8 +56,9 @@ public class RuleApplicator {
         for (Rule rule : rules) {
             RuleContext ctx = RuleContext.create(listener, rule);
             rule.start(ctx);
-            try {
+            try (TimedOperation rcto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getName())) {
 
+                int nodeCounter = 0;
                 Iterator<? extends Node> targets = rule.getTargetSelector().getVisitedNodes(idx);
                 while (targets.hasNext()) {
                     Node node = targets.next();
@@ -58,23 +66,50 @@ public class RuleApplicator {
                         continue;
                     }
 
-                    try (TimedOperation rcto = TimeTracker.startOperation(TimedOperationCategory.RULE, rule.getName())) {
+                    try {
+                        nodeCounter++;
                         rule.apply(node, ctx);
-                        rcto.close(1);
-                    } catch (RuntimeException | StackOverflowError | AssertionError e) {
-                        if (e instanceof Error && !SystemProps.isErrorRecoveryMode()) { // NOPMD
-                            throw e;
-                        }
-                        // The listener handles logging if needed,
-                        // it may also rethrow the error.
-                        listener.onError(new ProcessingError(e, node.getTextDocument().getDisplayName()));
+                    } catch (RuntimeException e) {
+                        reportOrRethrow(listener, rule, node, AssertionUtil.contexted(e), true);
+                    } catch (StackOverflowError e) {
+                        reportOrRethrow(listener, rule, node, AssertionUtil.contexted(e), SystemProps.isErrorRecoveryMode());
+                    } catch (AssertionError e) {
+                        reportOrRethrow(listener, rule, node, AssertionUtil.contexted(e), SystemProps.isErrorRecoveryMode());
                     }
                 }
+                
+                rcto.close(nodeCounter);
             } finally {
                 rule.end(ctx);
             }
         }
     }
+
+
+    private <E extends Throwable> void reportOrRethrow(FileAnalysisListener listener, Rule rule, Node node, E e, boolean reportAndDontThrow) throws E {
+        if (e instanceof ExceptionContext) {
+            ((ExceptionContext) e).addContextValue("Rule applied on node", node);
+        }
+
+        if (reportAndDontThrow) {
+            reportException(listener, rule, node, e);
+        } else {
+            throw e;
+        }
+    }
+
+
+    private void reportException(FileAnalysisListener listener, Rule rule, Node node, Throwable e) {
+        // The listener handles logging if needed,
+        // it may also rethrow the error.
+        listener.onError(new ProcessingError(e, node.getTextDocument().getDisplayName()));
+
+        // fixme - maybe duplicated logging
+        LOG.warn("Exception applying rule {} on file {}, continuing with next rule", rule.getName(), node.getTextDocument().getPathId(), e);
+        String nodeToString = StringUtil.elide(node.toString(), 600, " ... (truncated)");
+        LOG.warn("Exception occurred on node {}", nodeToString);
+    }
+
 
     private void indexTree(Node top, TreeIndex idx) {
         idx.indexNode(top);

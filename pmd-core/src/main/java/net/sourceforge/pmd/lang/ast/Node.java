@@ -17,6 +17,9 @@ import net.sourceforge.pmd.annotation.DeprecatedUntil700;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.NodeStream.DescendantNodeStream;
 import net.sourceforge.pmd.lang.ast.internal.StreamImpl;
+import net.sourceforge.pmd.lang.document.FileLocation;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
 import net.sourceforge.pmd.lang.rule.xpath.XPathVersion;
@@ -24,12 +27,9 @@ import net.sourceforge.pmd.lang.rule.xpath.impl.AttributeAxisIterator;
 import net.sourceforge.pmd.lang.rule.xpath.impl.XPathHandler;
 import net.sourceforge.pmd.lang.rule.xpath.internal.DeprecatedAttrLogger;
 import net.sourceforge.pmd.lang.rule.xpath.internal.SaxonXPathRuleQuery;
+import net.sourceforge.pmd.reporting.Reportable;
 import net.sourceforge.pmd.util.DataMap;
 import net.sourceforge.pmd.util.DataMap.DataKey;
-import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.Reportable;
-import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.TextRegion;
 
 
 /**
@@ -59,11 +59,13 @@ import net.sourceforge.pmd.util.document.TextRegion;
  */
 public interface Node extends Reportable {
 
+    /**
+     * Compares nodes according to their location in the file.
+     * Note that this comparator is not <i>consistent with equals</i>
+     * (see {@link Comparator}) as some nodes have the same location.
+     */
     Comparator<Node> COORDS_COMPARATOR =
-        Comparator.comparingInt(Node::getBeginLine)
-                  .thenComparingInt(Node::getBeginColumn)
-                  .thenComparingInt(Node::getEndLine)
-                  .thenComparingInt(Node::getEndColumn);
+        Comparator.comparing(Node::getReportLocation, FileLocation.COMPARATOR);
 
     /**
      * Returns a string token, usually filled-in by the parser, which describes some textual characteristic of this
@@ -117,7 +119,16 @@ public interface Node extends Reportable {
      * <p>Use this instead of {@link #getBeginColumn()}/{@link #getBeginLine()}, etc.
      */
     @Override
-    FileLocation getReportLocation();
+    default FileLocation getReportLocation() {
+        return getAstInfo().getTextDocument().toLocation(getTextRegion());
+    }
+
+    /**
+     * Returns a region of text delimiting the node in the underlying
+     * text document. This does not necessarily match the
+     * {@link #getReportLocation() report location}.
+     */
+    TextRegion getTextRegion();
 
 
     // Those are kept here because they're handled specially as XPath
@@ -125,22 +136,22 @@ public interface Node extends Reportable {
 
     @Override
     default int getBeginLine() {
-        return getReportLocation().getBeginLine();
+        return Reportable.super.getBeginLine();
     }
 
     @Override
     default int getBeginColumn() {
-        return getReportLocation().getBeginColumn();
+        return Reportable.super.getBeginColumn();
     }
 
     @Override
     default int getEndLine() {
-        return getReportLocation().getEndLine();
+        return Reportable.super.getEndLine();
     }
 
     @Override
     default int getEndColumn() {
-        return getReportLocation().getEndColumn();
+        return Reportable.super.getEndColumn();
     }
 
 
@@ -492,7 +503,7 @@ public interface Node extends Reportable {
     default @Nullable Node getNextSibling() {
         Node parent = getParent();
         int idx = getIndexInParent();
-        if (parent != null && idx < parent.getNumChildren()) {
+        if (parent != null && idx + 1 < parent.getNumChildren()) {
             return parent.getChild(idx + 1);
         }
         return null;
@@ -670,6 +681,9 @@ public interface Node extends Reportable {
         return (RootNode) r;
     }
 
+    /**
+     * Returns the language version of this node.
+     */
     default LanguageVersion getLanguageVersion() {
         return getTextDocument().getLanguageVersion();
     }

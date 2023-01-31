@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.apex.ast;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 import apex.jorje.data.Identifier;
 import apex.jorje.semantic.ast.expression.MethodCallExpression;
@@ -41,10 +41,10 @@ public final class ASTMethodCallExpression extends AbstractApexNode<MethodCallEx
     }
 
     @Override
-    protected @NonNull TextRegion getRegion() {
+    public @NonNull TextRegion getTextRegion() {
         int fullLength = getFullMethodName().length();
         int nameLength = getMethodName().length();
-        TextRegion base = super.getRegion();
+        TextRegion base = super.getTextRegion();
         if (fullLength > nameLength) {
             base = base.growLeft(fullLength - nameLength);
         }

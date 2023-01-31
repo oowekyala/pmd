@@ -8,13 +8,19 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.Reportable;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.reporting.Reportable;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
- * Represents a language-independent token such as constants, values language reserved keywords, or comments.
+ * Represents a token, part of a token chain in a source file. Tokens
+ * are the individual "words" of a programming language, such as literals,
+ * identifiers, keywords, or comments. Tokens are produced by a lexer and
+ * are used by a parser implementation to build an AST {@link Node}. Tokens
+ * should generally not be manipulated in rules directly as they have little
+ * to no semantic information.
  */
 public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, Reportable {
 
@@ -135,4 +141,16 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
         return () -> IteratorUtil.generate(from.getPreviousComment(), GenericToken::getPreviousComment);
     }
 
+    /**
+     * Gets a unique integer representing the kind of token this is.
+     * The semantics of this kind depend on the language.
+     *
+     * <p><strong>Note:</strong> This is an experimental API.
+     *
+     * <p>The returned constants can be looked up in the language's "*ParserConstants",
+     * e.g. CppParserConstants or JavaParserConstants. These constants are considered
+     * internal API and may change at any time when the language's grammar is changed.
+     */
+    @Experimental
+    int getKind();
 }

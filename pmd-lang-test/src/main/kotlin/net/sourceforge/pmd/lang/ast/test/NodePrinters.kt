@@ -6,8 +6,8 @@ package net.sourceforge.pmd.lang.ast.test
 
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.rule.xpath.Attribute
+import net.sourceforge.pmd.util.StringUtil
 import net.sourceforge.pmd.util.treeexport.TextTreeRenderer
-import org.apache.commons.lang3.StringEscapeUtils
 
 /**
  * Prints just the structure, like so:
@@ -34,6 +34,25 @@ open class RelevantAttributePrinter : BaseNodeAttributePrinter() {
 }
 
 /**
+ * Only prints the begin/end coordinates.
+ */
+object CoordinatesPrinter : BaseNodeAttributePrinter() {
+
+    private val Considered = setOf("BeginLine", "EndLine", "BeginColumn", "EndColumn")
+
+    override fun fillAttributes(node: Node, result: MutableList<AttributeInfo>) {
+        result += AttributeInfo("BeginLine", node.beginLine)
+        result += AttributeInfo("EndLine", node.endLine)
+        result += AttributeInfo("EndColumn", node.endColumn)
+        result += AttributeInfo("BeginColumn", node.beginColumn)
+    }
+
+    override fun ignoreAttribute(node: Node, attribute: Attribute): Boolean =
+            attribute.name !in Considered
+
+}
+
+/**
  * Base attribute printer, subclass to filter attributes.
  */
 open class BaseNodeAttributePrinter : TextTreeRenderer(true, -1) {
@@ -46,7 +65,7 @@ open class BaseNodeAttributePrinter : TextTreeRenderer(true, -1) {
         node.xPathAttributesIterator
                 .asSequence()
                 .filterNot { ignoreAttribute(node, it) }
-                .map { AttributeInfo(it.name, it.value?.toString()) }
+                .map { AttributeInfo(it.name, it.value) }
                 .forEach { result += it }
     }
 
@@ -68,11 +87,12 @@ open class BaseNodeAttributePrinter : TextTreeRenderer(true, -1) {
 
     protected open fun valueToString(value: Any?): String? {
         return when (value) {
-            is String -> "\"" + StringEscapeUtils.unescapeJava(value) + "\""
+            is String -> "\"" + StringUtil.escapeJava(value) + "\""
             is Char -> '\''.toString() + value.toString().replace("'".toRegex(), "\\'") + '\''.toString()
             is Enum<*> -> value.enumDeclaringClass.simpleName + "." + value.name
             is Class<*> -> value.canonicalName?.let { "$it.class" }
-            is Number, is Boolean, null -> value.toString()
+            is Number, is Boolean -> value.toString()
+            null -> "null"
             else -> null
         }
     }

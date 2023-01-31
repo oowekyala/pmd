@@ -12,25 +12,49 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+import net.sourceforge.pmd.annotation.DeprecatedUntil700;
+import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.renderers.AbstractAccumulatingRenderer;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
 import net.sourceforge.pmd.util.BaseResultProducingCloseable;
-import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * A {@link Report} collects all informations during a PMD execution. This
  * includes violations, suppressed violations, metrics, error during processing
  * and configuration errors.
+ *
+ * <p>A report may be created by a {@link GlobalReportBuilderListener} that you
+ * use as the {@linkplain GlobalAnalysisListener} in {@link PmdAnalysis#performAnalysisAndCollectReport() PMD's entry point}.
+ * You can also create one manually with {@link #buildReport(Consumer)}.
+ *
+ * <p>For special use cases, like filtering the report after PMD analysis and
+ * before rendering the report, some transformation operations are provided:
+ * <ul>
+ *     <li>{@link #filterViolations(Predicate)}</li>
+ *     <li>{@link #union(Report)}</li>
+ * </ul>
+ * These methods create a new {@link Report} rather than modifying their receiver.
+ * </p>
  */
-public class Report {
+public final class Report {
     // todo move to package reporting
 
     private final List<RuleViolation> violations = synchronizedList(new ArrayList<>());
     private final List<SuppressedViolation> suppressedRuleViolations = synchronizedList(new ArrayList<>());
     private final List<ProcessingError> errors = synchronizedList(new ArrayList<>());
     private final List<ConfigurationError> configErrors = synchronizedList(new ArrayList<>());
+
+    @DeprecatedUntil700
+    @InternalApi
+    public Report() { // NOPMD - UnnecessaryConstructor
+        // TODO: should be package-private, you have to use a listener to build a report.
+    }
 
     /**
      * Represents a configuration error.
@@ -156,7 +180,12 @@ public class Report {
      * Adds a new rule violation to the report and notify the listeners.
      *
      * @param violation the violation to add
+     *
+     * @deprecated PMD's way of creating a report is internal and may be changed in pmd 7.
      */
+    @DeprecatedUntil700
+    @Deprecated
+    @InternalApi
     public void addRuleViolation(RuleViolation violation) {
         synchronized (violations) {
             int index = Collections.binarySearch(violations, violation, RuleViolation.DEFAULT_COMPARATOR);
@@ -167,7 +196,7 @@ public class Report {
     /**
      * Adds a new suppressed violation.
      */
-    public void addSuppressedViolation(SuppressedViolation sv) {
+    private void addSuppressedViolation(SuppressedViolation sv) {
         suppressedRuleViolations.add(sv);
     }
 
@@ -175,7 +204,12 @@ public class Report {
      * Adds a new configuration error to the report.
      *
      * @param error the error to add
+     *
+     * @deprecated PMD's way of creating a report is internal and may be changed in pmd 7.
      */
+    @DeprecatedUntil700
+    @Deprecated
+    @InternalApi
     public void addConfigError(ConfigurationError error) {
         configErrors.add(error);
     }
@@ -185,7 +219,11 @@ public class Report {
      *
      * @param error
      *            the error to add
+     * @deprecated PMD's way of creating a report is internal and may be changed in pmd 7.
      */
+    @DeprecatedUntil700
+    @Deprecated
+    @InternalApi
     public void addError(ProcessingError error) {
         errors.add(error);
     }
@@ -195,10 +233,16 @@ public class Report {
      * summary over all violations is needed as PMD creates one report per file
      * by default.
      *
-     * @param r
-     *            the report to be merged into this.
+     * <p>This is synchronized on an internal lock (note that other mutation
+     * operations are not synchronized, todo for pmd 7).
+     *
+     * @param r the report to be merged into this.
+     *
      * @see AbstractAccumulatingRenderer
+     *
+     * @deprecated Convert Renderer to use the reports.
      */
+    @Deprecated
     public void merge(Report r) {
         errors.addAll(r.errors);
         configErrors.addAll(r.configErrors);
@@ -213,7 +257,7 @@ public class Report {
     /**
      * Returns an unmodifiable list of violations that were suppressed.
      */
-    public final List<SuppressedViolation> getSuppressedViolations() {
+    public List<SuppressedViolation> getSuppressedViolations() {
         return Collections.unmodifiableList(suppressedRuleViolations);
     }
 
@@ -223,7 +267,7 @@ public class Report {
      *
      * <p>The violations list is sorted with {@link RuleViolation#DEFAULT_COMPARATOR}.
      */
-    public final List<RuleViolation> getViolations() {
+    public List<RuleViolation> getViolations() {
         return Collections.unmodifiableList(violations);
     }
 
@@ -232,7 +276,7 @@ public class Report {
      * Returns an unmodifiable list of processing errors that have been
      * recorded until now.
      */
-    public final List<ProcessingError> getProcessingErrors() {
+    public List<ProcessingError> getProcessingErrors() {
         return Collections.unmodifiableList(errors);
     }
 
@@ -241,10 +285,17 @@ public class Report {
      * Returns an unmodifiable list of configuration errors that have
      * been recorded until now.
      */
-    public final List<ConfigurationError> getConfigurationErrors() {
+    public List<ConfigurationError> getConfigurationErrors() {
         return Collections.unmodifiableList(configErrors);
     }
 
+    /**
+     * Create a report by making side effects on a {@link FileAnalysisListener}.
+     * This wraps a {@link ReportBuilderListener}.
+     */
+    public static Report buildReport(Consumer<? super FileAnalysisListener> lambda) {
+        return BaseResultProducingCloseable.using(new ReportBuilderListener(), lambda);
+    }
 
     /**
      * A {@link FileAnalysisListener} that accumulates events into a
@@ -311,5 +362,58 @@ public class Report {
         protected Report getResultImpl() {
             return report;
         }
+    }
+
+    /**
+     * Creates a new report taking all the information from this report,
+     * but filtering the violations.
+     *
+     * @param filter when true, the violation will be kept.
+     * @return copy of this report
+     */
+    @Experimental
+    public Report filterViolations(Predicate<RuleViolation> filter) {
+        Report copy = new Report();
+
+        for (RuleViolation violation : violations) {
+            if (filter.test(violation)) {
+                copy.addRuleViolation(violation);
+            }
+        }
+
+        copy.suppressedRuleViolations.addAll(suppressedRuleViolations);
+        copy.errors.addAll(errors);
+        copy.configErrors.addAll(configErrors);
+        return copy;
+    }
+
+    /**
+     * Creates a new report by combining this report with another report.
+     * This is similar to {@link #merge(Report)}, but instead a new report
+     * is created. The lowest start time and greatest end time are kept in the copy.
+     *
+     * @param other the other report to combine
+     * @return
+     */
+    @Experimental
+    public Report union(Report other) {
+        Report copy = new Report();
+
+        for (RuleViolation violation : violations) {
+            copy.addRuleViolation(violation);
+        }
+        for (RuleViolation violation : other.violations) {
+            copy.addRuleViolation(violation);
+        }
+
+        copy.suppressedRuleViolations.addAll(suppressedRuleViolations);
+        copy.suppressedRuleViolations.addAll(other.suppressedRuleViolations);
+
+        copy.errors.addAll(errors);
+        copy.errors.addAll(other.errors);
+        copy.configErrors.addAll(configErrors);
+        copy.configErrors.addAll(other.configErrors);
+
+        return copy;
     }
 }

@@ -9,7 +9,7 @@ import net.sourceforge.pmd.lang.scala.ScalaLanguageModule;
 
 public final class ScalaParsingHelper extends BaseParsingHelper<ScalaParsingHelper, ASTSource> {
 
-    public static final ScalaParsingHelper DEFAULT = new ScalaParsingHelper(Params.getDefaultProcess());
+    public static final ScalaParsingHelper DEFAULT = new ScalaParsingHelper(Params.getDefault());
 
     private ScalaParsingHelper(Params params) {
         super(ScalaLanguageModule.NAME, ASTSource.class, params);
@@ -19,6 +19,5 @@ public final class ScalaParsingHelper extends BaseParsingHelper<ScalaParsingHelp
     protected ScalaParsingHelper clone(Params params) {
         return new ScalaParsingHelper(params);
     }
-
 
 }

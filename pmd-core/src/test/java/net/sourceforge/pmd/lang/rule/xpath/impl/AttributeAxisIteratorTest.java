@@ -6,9 +6,7 @@ package net.sourceforge.pmd.lang.rule.xpath.impl;
 
 
 import static net.sourceforge.pmd.util.CollectionUtil.setOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,57 +15,52 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.sourceforge.pmd.lang.ast.DummyNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 
 /**
  * Unit test for {@link AttributeAxisIterator}
  */
-public class AttributeAxisIteratorTest {
+class AttributeAxisIteratorTest {
+
+    private static final Set<String> DEFAULT_ATTRS = setOf("BeginColumn", "BeginLine", "Image", "EndColumn", "EndLine");
 
     /**
      * Test hasNext and next.
      */
     @Test
-    public void testAttributeAxisIterator() {
+    void testAttributeAxisIterator() {
         DummyNode dummyNode = new DummyNode();
-        dummyNode.setCoords(1, 1, 2, 2);
 
         AttributeAxisIterator it = new AttributeAxisIterator(dummyNode);
-        Map<String, Attribute> atts = toMap(it);
-        Set<String> expected = setOf("BeginColumn",
-                                     "BeginLine",
-                                     "FindBoundary",
-                                     "Image",
-                                     "EndColumn",
-                                     "EndLine");
-        assertEquals(expected, atts.keySet());
+
+        assertEquals(DEFAULT_ATTRS, toMap(it).keySet());
     }
 
     @Test
-    public void testAttributeAxisIteratorWithEnum() {
+    void testAttributeAxisIteratorWithEnum() {
         DummyNodeWithEnum dummyNode = new DummyNodeWithEnum();
 
         AttributeAxisIterator it = new AttributeAxisIterator(dummyNode);
-        Map<String, Attribute> atts = toMap(it);
-        assertEquals(7, atts.size());
-        assertTrue(atts.containsKey("Enum"));
-        assertEquals(DummyNodeWithEnum.MyEnum.FOO, atts.get("Enum").getValue());
+
+        Set<String> expected = CollectionUtil.setUnion(DEFAULT_ATTRS, "Enum");
+
+        assertEquals(expected, toMap(it).keySet());
     }
 
     @Test
-    public void testAttributeAxisIteratorWithList() {
+    void testAttributeAxisIteratorWithList() {
+        // list attributes are not supported anymore
         DummyNodeWithList dummyNode = new DummyNodeWithList();
 
         AttributeAxisIterator it = new AttributeAxisIterator(dummyNode);
-        Map<String, Attribute> atts = toMap(it);
-        assertEquals(6, atts.size());
-        assertFalse(atts.containsKey("List"));
-        assertFalse(atts.containsKey("NodeList"));
+
+        assertEquals(DEFAULT_ATTRS, toMap(it).keySet());
     }
 
     private Map<String, Attribute> toMap(AttributeAxisIterator it) {

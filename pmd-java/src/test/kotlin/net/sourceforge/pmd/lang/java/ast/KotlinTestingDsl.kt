@@ -7,24 +7,18 @@ package net.sourceforge.pmd.lang.java.ast
 import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
 import com.github.oowekyala.treeutils.printers.KotlintestBeanTreePrinter
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.scopes.AbstractContainerScope
+import io.kotest.core.test.TestScope
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
-import net.sourceforge.pmd.lang.LanguageRegistry
-import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.ParseException
-import net.sourceforge.pmd.lang.ast.TokenMgrError
+import net.sourceforge.pmd.lang.ast.*
 import net.sourceforge.pmd.lang.ast.test.*
 import net.sourceforge.pmd.lang.java.JavaLanguageModule
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
-import net.sourceforge.pmd.lang.java.JavaParsingHelper.TestCheckLogger
-import net.sourceforge.pmd.lang.java.JavaParsingHelper.WITH_PROCESSING
-import org.apache.commons.io.output.TeeOutputStream
+import net.sourceforge.pmd.lang.java.JavaParsingHelper.*
 import java.beans.PropertyDescriptor
-import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.nio.charset.StandardCharsets
 
 /**
  * Represents the different Java language versions.
@@ -33,15 +27,19 @@ enum class JavaVersion : Comparable<JavaVersion> {
     J1_3, J1_4, J1_5, J1_6, J1_7, J1_8, J9, J10, J11,
     J12,
     J13,
-    J14, J14__PREVIEW,
-    J15, J15__PREVIEW;
+    J14,
+    J15,
+    J16,
+    J17,
+    J18, J18__PREVIEW,
+    J19, J19__PREVIEW;
 
     /** Name suitable for use with e.g. [JavaParsingHelper.parse] */
-    val pmdName: String = name.removePrefix("J").replaceFirst("__", "-").replace('_', '.').toLowerCase()
+    val pmdName: String = name.removePrefix("J").replaceFirst("__", "-").replace('_', '.').lowercase()
 
-    val pmdVersion get() = LanguageRegistry.getLanguage(JavaLanguageModule.NAME).getVersion(pmdName)
+    val pmdVersion get() = JavaLanguageModule.getInstance().getVersion(pmdName)
 
-    val parser: JavaParsingHelper = WITH_PROCESSING.withDefaultVersion(pmdName)
+    val parser: JavaParsingHelper = DEFAULT.withDefaultVersion(pmdName)
 
     operator fun not(): List<JavaVersion> = values().toList() - this
 
@@ -187,11 +185,12 @@ inline fun <reified N : Node> JavaNode?.shouldMatchNode(ignoreChildren: Boolean 
  * @property otherImports Other imports, without the `import` and semicolon
  * @property genClassHeader Header of the enclosing class used in parsing contexts like parseExpression, etc. E.g. "class Foo"
  */
-open class ParserTestCtx(val javaVersion: JavaVersion = JavaVersion.Latest,
+open class ParserTestCtx(testScope: TestScope,
+                         val javaVersion: JavaVersion = JavaVersion.Latest,
                          val importedTypes: MutableList<Class<*>> = mutableListOf(),
                          val otherImports: MutableList<String> = mutableListOf(),
                          var packageName: String = "",
-                         var genClassHeader: String = "class Foo") {
+                         var genClassHeader: String = "class Foo"): AbstractContainerScope(testScope) {
 
     var parser: JavaParsingHelper = javaVersion.parser.withProcessing(false)
         private set
@@ -202,12 +201,21 @@ open class ParserTestCtx(val javaVersion: JavaVersion = JavaVersion.Latest,
         return logger
     }
 
+    /**
+     * Will throw on the first semantic error or warning.
+     * Useful because it produces a stack trace for that warning/error.
+     */
+    fun assertNoSemanticErrorsOrWarnings() {
+        parser = parser.withProcessing(true).withLogger(UnforgivingSemanticLogger.INSTANCE)
+    }
+
     /** Returns a function that can retrieve the log*/
     fun logTypeInference(verbose: Boolean = false, to: PrintStream = System.err) {
         parser = parser.withProcessing(true).logTypeInference(verbose, to)
     }
 
-    var fullSource: String? = null
+    /** Populated after an [asIfIn] call, used by [TypeBodyParsingCtx]. */
+    internal var fullSource: String? = null
 
     /** Imports to add to the top of the parsing contexts. */
     internal val imports: List<String>
@@ -273,4 +281,3 @@ open class ParserTestCtx(val javaVersion: JavaVersion = JavaVersion.Latest,
     }
 
 }
-

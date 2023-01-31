@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.Report.ConfigurationError;
+import net.sourceforge.pmd.Report.GlobalReportBuilderListener;
 import net.sourceforge.pmd.Report.ProcessingError;
 import net.sourceforge.pmd.Report.ReportBuilderListener;
 import net.sourceforge.pmd.Report.SuppressedViolation;
@@ -16,11 +18,11 @@ import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertySource;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
-import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * This is an interface for rendering a Report. When a Renderer is being
@@ -155,8 +157,6 @@ public interface Renderer extends PropertySource {
     /**
      * This method is at the very end of the Rendering process, after
      * {@link Renderer#renderFileReport(Report)}.
-     *
-     * @throws IOException
      */
     void end() throws IOException;
 
@@ -186,7 +186,7 @@ public interface Renderer extends PropertySource {
     //  when the file is done. Many renderers could directly handle
     //  violations as they come though.
     default GlobalAnalysisListener newListener() throws IOException {
-        try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
+        try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
             this.start();
         }
 
@@ -194,6 +194,13 @@ public interface Renderer extends PropertySource {
 
             // guard for the close routine
             final Object reportMergeLock = new Object();
+
+            final GlobalReportBuilderListener configErrorReport = new GlobalReportBuilderListener();
+
+            @Override
+            public void onConfigError(ConfigurationError error) {
+                configErrorReport.onConfigError(error);
+            }
 
             @Override
             public FileAnalysisListener startFileAnalysis(TextFile file) {
@@ -223,7 +230,7 @@ public interface Renderer extends PropertySource {
                         reportBuilder.close();
                         synchronized (reportMergeLock) {
                             // TODO renderFileReport should be thread-safe instead
-                            try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
+                            try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
                                 renderer.renderFileReport(reportBuilder.getResult());
                             }
                         }
@@ -238,7 +245,9 @@ public interface Renderer extends PropertySource {
 
             @Override
             public void close() throws Exception {
-                try (TimedOperation to = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
+                configErrorReport.close();
+                Renderer.this.renderFileReport(configErrorReport.getResult());
+                try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.REPORTING)) {
                     end();
                     flush();
                 }

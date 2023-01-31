@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.cpd.token.internal;
 
-import static net.sourceforge.pmd.internal.util.IteratorUtil.AbstractIterator;
+import static net.sourceforge.pmd.util.IteratorUtil.AbstractIterator;
 
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -126,7 +126,7 @@ public abstract class BaseTokenFilter<T extends GenericToken<T>> implements Toke
         return currentToken.isEof();
     }
 
-    private class RemainingTokens implements Iterable<T> {
+    private final class RemainingTokens implements Iterable<T> {
 
         @Override
         public Iterator<T> iterator() {

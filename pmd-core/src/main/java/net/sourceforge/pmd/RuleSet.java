@@ -4,7 +4,6 @@
 
 package net.sourceforge.pmd;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,17 +14,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.cache.ChecksumAware;
 import net.sourceforge.pmd.internal.util.PredicateUtil;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.rule.RuleReference;
 import net.sourceforge.pmd.lang.rule.XPathRule;
-import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * This class represents a collection of rules along with some optional filter
@@ -35,7 +36,7 @@ import net.sourceforge.pmd.util.document.TextFile;
  */
 public class RuleSet implements ChecksumAware {
 
-    private static final Logger LOG = Logger.getLogger(RuleSet.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(RuleSet.class);
     private static final String MISSING_RULE = "Missing rule";
     private static final String MISSING_RULESET_DESCRIPTION = "RuleSet description must not be null";
     private static final String MISSING_RULESET_NAME = "RuleSet name must not be null";
@@ -54,8 +55,7 @@ public class RuleSet implements ChecksumAware {
     private final List<Pattern> excludePatterns;
     private final List<Pattern> includePatterns;
 
-    /* TODO make that a Predicate<String> */
-    private final Predicate<File> filter;
+    private final Predicate<String> filter;
 
     /**
      * Creates a new RuleSet with the given checksum.
@@ -217,9 +217,10 @@ public class RuleSet implements ChecksumAware {
             // check for duplicates - adding more than one rule with the same name will
             // be problematic - see #RuleSet.getRuleByName(String)
             for (Rule rule : rules) {
-                if (rule.getName().equals(newRule.getName()) && rule.getLanguage() == newRule.getLanguage()) {
-                    LOG.warning("The rule with name " + newRule.getName() + " is duplicated. "
-                            + "Future versions of PMD will reject to load such rulesets.");
+                if (rule.getName().equals(newRule.getName()) && rule.getLanguage().equals(newRule.getLanguage())) {
+                    LOG.warn("The rule with name {} is duplicated. "
+                            + "Future versions of PMD will reject to load such rulesets.",
+                            newRule.getName());
                     break;
                 }
             }
@@ -235,7 +236,7 @@ public class RuleSet implements ChecksumAware {
          */
         Rule getExistingRule(final Rule rule) {
             for (Rule r : rules) {
-                if (r.getName().equals(rule.getName()) && r.getLanguage() == rule.getLanguage()) {
+                if (r.getName().equals(rule.getName()) && r.getLanguage().equals(rule.getLanguage())) {
                     return r;
                 }
             }
@@ -270,7 +271,7 @@ public class RuleSet implements ChecksumAware {
 
             for (final Iterator<Rule> it = rules.iterator(); it.hasNext();) {
                 final Rule r = it.next();
-                if (r.getName().equals(rule.getName()) && r.getLanguage() == rule.getLanguage()) {
+                if (r.getName().equals(rule.getName()) && r.getLanguage().equals(rule.getLanguage())) {
                     it.remove();
                 }
             }
@@ -547,23 +548,12 @@ public class RuleSet implements ChecksumAware {
             while (iterator.hasNext()) {
                 Rule rule = iterator.next();
                 if (rule.getPriority().compareTo(minimumPriority) > 0) {
-                    LOG.fine("Removing rule " + rule.getName() + " due to priority: " + rule.getPriority() + " required: " + minimumPriority);
+                    LOG.debug("Removing rule {} due to priority: {} required: {}",
+                            rule.getName(), rule.getPriority(), minimumPriority);
                     iterator.remove();
                 }
             }
         }
-    }
-
-    /**
-     * @deprecated Use {@link #getFileExclusions()}
-     */
-    @Deprecated
-    public List<String> getExcludePatterns() {
-        List<String> excludes = new ArrayList<>();
-        for (Pattern p : excludePatterns) {
-            excludes.add(p.pattern());
-        }
-        return excludes;
     }
 
     /**
@@ -612,17 +602,31 @@ public class RuleSet implements ChecksumAware {
      * which also matches the file. In other words, <code>include</code>
      * patterns override <code>exclude</code> patterns.
      *
-     * @param file
-     *            the source file to check
+     * @param qualFileName the source path to check
+     *
      * @return <code>true</code> if the file should be checked,
-     *         <code>false</code> otherwise
+     *     <code>false</code> otherwise
      */
+    // TODO get rid of this overload
+    @InternalApi
     public boolean applies(String qualFileName) {
-        return filter.test(new File(qualFileName));
+        return filter.test(qualFileName);
     }
 
-    public boolean applies(TextFile file) {
-        return applies(file.getPathId());
+    /**
+     * Check if a given source file should be checked by rules in this RuleSet.
+     * A file should not be checked if there is an <code>exclude</code> pattern
+     * which matches the file, unless there is an <code>include</code> pattern
+     * which also matches the file. In other words, <code>include</code>
+     * patterns override <code>exclude</code> patterns.
+     *
+     * @param file a text file
+     *
+     * @return <code>true</code> if the file should be checked,
+     *     <code>false</code> otherwise
+     */
+    boolean applies(TextFile file) {
+        return applies(file.getDisplayName());
     }
 
     /**
@@ -637,10 +641,16 @@ public class RuleSet implements ChecksumAware {
      *
      * @return <code>true</code> if the given rule matches the given language,
      *         which means, that the rule would be executed.
+     *
+     * @deprecated This is internal API, removed in PMD 7. You should
+     * not use a ruleset directly.
      */
+    @Deprecated
+    @InternalApi
     public static boolean applies(Rule rule, LanguageVersion languageVersion) {
         final LanguageVersion min = rule.getMinimumLanguageVersion();
         final LanguageVersion max = rule.getMaximumLanguageVersion();
+        assert rule.getLanguage() != null : "Rule has no language " + rule;
         return rule.getLanguage().equals(languageVersion.getLanguage())
                 && (min == null || min.compareTo(languageVersion) <= 0)
                 && (max == null || max.compareTo(languageVersion) >= 0);
@@ -687,18 +697,6 @@ public class RuleSet implements ChecksumAware {
     }
 
     /**
-     * @deprecated Use {@link #getFileInclusions()}
-     */
-    @Deprecated
-    public List<String> getIncludePatterns() {
-        List<String> includes = new ArrayList<>();
-        for (Pattern p : includePatterns) {
-            includes.add(p.pattern());
-        }
-        return includes;
-    }
-
-    /**
      * Returns the file exclusion patterns as an unmodifiable list.
      */
     public List<Pattern> getFileExclusions() {
@@ -720,7 +718,12 @@ public class RuleSet implements ChecksumAware {
      *
      * @param collector
      *            the removed rules will be added to this collection
+     *
+     * @deprecated This is internal API, removed in PMD 7. You should
+     * not use a ruleset directly.
      */
+    @Deprecated
+    @InternalApi
     public void removeDysfunctionalRules(Collection<Rule> collector) {
         Iterator<Rule> iter = rules.iterator();
 

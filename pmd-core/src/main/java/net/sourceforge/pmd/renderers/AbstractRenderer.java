@@ -7,13 +7,11 @@ package net.sourceforge.pmd.renderers;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.apache.commons.io.IOUtils;
-
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.cli.PMDParameters;
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.properties.AbstractPropertySource;
-import net.sourceforge.pmd.util.IOUtil;
 
 /**
  * Abstract base class for {@link Renderer} implementations.
@@ -93,12 +91,17 @@ public abstract class AbstractRenderer extends AbstractPropertySource implements
 
     @Override
     public void flush() {
+        if (writer == null) {
+            // might happen, if no writer is set. E.g. in maven-pmd-plugin's PmdCollectingRenderer
+            return;
+        }
+
         try {
             this.writer.flush();
         } catch (IOException e) {
             throw new IllegalStateException(e);
         } finally {
-            IOUtils.closeQuietly(writer);
+            IOUtil.closeQuietly(writer);
         }
     }
 

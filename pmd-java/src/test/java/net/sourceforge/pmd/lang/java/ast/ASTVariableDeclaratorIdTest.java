@@ -4,24 +4,27 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ASTVariableDeclaratorIdTest extends BaseParserTest {
+import net.sourceforge.pmd.lang.java.BaseParserTest;
+import net.sourceforge.pmd.lang.java.ast.internal.PrettyPrintingUtil;
+
+class ASTVariableDeclaratorIdTest extends BaseParserTest {
 
 
     @Test
-    public void testIsExceptionBlockParameter() {
+    void testIsExceptionBlockParameter() {
         ASTCompilationUnit acu = java.parse(EXCEPTION_PARAMETER);
         ASTVariableDeclaratorId id = acu.getFirstDescendantOfType(ASTVariableDeclaratorId.class);
         assertTrue(id.isExceptionBlockParameter());
     }
 
     @Test
-    public void testTypeNameNode() {
+    void testTypeNameNode() {
         ASTCompilationUnit acu = java.parse(TYPE_NAME_NODE);
         ASTVariableDeclaratorId id = acu.findDescendantsOfType(ASTVariableDeclaratorId.class).get(0);
 
@@ -30,7 +33,7 @@ public class ASTVariableDeclaratorIdTest extends BaseParserTest {
     }
 
     @Test
-    public void testAnnotations() {
+    void testAnnotations() {
         ASTCompilationUnit acu = java.parse(TEST_ANNOTATIONS);
         ASTVariableDeclaratorId id = acu.findDescendantsOfType(ASTVariableDeclaratorId.class).get(0);
 
@@ -39,15 +42,15 @@ public class ASTVariableDeclaratorIdTest extends BaseParserTest {
     }
 
     @Test
-    public void testLambdaWithType() throws Exception {
+    void testLambdaWithType() throws Exception {
         ASTCompilationUnit acu = java8.parse(TEST_LAMBDA_WITH_TYPE);
         ASTLambdaExpression lambda = acu.getFirstDescendantOfType(ASTLambdaExpression.class);
         ASTVariableDeclaratorId f = lambda.getFirstDescendantOfType(ASTVariableDeclaratorId.class);
-        assertEquals("File", f.getTypeNode().getTypeImage());
+        assertEquals("File", PrettyPrintingUtil.prettyPrintType(f.getTypeNode()));
     }
 
     @Test
-    public void testLambdaWithoutType() throws Exception {
+    void testLambdaWithoutType() throws Exception {
         ASTCompilationUnit acu = java8.parse(TEST_LAMBDA_WITHOUT_TYPE);
         ASTLambdaExpression lambda = acu.getFirstDescendantOfType(ASTLambdaExpression.class);
         ASTVariableDeclaratorId f = lambda.getFirstDescendantOfType(ASTVariableDeclaratorId.class);
@@ -62,7 +65,4 @@ public class ASTVariableDeclaratorIdTest extends BaseParserTest {
     private static final String TEST_LAMBDA_WITHOUT_TYPE =
         "public class Foo {\n    public void bar() {\n        FileFilter java2 = f -> f.getName().endsWith(\".java\");\n    }\n}\n";
 
-    public static junit.framework.Test suite() {
-        return new junit.framework.JUnit4TestAdapter(ASTVariableDeclaratorIdTest.class);
-    }
 }

@@ -5,8 +5,14 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
  * Represents the operator of an {@linkplain ASTInfixExpression infix expression}.
@@ -81,6 +87,15 @@ public enum BinaryOp implements InternalInterfaces.OperatorLike {
     /** Modulo {@code "%"} operator. */
     MOD("%");
 
+    /** Set of {@code &&} and {@code ||}. Use with {@link JavaAstUtils#isInfixExprWithOperator(JavaNode, Set)}. */
+    public static final Set<BinaryOp> CONDITIONAL_OPS =
+        CollectionUtil.immutableEnumSet(CONDITIONAL_AND, CONDITIONAL_OR);
+    /** Set of {@code <}, {@code <=}, {@code >=} and {@code >}. Use with {@link JavaAstUtils#isInfixExprWithOperator(JavaNode, Set)}. */
+    public static final Set<BinaryOp> COMPARISON_OPS = CollectionUtil.immutableEnumSet(LE, GE, GT, LT);
+    /** Set of {@code ==} and {@code !=}. Use with {@link JavaAstUtils#isInfixExprWithOperator(JavaNode, Set)}. */
+    public static final Set<BinaryOp> EQUALITY_OPS = CollectionUtil.immutableEnumSet(EQ, NE);
+    /** Set of {@code <<}, {@code >>} and {@code >>>}. Use with {@link JavaAstUtils#isInfixExprWithOperator(JavaNode, Set)}. */
+    public static final Set<BinaryOp> SHIFT_OPS = CollectionUtil.immutableEnumSet(LEFT_SHIFT, RIGHT_SHIFT, UNSIGNED_RIGHT_SHIFT);
 
     private final String code;
 
@@ -125,6 +140,17 @@ public enum BinaryOp implements InternalInterfaces.OperatorLike {
         return comparePrecedence(other) == 0;
     }
 
+
+    /**
+     * Returns the ops with strictly greater precedence than the given op.
+     * This may return an empty set.
+     */
+    public static Set<BinaryOp> opsWithGreaterPrecedence(BinaryOp op) {
+        Set<BinaryOp> range = EnumSet.range(op, MOD);
+        range.remove(op);
+        return range;
+    }
+
     private int precedenceClass() {
         switch (this) {
         case CONDITIONAL_OR:
@@ -161,4 +187,30 @@ public enum BinaryOp implements InternalInterfaces.OperatorLike {
             return -1;
         }
     }
+
+
+    /**
+     * Complement, for boolean operators. Eg for {@code ==}, return {@code !=},
+     * for {@code <=}, returns {@code >}. Returns null if this is another kind
+     * of operator.
+     */
+    public @Nullable BinaryOp getComplement() {
+        switch (this) {
+        case CONDITIONAL_OR: return CONDITIONAL_AND;
+        case CONDITIONAL_AND: return CONDITIONAL_OR;
+        case OR: return AND;
+        case AND: return OR;
+
+        case EQ: return NE;
+        case NE: return EQ;
+        case LE: return GT;
+        case GE: return LT;
+        case GT: return LE;
+        case LT: return GE;
+
+        default: return null;
+        }
+    }
+
+
 }

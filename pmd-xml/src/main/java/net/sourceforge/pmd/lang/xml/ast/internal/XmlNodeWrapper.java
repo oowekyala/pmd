@@ -18,14 +18,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
+import net.sourceforge.pmd.lang.rule.xpath.internal.CoordinateXPathFunction;
 import net.sourceforge.pmd.lang.xml.ast.XmlNode;
 import net.sourceforge.pmd.util.DataMap;
 import net.sourceforge.pmd.util.DataMap.DataKey;
-import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 
 /**
@@ -49,11 +49,17 @@ class XmlNodeWrapper implements XmlNode {
         super();
         this.node = domNode;
         this.parser = parser;
+
+        domNode.setUserData(CoordinateXPathFunction.PMD_NODE_USER_DATA, this, null);
+    }
+
+    protected XmlNode wrap(org.w3c.dom.Node domNode) {
+        return parser.wrapDomNode(domNode);
     }
 
     @Override
-    public FileLocation getReportLocation() {
-        return textDoc.toLocation(TextRegion.fromBothOffsets(startOffset, endOffset));
+    public TextRegion getTextRegion() {
+        return TextRegion.fromBothOffsets(startOffset, endOffset);
     }
 
     @Override
@@ -71,7 +77,7 @@ class XmlNodeWrapper implements XmlNode {
         }
         NodeList childNodes = parent.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
-            if (node == childNodes.item(i)) {
+            if (node == childNodes.item(i)) { // NOPMD CompareObjectsWithEquals
                 return i;
             }
         }

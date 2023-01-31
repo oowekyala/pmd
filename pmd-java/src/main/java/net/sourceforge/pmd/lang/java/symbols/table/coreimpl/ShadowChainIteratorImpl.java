@@ -10,7 +10,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.util.IteratorUtil;
 import net.sourceforge.pmd.util.OptionalBool;
 
 class ShadowChainIteratorImpl<S, I>
@@ -34,7 +34,7 @@ class ShadowChainIteratorImpl<S, I>
             done();
             return;
         }
-        assert !next.getResolver().resolveHere(name).isEmpty() : "Shadow iterator stopped on wrong node";
+        assert !next.resolveHere(name).isEmpty() : "Shadow iterator stopped on wrong node";
         setNext(next);
     }
 
@@ -55,7 +55,7 @@ class ShadowChainIteratorImpl<S, I>
 
     @Override
     public List<S> getResults() {
-        return getCurrentValue().getResolver().resolveHere(name);
+        return getCurrentValue().resolveHere(name);
     }
 
     // inclusive of the parameter

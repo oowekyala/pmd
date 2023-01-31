@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.util;
 
+import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -11,23 +13,18 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.lang.document.Chars;
 
 /**
- * A number of String-specific utility methods for use by PMD or its IDE
- * plugins.
+ * String-related utility functions. See also {@link StringUtils}.
  *
  * @author BrianRemedios
- * @deprecated Is internal API
+ * @author Clément Fournier
  */
-@Deprecated
-@InternalApi
 public final class StringUtil {
 
-    private static final String[] EMPTY_STRINGS = new String[0];
 
     private static final Pattern XML_10_INVALID_CHARS = Pattern.compile(
             "\\x00|\\x01|\\x02|\\x03|\\x04|\\x05|\\x06|\\x07|\\x08|"
@@ -36,6 +33,17 @@ public final class StringUtil {
           + "\\x19|\\x1a|\\x1b|\\x1c|\\x1d|\\x1e|\\x1f");
 
     private StringUtil() {
+    }
+
+    public static String inSingleQuotes(String s) {
+        if (s == null) {
+            s = "";
+        }
+        return "'" + s + "'";
+    }
+
+    public static @NonNull String inDoubleQuotes(String expected) {
+        return "\"" + expected + "\"";
     }
 
 
@@ -154,7 +162,7 @@ public final class StringUtil {
      */
     public static StringBuilder append(StringBuilder sb, CharSequence charSeq) {
         if (charSeq instanceof Chars) {
-            ((Chars) charSeq).appendChars(sb, 0, charSeq.length());
+            ((Chars) charSeq).appendChars(sb);
             return sb;
         } else {
             return sb.append(charSeq);
@@ -211,47 +219,6 @@ public final class StringUtil {
         return text;
     }
 
-
-    /**
-     * @param supportUTF8 override the default setting, whether special characters should be replaced with entities (
-     *                    <code>false</code>) or should be included as is ( <code>true</code>).
-     * @deprecated for removal. Use Java's XML implementations, that do the escaping,
-     *             use {@link #removedInvalidXml10Characters(String)} for fixing invalid characters in XML 1.0
-     *             documents or use {@code StringEscapeUtils#escapeXml10(String)} from apache commons-text instead.
-     */
-    @Deprecated
-    public static void appendXmlEscaped(StringBuilder buf, String src, boolean supportUTF8) {
-        char c;
-        int i = 0;
-        while (i < src.length()) {
-            c = src.charAt(i++);
-            if (c > '~') {
-                // 126
-                if (!supportUTF8) {
-                    int codepoint = c;
-                    // surrogate characters are not allowed in XML
-                    if (Character.isHighSurrogate(c)) {
-                        char low = src.charAt(i++);
-                        codepoint = Character.toCodePoint(c, low);
-                    }
-                    buf.append("&#x").append(Integer.toHexString(codepoint)).append(';');
-                } else {
-                    buf.append(c);
-                }
-            } else if (c == '&') {
-                buf.append("&amp;");
-            } else if (c == '"') {
-                buf.append("&quot;");
-            } else if (c == '<') {
-                buf.append("&lt;");
-            } else if (c == '>') {
-                buf.append("&gt;");
-            } else {
-                buf.append(c);
-            }
-        }
-    }
-
     /**
      * Remove characters, that are not allowed in XML 1.0 documents.
      *
@@ -291,75 +258,79 @@ public final class StringUtil {
      * leading characters can be removed to shift all the text in the strings to
      * the left without misaligning them.
      *
-     * @throws NullPointerException If the parameter is null
-     */
-    public static int maxCommonLeadingWhitespaceForAll(String[] strings) {
-
-        int shortest = lengthOfShortestIn(strings);
-        if (shortest == 0) {
-            return 0;
-        }
-
-        char[] matches = new char[shortest];
-
-        for (int m = 0; m < matches.length; m++) {
-            matches[m] = strings[0].charAt(m);
-            if (!Character.isWhitespace(matches[m])) {
-                return m;
-            }
-            for (String str : strings) {
-                if (str.charAt(m) != matches[m]) {
-                    return m;
-                }
-            }
-        }
-
-        return shortest;
-    }
-
-
-    /**
-     * Return the length of the shortest string in the array. If the collection
-     * is empty or any one of them is null then it returns 0.
+     * <p>Note: the spec is described in
+     * <a href='https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/String.html#stripIndent()'>String#stripIndent</a>
+     *
+     * <quote>
+     * The minimum indentation (min) is determined as follows:
+     * <ul>
+     *     <li>For each non-blank line (as defined by isBlank()), the leading white space characters are counted.
+     *     <li>The leading white space characters on the last line are also counted even if blank.
+     * </ul>
+     * The min value is the smallest of these counts.
+     * </quote>
      *
      * @throws NullPointerException If the parameter is null
      */
-    public static int lengthOfShortestIn(String[] strings) {
-
-        if (strings.length == 0) {
-            return 0;
-        }
-
-        int minLength = Integer.MAX_VALUE;
-
-        for (String string : strings) {
-            if (string == null) {
-                return 0;
+    private static int maxCommonLeadingWhitespaceForAll(List<? extends CharSequence> lines) {
+        int maxCommonWs = Integer.MAX_VALUE;
+        for (int i = 0; i < lines.size(); i++) {
+            CharSequence line = lines.get(i);
+            // compute common prefix
+            if (!StringUtils.isBlank(line) || i == lines.size() - 1) {
+                maxCommonWs = Math.min(maxCommonWs, countLeadingWhitespace(line));
             }
-            minLength = Math.min(minLength, string.length());
         }
+        if (maxCommonWs == Integer.MAX_VALUE) {
+            // common prefix not found
+            maxCommonWs = 0;
+        }
+        return maxCommonWs;
+    }
 
-        return minLength;
+    /**
+     * Returns a list of
+     */
+    public static List<Chars> linesWithTrimIndent(String source) {
+        List<String> lines = Arrays.asList(source.split("\n"));
+        List<Chars> result = lines.stream().map(Chars::wrap).collect(CollectionUtil.toMutableList());
+        trimIndentInPlace(result);
+        return result;
+    }
+
+    /**
+     * Trim the common indentation of each line in place in the input list.
+     * Trailing whitespace is removed on each line. Note that blank lines do
+     * not count towards computing the max common indentation, except
+     * the last one.
+     *
+     * @param lines mutable list
+     */
+    public static void trimIndentInPlace(List<Chars> lines) {
+        int trimDepth = maxCommonLeadingWhitespaceForAll(lines);
+        lines.replaceAll(chars -> chars.length() >= trimDepth
+                                  ? chars.subSequence(trimDepth).trimEnd()
+                                  : chars.trimEnd());
+    }
+
+    /**
+     * Trim common indentation in the lines of the string. Like
+     * {@link #trimIndentInPlace(List)} called with the list of lines
+     * and joined with {@code \n}.
+     */
+    public static StringBuilder trimIndent(Chars string) {
+        List<Chars> lines = string.lineStream().collect(CollectionUtil.toMutableList());
+        trimIndentInPlace(lines);
+        return CollectionUtil.joinCharsIntoStringBuilder(lines, "\n");
     }
 
 
-    /**
-     * Trims off the leading characters off the strings up to the trimDepth
-     * specified. Returns the same strings if trimDepth = 0
-     *
-     * @return String[]
-     */
-    public static String[] trimStartOn(String[] strings, int trimDepth) {
-
-        if (trimDepth == 0) {
-            return strings;
+    private static int countLeadingWhitespace(CharSequence s) {
+        int count = 0;
+        while (count < s.length() && Character.isWhitespace(s.charAt(count))) {
+            count++;
         }
-
-        String[] results = new String[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            results[i] = strings[i].substring(trimDepth);
-        }
-        return results;
+        return count;
     }
 
 
@@ -425,14 +396,50 @@ public final class StringUtil {
         return sb.toString();
     }
 
+    /**
+     * If the string starts and ends with the delimiter, returns the substring
+     * within the delimiters. Otherwise returns the original string. The
+     * start and end delimiter must be 2 separate instances.
+     * <pre>{@code
+     * removeSurrounding("",     _ )  = ""
+     * removeSurrounding("q",   'q')  = "q"
+     * removeSurrounding("qq",  'q')  = ""
+     * removeSurrounding("q_q", 'q')  = "_"
+     * }</pre>
+     */
+    public static String removeSurrounding(String string, char delimiter) {
+        if (string.length() >= 2
+            && string.charAt(0) == delimiter
+            && string.charAt(string.length() - 1) == delimiter) {
+            return string.substring(1, string.length() - 1);
+        }
+        return string;
+    }
 
     /**
-     * Returns an empty array of string
-     *
-     * @return String
+     * Like {@link #removeSurrounding(String, char) removeSurrounding} with
+     * a double quote as a delimiter.
      */
-    public static String[] getEmptyStrings() {
-        return EMPTY_STRINGS;
+    public static String removeDoubleQuotes(String string) {
+        return removeSurrounding(string, '"');
+    }
+
+    /**
+     * Truncate the given string to some maximum length. If it needs
+     * truncation, the ellipsis string is appended. The length of the
+     * returned string is always lower-or-equal to the maxOutputLength,
+     * even when truncation occurs.
+     */
+    public static String elide(String string, int maxOutputLength, String ellipsis) {
+        AssertionUtil.requireNonNegative("maxOutputLength", maxOutputLength);
+        if (ellipsis.length() > maxOutputLength) {
+            throw new IllegalArgumentException("Ellipsis too long '" + ellipsis + "', maxOutputLength=" + maxOutputLength);
+        }
+        if (string.length() <= maxOutputLength) {
+            return string;
+        }
+        String truncated = string.substring(0, maxOutputLength - ellipsis.length());
+        return truncated + ellipsis;
     }
 
 
@@ -484,31 +491,18 @@ public final class StringUtil {
         return retval.toString();
     }
 
-
     /**
-     * Truncate the string to the given maximum length. If it is truncated,
-     * the ellipsis string is appended to it.
-     *
-     * @param str      String to truncate
-     * @param maxWidth Maximum width
-     * @param ellipsis Ellipsis to append to the string when the string
-     *                 is truncated (eg {@code ...})
-     *
-     * @return A truncated string, with at most length {@code maxWidth}
+     * Escape the string so that it appears literally when interpreted
+     * by a {@link MessageFormat}.
      */
-    public static String truncate(String str, int maxWidth, String ellipsis) {
-        AssertionUtil.requireParamNotNull("str", str);
-        AssertionUtil.requireParamNotNull("ellipsis", ellipsis);
-        AssertionUtil.requireNonNegative("maximum width", maxWidth);
-        if (maxWidth < ellipsis.length()) {
-            throw AssertionUtil.mustBe("Ellipsis length", ellipsis, "smaller than maxWidth (" + maxWidth + ")");
-        }
+    public static String quoteMessageFormat(String str) {
+        return str.replaceAll("'", "''");
+    }
 
-        if (str.length() > maxWidth) {
-            final int ix = Math.max(maxWidth - ellipsis.length(), 0);
-            return str.substring(0, ix) + ellipsis;
-        }
-        return str;
+
+    /** Return the empty string if the parameter is null. */
+    public static String nullToEmpty(final String value) {
+        return value == null ? "" : value;
     }
 
 

@@ -4,15 +4,25 @@
 package net.sourceforge.pmd.lang.ast.test
 
 import net.sourceforge.pmd.*
-import net.sourceforge.pmd.lang.*
-import net.sourceforge.pmd.lang.ast.*
+import net.sourceforge.pmd.internal.util.IOUtil
+import net.sourceforge.pmd.lang.Language
+import net.sourceforge.pmd.lang.LanguageRegistry
+import net.sourceforge.pmd.lang.LanguageVersion
+import net.sourceforge.pmd.lang.LanguageVersionHandler
+import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.Parser
+import net.sourceforge.pmd.lang.ast.RootNode
+import net.sourceforge.pmd.lang.ast.SemanticErrorReporter
+import net.sourceforge.pmd.lang.document.TextDocument
+import net.sourceforge.pmd.lang.document.TextFile
+import net.sourceforge.pmd.lang.rule.XPathRule
+import net.sourceforge.pmd.lang.rule.xpath.XPathVersion
 import net.sourceforge.pmd.processor.AbstractPMDProcessor
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener
-import net.sourceforge.pmd.util.document.TextDocument
-import net.sourceforge.pmd.util.document.TextFile
-import org.apache.commons.io.IOUtils
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Language-independent base for a parser utils class.
@@ -25,19 +35,17 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
 ) {
 
     data class Params(
-            val doProcess: Boolean,
-            val defaultVerString: String?,
-            val resourceLoader: Class<*>?,
-            val resourcePrefix: String,
-            val parserOptions: ParserOptions? = null
+        val doProcess: Boolean,
+        val defaultVerString: String?,
+        val resourceLoader: Class<*>?,
+        val resourcePrefix: String,
+        val languageRegistry: LanguageRegistry = LanguageRegistry.PMD,
+        val suppressMarker: String = PMD.SUPPRESS_MARKER,
     ) {
         companion object {
 
             @JvmStatic
-            val defaultNoProcess = Params(false, null, null, "")
-
-            @JvmStatic
-            val defaultProcess = Params(true, null, null, "")
+            val default = Params(true, null, null, "")
 
         }
     }
@@ -56,12 +64,18 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
     fun getVersion(version: String?): LanguageVersion {
         val language = language
         return if (version == null) language.defaultVersion
-               else language.getVersion(version) ?: throw AssertionError("Unsupported version $version for language $language")
+        else language.getVersion(version)
+            ?: throw AssertionError("Unsupported version $version for language $language")
     }
 
-    private val language: Language
-        get() = LanguageRegistry.getLanguage(langName)
-                ?: throw AssertionError("'$langName' is not a supported language (available ${LanguageRegistry.getLanguages()})")
+    val language: Language
+        get() =
+            params.languageRegistry.getLanguageByFullName(langName)
+                ?: run {
+                    val langNames = params.languageRegistry.commaSeparatedList { it.name }
+                    throw AssertionError("'$langName' is not a supported language (available $langNames)")
+                }
+
 
     val defaultVersion: LanguageVersion
         get() = getVersion(params.defaultVerString)
@@ -70,8 +84,8 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
     protected abstract fun clone(params: Params): Self
 
     @JvmOverloads
-    fun withProcessing(boolean: Boolean = true): Self =
-            clone(params.copy(doProcess = boolean))
+    fun withProcessing(doProcess: Boolean = true): Self =
+        clone(params.copy(doProcess = doProcess))
 
     /**
      * Returns an instance of [Self] for which all parsing methods
@@ -80,7 +94,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      * defined by the language module is used instead.
      */
     fun withDefaultVersion(version: String?): Self =
-            clone(params.copy(defaultVerString = version))
+        clone(params.copy(defaultVerString = version))
 
     /**
      * Returns an instance of [Self] for which [parseResource] uses
@@ -91,13 +105,12 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
             clone(params.copy(resourceLoader = contextClass, resourcePrefix = resourcePrefix))
 
 
-    /**
-     * Returns an instance of [Self] for which the [parse] methods use
-     * the provided [parserOptions].
-     */
-    fun withParserOptions(parserOptions: ParserOptions?): Self =
-            clone(params.copy(parserOptions = parserOptions))
+    fun withLanguageRegistry(languageRegistry: LanguageRegistry): Self =
+            clone(params.copy(languageRegistry = languageRegistry))
 
+
+    fun withSuppressMarker(marker: String): Self =
+            clone(params.copy(suppressMarker = marker))
 
     fun getHandler(version: String): LanguageVersionHandler {
         return getVersion(version).languageVersionHandler
@@ -117,42 +130,25 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      * so.
      */
     @JvmOverloads
-    fun parse(sourceCode: String, version: String? = null): T {
+    open fun parse(
+        sourceCode: String,
+        version: String? = null,
+        fileName: String = TextFile.UNKNOWN_FILENAME
+    ): T {
         val lversion = if (version == null) defaultVersion else getVersion(version)
         val handler = lversion.languageVersionHandler
-        val options = params.parserOptions ?: handler.defaultParserOptions
-        val parser = handler.getParser(options)
-        val textDoc = TextDocument.readOnlyString(sourceCode, TextFile.UNKNOWN_FILENAME, lversion)
-        val task = Parser.ParserTask(textDoc, SemanticErrorReporter.noop(), options.suppressMarker)
-        val rootNode = rootClass.cast(parser.parse(task))
-        if (params.doProcess) {
-            postProcessing(handler, lversion, rootNode)
+        val textDoc = TextDocument.readOnlyString(sourceCode, fileName, lversion)
+        val task = Parser.ParserTask(textDoc, SemanticErrorReporter.noop())
+        task.properties.also {
+            handler.declareParserTaskProperties(it)
+            it.setProperty(Parser.ParserTask.COMMENT_MARKER, params.suppressMarker)
         }
-        return rootNode
+        return doParse(params, task)
     }
 
-    /**
-     * Select the processing stages that this should run in [postProcessing],
-     * by default runs everything.
-     */
-    protected open fun selectProcessingStages(handler: LanguageVersionHandler): List<AstProcessingStage<*>> =
-            handler.processingStages
-
-    /**
-     * Called only if [Params.doProcess] is true.
-     */
-    protected open fun postProcessing(handler: LanguageVersionHandler, lversion: LanguageVersion, rootNode: T) {
-        val astAnalysisContext = object : AstAnalysisContext {
-            override fun getTypeResolutionClassLoader(): ClassLoader = javaClass.classLoader
-
-            override fun getLanguageVersion(): LanguageVersion = lversion
-        }
-
-        val stages = selectProcessingStages(handler).sortedWith(Comparator { o1, o2 -> o1.compare(o2) })
-
-        stages.forEach {
-            it.processAST(rootNode, astAnalysisContext)
-        }
+    protected open fun doParse(params: Params, task: Parser.ParserTask): T {
+        val parser = task.languageVersion.languageVersionHandler.parser
+        return rootClass.cast(parser.parse(task))
     }
 
     /**
@@ -162,7 +158,14 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      */
     @JvmOverloads
     open fun parseResource(resource: String, version: String? = null): T =
-            parse(readResource(resource), version)
+        parse(readResource(resource), version, fileName = resource)
+
+    /**
+     * Fetches and [parse]s the [path].
+     */
+    @JvmOverloads
+    open fun parseFile(path: Path, version: String? = null): T =
+            parse(IOUtil.readToString(Files.newBufferedReader(path)), version, fileName = path.toAbsolutePath().toString())
 
     /**
      * Fetches the source of the given [clazz].
@@ -180,7 +183,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
     }
 
     private fun consume(input: InputStream) =
-            IOUtils.toString(input, StandardCharsets.UTF_8)
+            IOUtil.readToString(input, StandardCharsets.UTF_8)
                     .replace(Regex("\\R"), "\n")  // normalize line-endings
 
     /**
@@ -205,36 +208,52 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
         return consume(input)
     }
 
+    @JvmOverloads
+    fun newXpathRule(expr: String, version: XPathVersion = XPathVersion.DEFAULT) =
+        XPathRule(version, expr).apply {
+            language = this@BaseParsingHelper.language
+            message = "XPath Rule Failed"
+        }
 
     /**
      * Execute the given [rule] on the [code]. Produce a report with the violations
      * found by the rule. The language version of the piece of code is determined by the [params].
      */
     @JvmOverloads
-    fun executeRule(rule: Rule, code: String, filename: String = "testfile.${language.extensions[0]}"): Report {
-        val rules = RulesetsFactoryUtils.defaultFactory().createSingleRuleRuleSet(rule)
-
-        val configuration = PMDConfiguration()
-        configuration.setDefaultLanguageVersion(defaultVersion)
-        configuration.suppressMarker = params.parserOptions?.suppressMarker ?: PMD.SUPPRESS_MARKER
+    fun executeRule(
+        rule: Rule,
+        code: String,
+        fileName: String = "testfile.${language.extensions[0]}"
+    ): Report {
+        if (rule.language == null)
+            rule.language = language
+        val config = PMDConfiguration().apply {
+            suppressMarker = params.suppressMarker
+            setDefaultLanguageVersion(defaultVersion)
+        }
 
         val reportBuilder = Report.GlobalReportBuilderListener()
         val fullListener = GlobalAnalysisListener.tee(listOf(GlobalAnalysisListener.exceptionThrower(), reportBuilder))
 
+
         AbstractPMDProcessor.runSingleFile(
-                listOf(rules),
-                TextFile.forCharSeq(code, "testFile", getVersion(null)),
-                fullListener,
-                configuration
+            listOf(RuleSet.forSingleRule(rule)),
+            TextFile.forCharSeq(code, fileName, defaultVersion),
+            fullListener,
+            config
         )
 
         fullListener.close()
-
         return reportBuilder.result
     }
 
     fun executeRuleOnResource(rule: Rule, resourcePath: String): Report =
-            executeRule(rule, readResource(resourcePath))
+        executeRule(rule, code = readResource(resourcePath))
 
-
+    fun executeRuleOnFile(rule: Rule, path: Path): Report =
+        executeRule(
+            rule,
+            code = Files.newBufferedReader(path).readText(),
+            fileName = path.toString()
+        )
 }

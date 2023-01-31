@@ -8,18 +8,15 @@ package net.sourceforge.pmd.lang.ast.impl.javacc;
 import java.io.EOFException;
 
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument.TokenDocumentBehavior;
-import net.sourceforge.pmd.lang.ast.impl.javacc.io.MalformedSourceException;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.FileLocation;
-import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.FileLocation;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 /**
  * PMD flavour of character streams used by JavaCC parsers.
  */
 public final class CharStream {
-
-    private static final EOFException EOF = new EOFException();
 
     private final JavaccTokenDocument tokenDoc;
     private final TextDocument textDoc;
@@ -36,8 +33,9 @@ public final class CharStream {
     }
 
     /**
-     * Create a new char stream for the given document. Note: this
-     * mutates the token document by translating its escapes.
+     * Create a new char stream for the given document. This may create
+     * a new {@link TextDocument} view over the original, which reflects
+     * its character escapes.
      */
     public static CharStream create(TextDocument doc, TokenDocumentBehavior behavior) throws MalformedSourceException {
         TextDocument translated = behavior.translate(doc);
@@ -54,7 +52,7 @@ public final class CharStream {
      */
     public char readChar() throws EOFException {
         if (curOffset == chars.length()) {
-            throw EOF;
+            throw new EOFException();
         }
         return chars.charAt(curOffset++);
     }

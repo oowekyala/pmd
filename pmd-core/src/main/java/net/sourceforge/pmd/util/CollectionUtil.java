@@ -4,23 +4,26 @@
 
 package net.sourceforge.pmd.util;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyIterator;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.emptySet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -30,73 +33,25 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.ConsPStack;
 import org.pcollections.HashTreePSet;
-import org.pcollections.MapPSet;
 import org.pcollections.PMap;
+import org.pcollections.PSequence;
 import org.pcollections.PSet;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
+import net.sourceforge.pmd.lang.document.Chars;
 
 /**
- * Generic collection and array-related utility functions for java.util types.
- * See ClassUtil for comparable facilities for short name lookup.
+ * Generic collection-related utility functions for java.util types.
  *
  * @author Brian Remedios
- * @version $Revision$
- * @deprecated Is internal API
+ * @author Clément Fournier
  */
-@Deprecated
-@InternalApi
 public final class CollectionUtil {
+
     private static final int UNKNOWN_SIZE = -1;
 
-    @SuppressWarnings("PMD.UnnecessaryFullyQualifiedName")
-    public static final Set<String> COLLECTION_INTERFACES_BY_NAMES = collectionTypes(List.class, Collection.class, Map.class, Set.class);
-
-    @SuppressWarnings({"PMD.LooseCoupling", "PMD.UnnecessaryFullyQualifiedName"})
-    public static final Set<String> COLLECTION_CLASSES_BY_NAMES
-        = collectionTypes(ArrayList.class, java.util.LinkedList.class, java.util.Vector.class, HashMap.class,
-                          java.util.LinkedHashMap.class, java.util.TreeMap.class, java.util.TreeSet.class,
-                          HashSet.class, java.util.LinkedHashSet.class, java.util.Hashtable.class);
-
-
     private CollectionUtil() {
-    }
-
-    private static Set<String> collectionTypes(Class<?>... types) {
-        Set<String> set = new HashSet<>();
-
-        for (Class<?> type : types) {
-            if (!set.add(type.getSimpleName()) || !set.add(type.getName())) {
-                throw new IllegalArgumentException("Duplicate or name collision for " + type);
-            }
-        }
-
-        return set;
-    }
-
-    /**
-     * Return whether we can identify the typeName as a java.util collection
-     * class or interface as specified.
-     *
-     * @param typeName
-     *            String
-     * @param includeInterfaces
-     *            boolean
-     * @return boolean
-     *
-     * @deprecated Will be replaced with type resolution
-     */
-    @Deprecated
-    public static boolean isCollectionType(String typeName, boolean includeInterfaces) {
-
-        if (COLLECTION_CLASSES_BY_NAMES.contains(typeName)) {
-            return true;
-        }
-
-        return includeInterfaces && COLLECTION_INTERFACES_BY_NAMES.contains(typeName);
     }
 
     /**
@@ -142,7 +97,6 @@ public final class CollectionUtil {
     }
 
 
-
     /**
      * Returns a list view that pretends it is the concatenation of
      * both lists. The returned view is unmodifiable. The implementation
@@ -157,9 +111,9 @@ public final class CollectionUtil {
      */
     public static <T> List<T> concatView(List<? extends T> head, List<? extends T> tail) {
         if (head.isEmpty()) {
-            return Collections.unmodifiableList(tail);
+            return makeUnmodifiableAndNonNull(tail);
         } else if (tail.isEmpty()) {
-            return Collections.unmodifiableList(head);
+            return makeUnmodifiableAndNonNull(head);
         } else {
             return new ConsList<>(head, tail);
         }
@@ -251,16 +205,50 @@ public final class CollectionUtil {
         return Collections.unmodifiableSet(union);
     }
 
+    /**
+     * Returns an unmodifiable set containing the given elements.
+     *
+     * @param first First element
+     * @param rest  Following elements
+     */
+    @SafeVarargs
+    public static <T extends Enum<T>> Set<T> immutableEnumSet(T first, T... rest) {
+        return Collections.unmodifiableSet(EnumSet.of(first, rest));
+    }
+
 
     @SafeVarargs
     public static <T> List<T> listOf(T first, T... rest) {
         if (rest.length == 0) {
-            return Collections.singletonList(first);
+            return ConsPStack.singleton(first);
         }
         List<T> union = new ArrayList<>();
         union.add(first);
-        union.addAll(Arrays.asList(rest));
+        union.addAll(asList(rest));
         return Collections.unmodifiableList(union);
+    }
+
+    public static <K, V> Map<K, V> mapOf(K k0, V v0) {
+        return Collections.singletonMap(k0, v0);
+    }
+
+    public static <K, V> Map<K, V> mapOf(K k1, V v1, K k2, V v2) {
+        Map<K, V> map = new LinkedHashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        return Collections.unmodifiableMap(map);
+    }
+
+    public static <K, V> Map<K, V> buildMap(Consumer<Map<K, V>> effect) {
+        Map<K, V> map = new LinkedHashMap<>();
+        effect.accept(map);
+        return Collections.unmodifiableMap(map);
+    }
+
+    public static <K, V> Map<K, V> buildMap(Map<K, V> initialMap, Consumer<Map<K, V>> effect) {
+        Map<K, V> map = new LinkedHashMap<>(initialMap);
+        effect.accept(map);
+        return Collections.unmodifiableMap(map);
     }
 
     public static <T, R> List<@NonNull R> mapNotNull(Iterable<? extends T> from, Function<? super T, ? extends @Nullable R> f) {
@@ -289,9 +277,46 @@ public final class CollectionUtil {
         if (m.isEmpty()) {
             return Collections.singletonMap(k, v);
         }
-        HashMap<K, V> newM = new HashMap<>(m);
+        Map<K, V> newM = new HashMap<>(m);
         newM.put(k, v);
         return newM;
+    }
+
+    /**
+     * Produce a new list with the elements of the first, and one additional
+     * item. The returned list is immutable.
+     */
+    public static <V> List<V> plus(List<V> list, V v) {
+        if (list instanceof PSequence) {
+            return ((PSequence<V>) list).plus(v);
+        } else if (list.isEmpty()) {
+            return ConsPStack.singleton(v);
+        }
+        return ConsPStack.from(list).plus(v);
+    }
+
+    /** Returns the empty list. */
+    public static <V> List<V> emptyList() {
+        // We use this implementation so that it plays well with other
+        // operations that expect immutable data.
+        return ConsPStack.empty();
+    }
+
+    /**
+     * Returns an unmodifiable set containing the set union of the collection,
+     * and the new elements.
+     */
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public static <V> Set<V> setUnion(Collection<? extends V> set, V first, V... newElements) {
+        if (set instanceof PSet) {
+            return ((PSet<V>) set).plus(first).plusAll(asList(newElements));
+        }
+        Set<V> newSet = new LinkedHashSet<>(set.size() + 1 + newElements.length);
+        newSet.addAll(set);
+        newSet.add(first);
+        Collections.addAll(newSet, newElements);
+        return Collections.unmodifiableSet(newSet);
     }
 
 
@@ -308,7 +333,7 @@ public final class CollectionUtil {
         AssertionUtil.requireParamNotNull("values", to);
         Validate.isTrue(from.size() == to.size(), "Mismatched list sizes %s to %s", from, to);
 
-        if (from.isEmpty()) {
+        if (from.isEmpty()) { //NOPMD: we really want to compare references here
             return emptyMap();
         }
 
@@ -397,7 +422,7 @@ public final class CollectionUtil {
         if (from == null) {
             return emptyList();
         }
-        return map(Arrays.asList(from), f);
+        return map(asList(from), f);
     }
 
     /**
@@ -415,7 +440,7 @@ public final class CollectionUtil {
         if (!from.hasNext()) {
             return emptyList();
         } else if (sizeHint == 1) {
-            return Collections.singletonList(f.apply(from.next()));
+            return ConsPStack.singleton(f.apply(from.next()));
         }
         List<R> res = sizeHint == UNKNOWN_SIZE ? new ArrayList<>() : new ArrayList<>(sizeHint);
         while (from.hasNext()) {
@@ -466,12 +491,12 @@ public final class CollectionUtil {
     /**
      * A collector that returns a mutable set. This contrasts with
      * {@link Collectors#toSet()}, which makes no guarantee about the
-     * mutability of the set.
+     * mutability of the set. The set preserves insertion order.
      *
      * @param <T> Type of accumulated values
      */
     public static <T> Collector<T, ?, Set<T>> toMutableSet() {
-        return Collectors.toCollection(HashSet::new);
+        return Collectors.toCollection(LinkedHashSet::new);
     }
 
     /**
@@ -487,13 +512,26 @@ public final class CollectionUtil {
     }
 
     /**
+     * A collector that returns an unmodifiable set. This contrasts with
+     * {@link Collectors#toSet()}, which makes no guarantee about the
+     * mutability of the set. {@code Collectors::toUnmodifiableSet} was
+     * only added in JDK 9. The set preserves insertion order.
+     *
+     * @param <T> Type of accumulated values
+     */
+    public static <T> Collector<T, ?, Set<T>> toUnmodifiableSet() {
+        return Collectors.collectingAndThen(toMutableSet(), Collections::unmodifiableSet);
+    }
+
+    /**
      * A collectors that accumulates into a persistent set.
      *
      * @param <T> Type of accumulated values
      */
     public static <T> Collector<T, ?, PSet<T>> toPersistentSet() {
         class Holder {
-            MapPSet<T> set = HashTreePSet.empty();
+
+            PSet<T> set = HashTreePSet.empty();
         }
 
         return Collector.of(
@@ -533,7 +571,7 @@ public final class CollectionUtil {
 
 
     public static <T> List<T> listOfNotNull(T t) {
-        return t == null ? emptyList() : singletonList(t);
+        return t == null ? emptyList() : ConsPStack.singleton(t);
     }
 
     /**
@@ -570,5 +608,82 @@ public final class CollectionUtil {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns an unmodifiable copy of the list. This is to be preferred
+     * to {@link Collections#unmodifiableList(List)} if you don't trust
+     * the source of the list, because no one holds a reference to the buffer
+     * except the returned unmodifiable list.
+     *
+     * @param list A list
+     * @param <T>  Type of items
+     */
+    public static <T> List<T> defensiveUnmodifiableCopy(List<? extends T> list) {
+        if (list instanceof PSequence) {
+            return (List<T>) list; // is already immutable
+        }
+        if (list.isEmpty()) {
+            return ConsPStack.empty();
+        } else if (list.size() == 1) {
+            return ConsPStack.singleton(list.get(0));
+        }
+        return ConsPStack.from(list);
+    }
+
+    public static <T> Set<T> defensiveUnmodifiableCopyToSet(Collection<? extends T> list) {
+        if (list.isEmpty()) {
+            return emptySet();
+        }
+        return Collections.unmodifiableSet(new LinkedHashSet<>(list));
+    }
+
+    /**
+     * Like {@link String#join(CharSequence, Iterable)}, except it appends
+     * on a preexisting {@link StringBuilder}. The result value is that StringBuilder.
+     */
+    public static <T> StringBuilder joinOn(StringBuilder sb,
+                                           Iterable<? extends T> iterable,
+                                           BiConsumer<? super StringBuilder, ? super T> appendItem,
+                                           String delimiter) {
+        boolean first = true;
+        for (T t : iterable) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(delimiter);
+            }
+            appendItem.accept(sb, t);
+        }
+        return sb;
+    }
+
+    public static @NonNull StringBuilder joinCharsIntoStringBuilder(List<Chars> lines, String delimiter) {
+        return joinOn(
+            new StringBuilder(),
+            lines,
+            (buf, line) -> line.appendChars(buf),
+            delimiter
+        );
+    }
+
+
+    /**
+     * Merge the second map into the first. If some keys are in common,
+     * merge them using the merge function, like {@link Map#merge(Object, Object, BiFunction)}.
+     */
+    public static <K, V> void mergeMaps(Map<K, V> result, Map<K, V> other, BinaryOperator<V> mergeFun) {
+        for (K otherKey : other.keySet()) {
+            V otherInfo = other.get(otherKey); // non-null
+            result.merge(otherKey, otherInfo, mergeFun);
+        }
+    }
+
+    public static @NonNull <T> List<T> makeUnmodifiableAndNonNull(@Nullable List<? extends T> list) {
+        if (list instanceof PSequence) {
+            return (List<T>) list;
+        }
+        return list == null || list.isEmpty() ? emptyList()
+                                              : Collections.unmodifiableList(list);
     }
 }

@@ -43,7 +43,7 @@ class SubstTest : ProcessorTestSpec({
         val map = Map::class
 
         // assert the form of the type
-        fieldT.typeMirror shouldBe with (typeDsl) {
+        fieldT shouldHaveType with (typeDsl) {
             map[map[k, f], map[f, c]]
         }
 
@@ -107,6 +107,24 @@ class SubstTest : ProcessorTestSpec({
             ))
 
             composed(`t_List{A}`) shouldBe `t_List{Iter{t_Coll{C}}}`
+        }
+
+
+    }
+
+    parserTest("Test subst toString") {
+
+
+        val (a, b, c) = makeDummyTVars("A", "B", "C")
+
+        with(TypeDslOf(a.typeSystem)) {
+            val `t_Iter{B}` = Iterable::class[b]
+            val `t_Coll{C}` = Collection::class[c]
+
+
+            val sub1 = subOf(a to `t_Iter{B}`, b to `t_Coll{C}`)
+
+            sub1.toString() shouldBe "Substitution[A => java.lang.Iterable<B>; B => java.util.Collection<C>]"
         }
 
 

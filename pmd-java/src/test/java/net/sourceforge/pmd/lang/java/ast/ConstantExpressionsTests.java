@@ -5,21 +5,19 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
-import net.sourceforge.pmd.lang.java.symboltable.BaseNonParserTest;
+import net.sourceforge.pmd.lang.java.BaseParserTest;
 
-public class ConstantExpressionsTests extends BaseNonParserTest {
+class ConstantExpressionsTests extends BaseParserTest {
 
     private Executable isConst(String expr, Object value) {
         return () -> {
-            ASTCompilationUnit ast = java.parse("class Foo {{ Object o = (" + expr + "); }}");
-
-            ASTExpression e = ast.descendants(ASTExpression.class).crossFindBoundaries().firstOrThrow();
+            ASTExpression e = parseExpr(expr);
 
             assertEquals(value, e.getConstValue(), "Constant value of '" + expr + "'");
 
@@ -31,8 +29,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
     }
 
     @Test
-    public void testUnaries() {
-        Assertions.assertAll(
+    void testUnaries() {
+        assertAll(
             isConst("+1", 1),
             isConst("+1L", 1L),
             isConst("-1L", -1L),
@@ -55,8 +53,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public void testCasts() {
-        Assertions.assertAll(
+    void testCasts() {
+        assertAll(
             isConst("+1", 1),
             isConst("(long) +1", 1L),
             isConst("(long) 'c'", (long) 'c'),
@@ -78,8 +76,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public void testShortcutBoolean() {
-        Assertions.assertAll(
+    void testShortcutBoolean() {
+        assertAll(
             isConst("true && true", true),
             isConst("true && false", false),
             isConst("false && true", false),
@@ -107,8 +105,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public strictfp void testBitwise() {
-        Assertions.assertAll(
+    strictfp void testBitwise() {
+        assertAll(
 
             isConst("~1 ^ ~8", ~1 ^ ~8),
             isConst("~1 ^ ~8L", ~1 ^ ~8L),
@@ -146,8 +144,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
     }
 
     @Test
-    public void testShifts() {
-        Assertions.assertAll(
+    void testShifts() {
+        assertAll(
             isConst("1 << 2", 1 << 2),
             isConst("1 << 2L", 1 << 2L),
             isConst("1L << 2L", 1L << 2L),
@@ -176,8 +174,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public void testAdditives() {
-        Assertions.assertAll(
+    void testAdditives() {
+        assertAll(
             isConst("1 + 2", 3),
             isConst("1 + ~2", 1 + ~2),
             isConst("1 - 2", -1),
@@ -206,8 +204,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public strictfp void testMult() {
-        Assertions.assertAll(
+    strictfp void testMult() {
+        assertAll(
             isConst("1 * 2.0", 1 * 2.0),
             isConst("1L * 2", 2L),
             isConst("1L * 2F", 1L * 2F),
@@ -246,8 +244,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
     }
 
     @Test
-    public strictfp void testRelationals() {
-        Assertions.assertAll(
+    strictfp void testRelationals() {
+        assertAll(
             isConst("1 <= 2L", true),
             isConst("2 <= 2d", true),
             isConst("'c' <= 6", false),
@@ -286,8 +284,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
     }
 
     @Test
-    public strictfp void testEquality() {
-        Assertions.assertAll(
+    strictfp void testEquality() {
+        assertAll(
             isConst("1 == 2", false),
             isConst("2 != 2d", false),
             isConst("'x' != (int) 'x'", false),
@@ -301,8 +299,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
     }
 
     @Test
-    public strictfp void testConditionals() {
-        Assertions.assertAll(
+    strictfp void testConditionals() {
+        assertAll(
             isConst("true ? 1 + 2 : 4", 3),
             isConst("false ? 1 + 2 : 4", 4),
             isConst("1 == 2 ? 1 + 2 : 4", 4),
@@ -318,8 +316,8 @@ public class ConstantExpressionsTests extends BaseNonParserTest {
 
 
     @Test
-    public strictfp void testConstFields() {
-        Assertions.assertAll(
+    strictfp void testConstFields() {
+        assertAll(
             isConst("Math.PI", Math.PI),
             isConst("Math.PI > 3", true),
 

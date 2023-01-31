@@ -4,17 +4,16 @@
 
 package net.sourceforge.pmd.lang;
 
-import static java.util.Collections.emptyList;
-
+import java.util.Collections;
 import java.util.List;
 
+import net.sourceforge.pmd.ViolationSuppressor;
 import net.sourceforge.pmd.annotation.Experimental;
-import net.sourceforge.pmd.lang.ast.AstProcessingStage;
 import net.sourceforge.pmd.lang.ast.Parser;
 import net.sourceforge.pmd.lang.metrics.LanguageMetricsProvider;
-import net.sourceforge.pmd.lang.rule.RuleViolationFactory;
-import net.sourceforge.pmd.lang.rule.impl.DefaultRuleViolationFactory;
 import net.sourceforge.pmd.lang.rule.xpath.impl.XPathHandler;
+import net.sourceforge.pmd.properties.PropertySource;
+import net.sourceforge.pmd.reporting.ViolationDecorator;
 import net.sourceforge.pmd.util.designerbindings.DesignerBindings;
 import net.sourceforge.pmd.util.designerbindings.DesignerBindings.DefaultDesignerBindings;
 
@@ -37,44 +36,33 @@ public interface LanguageVersionHandler {
 
 
     /**
-     * Returns the list of all supported optional processing stages.
-     *
-     * @return A list of all optional processing stages.
+     * @deprecated This is transitional
      */
-    @Experimental
-    default List<? extends AstProcessingStage<?>> getProcessingStages() {
-        return emptyList();
+    @Deprecated
+    default void declareParserTaskProperties(PropertySource source) {
+        // do nothing
     }
 
 
     /**
-     * Get the default ParserOptions.
-     *
-     * @return ParserOptions
+     * Returns the parser instance.
      */
-    default ParserOptions getDefaultParserOptions() {
-        return new ParserOptions();
-    }
-
+    Parser getParser();
 
     /**
-     * Get the Parser.
-     *
-     * @return Parser
+     * Returns the language-specific violation decorator.
      */
-    Parser getParser(ParserOptions parserOptions);
-
-
-    default Parser getParser() {
-        return getParser(getDefaultParserOptions());
+    default ViolationDecorator getViolationDecorator() {
+        return ViolationDecorator.noop();
     }
 
-
     /**
-     * Get the RuleViolationFactory.
+     * Returns additional language-specific violation suppressors.
+     * These take precedence over the default suppressors (eg nopmd comment),
+     * but do not replace them.
      */
-    default RuleViolationFactory getRuleViolationFactory() {
-        return DefaultRuleViolationFactory.defaultInstance();
+    default List<ViolationSuppressor> getExtraViolationSuppressors() {
+        return Collections.emptyList();
     }
 
 
@@ -87,7 +75,7 @@ public interface LanguageVersionHandler {
      * instance the return type will probably be changed to an Optional.
      */
     @Experimental
-    default LanguageMetricsProvider<?, ?> getLanguageMetricsProvider() {
+    default LanguageMetricsProvider getLanguageMetricsProvider() {
         return null;
     }
 

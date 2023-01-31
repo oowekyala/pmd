@@ -16,7 +16,10 @@ import org.apache.tools.ant.BuildFileRule;
 import org.apache.tools.ant.Project;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.rules.TemporaryFolder;
+
+import net.sourceforge.pmd.annotation.InternalApi;
 
 
 /**
@@ -30,13 +33,24 @@ import org.junit.rules.TemporaryFolder;
 public abstract class AbstractAntTestHelper {
 
     @Rule
+    @InternalApi
+    @Deprecated
     public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Rule
+    @InternalApi
+    @Deprecated
     public final BuildFileRule buildRule = new BuildFileRule();
+
+    @Rule
+    @InternalApi
+    @Deprecated
+    public final SystemErrRule systemErrRule = new SystemErrRule().muteForSuccessfulTests();
 
     protected String pathToTestScript;
     protected String antTestScriptFilename;
+    @InternalApi
+    @Deprecated
     public String mvnWorkaround;
 
     public AbstractAntTestHelper() {
@@ -87,6 +101,7 @@ public abstract class AbstractAntTestHelper {
 
     public void executeTarget(String target) {
         buildRule.executeTarget(target);
+        System.err.println(buildRule.getLog());
     }
 
     public void assertOutputContaining(String text) {

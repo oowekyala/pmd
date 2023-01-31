@@ -6,46 +6,47 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.java.symboltable.BaseNonParserTest;
+import net.sourceforge.pmd.lang.java.BaseParserTest;
 
-public class CommentAssignmentTest extends BaseNonParserTest {
+class CommentAssignmentTest extends BaseParserTest {
 
     /**
      * Blank lines in comments should not raise an exception. See bug #1048.
      */
     @Test
-    public void testFilteredCommentIn() {
+    void testFilteredCommentIn() {
         ASTCompilationUnit node = java.parse("public class Foo {\n"
                                                  + "     /* multi line comment with blank lines\n\n\n */\n"
                                                  + "        /** a formal comment with blank lines\n\n\n */"
                                                  + "}");
 
-        Comment comment = node.getComments().get(0);
+        JavaComment comment = node.getComments().get(0);
 
         assertFalse(comment.isSingleLine());
         assertFalse(comment.hasJavadocContent());
-        assertEquals("multi line comment with blank lines", StringUtils.join(comment.filteredLines(), ' '));
+        assertEquals("multi line comment with blank lines", StringUtils.join(comment.getFilteredLines(), ' '));
 
         comment = node.getComments().get(1);
         assertFalse(comment.isSingleLine());
         assertTrue(comment.hasJavadocContent());
-        assertThat(comment, instanceOf(FormalComment.class));
-        assertEquals("a formal comment with blank lines", StringUtils.join(comment.filteredLines(), ' '));
+        assertThat(comment, instanceOf(JavadocComment.class));
+        assertEquals("a formal comment with blank lines", StringUtils.join(comment.getFilteredLines(), ' '));
     }
 
 
     @Test
-    public void testCommentAssignments() {
+    void testCommentAssignments() {
 
         ASTCompilationUnit node = java.parse("public class Foo {\n"
                                                  + "     /** Comment 1 */\n"
@@ -62,7 +63,7 @@ public class CommentAssignmentTest extends BaseNonParserTest {
     }
 
     @Test
-    public void testCommentAssignmentsWithAnnotation() {
+    void testCommentAssignmentsWithAnnotation() {
 
         ASTCompilationUnit node = java.parse("public class Foo {\n"
                                                  + "     /** Comment 1 */\n"
@@ -80,7 +81,7 @@ public class CommentAssignmentTest extends BaseNonParserTest {
     }
 
     @Test
-    public void testCommentAssignmentOnPackage() {
+    void testCommentAssignmentOnPackage() {
 
         ASTCompilationUnit node = java.parse("/** Comment 1 */\n"
                                                  + "package bar;\n");
@@ -90,7 +91,7 @@ public class CommentAssignmentTest extends BaseNonParserTest {
     }
 
     @Test
-    public void testCommentAssignmentOnClass() {
+    void testCommentAssignmentOnClass() {
 
         ASTCompilationUnit node = java.parse("/** outer */\n"
                                                  + "class Foo { "
@@ -99,7 +100,7 @@ public class CommentAssignmentTest extends BaseNonParserTest {
                                                  + " /** enum */enum NestedEnum {}"
                                                  + "}");
 
-        List<ASTAnyTypeDeclaration> types = node.descendants(ASTAnyTypeDeclaration.class).toList();
+        List<ASTAnyTypeDeclaration> types = node.descendants(ASTAnyTypeDeclaration.class).crossFindBoundaries().toList();
         assertCommentEquals(types.get(0), "/** outer */");
         assertCommentEquals(types.get(1), "/** inner */");
         assertCommentEquals(types.get(2), "/** local */");
@@ -107,7 +108,7 @@ public class CommentAssignmentTest extends BaseNonParserTest {
     }
 
     @Test
-    public void testCommentAssignmentOnEnum() {
+    void testCommentAssignmentOnEnum() {
 
         ASTCompilationUnit node = java.parse("enum Foo { "
                                                  + " /** A */ A,"
@@ -125,11 +126,11 @@ public class CommentAssignmentTest extends BaseNonParserTest {
 
 
     private void assertCommentEquals(JavadocCommentOwner pack, String expected) {
-        Assert.assertNotNull("null comment on " + pack, pack.getJavadocComment());
-        Assert.assertEquals(expected, pack.getJavadocComment().getText().toString());
+        assertNotNull(pack.getJavadocComment(), "null comment on " + pack);
+        assertEquals(expected, pack.getJavadocComment().getText().toString());
     }
 
     private void assertHasNoComment(JavadocCommentOwner pack) {
-        Assert.assertNull("Expected null comment on " + pack, pack.getJavadocComment());
+        assertNull(pack.getJavadocComment(), "Expected null comment on " + pack);
     }
 }

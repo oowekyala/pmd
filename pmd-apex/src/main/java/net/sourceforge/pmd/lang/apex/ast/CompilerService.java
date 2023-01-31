@@ -7,7 +7,7 @@ package net.sourceforge.pmd.lang.apex.ast;
 import java.util.Collections;
 import java.util.List;
 
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 import apex.jorje.semantic.ast.compilation.Compilation;
 import apex.jorje.semantic.compiler.ApexCompiler;
@@ -93,5 +93,4 @@ class CompilerService {
         return new CompilationInput(sourceFiles, symbolProvider, accessEvaluator, queryValidator, null,
                                     NoopCompilerProgressCallback.get());
     }
-
 }

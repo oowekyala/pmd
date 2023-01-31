@@ -10,35 +10,46 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import net.sourceforge.pmd.PMD;
-import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.PmdAnalysis;
 import net.sourceforge.pmd.Report.ConfigurationError;
 import net.sourceforge.pmd.Report.GlobalReportBuilderListener;
 import net.sourceforge.pmd.Report.ProcessingError;
 import net.sourceforge.pmd.RuleViolation;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.lang.ast.FileAnalysisException;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.BaseResultProducingCloseable;
 import net.sourceforge.pmd.util.CollectionUtil;
-import net.sourceforge.pmd.util.IOUtil;
-import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * Listens to an analysis. This object produces new {@link FileAnalysisListener}
- * for each analysed file, which themselves handle events like violations,
+ * for each analyzed file, which themselves handle events like violations,
  * in their file. Thread-safety is required.
+ * 
+ * The listener may provide a {@link ListenerInitializer} to get context
+ * information on the analysis before events start occurring.
  *
  * <p>Listeners are the main API to obtain results of an analysis. The
- * entry point of the API ({@link PMD#processFiles(PMDConfiguration, List, List, GlobalAnalysisListener) PMD::processFiles})
- * runs a set of rules on a set of files. What happens to events is entirely
- * the concern of the listener.
+ * entry point of the API ({@link PmdAnalysis}) runs a set of rules on
+ * a set of files. What happens to events is entirely the concern of the
+ * listener.
  *
  * <p>A useful kind of listener are the ones produced by {@linkplain Renderer#newListener() renderers}.
  * Another is the {@linkplain GlobalReportBuilderListener report builder}.
  */
 public interface GlobalAnalysisListener extends AutoCloseable {
 
+    /**
+     * Provides an initializer to gather analysis context before events start occurring.
+     * 
+     * @return A listener initializer.
+     */
+    default ListenerInitializer initializer() {
+        return ListenerInitializer.noop();
+    }
+    
     /**
      * Returns a file listener that will handle events occurring during
      * the analysis of the given file. The new listener may receive events
@@ -81,18 +92,11 @@ public interface GlobalAnalysisListener extends AutoCloseable {
         // do nothing
     }
 
+    /**
+     * A listener that does nothing.
+     */
     static GlobalAnalysisListener noop() {
-        return new GlobalAnalysisListener() {
-            @Override
-            public FileAnalysisListener startFileAnalysis(TextFile file) {
-                return FileAnalysisListener.noop();
-            }
-
-            @Override
-            public void close() {
-                // do nothing
-            }
-        };
+        return NoopAnalysisListener.INSTANCE;
     }
 
     /**
@@ -108,12 +112,7 @@ public interface GlobalAnalysisListener extends AutoCloseable {
      */
     static GlobalAnalysisListener tee(Collection<? extends GlobalAnalysisListener> listeners) {
         AssertionUtil.requireParamNotNull("Listeners", listeners);
-        AssertionUtil.requireNotEmpty("Listeners", listeners);
         AssertionUtil.requireContainsNoNullValue("Listeners", listeners);
-
-        if (listeners.size() == 1) {
-            return listeners.iterator().next();
-        }
 
         final class TeeListener implements GlobalAnalysisListener {
 
@@ -121,6 +120,11 @@ public interface GlobalAnalysisListener extends AutoCloseable {
 
             TeeListener(List<GlobalAnalysisListener> myList) {
                 this.myList = myList;
+            }
+            
+            @Override
+            public ListenerInitializer initializer() {
+                return ListenerInitializer.tee(CollectionUtil.map(myList, GlobalAnalysisListener::initializer));
             }
 
             @Override
@@ -141,14 +145,20 @@ public interface GlobalAnalysisListener extends AutoCloseable {
                 return "TeeListener{" + myList + '}';
             }
         }
-
+        
         // Flatten other tee listeners in the list
         // This prevents suppressed exceptions from being chained too deep if they occur in close()
         List<GlobalAnalysisListener> myList =
             listeners.stream()
                      .flatMap(l -> l instanceof TeeListener ? ((TeeListener) l).myList.stream() : Stream.of(l))
+                     .filter(l -> !(l instanceof NoopAnalysisListener))
                      .collect(CollectionUtil.toUnmodifiableList());
-
+        
+        if (myList.isEmpty()) {
+            return noop();
+        } else if (myList.size() == 1) {
+            return myList.iterator().next();
+        }
 
         return new TeeListener(myList);
     }

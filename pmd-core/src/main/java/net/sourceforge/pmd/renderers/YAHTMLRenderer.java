@@ -17,9 +17,11 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
 import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.Report;
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * Renderer to another HTML format.
@@ -48,7 +50,8 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
     }
 
     private void addViolation(RuleViolation violation) {
-        String packageName = violation.getPackageName();
+        String packageName = violation.getAdditionalInfo().getOrDefault(RuleViolation.PACKAGE_NAME, "");
+        String className = violation.getAdditionalInfo().getOrDefault(RuleViolation.CLASS_NAME, "");
 
         // report each part of the package name: e.g. net.sf.pmd.test will create nodes for
         // net, net.sf, net.sf.pmd, and net.sf.pmd.test
@@ -70,10 +73,10 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
         }
 
         // add one node per class collecting the actual violations
-        String fqClassName = packageName + "." + violation.getClassName();
+        String fqClassName = packageName + "." + className;
         ReportNode classNode = reportNodesByPackage.get(fqClassName);
         if (classNode == null) {
-            classNode = new ReportNode(packageName, violation.getClassName());
+            classNode = new ReportNode(packageName, className);
             reportNodesByPackage.put(fqClassName, classNode);
         }
         classNode.addRuleViolation(violation);
@@ -88,7 +91,7 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
     }
 
     @Override
-    public void end() throws IOException {
+    public void outputReport(Report report) throws IOException {
         String outputDir = getProperty(OUTPUT_DIR);
 
         for (RuleViolation ruleViolation : report.getViolations()) {
@@ -162,15 +165,17 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
                     out.println("        <tr><th>Method</th><th>Violation</th></tr>");
                     for (RuleViolation violation : node.getViolations()) {
                         out.print("        <tr><td>");
-                        out.print(violation.getMethodName());
+                        String methodName = violation.getAdditionalInfo().get(RuleViolation.METHOD_NAME);
+                        out.print(StringUtil.nullToEmpty(methodName));
                         out.print("</td><td>");
                         out.print("<table border=\"0\">");
 
                         out.print(renderViolationRow("Rule:", violation.getRule().getName()));
                         out.print(renderViolationRow("Description:", violation.getDescription()));
 
-                        if (StringUtils.isNotBlank(violation.getVariableName())) {
-                            out.print(renderViolationRow("Variable:", violation.getVariableName()));
+                        String variableName = violation.getAdditionalInfo().get(RuleViolation.VARIABLE_NAME);
+                        if (StringUtils.isNotBlank(variableName)) {
+                            out.print(renderViolationRow("Variable:", variableName));
                         }
 
                         out.print(renderViolationRow("Line:", violation.getEndLine() > 0

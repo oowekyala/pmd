@@ -9,14 +9,18 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
 import net.sourceforge.pmd.lang.java.types.JTypeVisitor;
@@ -42,11 +46,22 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
 
     // Equal ivars share the same BoundSet
     private BoundSet boundSet = new BoundSet();
+    private boolean hasNonTrivialBound;
 
     InferenceVar(InferenceContext ctx, JTypeVar tvar, int id) {
         this.ctx = ctx;
         this.tvar = tvar;
         this.id = id;
+    }
+
+    @Override
+    public JTypeMirror withAnnotations(PSet<SymAnnot> newTypeAnnots) {
+        return this;
+    }
+
+    @Override
+    public PSet<SymAnnot> getTypeAnnotations() {
+        return HashTreePSet.empty();
     }
 
     public String getName() {
@@ -82,10 +97,20 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
      * Adds a new bound on this variable.
      */
     public void addBound(BoundKind kind, JTypeMirror type) {
+        this.hasNonTrivialBound = true;
         addBound(kind, type, false);
     }
 
-    public void addBound(BoundKind kind, JTypeMirror type, boolean isSubstitution) {
+    public void addPrimaryBound(BoundKind kind, JTypeMirror type) {
+        addBound(kind, type, true);
+    }
+
+    /**
+     * @param isPrimaryBound Whether this is the default bound conferred
+     *                       by the bound on a type parameter declaration.
+     *                       This is treated specially by java 7 inference.
+     */
+    private void addBound(BoundKind kind, JTypeMirror type, boolean isPrimaryBound) {
         if (this.isEquivalentTo(type)) {
             // may occur because of transitive propagation
             // alpha <: alpha is always true and not interesting
@@ -93,8 +118,21 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
         }
 
         if (boundSet.bounds.computeIfAbsent(kind, k -> new LinkedHashSet<>()).add(type)) {
-            ctx.onBoundAdded(this, kind, type, isSubstitution);
+            ctx.onBoundAdded(this, kind, type, isPrimaryBound);
         }
+    }
+
+    /**
+     * Returns true if the node has no bounds except the ones given
+     * by the upper bound of the type parameter. In the Java 7 inference
+     * process, this indicates that we should use additional constraints
+     * binding the return type of the method to the target type (determined by
+     * an assignment context).
+     *
+     * <p>Remove this if you remove support for java 7 at some point.
+     */
+    boolean hasOnlyPrimaryBound() {
+        return !hasNonTrivialBound;
     }
 
     /**
@@ -125,7 +163,7 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
 
 
             // put the new bounds before updating
-            LinkedHashSet<JTypeMirror> newBounds = new LinkedHashSet<>();
+            Set<JTypeMirror> newBounds = new LinkedHashSet<>();
             boundSet.bounds.put(kind, newBounds);
 
             for (JTypeMirror prev : prevBounds) {
@@ -311,7 +349,7 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
     private static final class BoundSet {
 
         JTypeMirror inst;
-        EnumMap<BoundKind, Set<JTypeMirror>> bounds = new EnumMap<>(BoundKind.class);
+        Map<BoundKind, Set<JTypeMirror>> bounds = new EnumMap<>(BoundKind.class);
 
     }
 }

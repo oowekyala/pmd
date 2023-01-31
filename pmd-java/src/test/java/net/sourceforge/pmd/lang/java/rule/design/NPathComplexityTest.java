@@ -6,6 +6,6 @@ package net.sourceforge.pmd.lang.java.rule.design;
 
 import net.sourceforge.pmd.testframework.PmdRuleTst;
 
-@org.junit.Ignore("Rule has not been updated yet")
-public class NPathComplexityTest extends PmdRuleTst {
+class NPathComplexityTest extends PmdRuleTst {
+    // no additional unit tests
 }

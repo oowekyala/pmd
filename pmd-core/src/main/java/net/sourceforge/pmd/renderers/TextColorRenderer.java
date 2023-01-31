@@ -118,8 +118,9 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
         return property != null && !("0".equals(property) || "false".equalsIgnoreCase(property));
     }
 
+
     @Override
-    public void end() throws IOException {
+    public void outputReport(Report report) throws IOException {
         StringBuilder buf = new StringBuilder(500);
         buf.append(PMD.EOL);
         initializeColorsIfSupported();
@@ -258,7 +259,9 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
     }
 
     private static String keyFor(RuleViolation rv) {
-        return StringUtils.isNotBlank(rv.getPackageName()) ? rv.getPackageName() + '.' + rv.getClassName() : "";
+        String packageName = rv.getAdditionalInfo().getOrDefault(RuleViolation.PACKAGE_NAME, "");
+        String className = rv.getAdditionalInfo().getOrDefault(RuleViolation.CLASS_NAME, "");
+        return StringUtils.isNotBlank(packageName) ? packageName + '.' + className : "";
     }
 
 

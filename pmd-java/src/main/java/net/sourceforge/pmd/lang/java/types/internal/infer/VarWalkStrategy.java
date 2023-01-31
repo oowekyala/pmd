@@ -8,10 +8,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.java.types.internal.infer.Graph.UniqueGraph;
 import net.sourceforge.pmd.lang.java.types.internal.infer.Graph.Vertex;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Strategy to walk the set of remaining free variables. Interdependent
@@ -42,8 +42,8 @@ interface VarWalkStrategy extends Iterator<Set<InferenceVar>> {
 
         private final Iterator<Set<InferenceVar>> iterator;
 
-        GraphWalk(InferenceContext infCtx) {
-            this.iterator = buildGraphIterator(infCtx);
+        GraphWalk(InferenceContext infCtx, boolean onlyBoundedVars) {
+            this.iterator = buildGraphIterator(infCtx, onlyBoundedVars);
         }
 
         GraphWalk(InferenceVar var) {
@@ -60,12 +60,15 @@ interface VarWalkStrategy extends Iterator<Set<InferenceVar>> {
             return iterator.next();
         }
 
-        Iterator<Set<InferenceVar>> buildGraphIterator(InferenceContext ctx) {
+        Iterator<Set<InferenceVar>> buildGraphIterator(InferenceContext ctx, boolean onlyBoundedVars) {
 
             Set<InferenceVar> freeVars = ctx.getFreeVars();
             if (freeVars.isEmpty()) {
                 return Collections.emptyIterator();
             } else if (freeVars.size() == 1) {
+                if (onlyBoundedVars && freeVars.iterator().next().hasOnlyPrimaryBound()) {
+                    return Collections.emptyIterator();
+                }
                 // common case
                 return IteratorUtil.singletonIterator(freeVars);
             }
@@ -76,6 +79,9 @@ interface VarWalkStrategy extends Iterator<Set<InferenceVar>> {
             Graph<InferenceVar> graph = new UniqueGraph<>();
 
             for (InferenceVar ivar : freeVars) {
+                if (onlyBoundedVars && ivar.hasOnlyPrimaryBound()) {
+                    continue;
+                }
                 Vertex<InferenceVar> vertex = graph.addLeaf(ivar);
                 Set<InferenceVar> dependencies = ctx.freeVarsIn(ivar.getBounds(BoundKind.ALL));
                 for (InferenceVar dep : dependencies) {

@@ -12,8 +12,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar;
 import net.sourceforge.pmd.util.OptionalBool;
 
@@ -28,58 +30,137 @@ public final class TypePrettyPrint {
     }
 
     public static @NonNull String prettyPrint(@NonNull JTypeVisitable t) {
-        TypePrettyPrinter sb = new TypePrettyPrinter();
-        t.acceptVisitor(PrettyPrintVisitor.INSTANCE, sb);
-        return sb.getResult();
+        return prettyPrint(t, new TypePrettyPrinter());
     }
 
-    public static @NonNull String prettyPrint(@NonNull JMethodSig sig, boolean printHeader) {
-        TypePrettyPrinter sb = new TypePrettyPrinter();
-        sb.printMethodHeader = printHeader;
-        sig.acceptVisitor(PrettyPrintVisitor.INSTANCE, sb);
-        return sb.getResult();
+    public static @NonNull String prettyPrintWithSimpleNames(@NonNull JTypeVisitable t) {
+        return prettyPrint(t, new TypePrettyPrinter().qualifyNames(false));
     }
 
-    public static @NonNull String prettyPrintWithTvarBounds(@NonNull JTypeMirror sig) {
-        TypePrettyPrinter sb = new TypePrettyPrinter();
-        sb.printTypeVarBounds = YES;
-        sig.acceptVisitor(PrettyPrintVisitor.INSTANCE, sb);
-        return sb.getResult();
+    public static String prettyPrint(@NonNull JTypeVisitable t, TypePrettyPrinter prettyPrinter) {
+        t.acceptVisitor(PrettyPrintVisitor.INSTANCE, prettyPrinter);
+        return prettyPrinter.consumeResult();
     }
 
-    public static String prettyPrintWithTvarQualifier(@NonNull JTypeMirror t) {
-        TypePrettyPrinter sb = new TypePrettyPrinter();
-        sb.qualifyTvars = true;
-        t.acceptVisitor(PrettyPrintVisitor.INSTANCE, sb);
-        return sb.getResult();
-    }
-
-    private static class TypePrettyPrinter {
+    /**
+     * Options to pretty print a type. Cannot be used concurrently.
+     */
+    public static class TypePrettyPrinter {
 
         private final StringBuilder sb = new StringBuilder();
 
         private boolean printMethodHeader = true;
+        private boolean printMethodReturnType = true;
         private OptionalBool printTypeVarBounds = UNKNOWN;
         private boolean qualifyTvars = false;
+        private boolean qualifyNames = true;
         private boolean isVarargs = false;
+        private boolean printTypeAnnotations = true;
+        private boolean qualifyAnnotations = false;
 
+        /** Create a new pretty printer with the default configuration. */
+        public TypePrettyPrinter() { // NOPMD
+            // default
+        }
 
-        StringBuilder append(Object o) {
+        StringBuilder append(char o) {
             return sb.append(o);
         }
 
+        StringBuilder append(String o) {
+            return sb.append(o);
+        }
 
-        public String getResult() {
-            return sb.toString();
+        /**
+         * Print the declaring type of the method and its type parameters.
+         * Default: true.
+         */
+        public TypePrettyPrinter printMethodHeader(boolean printMethodHeader) {
+            this.printMethodHeader = printMethodHeader;
+            return this;
+        }
+
+        /**
+         * Print the return type of methods (as postfix).
+         * Default: true.
+         */
+        public TypePrettyPrinter printMethodResult(boolean printMethodResult) {
+            this.printMethodReturnType = printMethodResult;
+            return this;
+        }
+
+        /**
+         * Print the bounds of type variables.
+         * Default: false.
+         */
+        public void printTypeVarBounds(OptionalBool printTypeVarBounds) {
+            this.printTypeVarBounds = printTypeVarBounds;
+        }
+
+        /**
+         * Qualify type variables with the name of the declaring symbol.
+         * Eg {@code Foo#T} for {@code class Foo<T>}}.
+         * Default: false.
+         */
+        public TypePrettyPrinter qualifyTvars(boolean qualifyTvars) {
+            this.qualifyTvars = qualifyTvars;
+            return this;
+        }
+
+        /**
+         * Whether to print the binary name of a type annotation or
+         * just the simple name if false.
+         * Default: false.
+         */
+        public TypePrettyPrinter qualifyAnnotations(boolean qualifyAnnotations) {
+            this.qualifyAnnotations = qualifyAnnotations;
+            return this;
+        }
+
+        /**
+         * Whether to print the type annotations.
+         * Default: true.
+         */
+        public TypePrettyPrinter printAnnotations(boolean printAnnotations) {
+            this.printTypeAnnotations = printAnnotations;
+            return this;
+        }
+
+        /**
+         * Use qualified names for class types instead of simple names.
+         * Default: true.
+         */
+        public TypePrettyPrinter qualifyNames(boolean qualifyNames) {
+            this.qualifyNames = qualifyNames;
+            return this;
+        }
+
+        String consumeResult() {
+            // The pretty printer might be reused by another call,
+            // delete the buffer.
+            String result = sb.toString();
+            this.sb.setLength(0);
+            return result;
+        }
+
+        private void printTypeAnnotations(PSet<SymAnnot> annots) {
+            if (this.printTypeAnnotations) {
+                for (SymAnnot annot : annots) {
+                    String name = this.qualifyAnnotations ? annot.getBinaryName()
+                                                          : annot.getSimpleName();
+                    append('@').append(name).append(' ');
+                }
+            }
         }
     }
 
-    private static class PrettyPrintVisitor implements JTypeVisitor<Void, TypePrettyPrinter> {
+    private static final class PrettyPrintVisitor implements JTypeVisitor<Void, TypePrettyPrinter> {
 
         static final PrettyPrintVisitor INSTANCE = new PrettyPrintVisitor();
 
         @Override
         public Void visit(JTypeMirror t, TypePrettyPrinter sb) {
+            sb.printTypeAnnotations(t.getTypeAnnotations());
             sb.append(t.toString());
             return null;
         }
@@ -97,12 +178,13 @@ public final class TypePrettyPrint {
                 sb.append("(erased) ");
             }
 
+            sb.printTypeAnnotations(t.getTypeAnnotations());
 
             if (t.getSymbol().isUnresolved()) {
                 sb.append('*'); // a small marker to spot them
             }
 
-            if (enclosing != null && !isAnon) {
+            if (enclosing != null && !isAnon || !sb.qualifyNames) {
                 sb.append(t.getSymbol().getSimpleName());
             } else {
                 sb.append(t.getSymbol().getBinaryName());
@@ -121,6 +203,7 @@ public final class TypePrettyPrint {
 
         @Override
         public Void visitWildcard(JWildcardType t, TypePrettyPrinter sb) {
+            sb.printTypeAnnotations(t.getTypeAnnotations());
             sb.append("?");
             if (t.isUnbounded()) {
                 return null;
@@ -134,12 +217,17 @@ public final class TypePrettyPrint {
 
         @Override
         public Void visitPrimitive(JPrimitiveType t, TypePrettyPrinter sb) {
+            sb.printTypeAnnotations(t.getTypeAnnotations());
             sb.append(t.getSimpleName());
             return null;
         }
 
         @Override
         public Void visitTypeVar(JTypeVar t, TypePrettyPrinter sb) {
+            if (t instanceof CaptureMatcher) {
+                sb.append(t.toString());
+                return null;
+            }
             if (!t.isCaptured() && sb.qualifyTvars) {
                 JTypeParameterSymbol sym = t.getSymbol();
                 if (sym != null) {
@@ -147,6 +235,8 @@ public final class TypePrettyPrint {
                     sb.append('#');
                 }
             }
+
+            sb.printTypeAnnotations(t.getTypeAnnotations());
             sb.append(t.getName());
 
             if (sb.printTypeVarBounds == YES) {
@@ -185,9 +275,12 @@ public final class TypePrettyPrint {
 
             sb.append(t.getName());
 
-            join(sb, t.getFormalParameters(), ", ", "(", ") -> ", t.isVarargs());
+            join(sb, t.getFormalParameters(), ", ", "(", ")", t.isVarargs());
 
-            t.getReturnType().acceptVisitor(this, sb);
+            if (sb.printMethodReturnType) {
+                sb.append(" -> ");
+                t.getReturnType().acceptVisitor(this, sb);
+            }
             return null;
         }
 
@@ -210,6 +303,8 @@ public final class TypePrettyPrint {
             if (component instanceof JIntersectionType) {
                 sb.append(")");
             }
+            // todo I think the annotation placement might be wrong, add tests
+            sb.printTypeAnnotations(t.getTypeAnnotations());
             sb.append(isVarargs ? "..." : "[]");
             return null;
         }

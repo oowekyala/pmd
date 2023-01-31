@@ -16,9 +16,7 @@ import java.util.function.*
 import java.util.stream.Collector
 import java.util.function.Function as JavaFunction
 
-/**
- *
- */
+@Suppress("UNUSED_VARIABLE")
 class MethodRefInferenceTest : ProcessorTestSpec({
 
 
@@ -342,10 +340,7 @@ class MethodRefInferenceTest : ProcessorTestSpec({
 
             package scratch;
 
-            import static java.util.stream.Collectors.joining;
-
             import java.util.Comparator;
-            import java.util.Deque;
 
             class Archive {
 
@@ -360,12 +355,15 @@ class MethodRefInferenceTest : ProcessorTestSpec({
 
         val t_Archive = acu.firstTypeSignature()
         val mref = acu.descendants(ASTMethodReference::class.java).firstOrThrow()
+        val call = acu.firstMethodCall()
 
-        spy.shouldTriggerMissingCtDecl {
+        spy.shouldHaveMissingCtDecl(call)
+
+        acu.withTypeDsl {
             mref.referencedMethod shouldBe ts.UNRESOLVED_METHOD
             mref shouldHaveType ts.UNKNOWN
-            acu.firstMethodCall().methodType shouldBe ts.UNRESOLVED_METHOD
-            acu.firstMethodCall().overloadSelectionInfo.apply {
+            call.methodType shouldBe ts.UNRESOLVED_METHOD
+            call.overloadSelectionInfo.apply {
                 isFailed shouldBe true
             }
         }
@@ -553,7 +551,7 @@ class Scratch {
         """.trimIndent())
 
         val (_, t_Sink) = acu.descendants(ASTClassOrInterfaceDeclaration::class.java).toList { it.typeMirror }
-        val (_, acceptInt, acceptLong) = acu.descendants(ASTMethodDeclaration::class.java).toList()
+        val (_, acceptInt, acceptLong) = acu.descendants(ASTMethodDeclaration::class.java).crossFindBoundaries().toList()
         val (castRef, returnRef) = acu.descendants(ASTMethodReference::class.java).toList()
 
         doTest("In cast context") {
@@ -724,7 +722,7 @@ class Scratch {
     parserTest("Missing compile-time decl") {
 
         val acu = parser.parse("""
-import java.util.function.IntConsumer;
+interface IntConsumer { void accept(int i); }
 
 class Scratch {
 
@@ -734,11 +732,12 @@ class Scratch {
 }
         """.trimIndent())
 
+        val (t_IntConsumer) = acu.declaredTypeSignatures()
         val (fooRef) = acu.descendants(ASTMethodReference::class.java).toList()
 
         fooRef.shouldMatchN {
             methodRef("foo") {
-                it shouldHaveType it.typeSystem.UNKNOWN
+                it shouldHaveType t_IntConsumer
                 it.referencedMethod shouldBe it.typeSystem.UNRESOLVED_METHOD
 
                 unspecifiedChild()
@@ -941,7 +940,7 @@ class Scratch {
         """.trimIndent())
 
         val (_, t_NodeStream) = acu.descendants(ASTClassOrInterfaceDeclaration::class.java).toList { it.typeMirror }
-        val (_, tvar) = acu.descendants(ASTTypeParameter::class.java).toList { it.typeMirror }
+        val (_, tvar) = acu.descendants(ASTTypeParameter::class.java).crossFindBoundaries().toList { it.typeMirror }
         val call = acu.descendants(ASTMethodCall::class.java).firstOrThrow()
 
         call.shouldMatchN {
@@ -1123,7 +1122,7 @@ class Scratch {
             mref.functionalMethod shouldBe plus
             val rvar = plus.typeParameters[0]!!
             mref.referencedMethod shouldBe abstractColl[rvar].getDeclaredMethod(inAbstractColl.symbol)
-            mref.typeMirror shouldBe t_Additioner
+            mref shouldHaveType t_Additioner
         }
     }
 

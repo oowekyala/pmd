@@ -13,6 +13,7 @@ import net.sourceforge.pmd.lang.ast.test.NodeSpec
 import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.types.JClassType
+import net.sourceforge.pmd.lang.java.types.shouldHaveType
 import net.sourceforge.pmd.lang.java.types.testdata.BoolLogic
 import net.sourceforge.pmd.lang.java.types.testdata.TypeInferenceTestCases
 import net.sourceforge.pmd.lang.java.types.typeDsl
@@ -230,10 +231,10 @@ class StressTest : ProcessorTestSpec({
 
         acu.descendants(ASTLocalVariableDeclaration::class.java)
                 .map { it.varIds[0]!! }
-                .filter { it.variableName.startsWith("asList") }
+                .filter { it.name.startsWith("asList") }
                 .map { it.initializer!! }
                 .forEachIndexed { i, expr ->
-                    val t = measureTimeMillis {
+                    val t = measureTimeMillis { // todo these measurements are not accurate because typeres is done strictly now
                         assertFalse {
                             expr.typeMirror == expr.typeSystem.UNKNOWN
                         }
@@ -264,8 +265,7 @@ class StressTest : ProcessorTestSpec({
         //     public static <U> List<U> m(List<U> src)
 
         inContext(StatementParsingCtx) {
-
-            """
+            val code = """
             List<Integer> c =
               // 8 lparens per line
               m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
@@ -273,8 +273,8 @@ class StressTest : ProcessorTestSpec({
               m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
               m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
               m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
-//              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
-//              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
+              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
+              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
 //              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
 //              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
 //              m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(m(new java.util.ArrayList<>(
@@ -285,36 +285,37 @@ class StressTest : ProcessorTestSpec({
 //              ))))))))
 //              ))))))))
 //              ))))))))
-//              ))))))))
-//              ))))))))
+              ))))))))
+              ))))))))
               ))))))))
               ))))))))
               ))))))))
               ))))))))
               ))))))));
 
-        """ should parseAs {
-                localVarDecl {
-                    modifiers { }
-                    classType("List") {
-                        //                it.typeMirror shouldBe RefTypeGen.`t_List{Integer}`
-                        typeArgList()
-                    }
+        """
 
-                    child<ASTVariableDeclarator> {
-                        variableId("c") {
-                            it.typeMirror shouldBe it.typeDsl.gen.`t_List{Integer}`
+            val t = measureTimeMillis {
+                code should parseAs {
+                    localVarDecl {
+                        modifiers { }
+                        classType("List") {
+                            //                it shouldHaveType RefTypeGen.`t_List{Integer}`
+                            typeArgList()
                         }
-                        child<ASTMethodCall>(ignoreChildren = true) {
-                            val t = measureTimeMillis {
-                                it.typeMirror shouldBe it.typeDsl.gen.`t_List{Integer}`
-                            }
 
-                            myLog("huge call chain: $t ms")
+                        child<ASTVariableDeclarator> {
+                            variableId("c") {
+                                it shouldHaveType it.typeDsl.gen.`t_List{Integer}`
+                            }
+                            child<ASTMethodCall>(ignoreChildren = true) {
+                                it shouldHaveType it.typeDsl.gen.`t_List{Integer}`
+                            }
                         }
                     }
                 }
             }
+            myLog("huge call chain: $t ms")
         }
     }
 

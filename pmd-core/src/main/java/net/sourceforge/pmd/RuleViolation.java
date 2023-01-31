@@ -5,8 +5,10 @@
 package net.sourceforge.pmd;
 
 import java.util.Comparator;
+import java.util.Map;
 
-import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.annotation.DeprecatedUntil700;
+import net.sourceforge.pmd.lang.document.FileLocation;
 
 /**
  * A RuleViolation is created by a Rule when it identifies a violation of the
@@ -34,6 +36,28 @@ public interface RuleViolation {
                   .thenComparingInt(RuleViolation::getEndLine)
                   .thenComparingInt(RuleViolation::getEndColumn)
                   .thenComparing(rv -> rv.getRule().getName());
+
+
+    /**
+     * Key in {@link #getAdditionalInfo()} for the name of the class in
+     * which the violation was identified.
+     */
+    String CLASS_NAME = "className";
+    /**
+     * Key in {@link #getAdditionalInfo()} for the name of the variable
+     * related to the violation.
+     */
+    String VARIABLE_NAME = "variableName";
+    /**
+     * Key in {@link #getAdditionalInfo()} for the name of the method in
+     * which the violation was identified.
+     */
+    String METHOD_NAME = "methodName";
+    /**
+     * Key in {@link #getAdditionalInfo()} for the name of the package in
+     * which the violation was identified.
+     */
+    String PACKAGE_NAME = "packageName";
 
     /**
      * Get the Rule which identified this violation.
@@ -71,7 +95,7 @@ public interface RuleViolation {
      * @return Begin line number.
      */
     default int getBeginLine() {
-        return getLocation().getBeginLine();
+        return getLocation().getStartPos().getLine();
     }
 
     /**
@@ -81,7 +105,7 @@ public interface RuleViolation {
      * @return Begin column number.
      */
     default int getBeginColumn() {
-        return getLocation().getBeginColumn();
+        return getLocation().getStartPos().getColumn();
     }
 
     /**
@@ -91,7 +115,7 @@ public interface RuleViolation {
      * @return End line number.
      */
     default int getEndLine() {
-        return getLocation().getEndLine();
+        return getLocation().getEndPos().getLine();
     }
 
     /**
@@ -101,37 +125,66 @@ public interface RuleViolation {
      * @return End column number.
      */
     default int getEndColumn() {
-        return getLocation().getEndColumn();
+        return getLocation().getEndPos().getColumn();
     }
+
+    /**
+     * A map of additional key-value pairs known about this violation.
+     * What data is in there is language specific. Common keys supported
+     * by several languages are defined as constants on this interface.
+     * The map is unmodifiable.
+     */
+    Map<String, String> getAdditionalInfo();
+
 
     /**
      * Get the package name of the Class in which this violation was identified.
      *
      * @return The package name.
+     *
+     * @deprecated Use {@link #PACKAGE_NAME}
      */
-    // TODO Isn't this Java specific?
-    String getPackageName();
+    @Deprecated
+    @DeprecatedUntil700
+    default String getPackageName() {
+        return getAdditionalInfo().get(PACKAGE_NAME);
+    }
 
     /**
      * Get the name of the Class in which this violation was identified.
      *
      * @return The Class name.
+     * @deprecated Use {@link #CLASS_NAME}
      */
-    // TODO Isn't this Java specific?
-    String getClassName();
+    @Deprecated
+    @DeprecatedUntil700
+    default String getClassName() {
+        return getAdditionalInfo().get(CLASS_NAME);
+    }
 
     /**
      * Get the method name in which this violation was identified.
      *
      * @return The method name.
+     * @deprecated Use {@link #METHOD_NAME}
      */
-    // TODO Isn't this Java specific?
-    String getMethodName();
+    @Deprecated
+    @DeprecatedUntil700
+    default String getMethodName() {
+        return getAdditionalInfo().get(METHOD_NAME);
+    }
 
     /**
      * Get the variable name on which this violation was identified.
      *
      * @return The variable name.
+     * @deprecated Use {@link #VARIABLE_NAME}
      */
-    String getVariableName();
+    @Deprecated
+    @DeprecatedUntil700
+    default String getVariableName() {
+        return getAdditionalInfo().get(VARIABLE_NAME);
+    }
+
+
 }

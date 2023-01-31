@@ -11,7 +11,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import net.sourceforge.pmd.internal.util.IteratorUtil
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
@@ -19,6 +18,7 @@ import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
+import net.sourceforge.pmd.util.IteratorUtil
 
 fun <T, C : Collection<T>> C?.shouldContainAtMostOneOf(vararg expected: T) {
     this shouldNotBe null
@@ -400,6 +400,19 @@ fun TreeNodeWrapper<Node, *>.typeExpr(contents: ValuedNodeSpec<ASTTypeExpression
             it::getTypeNode shouldBe contents()
         }
 
+fun TreeNodeWrapper<Node, *>.patternExpr(contents: ValuedNodeSpec<ASTPatternExpression, ASTPattern>) =
+        child<ASTPatternExpression>(ignoreChildren = contents == EmptyAssertions) {
+            it::getPattern shouldBe contents()
+        }
+fun TreeNodeWrapper<Node, *>.typePattern(contents: NodeSpec<ASTTypePattern>) =
+        child<ASTTypePattern>(ignoreChildren = contents == EmptyAssertions) {
+            contents()
+        }
+fun TreeNodeWrapper<Node, *>.guardedPattern(contents: NodeSpec<ASTGuardedPattern>) =
+        child<ASTGuardedPattern>(ignoreChildren = contents == EmptyAssertions) {
+            contents()
+        }
+
 
 fun TreeNodeWrapper<Node, *>.arrayType(contents: NodeSpec<ASTArrayType> = EmptyAssertions) =
         child<ASTArrayType>(ignoreChildren = contents == EmptyAssertions) {
@@ -424,6 +437,7 @@ fun TreeNodeWrapper<Node, *>.stringLit(image: String, contents: NodeSpec<ASTStri
         child<ASTStringLiteral> {
             it::getImage shouldBe image
             it::isTextBlock shouldBe false
+            it::isEmpty shouldBe it.constValue.isEmpty()
             contents()
         }
 
@@ -455,6 +469,7 @@ fun TreeNodeWrapper<Node, *>.boolean(value: Boolean, contents: NodeSpec<ASTBoole
 fun TreeNodeWrapper<Node, *>.textBlock(contents: NodeSpec<ASTStringLiteral> = EmptyAssertions) =
         child<ASTStringLiteral> {
             it::isTextBlock shouldBe true
+            it::isEmpty shouldBe it.constValue.isEmpty()
             contents()
         }
 
@@ -587,7 +602,7 @@ fun TreeNodeWrapper<Node, *>.switchLabel(assertions: NodeSpec<ASTSwitchLabel> = 
 fun TreeNodeWrapper<Node, *>.switchDefaultLabel(assertions: NodeSpec<ASTSwitchLabel> = EmptyAssertions) =
         child<ASTSwitchLabel>(ignoreChildren = assertions == EmptyAssertions) {
             it::isDefault shouldBe true
-            it::getExprList shouldBe emptyList()
+            it.exprList.toList() shouldBe emptyList()
             assertions()
         }
 
