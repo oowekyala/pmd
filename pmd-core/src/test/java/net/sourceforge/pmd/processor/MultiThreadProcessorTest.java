@@ -75,8 +75,8 @@ class MultiThreadProcessorTest {
     @Test
     void testRulesThreadSafety() throws Exception {
         RuleSets ruleSets = setUpForTest("rulesets/MultiThreadProcessorTest/basic.xml");
-        try (AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(configuration)) {
-            processor.processFiles(ruleSets, files, listener);
+        try (AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(configuration, ruleSets)) {
+            processor.processFiles(files, listener);
         }
         listener.close();
 

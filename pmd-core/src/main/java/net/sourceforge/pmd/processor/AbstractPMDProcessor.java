@@ -26,38 +26,39 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
 public abstract class AbstractPMDProcessor implements AutoCloseable {
 
     protected final PMDConfiguration configuration;
+    protected final RuleSets ruleSets;
 
-    AbstractPMDProcessor(PMDConfiguration configuration) {
+
+    AbstractPMDProcessor(PMDConfiguration configuration, RuleSets ruleSets) {
         this.configuration = configuration;
+        this.ruleSets = ruleSets;
     }
 
     /**
      * Analyse all files. Each text file is closed.
      */
-    protected abstract void processFilesImpl(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener);
+    public abstract void processFiles(List<TextFile> files, GlobalAnalysisListener listener);
 
-    public final void processFiles(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
-        processFilesImpl(rulesets, files, listener);
-        rulesets.getAllRules().forEach(r -> {
-            RuleContext rctx = RuleContext.create(FileAnalysisListener.noop(), r);
-            r.endAnalysis(rctx);
-        });
-    }
 
     /**
      * Joins tasks and await completion of the analysis. After this, all
      * {@link TextFile}s must have been closed.
      */
     @Override
-    public abstract void close();
+    public void close() {
+        this.ruleSets.getAllRules().forEach(r -> {
+            RuleContext rctx = RuleContext.create(FileAnalysisListener.noop(), r);
+            r.endAnalysis(rctx);
+        });
+    }
 
     /**
      * Returns a new file processor. The strategy used for threading is
      * determined by {@link PMDConfiguration#getThreads()}.
      */
-    public static AbstractPMDProcessor newFileProcessor(final PMDConfiguration configuration) {
-        return configuration.getThreads() > 1 ? new MultiThreadProcessor(configuration)
-                                              : new MonoThreadProcessor(configuration);
+    public static AbstractPMDProcessor newFileProcessor(final PMDConfiguration configuration, RuleSets ruleSets) {
+        return configuration.getThreads() > 1 ? new MultiThreadProcessor(configuration, ruleSets)
+                                              : new MonoThreadProcessor(configuration, ruleSets);
     }
 
     /**
@@ -67,6 +68,6 @@ public abstract class AbstractPMDProcessor implements AutoCloseable {
     @InternalApi
     public static void runSingleFile(List<RuleSet> ruleSets, TextFile file, GlobalAnalysisListener listener, PMDConfiguration configuration) {
         RuleSets rsets = new RuleSets(ruleSets);
-        new MonoThreadProcessor(configuration).processFiles(rsets, listOf(file), listener);
+        new MonoThreadProcessor(configuration, rsets).processFiles(listOf(file), listener);
     }
 }

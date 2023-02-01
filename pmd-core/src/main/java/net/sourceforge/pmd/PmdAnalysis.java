@@ -310,8 +310,8 @@ public final class PmdAnalysis implements AutoCloseable {
             }
 
             encourageToUseIncrementalAnalysis(configuration);
-            try (AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(configuration)) {
-                processor.processFiles(rulesets, textFiles, listener);
+            try (AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(configuration, rulesets)) {
+                processor.processFiles(textFiles, listener);
             }
         } finally {
             try {

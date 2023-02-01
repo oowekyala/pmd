@@ -17,21 +17,16 @@ import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
  */
 final class MonoThreadProcessor extends AbstractPMDProcessor {
 
-    MonoThreadProcessor(PMDConfiguration configuration) {
-        super(configuration);
+    MonoThreadProcessor(PMDConfiguration configuration, RuleSets ruleSets) {
+        super(configuration, ruleSets);
     }
 
     @Override
     @SuppressWarnings("PMD.CloseResource") // closed by the PMDRunnable
-    public void processFilesImpl(RuleSets rulesets, List<TextFile> files, GlobalAnalysisListener listener) {
+    public void processFiles(List<TextFile> files, GlobalAnalysisListener listener) {
         for (TextFile file : files) {
-            new MonothreadRunnable(rulesets, file, listener, configuration).run();
+            new MonothreadRunnable(this.ruleSets, file, listener, configuration).run();
         }
-    }
-
-    @Override
-    public void close() {
-        // nothing to do
     }
 
     static final class MonothreadRunnable extends PmdRunnable {

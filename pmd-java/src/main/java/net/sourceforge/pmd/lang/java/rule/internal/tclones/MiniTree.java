@@ -65,11 +65,11 @@ public final class MiniTree {
         return locator.toLocation(getRegion());
     }
 
-    public void foreachDescendantAboveMass(int minMass, Consumer<MiniTree> action) {
+    public void foreachDescendantHeavierThan(int minMass, Consumer<MiniTree> action) {
         for (MiniTree child : children) {
             if (child.mass >= minMass) {
                 action.accept(this);
-                child.foreachDescendantAboveMass(minMass, action);
+                child.foreachDescendantHeavierThan(minMass, action);
             }
         }
     }
@@ -160,7 +160,7 @@ public final class MiniTree {
 
         /** Enums have perfect hashes. */
         public MiniTreeBuilder perfectHashAttr(String label, @NonNull Enum<?> value) {
-            return hashInt(label, Objects.hashCode(value));
+            return hashInt(label, value.ordinal());
         }
 
         /** Integers have perfect hashes. */

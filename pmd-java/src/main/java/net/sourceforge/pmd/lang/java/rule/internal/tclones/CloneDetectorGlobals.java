@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -96,13 +97,11 @@ final class CloneDetectorGlobals {
         void removeClonesOf(MiniTree t) {
             boolean ok = clones.remove(t) != null;
 
-            // we need to remove it also in the values list
+            // It's not a key, so it's a value somewhere.
             // we only do that periodically, which is a big performance improvement,
             // both in space (the lambdas need to be garbage collected) and time
             if (!ok && prunedTrees.add(t) && prunedTrees.size() > GC_GEN_SIZE) {
-                for (List<CloneSpec> cloneSpecs : clones.values()) {
-                    cloneSpecs.removeIf(spec -> prunedTrees.contains(spec.tree));
-                }
+                clones.entrySet().removeIf(e -> e.getValue().stream().anyMatch(spec -> prunedTrees.contains(spec.tree)));
                 prunedTrees.clear();
             }
         }
@@ -139,12 +138,11 @@ final class CloneDetectorGlobals {
         cloneSet.clones.forEach((key, others) -> {
             others.sort(Comparator.comparingDouble(CloneSpec::similarity).reversed());
 
-            System.out.println(key.fetchLocation());
+            System.out.println("Clone at      " + key.fetchLocation().startPosToStringWithFile());
 
-            others.forEach(clone -> {
-                String simPercent = StringUtil.percentageString(clone.similarity(), 2);
-                System.out.println("    " + simPercent + " @ " + clone.fetchLocation());
-            });
+            others.forEach(clone -> System.out.printf("   %6.2f%% at %s\n",
+                                                  100 * clone.similarity(),
+                                                  clone.fetchLocation().startPosToStringWithFile()));
         });
 
         System.out.println(cloneSet.totalSize() + " clones in " + cloneSet.clones.size() + " buckets");
@@ -161,8 +159,9 @@ final class CloneDetectorGlobals {
                     double similarity = ti.similarity(tj);
                     if (similarity >= simThreshold) {
                         // remove strictly smaller clones because they're less interesting
-                        ti.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
-                        tj.foreachDescendantAboveMass(minMass, cloneSet::removeClonesOf);
+                        // todo this looks broken
+                        ti.foreachDescendantHeavierThan(minMass, cloneSet::removeClonesOf);
+                        tj.foreachDescendantHeavierThan(minMass, cloneSet::removeClonesOf);
                         // finally add the clone pair
                         cloneSet.addClonePair(ti, tj, similarity);
                     }
