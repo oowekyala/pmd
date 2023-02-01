@@ -69,24 +69,9 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
 
     @Override
     public FileLocation toLocation(TextRegion region) {
-        checkInRange(region, this.getLength());
-        SourceCodePositioner positioner = content.getPositioner();
-
-        // We use longs to return both numbers at the same time
-        // This limits us to 2 billion lines or columns, which is FINE
-        TextPos2d bpos = positioner.lineColFromOffset(region.getStartOffset(), true);
-        TextPos2d epos = region.isEmpty() ? bpos
-                                          : positioner.lineColFromOffset(region.getEndOffset(), false);
-
-        return new FileLocation(
-            fileName,
-            bpos.getLine(),
-            bpos.getColumn(),
-            epos.getLine(),
-            epos.getColumn(),
-            region
-        );
+        return content.getPositioner().toLocation(region, fileName);
     }
+
 
     @Override
     public TextPos2d lineColumnAtOffset(int offset, boolean inclusive) {
@@ -126,7 +111,7 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
 
     @Override
     public Locator detachLocator() {
-        return new LocatorSoftReference(backend, this);
+        return new MiniLocator(backend, content.getPositioner());
     }
 
     private static final String NOT_IN_RANGE = "Region [start=%d, end=%d[ is not in range of this document (length %d)";

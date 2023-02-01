@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
+import static java.lang.Math.min;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -94,16 +96,8 @@ public final class MiniTree {
             result++;
         }
 
-        if (t1.children.length > t2.children.length) {
-            MiniTree tmp = t1;
-            t1 = t2;
-            t2 = tmp;
-        }
-
-        int t1Len = t1.children.length;
-        // t1 is now the node with the fewest children
-
-        for (int i = 0; i < t1Len; i++) {
+        int bound = min(t1.children.length, t2.children.length);
+        for (int i = 0; i < bound; i++) {
             result += numCommonNodes(t1.children[i], t2.children[i]);
         }
 

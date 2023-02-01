@@ -167,6 +167,11 @@ final class SourceCodePositioner {
         return getLastLine();
     }
 
+    public int getSourceCodeLength() {
+        return sourceCodeLength;
+    }
+
+
     /**
      * Returns the last column number of the last line in the document.
      */
@@ -206,6 +211,25 @@ final class SourceCodePositioner {
 
         return builder.build(len);
     }
+
+
+    FileLocation toLocation(TextRegion region, String fileName) {
+        RootTextDocument.checkInRange(region, getSourceCodeLength());
+
+        TextPos2d bpos = lineColFromOffset(region.getStartOffset(), true);
+        TextPos2d epos = region.isEmpty() ? bpos
+                                          : lineColFromOffset(region.getEndOffset(), false);
+
+        return new FileLocation(
+            fileName,
+            bpos.getLine(),
+            bpos.getColumn(),
+            epos.getLine(),
+            epos.getColumn(),
+            region
+        );
+    }
+
 
     static final class Builder {
 
