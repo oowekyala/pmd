@@ -21,4 +21,16 @@
         <priority>3</priority>
     </rule>
 
+    <rule name="TreeCloneDetection"
+          language="java"
+          since="7.x"
+          message="Tree clone detected"
+          class="net.sourceforge.pmd.lang.java.rule.internal.tclones.TreeCloneRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_diagnostics.html#treeclonedetection">
+        <description>
+            TODO
+        </description>
+        <priority>3</priority>
+    </rule>
+
 </ruleset>

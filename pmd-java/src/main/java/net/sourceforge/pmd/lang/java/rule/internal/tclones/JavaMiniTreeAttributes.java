@@ -22,7 +22,7 @@ import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTree.MiniTreeBuil
 /**
  *
  */
-public class JavaMiniTreeAttributes {
+public final class JavaMiniTreeAttributes {
 
 
     static final MiniAstHandler<JavaNode> JAVA_CONFIG = new MiniAstHandler<JavaNode>() {
@@ -49,7 +49,7 @@ public class JavaMiniTreeAttributes {
         }
     };
 
-    static final class AttributesHasher extends JavaVisitorBase<MiniTreeBuilder, Void> {
+    private static final class AttributesHasher extends JavaVisitorBase<MiniTreeBuilder, Void> {
         // note that nodes of a given type need to add exactly the same attributes in the same order
 
         static final AttributesHasher INSTANCE = new AttributesHasher();
@@ -101,5 +101,9 @@ public class JavaMiniTreeAttributes {
         // we do not hash variable names (in declarator id or field/var access)
         // this means trees identical modulo renaming of those vars will
         // be placed in the same bucket
+    }
+
+    private JavaMiniTreeAttributes() {
+        // utility class
     }
 }

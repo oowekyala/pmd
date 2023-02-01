@@ -109,6 +109,12 @@ public final class MiniTree {
         return deepHash; //this is relevant to put it in the buckets of the hashmap
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj; // this is intentionally not a deep equals
+    }
+
+
     /** The hash includes the whole subtree. */
     public int deepHash() {
         return deepHash;
@@ -170,7 +176,8 @@ public final class MiniTree {
             recordAttr(label, value);
         }
 
-        private void recordAttr(String label, @Nullable Object value) {
+        private void recordAttr(@SuppressWarnings("unused") String label,
+                                @Nullable Object value) {
             if (attributes == null) {
                 attributes = new ArrayList<>(1);
             }

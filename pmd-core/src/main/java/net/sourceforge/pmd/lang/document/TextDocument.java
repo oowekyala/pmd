@@ -195,6 +195,7 @@ public interface TextDocument extends Closeable, Locator {
      *
      * @throws IndexOutOfBoundsException If the argument is not a valid region in this document
      */
+    @Override
     FileLocation toLocation(TextRegion region);
 
 

@@ -115,11 +115,13 @@ final class CloneDetectorGlobals {
                 return;
             }
 
-            List<CloneSpec> list = clones.get(t1);
-            List<CloneSpec> list2 = append(list, new CloneSpec(similarity, t2));
-            if (list != list2) {
-                clones.put(t1, list2);
-            }
+            clones.compute(t1, (k, list) -> {
+                if (list == null) {
+                    list = new ArrayList<>(1);
+                }
+                list.add(new CloneSpec(similarity, t2));
+                return list;
+            });
         }
 
         int totalSize() {
