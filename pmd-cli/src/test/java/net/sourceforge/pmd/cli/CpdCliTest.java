@@ -35,10 +35,10 @@ class CpdCliTest extends BaseCliTest {
     private static final String SRC_DIR = BASE_RES_PATH + "files/";
 
     private static final Map<String, Integer> NUMBER_OF_TOKENS = ImmutableMap.of(
-            new File(SRC_DIR, "dup1.java").getAbsolutePath(), 89,
-            new File(SRC_DIR, "dup2.java").getAbsolutePath(), 89,
-            new File(SRC_DIR, "file_with_ISO-8859-1_encoding.java").getAbsolutePath(), 8,
-            new File(SRC_DIR, "file_with_utf8_bom.java").getAbsolutePath(), 9
+            new File(SRC_DIR, "dup1.dummy").getAbsolutePath(), 126,
+            new File(SRC_DIR, "dup2.dummy").getAbsolutePath(), 126,
+            new File(SRC_DIR, "file_with_ISO-8859-1_encoding.dummy").getAbsolutePath(), 43,
+            new File(SRC_DIR, "file_with_utf8_bom.dummy").getAbsolutePath(), 40
     );
     @TempDir
     private Path tempDir;
@@ -58,7 +58,7 @@ class CpdCliTest extends BaseCliTest {
     @Test
     void testEmptyResultRendering() throws Exception {
         final String expectedFilesXml = getExpectedFileEntriesXml(NUMBER_OF_TOKENS.keySet());
-        runCliSuccessfully("--minimum-tokens", "340", "--language", "java", "--dir", SRC_DIR, "--format", "xml")
+        runCliSuccessfully("--minimum-tokens", "340", "--language", "cpddummy", "--dir", SRC_DIR, "--format", "xml")
                 .verify(result -> result.checkStdOut(equalTo(
                         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + "<pmd-cpd>\n" + expectedFilesXml + "</pmd-cpd>\n"
                 )));
@@ -175,8 +175,9 @@ class CpdCliTest extends BaseCliTest {
             // set the default encoding under Windows
             System.setProperty("file.encoding", "Cp1252");
 
-            runCli(VIOLATIONS_FOUND, "--minimum-tokens", "34",
+            runCli(VIOLATIONS_FOUND, "--minimum-tokens", "4",
                    "-d", BASE_RES_PATH + "encodingTest/",
+                   "-l", "cpddummy",
                    "--ignore-identifiers", "--format", "xml",
                    // request UTF-8 for CPD
                    "--encoding", "UTF-8")
