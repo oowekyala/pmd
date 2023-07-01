@@ -34,6 +34,18 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--
+            Language Modules as runtime dependencies.
+            Needed for autocompletion of languages.
+        -->
+        <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-languages-deps</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Needed for Designer command -->
         <dependency>
             <groupId>net.sourceforge.pmd</groupId>
