@@ -3,6 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>pmd-cli</artifactId>
     <name>PMD CLI</name>
+    <description>
+        The CLI module of PMD. Note that this does not have dependencies on any
+        language module, so they must be included separately.
+        See the entry point PmdCli.
+    </description>
 
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
@@ -27,18 +32,6 @@
             <groupId>net.sourceforge.pmd</groupId>
             <artifactId>pmd-core</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <!--
-            Language Modules as runtime dependencies.
-            Needed for autocompletion of languages.
-        -->
-        <dependency>
-            <groupId>net.sourceforge.pmd</groupId>
-            <artifactId>pmd-languages-deps</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Needed for Designer command -->
