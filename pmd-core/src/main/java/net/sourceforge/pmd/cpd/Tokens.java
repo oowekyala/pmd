@@ -36,8 +36,8 @@ public class Tokens {
      */
     @InternalApi
     @Deprecated // just to get a warning
-    public Tokens() {
-
+    public Tokens() { // NOPMD
+        // empty
     }
 
     private void add(TokenEntry tokenEntry) {
