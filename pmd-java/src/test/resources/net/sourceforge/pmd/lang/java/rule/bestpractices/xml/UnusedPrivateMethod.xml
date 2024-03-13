@@ -1811,14 +1811,11 @@ public class Example {
         <description>[java] UnusedPrivateMethod false-positive used in lambda #4817</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
-package net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.CacheBuilder;
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.CacheLoader;
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.LoadingCache;
 
 public class NotUsedPrivateMethodFalsePositive {
 
@@ -1833,6 +1830,29 @@ public class NotUsedPrivateMethodFalsePositive {
         return clientIdsToDps.getUnchecked("");
     }
 }
+class CacheLoader<K, V> {
+    private CacheLoader() {}
+
+    public static <K, V> CacheLoader<K, V> from(Function<K, V> r) {
+        return null;
+    }
+}
+
+class CacheBuilder<K, V> {
+    public static CacheBuilder<Object, Object> newBuilder() {
+        return null;
+    }
+
+    public <X extends K, Y extends V> LoadingCache<X, Y> build(CacheLoader<? super X, Y> loader) {
+        return null;
+    }
+}
+class LoadingCache<K, V> {
+    public V getUnchecked(K k) {
+        return null;
+    }
+}
+
 ]]></code>
     </test-code>
 
@@ -1840,14 +1860,11 @@ public class NotUsedPrivateMethodFalsePositive {
         <description>[java] UnusedPrivateMethod false-positive used in lambda - qualified #4817</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
-package net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.CacheBuilder;
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.CacheLoader;
-import net.sourceforge.pmd.lang.java.rule.bestpractices.unusedprivatemethod.cache.LoadingCache;
 
 public class NotUsedPrivateMethodFalsePositive {
 
@@ -1862,6 +1879,28 @@ public class NotUsedPrivateMethodFalsePositive {
         return clientIdsToDps.getUnchecked("");
     }
 }
-]]></code>
+class CacheLoader<K, V> {
+    private CacheLoader() {}
+
+    public static <K, V> CacheLoader<K, V> from(Function<K, V> r) {
+        return null;
+    }
+}
+
+class CacheBuilder<K, V> {
+    public static CacheBuilder<Object, Object> newBuilder() {
+        return null;
+    }
+
+    public <X extends K, Y extends V> LoadingCache<X, Y> build(CacheLoader<? super X, Y> loader) {
+        return null;
+    }
+}
+class LoadingCache<K, V> {
+    public V getUnchecked(K k) {
+        return null;
+    }
+}
+            ]]></code>
     </test-code>
 </test-data>
