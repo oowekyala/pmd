@@ -43,6 +43,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     private final LanguageMetricsProvider myMetricsProvider = new JavaMetricsProvider();
     private final JavaParser parser;
     private final JavaParser parserWithoutProcessing;
+    private final XPathHandler xpathHandler;
     private TypeSystem typeSystem;
 
     public JavaLanguageProcessor(JavaLanguageProperties properties, TypeSystem typeSystem) {
@@ -52,6 +53,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         String suppressMarker = properties.getSuppressMarker();
         this.parser = new JavaParser(suppressMarker, this, true);
         this.parserWithoutProcessing = new JavaParser(suppressMarker, this, false);
+        this.xpathHandler = createXPathHandler(typeSystem);
     }
 
     public JavaLanguageProcessor(JavaLanguageProperties properties) {
@@ -95,7 +97,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
 
     @Override
     public XPathHandler getXPathHandler() {
-        return XPATH_HANDLER;
+        return xpathHandler;
     }
 
     @Override
@@ -113,11 +115,11 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         return myMetricsProvider;
     }
 
-    private static final XPathHandler XPATH_HANDLER =
-        XPathHandler.getHandlerForFunctionDefs(
-            BaseContextNodeTestFun.TYPE_IS_EXACTLY,
-            BaseContextNodeTestFun.TYPE_IS,
-            BaseContextNodeTestFun.HAS_ANNOTATION,
+    private static XPathHandler createXPathHandler(TypeSystem ts) {
+        return XPathHandler.getHandlerForFunctionDefs(
+            BaseContextNodeTestFun.typeIs(ts),
+            BaseContextNodeTestFun.typeIsExactly(ts),
+            BaseContextNodeTestFun.hasAnnotation(ts),
             MatchesSignatureFunction.INSTANCE,
             NodeIsFunction.INSTANCE,
             GetModifiersFun.GET_EFFECTIVE,
@@ -125,6 +127,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             MetricFunction.INSTANCE,
             GetCommentOnFunction.INSTANCE
         );
+    }
 
     public void setTypeSystem(TypeSystem ts) {
         this.typeSystem = Objects.requireNonNull(ts);

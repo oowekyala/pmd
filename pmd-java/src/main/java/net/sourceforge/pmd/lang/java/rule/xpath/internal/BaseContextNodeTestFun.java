@@ -9,6 +9,7 @@ import java.util.function.BiPredicate;
 import net.sourceforge.pmd.lang.java.ast.Annotatable;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
+import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
 
 /**
@@ -24,12 +25,7 @@ public class BaseContextNodeTestFun<T extends JavaNode> extends BaseJavaXPathFun
     static final Type[] SINGLE_STRING_SEQ = {Type.SINGLE_STRING};
     private final Class<T> klass;
     private final BiPredicate<String, T> checker;
-
-    public static final BaseJavaXPathFunction TYPE_IS_EXACTLY = new BaseContextNodeTestFun<>(TypeNode.class, "typeIsExactly", TypeTestUtil::isExactlyA);
-    public static final BaseJavaXPathFunction TYPE_IS = new BaseContextNodeTestFun<>(TypeNode.class, "typeIs", TypeTestUtil::isA);
-    public static final BaseJavaXPathFunction HAS_ANNOTATION = new BaseContextNodeTestFun<>(Annotatable.class, "hasAnnotation", (name, node) -> node.isAnnotationPresent(name));
-
-    protected BaseContextNodeTestFun(Class<T> klass, String localName, BiPredicate<String, T> checker) {
+    protected BaseContextNodeTestFun(TypeSystem ts, Class<T> klass, String localName, BiPredicate<String, T> checker) {
         super(localName);
         this.klass = klass;
         this.checker = checker;
@@ -57,4 +53,17 @@ public class BaseContextNodeTestFun<T extends JavaNode> extends BaseJavaXPathFun
             return klass.isInstance(contextNode) && checker.test(fullTypeName, (T) contextNode);
         };
     }
+
+    public static BaseJavaXPathFunction typeIsExactly(TypeSystem ts) {
+        return new BaseContextNodeTestFun<>(ts, TypeNode.class, "typeIsExactly", TypeTestUtil::isExactlyA);
+    }
+
+    public static BaseJavaXPathFunction typeIs(TypeSystem ts) {
+        return new BaseContextNodeTestFun<>(ts, TypeNode.class, "typeIs", TypeTestUtil::isA);
+    }
+
+    public static BaseJavaXPathFunction hasAnnotation(TypeSystem ts) {
+        return new BaseContextNodeTestFun<>(ts, Annotatable.class, "hasAnnotation", (name, node) -> node.isAnnotationPresent(name));
+    }
+
 }
