@@ -20,11 +20,12 @@ import org.junit.jupiter.api.Timeout;
 
 import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException;
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.BaseJavaTreeDumpTest;
 import net.sourceforge.pmd.lang.java.JavaParsingHelper;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.types.AstTestUtil;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 class ParserCornersTest extends BaseJavaTreeDumpTest {
     private final JavaParsingHelper java = JavaParsingHelper.DEFAULT.withResourceContext(getClass());
@@ -34,6 +35,7 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     private final JavaParsingHelper java7 = java.withDefaultVersion("1.7");
     private final JavaParsingHelper java8 = java.withDefaultVersion("1.8");
     private final JavaParsingHelper java9 = java.withDefaultVersion("9");
+    private final JavaParsingHelper java15 = java.withDefaultVersion("15");
 
     @Override
     public @NonNull BaseParsingHelper<?, ?> getParser() {
@@ -43,7 +45,7 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testInvalidUnicodeEscape() {
         MalformedSourceException thrown = assertThrows(MalformedSourceException.class, // previously Error
-                () -> java.parse("\\u00k0", null, "x/filename.java"));
+                () -> java.parse("\\u00k0", null, FileId.fromPathLikeString("x/filename.java")));
         assertThat(thrown.getMessage(), startsWith("Source format error in file 'x/filename.java' at line 1, column 1: Invalid unicode escape"));
     }
 
@@ -168,6 +170,16 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
                         + "}");
     }
 
+    @Test
+    void testTextBlockWithQuotes() {
+        // https://github.com/pmd/pmd/issues/4364
+        java15.parse("public class Foo {\n"
+                + "  private String content = \"\"\"\n"
+                + "    <div class=\"invalid-class></div>\n"
+                + "  \"\"\";\n"
+                + "}");
+    }
+    
     /**
      * Tests a specific generic notation for calling methods. See:
      * https://jira.codehaus.org/browse/MPMD-139
@@ -311,8 +323,8 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testMethodReferenceConfused() {
         ASTCompilationUnit ast = java.parseResource("MethodReferenceConfused.java", "10");
-        ASTVariableDeclaratorId varWithMethodName = AstTestUtil.varId(ast, "method");
-        ASTVariableDeclaratorId someObject = AstTestUtil.varId(ast, "someObject");
+        ASTVariableId varWithMethodName = AstTestUtil.varId(ast, "method");
+        ASTVariableId someObject = AstTestUtil.varId(ast, "someObject");
 
         assertThat(varWithMethodName.getLocalUsages(), empty());
         assertThat(someObject.getLocalUsages(), hasSize(1));
@@ -339,5 +351,20 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testGithubBug3101UnresolvedTypeParams() {
         java.parseResource("GitHubBug3101.java");
+    }
+
+    @Test
+    void testGitHubBug3642() {
+        doTest("GitHubBug3642");
+    }
+
+    @Test
+    void testGitHubBug1780() {
+        doTest("GitHubBug1780OuterClass");
+    }
+
+    @Test
+    void testGithubBug4947() {
+        java15.parseResource("testdata/Issue4947TextBlock.java");
     }
 }

@@ -9,26 +9,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.PMD;
-import net.sourceforge.pmd.Report.ConfigurationError;
-import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.Rule;
-import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.lang.document.FileLocation;
-import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.lang.rule.Rule;
+import net.sourceforge.pmd.reporting.InternalApiBridge;
+import net.sourceforge.pmd.reporting.Report.ConfigurationError;
+import net.sourceforge.pmd.reporting.Report.ProcessingError;
+import net.sourceforge.pmd.reporting.RuleViolation;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 class YAHTMLRendererTest extends AbstractRendererTest {
 
@@ -38,19 +37,16 @@ class YAHTMLRendererTest extends AbstractRendererTest {
     private Path folder;
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         outputDir = folder.resolve("pmdtest").toFile();
         assertTrue(outputDir.mkdir());
     }
 
     private RuleViolation newRuleViolation(int beginLine, int beginColumn, int endLine, int endColumn, final String packageNameArg, final String classNameArg) {
         FileLocation loc = createLocation(beginLine, beginColumn, endLine, endColumn);
-        return new ParametricRuleViolation(new FooRule(), loc, "blah") {
-            {
-                packageName = packageNameArg;
-                className = classNameArg;
-            }
-        };
+        Map<String, String> additionalInfo = CollectionUtil.mapOf(RuleViolation.PACKAGE_NAME, packageNameArg,
+                                                                  RuleViolation.CLASS_NAME, classNameArg);
+        return InternalApiBridge.createRuleViolation(new FooRule(), loc, "blah", additionalInfo);
     }
 
     @Override
@@ -86,8 +82,7 @@ class YAHTMLRendererTest extends AbstractRendererTest {
     }
 
     private static String normalizeLineSeparators(String s) {
-        return s.replaceAll(Pattern.quote("\r\n"), "\n")
-                .replaceAll(Pattern.quote("\n"), PMD.EOL);
+        return s.replaceAll("\\R", System.lineSeparator());
     }
 
     @Override
@@ -99,7 +94,7 @@ class YAHTMLRendererTest extends AbstractRendererTest {
 
     @Override
     String getExpected() {
-        return "<h3 align=\"center\">The HTML files are located in '" + outputDir + "'.</h3>" + PMD.EOL;
+        return "<h3 align=\"center\">The HTML files are located in '" + outputDir + "'.</h3>" + System.lineSeparator();
     }
 
     @Override

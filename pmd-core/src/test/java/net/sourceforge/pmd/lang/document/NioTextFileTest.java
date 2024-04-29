@@ -4,25 +4,20 @@
 
 package net.sourceforge.pmd.lang.document;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.FileOutputStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.Collections;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import net.sourceforge.pmd.lang.DummyLanguageModule;
-import net.sourceforge.pmd.lang.LanguageRegistry;
-import net.sourceforge.pmd.lang.LanguageVersion;
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.PmdAnalysis;
 
 class NioTextFileTest {
 
@@ -38,13 +33,16 @@ class NioTextFileTest {
             zipOutputStream.write("dummy text".getBytes(StandardCharsets.UTF_8));
             zipOutputStream.closeEntry();
         }
-        try (FileSystem fileSystem = FileSystems.newFileSystem(URI.create("jar:" + zipArchive.toUri()), Collections.<String, Object>emptyMap())) {
-            Path path = fileSystem.getPath("path/inside/someSource.dummy");
-            LanguageRegistry.PMD.getLanguageById("dummy");
-            LanguageVersion languageVersion = DummyLanguageModule.getInstance().getDefaultVersion();
-            TextFile textFile = TextFile.builderForPath(path, StandardCharsets.UTF_8, languageVersion).build();
-            assertEquals(zipArchive.toAbsolutePath() + "!" + IOUtil.normalizePath("/path/inside/someSource.dummy"),
-                    textFile.getDisplayName());
+
+        PMDConfiguration config = new PMDConfiguration();
+        config.setReporter(new TestMessageReporter());
+        try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
+            pmd.files().addZipFileWithContent(zipArchive);
+            List<TextFile> collectedFiles = pmd.files().getCollectedFiles();
+            assertEquals(1, collectedFiles.size());
+            TextFile textFile = collectedFiles.get(0);
+            assertEquals(zipArchive.toAbsolutePath() + "!/path/inside/someSource.dummy",
+                    pmd.fileNameRenderer().getDisplayName(textFile));
         }
     }
 }

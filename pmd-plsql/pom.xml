@@ -7,7 +7,7 @@
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
         <artifactId>pmd</artifactId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -43,7 +43,7 @@
                                     <property name="javacc.jar" value="${javacc.jar}" />
                                     <property name="lang-name" value="PLSQL" />
                                     <property name="lang-name-camelcase" value="Plsql" />
-                                    <property name="lang-terse-name" value="plsql" />
+                                    <property name="lang-id" value="plsql" />
                                 </ant>
                             </target>
                         </configuration>
@@ -77,6 +77,18 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
                     <suppressionsLocation>pmd-plsql-checkstyle-suppressions.xml</suppressionsLocation>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.siom79.japicmp</groupId>
+                <artifactId>japicmp-maven-plugin</artifactId>
+                <configuration>
+                    <parameter>
+                        <excludes combine.children="append">
+                            <exclude>net.sourceforge.pmd.lang.plsql.ast.internal</exclude>
+                        </excludes>
+                    </parameter>
                 </configuration>
             </plugin>
         </plugins>

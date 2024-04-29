@@ -85,15 +85,12 @@ final class InternalInterfaces {
     interface AllChildrenAreOfType<T extends JavaNode> extends JavaNode {
 
         @Override
-        T getChild(int index);
-
-        @Override
         @Nullable
         default T getFirstChild() {
             if (getNumChildren() == 0) {
                 return null;
             }
-            return getChild(0);
+            return (T) getChild(0);
         }
 
 
@@ -103,7 +100,7 @@ final class InternalInterfaces {
             if (getNumChildren() == 0) {
                 return null;
             }
-            return getChild(getNumChildren() - 1);
+            return (T) getChild(getNumChildren() - 1);
         }
     }
 
@@ -118,7 +115,7 @@ final class InternalInterfaces {
         @NonNull
         default T getFirstChild() {
             assert getNumChildren() > 0 : "No children for node implementing AtLeastOneChild " + this;
-            return getChild(0);
+            return (T) getChild(0);
         }
 
 
@@ -127,29 +124,29 @@ final class InternalInterfaces {
         @NonNull
         default T getLastChild() {
             assert getNumChildren() > 0 : "No children for node implementing AtLeastOneChild " + this;
-            return getChild(getNumChildren() - 1);
+            return (T) getChild(getNumChildren() - 1);
         }
     }
 
     interface VariableIdOwner extends JavaNode {
 
         /** Returns the id of the declared variable. */
-        ASTVariableDeclaratorId getVarId();
+        ASTVariableId getVarId();
     }
 
-    interface MultiVariableIdOwner extends JavaNode, Iterable<ASTVariableDeclaratorId>, AccessNode {
+    interface MultiVariableIdOwner extends JavaNode, Iterable<ASTVariableId>, ModifierOwner {
 
         /**
          * Returns a stream of the variable ids declared
          * by this node.
          */
-        default NodeStream<ASTVariableDeclaratorId> getVarIds() {
-            return children(ASTVariableDeclarator.class).children(ASTVariableDeclaratorId.class);
+        default NodeStream<ASTVariableId> getVarIds() {
+            return children(ASTVariableDeclarator.class).children(ASTVariableId.class);
         }
 
 
         @Override
-        default Iterator<ASTVariableDeclaratorId> iterator() {
+        default Iterator<ASTVariableId> iterator() {
             return getVarIds().iterator();
         }
 

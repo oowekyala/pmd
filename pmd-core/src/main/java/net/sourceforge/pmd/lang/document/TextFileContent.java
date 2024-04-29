@@ -22,13 +22,16 @@ import java.util.zip.Checksum;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.internal.util.IOUtil;
 
 /**
  * Contents of a text file.
  */
 public final class TextFileContent {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextFileContent.class);
 
     // the three line terminators we handle.
     private static final String CRLF = "\r\n";
@@ -298,7 +301,8 @@ public final class TextFileContent {
         if (curLineTerm.equals(newLineTerm)) {
             return curLineTerm;
         } else {
-            // todo maybe we should report a warning
+            // todo maybe we should report a warning with filename
+            LOGGER.debug("Detect mixed line terminators. Falling back to system default.");
             return fallback; // mixed line terminators, fallback to system default
         }
     }

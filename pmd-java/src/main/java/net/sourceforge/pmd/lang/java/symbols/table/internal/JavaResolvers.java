@@ -25,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JElementSymbol;
@@ -43,6 +42,7 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig;
 import net.sourceforge.pmd.lang.java.types.JVariableSig.FieldSig;
 import net.sourceforge.pmd.lang.java.types.TypeOps;
 import net.sourceforge.pmd.lang.java.types.internal.infer.OverloadSet;
+import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 public final class JavaResolvers {
@@ -128,7 +128,15 @@ public final class JavaResolvers {
                 return t.streamMethods(
                     it -> it.nameEquals(simpleName)
                         && isAccessibleIn(nestRoot, it, true) // fetch protected methods
+                        && isNotStaticInterfaceMethod(it)
                 ).collect(OverloadSet.collectMostSpecific(t)); // remove overridden, hidden methods
+            }
+
+            // Static interface methods are not inherited and are in fact not in scope in the subtypes.
+            // They must be explicitly qualified or imported.
+            private boolean isNotStaticInterfaceMethod(JMethodSymbol it) {
+                return !it.isStatic() || it.getEnclosingClass().equals(t.getSymbol())
+                    || !it.getEnclosingClass().isInterface();
             }
 
             @Override
@@ -436,8 +444,8 @@ public final class JavaResolvers {
         case 0:
             return sym.getPackageName().equals(packageName);
         default:
-            // fixme this is reachable for invalid declarations, like a private field of an interface
-            throw AssertionUtil.shouldNotReachHere(Modifier.toString(sym.getModifiers()));
+            // TODO this is reachable for invalid declarations, like a private field of an interface
+            throw AssertionUtil.shouldNotReachHere("private field of an interface? " + sym + ", modifiers: " + Modifier.toString(sym.getModifiers()));
         }
     }
 

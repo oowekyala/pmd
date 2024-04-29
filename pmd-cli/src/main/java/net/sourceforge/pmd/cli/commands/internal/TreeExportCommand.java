@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.cli.commands.mixins.internal.EncodingMixin;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.PmdLanguageTypeSupport;
-import net.sourceforge.pmd.cli.internal.ExecutionResult;
+import net.sourceforge.pmd.cli.internal.CliExitCode;
 import net.sourceforge.pmd.internal.LogMessages;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -32,7 +32,7 @@ import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 
-@Command(name = "ast-dump", description = "Experimental: dumps the AST of parsing source code")
+@Command(name = "ast-dump", description = "Dumps the AST of parsing source code")
 public class TreeExportCommand extends AbstractPmdSubcommand {
 
     static {
@@ -75,7 +75,7 @@ public class TreeExportCommand extends AbstractPmdSubcommand {
     @Option(names = "-P", description = "Key-value pair defining a property for the report format.%n"
             + "Supported values for each report format:%n${sys:pmd-cli.tree-export.report.properties.help}",
             completionCandidates = TreeExportReportPropertiesCandidates.class)
-    private Properties properties;
+    private Properties properties = new Properties();
 
     @Option(names = "--file", description = "The file to parse and dump.")
     private Path file;
@@ -85,13 +85,12 @@ public class TreeExportCommand extends AbstractPmdSubcommand {
 
     public TreeExportConfiguration toConfiguration() {
         final TreeExportConfiguration configuration = new TreeExportConfiguration();
-        configuration.setDebug(debug);
         configuration.setFile(file);
         configuration.setFormat(format);
         configuration.setLanguage(language);
         configuration.setProperties(properties);
         configuration.setReadStdin(readStdin);
-        configuration.setSourceEncoding(encoding.getEncoding().name());
+        configuration.setSourceEncoding(encoding.getEncoding());
         
         return configuration;
     }
@@ -106,16 +105,16 @@ public class TreeExportCommand extends AbstractPmdSubcommand {
     }
     
     @Override
-    protected ExecutionResult execute() {
+    protected CliExitCode execute() {
         final TreeExporter exporter = new TreeExporter(toConfiguration());
         try {
             exporter.export();
-            return ExecutionResult.OK;
+            return CliExitCode.OK;
         } catch (final IOException e) {
             final SimpleMessageReporter reporter = new SimpleMessageReporter(LoggerFactory.getLogger(TreeExportCommand.class));
             reporter.error(e, LogMessages.errorDetectedMessage(1, "ast-dump"));
             
-            return ExecutionResult.ERROR;
+            return CliExitCode.ERROR;
         }
     }
 

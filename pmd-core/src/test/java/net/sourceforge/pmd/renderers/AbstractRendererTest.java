@@ -13,31 +13,39 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.sourceforge.pmd.DummyParsingHelper;
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.Report.ConfigurationError;
-import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.Rule;
-import net.sourceforge.pmd.RulePriority;
-import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.RuleWithProperties;
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.document.TextRange2d;
-import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.lang.rule.Rule;
+import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.reporting.InternalApiBridge;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.Report.ConfigurationError;
+import net.sourceforge.pmd.reporting.Report.ProcessingError;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 abstract class AbstractRendererTest {
 
+    @RegisterExtension
+    protected final DummyParsingHelper helper = new DummyParsingHelper();
+
+    protected static final String EOL = System.lineSeparator();
     @TempDir
     private Path tempDir;
 
@@ -94,12 +102,16 @@ abstract class AbstractRendererTest {
 
     protected FileLocation createLocation(int beginLine, int beginColumn, int endLine, int endColumn) {
         TextRange2d range2d = TextRange2d.range2d(beginLine, beginColumn, endLine, endColumn);
-        return FileLocation.range(getSourceCodeFilename(), range2d);
+        return FileLocation.range(FileId.fromPathLikeString(getSourceCodeFilename()), range2d);
     }
 
     protected RuleViolation newRuleViolation(int beginLine, int beginColumn, int endLine, int endColumn, Rule rule) {
         FileLocation loc = createLocation(beginLine, beginColumn, endLine, endColumn);
-        return new ParametricRuleViolation(rule, loc, "blah");
+        return newRuleViolation(rule, loc, "blah");
+    }
+
+    protected RuleViolation newRuleViolation(Rule rule, FileLocation location, String message) {
+        return InternalApiBridge.createRuleViolation(rule, location, message, Collections.emptyMap());
     }
 
     /**
@@ -168,14 +180,14 @@ abstract class AbstractRendererTest {
 
     @Test
     void testError() throws Exception {
-        Report.ProcessingError err = new Report.ProcessingError(new RuntimeException("Error"), "file");
+        Report.ProcessingError err = new Report.ProcessingError(new RuntimeException("Error"), FileId.fromPathLikeString("file"));
         String actual = render(it -> it.onError(err));
         assertEquals(filter(getExpectedError(err)), filter(actual));
     }
 
     @Test
     void testErrorWithoutMessage() throws Exception {
-        Report.ProcessingError err = new Report.ProcessingError(new NullPointerException(), "file");
+        Report.ProcessingError err = new Report.ProcessingError(new NullPointerException(), FileId.fromPathLikeString("file"));
         String actual = render(it -> it.onError(err));
         assertEquals(filter(getExpectedErrorWithoutMessage(err)), filter(actual));
     }
@@ -200,7 +212,7 @@ abstract class AbstractRendererTest {
         return renderGlobal(renderer, globalListener -> {
 
             LanguageVersion version = DummyLanguageModule.getInstance().getDefaultVersion();
-            TextFile dummyFile = TextFile.forCharSeq("dummyText", "file", version);
+            TextFile dummyFile = TextFile.forCharSeq("dummyText", FileId.fromPathLikeString("fname1.dummy"), version);
             try (FileAnalysisListener fal = globalListener.startFileAnalysis(dummyFile)) {
                 listenerEffects.accept(fal);
             } catch (Exception e) {

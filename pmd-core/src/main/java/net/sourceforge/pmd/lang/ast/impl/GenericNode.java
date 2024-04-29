@@ -55,13 +55,8 @@ public interface GenericNode<N extends GenericNode<N>> extends Node {
     }
 
     @Override
-    default N getNthParent(int n) {
-        return (N) Node.super.getNthParent(n);
-    }
-
-    @Override
-    default NodeStream<? extends N> children() {
-        return (NodeStream<? extends N>) Node.super.children();
+    default NodeStream<N> children() {
+        return (NodeStream<N>) Node.super.children();
     }
 
     @Override

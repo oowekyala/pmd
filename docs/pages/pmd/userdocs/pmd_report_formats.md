@@ -254,10 +254,6 @@ Was expecting one of:
 * warnings: 2
 </pre>
 
-**Properties:**
-
-*   color: Enables colors with anything other than `false` or `0`. Default: yes.
-
 ## textpad
 
 TextPad integration.
@@ -331,7 +327,7 @@ Was expecting one of:
     ... 10 more
 ]]>
 </error>
-<suppressedviolation filename="/home/pmd/source/pmd-core/src/main/java/net/sourceforge/pmd/PMD.java" suppressiontype="annotation" msg="Ensure that resources like this OutputStreamWriter object are closed after use" usermsg=""/>
+<suppressedviolation filename="/home/pmd/source/pmd-core/src/main/java/net/sourceforge/pmd/PMD.java" suppressiontype="@suppresswarnings" msg="Ensure that resources like this OutputStreamWriter object are closed after use" usermsg=""/>
 <configerror rule="LoosePackageCoupling" msg="No packages or classes specified"/>
 </pmd>
 ```
@@ -345,9 +341,16 @@ Was expecting one of:
 XML with a XSL transformation applied.
 
 PMD provides one built-in stylesheet, that is used by default, if no other
-stylesheet with the property "xsltFilename" is specified. It is called [pmd-nicerhtml.xsl](https://github.com/pmd/pmd/blob/master/pmd-core/src/main/resources/pmd-nicerhtml.xsl) and can be used for customization.
+stylesheet with the property "xsltFilename" is specified. It is called
+[pmd-nicerhtml.xsl](https://github.com/pmd/pmd/blob/master/pmd-core/src/main/resources/pmd-nicerhtml.xsl)
+and can be used for customization.
 
-[Example with pmd-nicerhtml.xsl](report-examples/pmd-report-pmd-nicerhtml.html)
+There are many other stylesheets available online: <https://github.com/pmd/pmd/tree/master/pmd-core/etc/xslt>.
+
+Examples:
+* [Example with pmd-nicerhtml.xsl](report-examples/pmd-report-pmd-nicerhtml.html)
+* [Example with html-report-v2.xslt](report-examples/html-report-v2.html) - includes charts. It requires javascript enabled and uses
+  [jQuery](https://jquery.com/), [DataTables](https://datatables.net/), and [Vega](https://vega.github.io/vega/) for charting. 
 
 **Properties:**
 

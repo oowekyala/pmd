@@ -4,24 +4,24 @@
 
 package net.sourceforge.pmd.lang.apex.multifile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.annotation.Experimental;
-import net.sourceforge.pmd.lang.apex.ast.ApexParser;
+import net.sourceforge.pmd.lang.apex.ApexLanguageProcessor;
+import net.sourceforge.pmd.lang.apex.ApexLanguageProperties;
 
-import com.nawforce.common.api.FileIssueOptions;
-import com.nawforce.common.api.Org;
-import com.nawforce.common.api.ServerOps;
-import com.nawforce.common.diagnostics.Issue;
+import com.nawforce.apexlink.api.Org;
+import com.nawforce.pkgforce.api.Issue;
+import com.nawforce.pkgforce.diagnostics.LoggerOps;
 
 /**
  * Stores multi-file analysis data. The 'Org' here is the primary ApexLink structure for maintaining information
@@ -31,61 +31,78 @@ import com.nawforce.common.diagnostics.Issue;
  * issues after packages are loaded and throw away the 'Org'. That would be a better model if all you wanted was the
  * issues but more complex rules will need the ability to traverse the internal graph of the 'Org'.
  *
+ * <p>Note: This is used by {@link net.sourceforge.pmd.lang.apex.rule.design.UnusedMethodRule}.
+ *
  * @author Kevin Jones
  */
-@Experimental
 public final class ApexMultifileAnalysis {
 
     // test only
     static final Logger LOG = LoggerFactory.getLogger(ApexMultifileAnalysis.class);
 
-    /**
-     * Instances of the apexlink index and data structures ({@link Org})
-     * are stored statically for now. TODO make that language-wide (#2518).
-     */
-    private static final Map<String, ApexMultifileAnalysis> INSTANCE_MAP = new ConcurrentHashMap<>();
-
-    // An arbitrary large number of errors to report
-    private static final Integer MAX_ERRORS_PER_FILE = 100;
-
     // Create a new org for each analysis
     // Null if failed.
     private final @Nullable Org org;
-    private final FileIssueOptions options = makeOptions();
 
-    private static final ApexMultifileAnalysis FAILED_INSTANCE = new ApexMultifileAnalysis();
-
-    /** Ctor for the failed instance. */
-    private ApexMultifileAnalysis() {
-        org = null;
+    static {
+        // Setup logging
+        LoggerOps.setLogger(new AnalysisLogger());
+        // TODO: Provide means to control logging
+        LoggerOps.setLoggingLevel(LoggerOps.NO_LOGGING());
     }
 
-    private ApexMultifileAnalysis(String multiFileAnalysisDirectory) {
-        LOG.debug("MultiFile Analysis created for {}", multiFileAnalysisDirectory);
-        org = Org.newOrg();
-        if (multiFileAnalysisDirectory != null && !multiFileAnalysisDirectory.isEmpty()) {
+
+    ApexMultifileAnalysis(ApexLanguageProperties properties) {
+        Optional<String> rootDir = properties.getProperty(ApexLanguageProperties.MULTIFILE_DIRECTORY);
+        LOG.debug("MultiFile Analysis created for {}", rootDir);
+
+        Org org = null;
+        try {
             // Load the package into the org, this can take some time!
-            org.newSFDXPackage(multiFileAnalysisDirectory); // this may fail if the config is wrong
-            org.flush();
+            if (rootDir.isPresent() && !rootDir.get().isEmpty()) {
+                Path projectPath = Paths.get(rootDir.get());
+                Path sfdxProjectJson = projectPath.resolve("sfdx-project.json");
 
-            // FIXME: Syntax & Semantic errors found during Org loading are not currently being reported. These
-            // should be routed to the new SemanticErrorReporter but that is not available for use just yet.
+                // Limit analysis to SFDX Projects
+                // MDAPI analysis is currently supported but is expected to be deprecated soon
+                if (Files.isDirectory(projectPath) && Files.isRegularFile(sfdxProjectJson)) {
+                    org = Org.newOrg(rootDir.get());
+
+                    // FIXME: Syntax & Semantic errors found during Org loading are not currently being reported. These
+                    // should be routed to the new SemanticErrorReporter but that is not available for use just yet.
+                    // Specifically we should check sfdx-project.json was ok as errors will disable further analysis
+                    Issue[] projectErrors =
+                            Arrays.stream(org.issues().issuesForFile(sfdxProjectJson.toString()))
+                                    .filter(Issue::isError).toArray(Issue[]::new);
+                    Arrays.stream(projectErrors).forEach(issue -> LOG.info(issue.toString()));
+                    if (projectErrors.length != 0) {
+                        org = null;
+                    }
+                } else {
+                    LOG.info("Missing project file at {}", sfdxProjectJson);
+                }
+            }
+        } catch (Exception | ExceptionInInitializerError | NoClassDefFoundError e) {
+            // Note: Org.newOrg() will try to find the base Apex Types through the current classloader
+            // in package "com.nawforce.runforce". This requires, that directory listings can be retrievied
+            // on the URL that the classloader returns from getResource("/com/nawforce/runforce"):
+            // https://github.com/nawforce/apex-link/blob/7688adcb7a2d7f8aa28d0618ffb2a3aa81151858/apexlink/src/main/scala/com/nawforce/apexlink/types/platform/PlatformTypeDeclaration.scala#L260-L273
+            // However, when running as an Eclipse plugin, we have a special bundle classloader, that returns
+            // URIs in the form "bundleresource://...". For the schema "bundleresource", no FileSystemProvider can be
+            // found, so we get a java.nio.file.ProviderNotFoundException. Since all this happens during initialization of the class
+            // com.nawforce.apexlink.types.platform.PlatformTypeDeclaration we get a ExceptionInInitializerError
+            // and later NoClassDefFoundErrors, because PlatformTypeDeclaration couldn't be loaded.
+            LOG.error("Exception while initializing Apexlink ({})", e.getMessage(), e);
+            LOG.error("PMD will not attempt to initialize Apexlink further, this can cause rules like UnusedMethod to be dysfunctional");
         }
-    }
-
-    private static FileIssueOptions makeOptions() {
-        FileIssueOptions options = new FileIssueOptions();
-        // Default issue options, zombies gets us unused methods & fields as well as deploy problems
-        options.includeZombies_$eq(true);
-        options.maxErrorsPerFile_$eq(MAX_ERRORS_PER_FILE);
-        return options;
+        this.org = org;
     }
 
     /**
      * Returns true if this is analysis index is in a failed state.
      * This object is then useless. The failed instance is returned
-     * from {@link #getAnalysisInstance(String)} if loading the org
-     * failed, maybe because of malformed configuration.
+     * from {@link ApexLanguageProcessor#getMultiFileState()} if
+     * loading the org failed, maybe because of malformed configuration.
      */
     public boolean isFailed() {
         return org == null;
@@ -94,45 +111,13 @@ public final class ApexMultifileAnalysis {
     public List<Issue> getFileIssues(String filename) {
         // Extract issues for a specific metadata file from the org
         return org == null ? Collections.emptyList()
-                           : Collections.unmodifiableList(Arrays.asList(org.getFileIssues(filename, options)));
-    }
-
-    /**
-     * Returns the analysis instance. Returns a {@linkplain #isFailed() failed instance}
-     * if this fails.
-     *
-     * @param multiFileAnalysisDirectory Root directory of the configuration (see {@link ApexParser#MULTIFILE_DIRECTORY}).
-     */
-    public static @NonNull ApexMultifileAnalysis getAnalysisInstance(String multiFileAnalysisDirectory) {
-        if (INSTANCE_MAP.isEmpty()) {
-            // Default some library wide settings
-            ServerOps.setAutoFlush(false);
-            ServerOps.setLogger(new AnalysisLogger());
-            ServerOps.setDebugLogging(new String[] { "ALL" });
-        }
-
-        return INSTANCE_MAP.computeIfAbsent(
-            multiFileAnalysisDirectory,
-            dir -> {
-                try {
-                    return new ApexMultifileAnalysis(dir);
-                } catch (Exception e) {
-                    LOG.error("Exception while initializing Apexlink ({})", e.getMessage(), e);
-                    LOG.error("PMD will not attempt to initialize Apexlink further, this can cause rules like UnusedMethod to be dysfunctional");
-                    return FAILED_INSTANCE;
-                }
-            });
+                           : Collections.unmodifiableList(Arrays.asList(org.issues().issuesForFile(filename)));
     }
 
     /*
      * Very simple logger to aid debugging, relays ApexLink logging into PMD
      */
-    private static final class AnalysisLogger implements com.nawforce.common.api.Logger {
-
-        @Override
-        public void error(String message) {
-            LOG.error(message);
-        }
+    private static final class AnalysisLogger implements com.nawforce.pkgforce.diagnostics.Logger {
 
         @Override
         public void info(String message) {
@@ -142,6 +127,11 @@ public final class ApexMultifileAnalysis {
         @Override
         public void debug(String message) {
             LOG.debug(message);
+        }
+
+        @Override
+        public void trace(String message) {
+            LOG.trace(message);
         }
     }
 }

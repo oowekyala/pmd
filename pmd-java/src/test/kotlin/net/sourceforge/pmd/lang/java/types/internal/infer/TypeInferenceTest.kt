@@ -7,13 +7,13 @@
 package net.sourceforge.pmd.lang.java.types.internal.infer
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
-import net.sourceforge.pmd.lang.ast.test.shouldMatchN
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol
 import net.sourceforge.pmd.lang.java.types.*
+import net.sourceforge.pmd.lang.test.ast.NodeSpec
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
+import net.sourceforge.pmd.lang.test.ast.shouldMatchN
 import java.util.*
 
 /**
@@ -137,7 +137,7 @@ class TypeInferenceTest : ProcessorTestSpec({
                             variableId("it")
                         }
                     }
-                    it::getExpression shouldBe child<ASTMethodCall> {
+                    it::getExpressionBody shouldBe child<ASTMethodCall> {
                         it shouldHaveType it.typeSystem.BOOLEAN
                         it::getQualifier shouldBe variableAccess("it") {
                             it shouldHaveType it.typeSystem.STRING
@@ -248,7 +248,7 @@ class Scratch<O> {
 }
         """.trimIndent())
 
-        val (t_I, t_C) = acu.declaredTypeSignatures()
+        val (_, t_C) = acu.declaredTypeSignatures()
         val tParam = acu.typeVariables().first { it.name == "T" }
 
         spy.shouldBeOk {
@@ -325,7 +325,7 @@ class MyMap<K, V> {
 
         """.trimIndent())
 
-        val (t_MyMap, t_MyMapEntry, t_KeyIter) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+        val (t_MyMap, t_MyMapEntry, t_KeyIter) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
         val (kvar, vvar) = acu.descendants(ASTTypeParameter::class.java).toList { it.typeMirror }
 
         val ctorCall = acu.descendants(ASTConstructorCall::class.java).firstOrThrow()
@@ -380,6 +380,39 @@ class Foo {
 
         spy.shouldBeOk {
             acu.firstMethodCall() shouldHaveType void
+        }
+    }
+
+
+    parserTest("#4902 bad intersection") {
+
+        val (acu, spy) = parser.parseWithTypeInferenceSpy("""
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class BadIntersection {
+
+  interface Animal { }
+  enum Bird implements Animal { PARROT, CHICKEN }
+  enum Fish implements Animal { GOLDFISH, MACKEREL }
+
+  private static List<Animal> combineAnimals() {
+    return Stream.of(
+            Bird.values(),
+            Fish.values()
+        )
+        .flatMap(Arrays::stream)
+        .collect(Collectors.toList());
+  }
+}
+        """.trimIndent())
+
+        val (_, t_Animal) = acu.declaredTypeSignatures()
+
+        spy.shouldBeOk {
+            acu.firstMethodCall() shouldHaveType java.util.List::class[t_Animal]
         }
     }
 

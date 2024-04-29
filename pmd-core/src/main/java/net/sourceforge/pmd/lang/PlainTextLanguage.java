@@ -4,13 +4,16 @@
 
 package net.sourceforge.pmd.lang;
 
-import net.sourceforge.pmd.annotation.Experimental;
+import net.sourceforge.pmd.cpd.AnyCpdLexer;
+import net.sourceforge.pmd.cpd.CpdCapableLanguage;
+import net.sourceforge.pmd.cpd.CpdLexer;
 import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.Parser;
 import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.lang.impl.SimpleLanguageModuleBase;
 
 /**
  * A dummy language implementation whose parser produces a single node.
@@ -22,23 +25,28 @@ import net.sourceforge.pmd.lang.document.TextRegion;
  * @author Clément Fournier
  * @since 6.48.0
  */
-@Experimental
-public final class PlainTextLanguage extends BaseLanguageModule {
+public final class PlainTextLanguage extends SimpleLanguageModuleBase implements CpdCapableLanguage {
+    private static final String ID = "text";
 
-    private static final Language INSTANCE = new PlainTextLanguage();
-
-    static final String TERSE_NAME = "text";
+    private static final PlainTextLanguage INSTANCE = new PlainTextLanguage();
 
     private PlainTextLanguage() {
-        super("Plain text", "Plain text", TERSE_NAME, "plain-text-file-goo-extension");
-        addVersion("default", new TextLvh(), true);
+        super(LanguageMetadata.withId(ID).name("Plain text")
+                              .extensions("plain-text-file-goo-extension")
+                              .addDefaultVersion("default"),
+              new TextLvh());
     }
 
     /**
      * Returns the singleton instance of this language.
      */
-    public static Language getInstance() {
-        return INSTANCE;
+    public static PlainTextLanguage getInstance() {
+        return INSTANCE; // note: this language is _not_ exposed via LanguageRegistry (no entry in META-INF/services)
+    }
+
+    @Override
+    public CpdLexer createCpdLexer(LanguagePropertyBundle bundle) {
+        return new AnyCpdLexer();
     }
 
     private static final class TextLvh implements LanguageVersionHandler {

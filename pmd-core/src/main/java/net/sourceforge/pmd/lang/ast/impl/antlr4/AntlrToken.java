@@ -72,6 +72,11 @@ public class AntlrToken implements GenericToken<AntlrToken> {
         return getRegion().compareTo(o.getRegion());
     }
 
+    @Override
+    public int getKind() {
+        return token.getType();
+    }
+
     public boolean isHidden() {
         return !isDefault();
     }

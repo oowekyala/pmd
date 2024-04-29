@@ -4,23 +4,20 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-import net.sourceforge.pmd.annotation.Experimental;
 
 /**
- * A record pattern (JDK19).
+ * A record pattern, a Java 21 language feature.
  *
  * <pre class="grammar">
  *
- * RecordPattern ::= {@linkplain ASTReferenceType ReferenceType} {@linkplain ASTComponentPatternList ComponentPatternList} [ {@linkplain ASTVariableDeclaratorId VariableDeclaratorId} ]
+ * RecordPattern ::= {@linkplain ASTReferenceType ReferenceType} {@linkplain ASTPatternList PatternList}
  *
  * </pre>
  *
- * @see <a href="https://openjdk.org/jeps/405">JEP 405: Record Patterns (Preview)</a>
+ * @see ASTRecordDeclaration
+ * @see <a href="https://openjdk.org/jeps/440">JEP 440: Record Patterns</a> (Java 21)
 */
-@Experimental
 public final class ASTRecordPattern extends AbstractJavaNode implements ASTPattern {
-
-    private int parenDepth;
 
     ASTRecordPattern(int id) {
         super(id);
@@ -35,21 +32,11 @@ public final class ASTRecordPattern extends AbstractJavaNode implements ASTPatte
      * Gets the type against which the expression is tested.
      */
     public ASTReferenceType getTypeNode() {
-        return getFirstChildOfType(ASTReferenceType.class);
+        return firstChild(ASTReferenceType.class);
     }
 
     /** Returns the declared variable. */
-    public ASTVariableDeclaratorId getVarId() {
-        return getFirstChildOfType(ASTVariableDeclaratorId.class);
-    }
-
-    void bumpParenDepth() {
-        parenDepth++;
-    }
-
-    @Override
-    @Experimental
-    public int getParenthesisDepth() {
-        return parenDepth;
+    public ASTVariableId getVarId() {
+        return firstChild(ASTVariableId.class);
     }
 }

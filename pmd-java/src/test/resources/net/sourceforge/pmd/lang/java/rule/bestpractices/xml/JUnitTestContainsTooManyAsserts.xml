@@ -66,9 +66,12 @@ public class MyTestCase {
         ]]></code>
     </test-code>
 
-   <test-code>
+    <test-code>
         <description>JUnit 3 Test contains more than one assert</description>
         <expected-problems>1</expected-problems>
+        <expected-messages>
+            <message>Unit tests should not contain more than 1 assert(s).</message>
+        </expected-messages>
         <code><![CDATA[
 import junit.framework.TestCase;
 public class MyTestCase extends TestCase {
@@ -269,4 +272,23 @@ public class MyTestCase {
             }
             ]]></code>
     </test-code>
+
+    <test-code>
+        <description>Extra properties</description>
+        <rule-property name="extraAssertMethodNames">customAssertion</rule-property>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+            import org.junit.jupiter.api.Test;
+            public class A {
+                @Test
+                void test() {
+                    customAssertion("aueoau");
+                    customAssertion("aueoau");
+                    customAssertion("aueoau");
+                }
+            }
+            ]]></code>
+    </test-code>
+
+
 </test-data>

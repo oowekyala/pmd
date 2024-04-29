@@ -13,13 +13,13 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTList;
 import net.sourceforge.pmd.lang.java.ast.InvocationNode;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
+import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.OptionalBool;
 import net.sourceforge.pmd.util.StringUtil;
@@ -53,7 +53,7 @@ import net.sourceforge.pmd.util.StringUtil;
  * an overload that does not exist (the char is widened to an int,
  * so the int overload is selected).
  *
- * <h5 id='ebnf'>Full EBNF grammar</h5>
+ * <h2 id='ebnf'>Full EBNF grammar</h2>
  *
  * <p>(no whitespace is tolerated anywhere):
  * <pre>{@code

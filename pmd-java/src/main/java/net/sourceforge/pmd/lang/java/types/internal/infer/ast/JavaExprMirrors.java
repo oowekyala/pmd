@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java.types.internal.infer.ast;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
@@ -25,6 +24,7 @@ import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.FunctionalE
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.Infer;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ast.CtorInvocMirror.EnumCtorInvocMirror;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /** Façade that creates {@link ExprMirror} instances. */
 public final class JavaExprMirrors {
@@ -109,7 +109,7 @@ public final class JavaExprMirrors {
         } else if (e instanceof ASTEnumConstant) {
             return new EnumCtorInvocMirror(this, (ASTEnumConstant) e, parent, subexprMaker);
         }
-        throw AssertionUtil.shouldNotReachHere("" + e);
+        throw AssertionUtil.shouldNotReachHere("Unhandled InvocationNode:" + e);
     }
 
 
@@ -124,7 +124,7 @@ public final class JavaExprMirrors {
         } else if (e instanceof ASTSwitchExpression) {
             return new SwitchMirror(this, (ASTSwitchExpression) e, true, null, defaultMirrorMaker());
         }
-        throw AssertionUtil.shouldNotReachHere("" + e);
+        throw AssertionUtil.shouldNotReachHere("Unhandled expression: " + e);
     }
 
     /**
@@ -136,7 +136,7 @@ public final class JavaExprMirrors {
         } else if (e instanceof ASTSwitchExpression) {
             return new SwitchMirror(this, (ASTSwitchExpression) e, false, null, defaultMirrorMaker());
         }
-        throw AssertionUtil.shouldNotReachHere("" + e);
+        throw AssertionUtil.shouldNotReachHere("Unhandled expression: " + e);
     }
 
     public FunctionalExprMirror getTopLevelFunctionalMirror(ASTExpression e) {
@@ -149,7 +149,7 @@ public final class JavaExprMirrors {
         } else if (e instanceof ASTMethodReference) {
             return new MethodRefMirrorImpl(this, (ASTMethodReference) e, parent, subexprMaker);
         }
-        throw AssertionUtil.shouldNotReachHere("" + e);
+        throw AssertionUtil.shouldNotReachHere("Unhandled expression: " + e);
     }
 
 

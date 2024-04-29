@@ -2,24 +2,22 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-/*
- * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
- */
-
 package net.sourceforge.pmd.lang.rule.xpath;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.DummyNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute.NoAttrScope;
+import net.sourceforge.pmd.lang.rule.xpath.impl.AttributeAxisIterator;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * @author Clément Fournier
@@ -95,10 +93,14 @@ class NoAttributeTest {
         }
 
 
+        @Override
+        public Iterator<Attribute> getXPathAttributesIterator() {
+            return new AttributeAxisIterator(this);
+        }
     }
 
     @NoAttribute(scope = NoAttrScope.INHERITED)
-    private static class NodeNoInherited extends DummyNodeParent {
+    public static class NodeNoInherited extends DummyNodeParent {
 
         // getSomeName is inherited and filtered out by NoAttrScope.INHERITED
         // getSomeInt is inherited but overridden here, so NoAttrScope.INHERITED has no effect
@@ -133,7 +135,7 @@ class NoAttributeTest {
 
     }
 
-    private static class NodeAllAttr extends DummyNodeParent {
+    public static class NodeAllAttr extends DummyNodeParent {
 
         NodeAllAttr(int id) {
             super();
@@ -141,7 +143,7 @@ class NoAttributeTest {
     }
 
     @NoAttribute(scope = NoAttrScope.ALL)
-    private static class NodeNoAttrAll extends DummyNodeParent {
+    public static class NodeNoAttrAll extends DummyNodeParent {
 
         public int getMySuppressedAttr() {
             return 12;
@@ -150,7 +152,7 @@ class NoAttributeTest {
     }
 
 
-    private static class NodeNoAttrAllChild extends NodeNoAttrAll {
+    public static class NodeNoAttrAllChild extends NodeNoAttrAll {
 
         public int getNotSuppressedAttr() {
             return 12;

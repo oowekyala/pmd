@@ -15,8 +15,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.pcollections.PSet;
 
-import net.sourceforge.pmd.annotation.Experimental;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
@@ -27,6 +25,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 import net.sourceforge.pmd.lang.java.types.TypeOps.Convertibility;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * Type mirrors represent Java types. They are created by a {@link TypeSystem}
@@ -139,6 +138,12 @@ public interface JTypeMirror extends JTypeVisitable {
      *
      * <p>Note that this set contains {@link TypeSystem#OBJECT}
      * for interfaces too.
+     *
+     * <p>Note that for types having type annotations, the supertypes
+     * do not bear the same annotations. Eg the supertypes of {@code @A String}
+     * contain {@code Object} but not {@code @A Object}. The supertypes
+     * may be annotated though, eg if a class declares {@code extends @A Foo},
+     * the supertypes contain {@code @A Foo}.
      *
      * @throws UnsupportedOperationException If this is the null type
      */
@@ -353,7 +358,7 @@ public interface JTypeMirror extends JTypeVisitable {
      * <p>For example, {@code List}, {@code List<T>}, and {@code List<String>}
      * are generic, but {@code String} is not.
      *
-     * @see JClassType#isGeneric().
+     * @see JClassType#isGeneric()
      */
     default boolean isGeneric() {
         return false;
@@ -407,17 +412,16 @@ public interface JTypeMirror extends JTypeVisitable {
      * method, they're not reused between calls. This stream does not
      * include constructors.
      *
+     * <p>Note: streams are a bit impractical when it comes to
+     * configuring the filter. Possibly a specialized API should be introduced.
+     * We need to support the use cases of the symbol table, ie filter by name + accessibility + staticity,
+     * and also possibly use cases for rules, like getting a method from
+     * a known signature. See also {@link JClassType#getDeclaredMethod(JExecutableSymbol)},
+     * which looks like this. Unifying this API would be nice.
+     *
      * @param prefilter Filter selecting symbols for which a signature
      *                  should be created and yielded by the stream
-     *
-     * @experimental streams are a bit impractical when it comes to
-     *     configuring the filter. Possibly a specialized API should be introduced.
-     *     We need to support the use cases of the symbol table, ie filter by name + accessibility + staticity,
-     *     and also possibly use cases for rules, like getting a method from
-     *     a known signature. See also {@link JClassType#getDeclaredMethod(JExecutableSymbol)},
-     *     which looks like this. Unifying this API would be nice.
      */
-    @Experimental
     default Stream<JMethodSig> streamMethods(Predicate<? super JMethodSymbol> prefilter) {
         return Stream.empty();
     }
@@ -427,11 +431,10 @@ public interface JTypeMirror extends JTypeVisitable {
      * not recurse into supertypes. Note that only class and array types
      * declare methods themselves.
      *
-     * @experimental See {@link #streamMethods(Predicate)}
+     * <p>See also note in {@link #streamMethods(Predicate)}.
      *
      * @see #streamMethods(Predicate)
      */
-    @Experimental
     default Stream<JMethodSig> streamDeclaredMethods(Predicate<? super JMethodSymbol> prefilter) {
         return Stream.empty();
     }
@@ -441,7 +444,6 @@ public interface JTypeMirror extends JTypeVisitable {
      * Returns a list of all the declared constructors for this type.
      * Abstract types like type variables and interfaces have no constructors.
      */
-    @Experimental
     default List<JMethodSig> getConstructors() {
         return Collections.emptyList();
     }

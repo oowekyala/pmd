@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
@@ -43,6 +41,7 @@ import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
 import net.sourceforge.pmd.lang.java.types.internal.infer.OverloadSet;
 import net.sourceforge.pmd.util.CollectionUtil;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Common operations on types.
@@ -94,9 +93,10 @@ public final class TypeOps {
     /**
      * Return true if t and s are the same type. This may perform side effects
      * on inference variables. Annotations are ignored.
+     *
+     * @apiNote Internal API
      */
-    @InternalApi
-    public static boolean isSameTypeInInference(JTypeMirror t, JTypeMirror s) {
+    static boolean isSameTypeInInference(JTypeMirror t, JTypeMirror s) {
         return isSameType(t, s, true, false);
     }
 
@@ -578,6 +578,11 @@ public final class TypeOps {
          */
         public boolean withUncheckedWarning() {
             return this == UNCHECKED_WARNING;
+        }
+
+        /** True if this is {@link #SUBTYPING} or {@link #UNCHECKED_NO_WARNING}. */
+        public boolean withoutWarnings() {
+            return this == SUBTYPING || this == UNCHECKED_NO_WARNING;
         }
 
         // package:
@@ -1733,8 +1738,15 @@ public final class TypeOps {
         vLoop:
         for (JTypeMirror v : set) {
             for (JTypeMirror w : set) {
-                if (!w.equals(v) && !hasUnresolvedSymbol(w) && isSubtypePure(w, v).bySubtyping()) {
-                    continue vLoop;
+                if (!w.equals(v) && !hasUnresolvedSymbol(w)) {
+                    Convertibility isConvertible = isSubtypePure(w, v);
+                    if (isConvertible.bySubtyping()
+                        // This last case covers unchecked conversion. It is made antisymmetric by the
+                        // test for a symbol. eg |G| <~> G<?> so it would fail.
+                        // However, |G| ~> S if |G| <: |S|, so we should consider |G| more specific than S.
+                        || isConvertible.withoutWarnings() && !Objects.equals(w.getSymbol(), v.getSymbol())) {
+                        continue vLoop;
+                    }
                 }
             }
             result.add(v);

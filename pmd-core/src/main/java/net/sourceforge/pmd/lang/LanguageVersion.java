@@ -5,9 +5,9 @@
 package net.sourceforge.pmd.lang;
 
 import java.util.List;
+import java.util.Objects;
 
-import net.sourceforge.pmd.Rule;
-import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.rule.Rule;
 
 /**
  * Represents a version of a {@link Language}. Language instances provide
@@ -21,32 +21,19 @@ import net.sourceforge.pmd.annotation.InternalApi;
  * and {@link Rule#getMaximumLanguageVersion()}. These should be set in the
  * ruleset XML (they're attributes of the {@code <rule>} element), and not
  * overridden.
- *
- * <p>Example usage:
- * <pre>
- * Language javaLanguage = LanguageRegistry.PMD.{@link LanguageRegistry#getLanguageById(String) getLanguageById}("java");
- * LanguageVersion java11 = javaLanguage.{@link Language#getVersion(String) getVersion}("11");
- * LanguageVersionHandler handler = java11.getLanguageVersionHandler();
- * Parser parser = handler.getParser(handler.getDefaultParserOptions());
- * // use parser
- * </pre>
  */
-public class LanguageVersion implements Comparable<LanguageVersion> {
+public final class LanguageVersion implements Comparable<LanguageVersion> {
 
     private final Language language;
     private final String version;
-    private final LanguageVersionHandler languageVersionHandler; // note: this is null if this is a cpd-only language...
+    private final int index;
+    private final List<String> aliases;
 
-    /**
-     * @deprecated Use {@link Language#getVersion(String)}. This is only
-     *     supposed to be used when initializing a {@link Language} instance.
-     */
-    @Deprecated
-    @InternalApi
-    public LanguageVersion(Language language, String version, LanguageVersionHandler languageVersionHandler) {
+    LanguageVersion(Language language, String version, int index, List<String> aliases) {
         this.language = language;
         this.version = version;
-        this.languageVersionHandler = languageVersionHandler;
+        this.index = index;
+        this.aliases = aliases;
     }
 
     /**
@@ -64,12 +51,8 @@ public class LanguageVersion implements Comparable<LanguageVersion> {
         return version;
     }
 
-    /**
-     * Returns the {@link LanguageVersionHandler}, which provides access
-     * to version-specific services, like the parser.
-     */
-    public LanguageVersionHandler getLanguageVersionHandler() {
-        return languageVersionHandler;
+    List<String> getAliases() {
+        return aliases;
     }
 
     /**
@@ -93,13 +76,13 @@ public class LanguageVersion implements Comparable<LanguageVersion> {
     }
 
     /**
-     * Get the terse name of this LanguageVersion. This is Language terse name
+     * Get the terse name of this LanguageVersion. This is Language id
      * appended with the LanguageVersion version if not an empty String.
      *
      * @return The terse name of this LanguageVersion.
      */
     public String getTerseName() {
-        return version.length() > 0 ? language.getTerseName() + ' ' + version : language.getTerseName();
+        return version.length() > 0 ? language.getId() + ' ' + version : language.getId();
     }
 
     /**
@@ -122,10 +105,29 @@ public class LanguageVersion implements Comparable<LanguageVersion> {
 
     @Override
     public int compareTo(LanguageVersion o) {
-        List<LanguageVersion> versions = language.getVersions();
-        int thisPosition = versions.indexOf(this);
-        int otherPosition = versions.indexOf(o);
-        return Integer.compare(thisPosition, otherPosition);
+        int cmp = language.compareTo(o.getLanguage());
+        if (cmp != 0) {
+            return cmp;
+        }
+        return Integer.compare(this.index, o.index);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LanguageVersion)) {
+            return false;
+        }
+        LanguageVersion that = (LanguageVersion) o;
+        return language.equals(that.language) && version.equals(that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(language, version);
     }
 
     @Override

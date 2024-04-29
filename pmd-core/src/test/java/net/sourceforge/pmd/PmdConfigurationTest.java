@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -22,19 +22,20 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import net.sourceforge.pmd.cache.FileAnalysisCache;
-import net.sourceforge.pmd.cache.NoopAnalysisCache;
+import net.sourceforge.pmd.cache.internal.FileAnalysisCache;
+import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
+import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
+import net.sourceforge.pmd.lang.CpdOnlyDummyLanguage;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.renderers.CSVRenderer;
 import net.sourceforge.pmd.renderers.Renderer;
-import net.sourceforge.pmd.util.ClasspathClassLoader;
 
 class PmdConfigurationTest {
 
@@ -73,7 +74,7 @@ class PmdConfigurationTest {
 
     @Test
     void auxClasspathWithRelativeFileEmpty() {
-        String relativeFilePath = "src/test/resources/net/sourceforge/pmd/cli/auxclasspath-empty.cp";
+        String relativeFilePath = "src/test/resources/net/sourceforge/pmd/auxclasspath-empty.cp";
         PMDConfiguration configuration = new PMDConfiguration();
         configuration.prependAuxClasspath("file:" + relativeFilePath);
         URL[] urls = ((ClasspathClassLoader) configuration.getClassLoader()).getURLs();
@@ -82,7 +83,7 @@ class PmdConfigurationTest {
 
     @Test
     void auxClasspathWithRelativeFileEmpty2() {
-        String relativeFilePath = "./src/test/resources/net/sourceforge/pmd/cli/auxclasspath-empty.cp";
+        String relativeFilePath = "./src/test/resources/net/sourceforge/pmd/auxclasspath-empty.cp";
         PMDConfiguration configuration = new PMDConfiguration();
         configuration.prependAuxClasspath("file:" + relativeFilePath);
         URL[] urls = ((ClasspathClassLoader) configuration.getClassLoader()).getURLs();
@@ -94,7 +95,7 @@ class PmdConfigurationTest {
         final String FILE_SCHEME = "file";
 
         String currentWorkingDirectory = new File("").getAbsoluteFile().toURI().getPath();
-        String relativeFilePath = "src/test/resources/net/sourceforge/pmd/cli/auxclasspath.cp";
+        String relativeFilePath = "src/test/resources/net/sourceforge/pmd/auxclasspath.cp";
         PMDConfiguration configuration = new PMDConfiguration();
         configuration.prependAuxClasspath("file:" + relativeFilePath);
         URL[] urls = ((ClasspathClassLoader) configuration.getClassLoader()).getURLs();
@@ -113,16 +114,6 @@ class PmdConfigurationTest {
             new URI(FILE_SCHEME, null, currentWorkingDirectory + "relative source dir/bar", null),
         };
         assertArrayEquals(expectedUris, uris);
-    }
-
-    @Test
-    void testRuleSetsLegacy() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertNull(configuration.getRuleSets(), "Default RuleSets");
-        configuration.setRuleSets("/rulesets/basic.xml");
-        assertEquals("/rulesets/basic.xml", configuration.getRuleSets(), "Changed RuleSets");
-        configuration.setRuleSets((String) null);
-        assertNull(configuration.getRuleSets());
     }
 
     @Test
@@ -152,27 +143,8 @@ class PmdConfigurationTest {
     void testSourceEncoding() {
         PMDConfiguration configuration = new PMDConfiguration();
         assertEquals(System.getProperty("file.encoding"), configuration.getSourceEncoding().name(), "Default source encoding");
-        configuration.setSourceEncoding(StandardCharsets.UTF_16LE.name());
+        configuration.setSourceEncoding(StandardCharsets.UTF_16LE);
         assertEquals(StandardCharsets.UTF_16LE, configuration.getSourceEncoding(), "Changed source encoding");
-    }
-
-    @Test
-    void testInputPaths() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertThat(configuration.getInputPathList(), empty());
-        configuration.setInputPaths("a,b,c");
-        List<Path> expected = listOf(
-            Paths.get("a"), Paths.get("b"), Paths.get("c")
-        );
-        assertEquals(expected, configuration.getInputPathList(), "Changed input paths");
-    }
-
-    @Test
-    void testReportShortNames() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(false, configuration.isReportShortNames(), "Default report short names");
-        configuration.setReportShortNames(true);
-        assertEquals(true, configuration.isReportShortNames(), "Changed report short names");
     }
 
     @Test
@@ -198,14 +170,6 @@ class PmdConfigurationTest {
     }
 
     @Test
-    void testReportFile() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(null, configuration.getReportFile(), "Default report file");
-        configuration.setReportFile("somefile");
-        assertEquals("somefile", configuration.getReportFile(), "Changed report file");
-    }
-
-    @Test
     void testShowSuppressedViolations() {
         PMDConfiguration configuration = new PMDConfiguration();
         assertEquals(false, configuration.isShowSuppressedViolations(), "Default show suppressed violations");
@@ -222,30 +186,6 @@ class PmdConfigurationTest {
         assertEquals("value", configuration.getReportProperties().get("key"), "Changed report properties value");
         configuration.setReportProperties(new Properties());
         assertEquals(0, configuration.getReportProperties().size(), "Replaced report properties size");
-    }
-
-    @Test
-    void testDebug() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(false, configuration.isDebug(), "Default debug");
-        configuration.setDebug(true);
-        assertEquals(true, configuration.isDebug(), "Changed debug");
-    }
-
-    @Test
-    void testStressTest() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(false, configuration.isStressTest(), "Default stress test");
-        configuration.setStressTest(true);
-        assertEquals(true, configuration.isStressTest(), "Changed stress test");
-    }
-
-    @Test
-    void testBenchmark() {
-        PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(false, configuration.isBenchmark(), "Default benchmark");
-        configuration.setBenchmark(true);
-        assertEquals(true, configuration.isBenchmark(), "Changed benchmark");
     }
 
     @Test
@@ -292,5 +232,15 @@ class PmdConfigurationTest {
 
         configuration.setIgnoreIncrementalAnalysis(true);
         assertTrue(configuration.getAnalysisCache() instanceof NoopAnalysisCache, "Ignoring incremental analysis should turn the cache into a noop");
+    }
+
+    @Test
+    void testCpdOnlyLanguage() {
+        final PMDConfiguration configuration = new PMDConfiguration(LanguageRegistry.CPD);
+
+        assertThrows(UnsupportedOperationException.class,
+            () -> configuration.setOnlyRecognizeLanguage(CpdOnlyDummyLanguage.getInstance()));
+        assertThrows(UnsupportedOperationException.class,
+            () -> configuration.setDefaultLanguageVersion(CpdOnlyDummyLanguage.getInstance().getDefaultVersion()));
     }
 }

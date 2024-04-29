@@ -24,7 +24,6 @@ import net.sf.saxon.value.FloatValue;
 import net.sf.saxon.value.Int64Value;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.UntypedAtomicValue;
 
 
 /**
@@ -131,7 +130,7 @@ public final class DomainConversion {
         (see http://openjdk.java.net/jeps/305) so that it looks clearer.
         */
         if (value == null) {
-            return UntypedAtomicValue.ZERO_LENGTH_UNTYPED;
+            return StringValue.ZERO_LENGTH_UNTYPED;
 
         } else if (value instanceof String) {
             return new StringValue((String) value);

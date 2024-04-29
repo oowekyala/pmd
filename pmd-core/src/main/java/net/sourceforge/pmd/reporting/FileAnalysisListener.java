@@ -8,19 +8,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.Report.SuppressedViolation;
-import net.sourceforge.pmd.RuleViolation;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.internal.util.IOUtil;
+import net.sourceforge.pmd.reporting.Report.ProcessingError;
+import net.sourceforge.pmd.reporting.Report.SuppressedViolation;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * A handler for events occuring during analysis of a single file. Instances
  * are only used on a single thread for their entire lifetime, so don't
- * need to be synchronized to access state they own.
+ * need to be synchronized to access state they own. File listeners are
+ * spawned by a {@link GlobalAnalysisListener}.
  *
  * <p>Listeners are assumed to be ready to receive events as soon as they
  * are constructed.
+ *
+ * @see Report.ReportBuilderListener
  */
 public interface FileAnalysisListener extends AutoCloseable {
 
@@ -51,10 +53,10 @@ public interface FileAnalysisListener extends AutoCloseable {
      * Signals the end of the analysis: no further calls will be made
      * to this listener. This is run in the thread the listener has
      * been used in. This means, if this routine merges some state
-     * into some global state of the {@link GlobalAnalysisListener),
+     * into some global state of the {@link GlobalAnalysisListener},
      * then that must be synchronized.
      *
-     * @throws Exception If an exception occurs, eg IOException when writing to a renderer
+     * @throws Exception If an exception occurs, e.g. IOException when writing to a renderer
      */
     @Override
     default void close() throws Exception {
@@ -90,10 +92,10 @@ public interface FileAnalysisListener extends AutoCloseable {
         List<FileAnalysisListener> list = new ArrayList<>(listeners);
         list.removeIf(it -> it == NoopFileListener.INSTANCE);
 
-        if (listeners.isEmpty()) {
+        if (list.isEmpty()) {
             return noop();
-        } else if (listeners.size() == 1) {
-            return listeners.iterator().next();
+        } else if (list.size() == 1) {
+            return list.iterator().next();
         }
 
         class TeeListener implements FileAnalysisListener {

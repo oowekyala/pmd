@@ -13,8 +13,8 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Combined filter/map predicate. Cannot accept null values.
@@ -44,13 +44,8 @@ interface Filtermap<I, O> extends Function<@NonNull I, @Nullable O>, Predicate<@
 
     /** Filter an iterator. */
     default Iterator<O> filterMap(Iterator<? extends I> iter) {
-        return applyIterator(iter, this);
+        return IteratorUtil.mapNotNull(iter, this);
     }
-
-    static <I, O> Iterator<O> applyIterator(Iterator<? extends I> iter, Filtermap<? super I, ? extends O> filtermap) {
-        return IteratorUtil.mapNotNull(iter, filtermap);
-    }
-
 
     /** Compose a new Filtermap, coalescing null values. */
     default <R> Filtermap<I, R> thenApply(Function<@NonNull ? super O, @Nullable ? extends R> then) {

@@ -14,28 +14,31 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
-import net.sourceforge.pmd.RulePriority;
 import net.sourceforge.pmd.benchmark.TextTimingReportRenderer;
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimingReport;
 import net.sourceforge.pmd.benchmark.TimingReportRenderer;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.PmdLanguageTypeSupport;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.PmdLanguageVersionTypeSupport;
-import net.sourceforge.pmd.cli.internal.ExecutionResult;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.RulePriorityTypeSupport;
+import net.sourceforge.pmd.cli.internal.CliExitCode;
+import net.sourceforge.pmd.cli.internal.ProgressBarListener;
 import net.sourceforge.pmd.internal.LogMessages;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.renderers.RendererFactory;
 import net.sourceforge.pmd.reporting.ReportStats;
 import net.sourceforge.pmd.util.StringUtil;
-import net.sourceforge.pmd.util.log.MessageReporter;
+import net.sourceforge.pmd.util.log.PmdReporter;
 import net.sourceforge.pmd.util.log.internal.SimpleMessageReporter;
 
 import picocli.CommandLine.Command;
@@ -44,7 +47,8 @@ import picocli.CommandLine.ParameterException;
 
 @Command(name = "check", showDefaultValues = true,
     description = "The PMD standard source code analyzer")
-public class PmdCommand extends AbstractAnalysisPmdSubcommand {
+public class PmdCommand extends AbstractAnalysisPmdSubcommand<PMDConfiguration> {
+    private static final Logger LOG = LoggerFactory.getLogger(PmdCommand.class);
 
     static {
         final Properties emptyProps = new Properties();
@@ -82,8 +86,6 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
 
     private boolean benchmark;
 
-    private boolean shortnames;
-
     private boolean showSuppressed;
 
     private String suppressMarker;
@@ -99,8 +101,6 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
     private Language forceLanguage;
 
     private String auxClasspath;
-
-    private boolean noRuleSetCompatibility;
 
     private Path cacheLocation;
 
@@ -138,11 +138,6 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
         this.benchmark = benchmark;
     }
 
-    @Option(names = "--short-names", description = "Prints shortened filenames in the report.")
-    public void setShortnames(final boolean shortnames) {
-        this.shortnames = shortnames;
-    }
-
     @Option(names = "--show-suppressed", description = "Report should show suppressed rule violations.")
     public void setShowSuppressed(final boolean showSuppressed) {
         this.showSuppressed = showSuppressed;
@@ -158,7 +153,8 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
     @Option(names = "--minimum-priority",
             description = "Rule priority threshold; rules with lower priority than configured here won't be used.%n"
                     + "Valid values (case insensitive): ${COMPLETION-CANDIDATES}",
-            defaultValue = "Low")
+            defaultValue = "Low",
+            completionCandidates = RulePriorityTypeSupport.class, converter = RulePriorityTypeSupport.class)
     public void setMinimumPriority(final RulePriority priority) {
         this.minimumPriority = priority;
     }
@@ -215,12 +211,6 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
         this.auxClasspath = auxClasspath;
     }
 
-    @Option(names = "--no-ruleset-compatibility",
-            description = "Disable the ruleset compatibility filter. The filter is active by default and tries automatically 'fix' old ruleset files with old rule names")
-    public void setNoRuleSetCompatibility(final boolean noRuleSetCompatibility) {
-        this.noRuleSetCompatibility = noRuleSetCompatibility;
-    }
-
     @Option(names = "--cache",
             description = "Specify the location of the cache file for incremental analysis. "
                     + "This should be the full path to the file, including the desired file name (not just the parent directory). "
@@ -258,28 +248,30 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
      *
      * @throws ParameterException if the parameters are inconsistent or incomplete
      */
-    public PMDConfiguration toConfiguration() {
+    @Override
+    protected PMDConfiguration toConfiguration() {
         final PMDConfiguration configuration = new PMDConfiguration();
-        configuration.setInputPathList(inputPaths);
+        if (inputPaths != null) {
+            configuration.setInputPathList(new ArrayList<>(inputPaths));
+        }
         configuration.setInputFilePath(fileListPath);
         configuration.setIgnoreFilePath(ignoreListPath);
         configuration.setInputUri(uri);
         configuration.setReportFormat(format);
-        configuration.setDebug(debug);
-        configuration.setSourceEncoding(encoding.getEncoding().name());
+        configuration.setSourceEncoding(encoding.getEncoding());
         configuration.setMinimumPriority(minimumPriority);
         configuration.setReportFile(reportFile);
         configuration.setReportProperties(properties);
-        configuration.setReportShortNames(shortnames);
+        if (relativizeRootPaths != null) {
+            configuration.addRelativizeRoots(relativizeRootPaths);
+        }
         configuration.setRuleSets(rulesets);
-        configuration.setRuleSetFactoryCompatibilityEnabled(!this.noRuleSetCompatibility);
         configuration.setShowSuppressedViolations(showSuppressed);
         configuration.setSuppressMarker(suppressMarker);
         configuration.setThreads(threads);
         configuration.setFailOnViolation(failOnViolation);
         configuration.setAnalysisCacheLocation(cacheLocation != null ? cacheLocation.toString() : null);
         configuration.setIgnoreIncrementalAnalysis(noCache);
-        configuration.setProgressBar(showProgressBar);
 
         if (languageVersion != null) {
             configuration.setDefaultLanguageVersions(languageVersion);
@@ -304,13 +296,13 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
     }
 
     @Override
-    protected ExecutionResult execute() {
+    @NonNull
+    protected CliExitCode doExecute(PMDConfiguration configuration) {
         if (benchmark) {
             TimeTracker.startGlobalTracking();
         }
 
-        final PMDConfiguration configuration = toConfiguration();
-        final MessageReporter pmdReporter = configuration.getReporter();
+        final PmdReporter pmdReporter = configuration.getReporter();
 
         try {
             PmdAnalysis pmd = null;
@@ -319,18 +311,29 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
                     pmd = PmdAnalysis.create(configuration);
                 } catch (final Exception e) {
                     pmdReporter.errorEx("Could not initialize analysis", e);
-                    return ExecutionResult.ERROR;
+                    return CliExitCode.ERROR;
                 }
 
-                pmdReporter.log(Level.DEBUG, "Current classpath:\n{0}", System.getProperty("java.class.path"));
+                LOG.debug("Runtime classpath:\n{}", System.getProperty("java.class.path"));
+                LOG.debug("Aux classpath: {}", configuration.getClassLoader());
+
+                if (showProgressBar) {
+                    if (reportFile == null) {
+                        pmdReporter.warn("Progressbar rendering conflicts with reporting to STDOUT. "
+                                + "No progressbar will be shown. Try running with argument '-r <file>' to output the report to a file instead.");
+                    } else {
+                        pmd.addListener(new ProgressBarListener());
+                    }
+                }
+
                 final ReportStats stats = pmd.runAndReturnStats();
                 if (pmdReporter.numErrors() > 0) {
                     // processing errors are ignored
-                    return ExecutionResult.ERROR;
+                    return CliExitCode.ERROR;
                 } else if (stats.getNumViolations() > 0 && configuration.isFailOnViolation()) {
-                    return ExecutionResult.VIOLATIONS_FOUND;
+                    return CliExitCode.VIOLATIONS_FOUND;
                 } else {
-                    return ExecutionResult.OK;
+                    return CliExitCode.OK;
                 }
             } finally {
                 if (pmd != null) {
@@ -341,20 +344,20 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand {
         } catch (final Exception e) {
             pmdReporter.errorEx("Exception while running PMD.", e);
             printErrorDetected(pmdReporter, 1);
-            return ExecutionResult.ERROR;
+            return CliExitCode.ERROR;
         } finally {
             finishBenchmarker(pmdReporter);
         }
     }
 
-    private void printErrorDetected(MessageReporter reporter, int errors) {
+    private void printErrorDetected(PmdReporter reporter, int errors) {
         String msg = LogMessages.errorDetectedMessage(errors, "pmd");
         // note: using error level here increments the error count of the reporter,
         // which we don't want.
         reporter.info(StringUtil.quoteMessageFormat(msg));
     }
 
-    private void finishBenchmarker(final MessageReporter pmdReporter) {
+    private void finishBenchmarker(final PmdReporter pmdReporter) {
         if (benchmark) {
             final TimingReport timingReport = TimeTracker.stopGlobalTracking();
 

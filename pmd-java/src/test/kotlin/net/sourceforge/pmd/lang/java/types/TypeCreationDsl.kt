@@ -7,7 +7,6 @@
 package net.sourceforge.pmd.lang.java.types
 
 import net.sourceforge.pmd.lang.java.ast.JavaNode
-import net.sourceforge.pmd.lang.java.ast.ParserTestSpec
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot
 import net.sourceforge.pmd.lang.java.symbols.internal.FakeSymAnnot
@@ -26,7 +25,7 @@ val JavaNode.typeDsl get() = TypeDslOf(this.typeSystem)
  * int[][]:                 int.toArray(2)
  * List<? extends Number>:  List::class[`?` extends Number::class]
  *
- * Use [typeDsl] (eg `with(node.typeDsl) { ... }`,
+ * Use [typeDsl] (eg `with(node.typeDsl) { ... }`),
  * or [TypeDslOf] (eg `with(TypeDslOf(ts)) { ... }`)
  *
  * to bring it into scope.
@@ -70,7 +69,7 @@ interface TypeDslMixin {
      */
     val `@`: (JClassSymbol) -> SymAnnotDsl get() = { SymAnnotDsl(FakeSymAnnot(it)) }
 
-    class SymAnnotDsl(private val annot: SymAnnot) {
+    class SymAnnotDsl(val annot: SymAnnot) {
         /** An infix fun to be able to write the annotation first. */
         infix fun on(t: JTypeMirror): JTypeMirror = t.addAnnotation(annot)
     }
@@ -125,13 +124,14 @@ interface TypeDslMixin {
      *      List::class[`?` super String::class]
      *
      */
+    @Suppress("DANGEROUS_CHARACTERS")
     val `?`: WildcardDsl get() = WildcardDsl(ts)
 
 }
 
 
 /** See [TypeDslMixin.@A]. */
-val ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx<*>.AnnotA
+val AnnotA
     get() = "@" + ClassWithTypeAnnotationsInside.A::class.java.canonicalName
 
 class TypeDslOf(override val ts: TypeSystem) : TypeDslMixin

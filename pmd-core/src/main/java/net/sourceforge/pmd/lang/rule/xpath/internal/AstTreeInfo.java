@@ -4,7 +4,11 @@
 
 package net.sourceforge.pmd.lang.rule.xpath.internal;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 
@@ -21,6 +25,19 @@ import net.sf.saxon.om.GenericTreeInfo;
 public final class AstTreeInfo extends GenericTreeInfo {
 
     private DeprecatedAttrLogger logger;
+    private final Map<Node, AstElementNode> wrapperCache = new LinkedHashMap<Node, AstElementNode>() {
+        @Override
+        protected boolean removeEldestEntry(Entry eldest) {
+            /*
+            hit ratio depending on cache size:
+            512: 61%
+            1024: 75%
+            2048: 82%
+            unbounded: 85%
+             */
+            return size() > 1024;
+        }
+    };
 
     /**
      * Builds an AstDocument, with the given node as the root.
@@ -37,21 +54,41 @@ public final class AstTreeInfo extends GenericTreeInfo {
     }
 
     public AstElementNode findWrapperFor(Node node) {
-        // for the RootNode, this returns the document node
-        List<Integer> indices = node.ancestorsOrSelf().toList(Node::getIndexInParent);
+        AstElementNode element = wrapperCache.get(node);
+        if (element == null) {
+            element = findWrapperImpl(node);
+            wrapperCache.put(node, element);
+            assert element.getUnderlyingNode() == node : "Incorrect wrapper " + element + " for " + node;
+        }
+        return element;
+    }
+
+    // for the RootNode, this returns the document node
+    private AstElementNode findWrapperImpl(Node node) {
+        // find the closest cached ancestor
         AstElementNode cur = getRootNode().getRootElement();
+        List<Node> ancestors = new ArrayList<>();
+        for (Node ancestor : node.ancestorsOrSelf()) {
+            AstElementNode wrappedAncestor = wrapperCache.get(ancestor);
+            ancestors.add(ancestor);
+            if (wrappedAncestor != null) {
+                cur = wrappedAncestor;
+                break;
+            }
+        }
 
-        // this is a quick but possibly expensive check
-        assert cur.getUnderlyingNode() == node.getRoot() : "Node is not in this tree";
+        // then go down the tree from that ancestor
 
-        // note we skip the first, who is the root
-        for (int i = indices.size() - 2; i >= 0; i--) {
-            Integer idx = indices.get(i);
+        // note we skip the first, who is the topmost ancestor
+        for (int i = ancestors.size() - 2; i >= 0; i--) {
+            Node ancestor = ancestors.get(i);
+            int idx = ancestor.getIndexInParent();
             if (idx >= cur.getChildren().size()) {
                 throw new IllegalArgumentException("Node is not part of this tree " + node);
             }
 
             cur = cur.getChildren().get(idx);
+            wrapperCache.put(ancestor, cur);
         }
         if (cur.getUnderlyingNode() != node) {
             // may happen with the root

@@ -16,17 +16,14 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.sourceforge.pmd.PMD;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.Report.ConfigurationError;
-import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.RuleViolation;
-import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.Report.ConfigurationError;
+import net.sourceforge.pmd.reporting.Report.ProcessingError;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 /**
  * <p>
- * A console renderer with optional color support under *nix systems.
+ * A console renderer with color support for terminal supporting ansi color codes.
  * </p>
  *
  * <pre>
@@ -48,45 +45,29 @@ import net.sourceforge.pmd.properties.PropertyFactory;
  *     code: logger.error( "missing attribute 'app_arg' in rule '" + ((Element)element.getParent()).getAttributeValue( "name" ) + "'" );
  * * warnings: 3
  * </pre>
- * <p>
- * Colorization is turned on by supplying -D<b>pmd.color</b> - any value other
- * than '0' or 'false', enables color - including an empty value (''). <b>Nota
- * Bene:</b> colorization is atm only supported under *nix terminals accepting
- * ansi escape sequences, such as xterm, rxvt et cetera.
- * </p>
  */
 public class TextColorRenderer extends AbstractAccumulatingRenderer {
 
     public static final String NAME = "textcolor";
-
-    // What? TODO 7.0.0 Use a boolean property
-    // TODO should the "textcolor" renderer really support "optional" colors?
-    //   either use text or textcolor...
-    //   This property is really weird, the standard boolean properties
-    //   are false unless value is exactly "true", this one is true unless
-    //   "false" or "0"...
-    public static final PropertyDescriptor<String> COLOR = PropertyFactory.stringProperty("color").desc("Enables colors with anything other than 'false' or '0'.").defaultValue("yes").build();
-    private static final String SYSTEM_PROPERTY_PMD_COLOR = "pmd.color";
 
     /**
      * Directory from where java was invoked.
      */
     private String pwd;
 
-    private String yellowBold = "";
-    private String whiteBold = "";
-    private String redBold = "";
-    private String red = "";
-    private String cyan = "";
-    private String green = "";
+    private String yellowBold = "\u001B[1;33m";
+    private String whiteBold = "\u001B[1;37m";
+    private String redBold = "\u001B[1;31m";
+    private String red = "\u001B[0;31m";
+    private String green = "\u001B[0;32m";
+    private String cyan = "\u001B[0;36m";
 
-    private String colorReset = "";
+    private String colorReset = "\u001B[0m";
 
     public TextColorRenderer() {
         // This Renderer was originally submitted by Adrian Papari and was
         // called the "PapariTextRenderer" pre-PMD 5.0.
         super(NAME, "Text format, with color support (requires ANSI console support, e.g. xterm, rxvt, etc.).");
-        definePropertyDescriptor(COLOR);
     }
 
     @Override
@@ -94,36 +75,10 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
         return "txt";
     }
 
-    /**
-     * Enables colors on *nix systems - not windows. Color support depends on
-     * the pmd.color property, which should be set with the -D option during
-     * execution - a set value other than 'false' or '0' enables color.
-     * <p/>
-     * btw, is it possible to do this on windows (ie; console colors)?
-     */
-    private void initializeColorsIfSupported() {
-        if (isPropertyEnabled(getProperty(COLOR)) || isPropertyEnabled(System.getProperty(SYSTEM_PROPERTY_PMD_COLOR))) {
-            this.yellowBold = "\u001B[1;33m";
-            this.whiteBold = "\u001B[1;37m";
-            this.redBold = "\u001B[1;31m";
-            this.red = "\u001B[0;31m";
-            this.green = "\u001B[0;32m";
-            this.cyan = "\u001B[0;36m";
-
-            this.colorReset = "\u001B[0m";
-        }
-    }
-
-    private boolean isPropertyEnabled(String property) {
-        return property != null && !("0".equals(property) || "false".equalsIgnoreCase(property));
-    }
-
-
     @Override
     public void outputReport(Report report) throws IOException {
         StringBuilder buf = new StringBuilder(500);
-        buf.append(PMD.EOL);
-        initializeColorsIfSupported();
+        buf.append(System.lineSeparator());
         String lastFile = null;
         int numberOfErrors = 0;
         int numberOfWarnings = 0;
@@ -131,7 +86,7 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
         for (RuleViolation rv : report.getViolations()) {
             buf.setLength(0);
             numberOfWarnings++;
-            String nextFile = determineFileName(rv.getFilename());
+            String nextFile = determineFileName(rv.getFileId());
             if (!nextFile.equals(lastFile)) {
                 lastFile = nextFile;
                 buf.append(this.yellowBold)
@@ -141,7 +96,7 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
                         .append(this.whiteBold)
                         .append(this.getRelativePath(lastFile))
                         .append(this.colorReset)
-                        .append(PMD.EOL);
+                        .append(System.lineSeparator());
             }
             buf.append(this.green)
                     .append("    src:  ")
@@ -152,38 +107,40 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
                     .append(rv.getBeginLine())
                     .append(rv.getEndLine() == -1 ? "" : ":" + rv.getEndLine())
                     .append(this.colorReset)
-                    .append(PMD.EOL);
+                    .append(System.lineSeparator());
             buf.append(this.green)
                     .append("    rule: ")
                     .append(this.colorReset)
                     .append(rv.getRule().getName())
-                    .append(PMD.EOL);
+                    .append(System.lineSeparator());
             buf.append(this.green)
                     .append("    msg:  ")
                     .append(this.colorReset)
                     .append(rv.getDescription())
-                    .append(PMD.EOL);
+                    .append(System.lineSeparator());
             buf.append(this.green)
                     .append("    code: ")
                     .append(this.colorReset)
                     .append(this.getLine(lastFile, rv.getBeginLine()))
-                    .append(PMD.EOL)
-                    .append(PMD.EOL);
+                    .append(System.lineSeparator())
+                    .append(System.lineSeparator());
             writer.write(buf.toString());
         }
-        writer.write(PMD.EOL + PMD.EOL);
-        writer.write("Summary:" + PMD.EOL + PMD.EOL);
+        writer.println();
+        writer.println();
+        writer.println("Summary:");
+        writer.println();
         for (Map.Entry<String, Integer> entry : getCountSummary(report).entrySet()) {
             buf.setLength(0);
             String key = entry.getKey();
-            buf.append(key).append(" : ").append(entry.getValue()).append(PMD.EOL);
-            writer.write(buf.toString());
+            buf.append(key).append(" : ").append(entry.getValue());
+            writer.println(buf);
         }
 
         for (ProcessingError error : report.getProcessingErrors()) {
             buf.setLength(0);
             numberOfErrors++;
-            String nextFile = determineFileName(error.getFile());
+            String nextFile = determineFileName(error.getFileId());
             if (!nextFile.equals(lastFile)) {
                 lastFile = nextFile;
                 buf.append(this.redBold)
@@ -193,20 +150,19 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
                         .append(this.whiteBold)
                         .append(this.getRelativePath(lastFile))
                         .append(this.colorReset)
-                        .append(PMD.EOL);
+                        .append(System.lineSeparator());
             }
             buf.append(this.green)
                     .append("    err:  ")
                     .append(this.cyan)
                     .append(error.getMsg())
                     .append(this.colorReset)
-                    .append(PMD.EOL)
+                    .append(System.lineSeparator())
                     .append(this.red)
                     .append(error.getDetail())
                     .append(colorReset)
-                    .append(PMD.EOL)
-                    .append(PMD.EOL);
-            writer.write(buf.toString());
+                    .append(System.lineSeparator());
+            writer.println(buf);
         }
 
         for (ConfigurationError error : report.getConfigurationErrors()) {
@@ -219,24 +175,23 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
                     .append(this.whiteBold)
                     .append(error.rule().getName())
                     .append(this.colorReset)
-                    .append(PMD.EOL);
+                    .append(System.lineSeparator());
             buf.append(this.green)
                     .append("    err:  ")
                     .append(this.cyan)
                     .append(error.issue())
                     .append(this.colorReset)
-                    .append(PMD.EOL)
-                    .append(PMD.EOL);
-            writer.write(buf.toString());
+                    .append(System.lineSeparator());
+            writer.println(buf);
         }
 
         // adding error message count, if any
         if (numberOfErrors > 0) {
-            writer.write(this.redBold + "*" + this.colorReset + " errors:   " + this.whiteBold + numberOfErrors
-                    + this.colorReset + PMD.EOL);
+            writer.println(this.redBold + "*" + this.colorReset + " errors:   " + this.whiteBold + numberOfErrors
+                    + this.colorReset);
         }
-        writer.write(this.yellowBold + "*" + this.colorReset + " warnings: " + this.whiteBold + numberOfWarnings
-                + this.colorReset + PMD.EOL);
+        writer.println(this.yellowBold + "*" + this.colorReset + " warnings: " + this.whiteBold + numberOfWarnings
+                + this.colorReset);
     }
 
 
@@ -259,7 +214,9 @@ public class TextColorRenderer extends AbstractAccumulatingRenderer {
     }
 
     private static String keyFor(RuleViolation rv) {
-        return StringUtils.isNotBlank(rv.getPackageName()) ? rv.getPackageName() + '.' + rv.getClassName() : "";
+        String packageName = rv.getAdditionalInfo().getOrDefault(RuleViolation.PACKAGE_NAME, "");
+        String className = rv.getAdditionalInfo().getOrDefault(RuleViolation.CLASS_NAME, "");
+        return StringUtils.isNotBlank(packageName) ? packageName + '.' + className : "";
     }
 
 

@@ -16,8 +16,8 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * This class handles the creation of Renderers.
@@ -90,7 +90,7 @@ public final class RendererFactory {
                     if (value != null) {
                         @SuppressWarnings("unchecked")
                         PropertyDescriptor<Object> prop2 = (PropertyDescriptor<Object>) prop;
-                        Object valueFrom = prop2.valueFrom(value);
+                        Object valueFrom = prop2.serializer().fromString(value);
                         renderer.setProperty(prop2, valueFrom);
                     }
                 }

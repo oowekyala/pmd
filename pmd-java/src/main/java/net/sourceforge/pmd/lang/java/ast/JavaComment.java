@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import java.util.stream.Stream;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JjtreeNode;
@@ -14,6 +13,7 @@ import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.reporting.Reportable;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * Wraps a comment token to provide some utilities.
@@ -35,14 +35,6 @@ public class JavaComment implements Reportable {
     @Override
     public FileLocation getReportLocation() {
         return getToken().getReportLocation();
-    }
-
-    /**
-     * @deprecated Use {@link #getText()}
-     */
-    @Deprecated
-    public String getImage() {
-        return getToken().getImage();
     }
 
     /** The token underlying this comment. */
@@ -116,7 +108,7 @@ public class JavaComment implements Reportable {
      * Trim the start of the provided line to remove a comment
      * markup opener ({@code //, /*, /**, *}) or closer {@code * /}.
      */
-    private static Chars removeCommentMarkup(Chars line) {
+    public static Chars removeCommentMarkup(Chars line) {
         line = line.trim().removeSuffix("*/");
         int subseqFrom = 0;
         if (line.startsWith('/', 0)) {
@@ -132,16 +124,27 @@ public class JavaComment implements Reportable {
         return line.subSequence(subseqFrom, line.length()).trim();
     }
 
-    private static Stream<JavaccToken> getSpecialCommentsIn(JjtreeNode<?> node) {
+    private static Stream<JavaccToken> getSpecialTokensIn(JjtreeNode<?> node) {
         return GenericToken.streamRange(node.getFirstToken(), node.getLastToken())
                            .flatMap(it -> IteratorUtil.toStream(GenericToken.previousSpecials(it).iterator()));
     }
 
     public static Stream<JavaComment> getLeadingComments(JavaNode node) {
-        if (node instanceof AccessNode) {
-            node = ((AccessNode) node).getModifiers();
+        Stream<JavaccToken> specialTokens;
+        
+        if (node instanceof ModifierOwner) {
+            node = ((ModifierOwner) node).getModifiers();
+            specialTokens = getSpecialTokensIn(node);
+            
+            // if this was a non-implicit empty modifier node, we should also consider comments immediately after
+            if (!node.getFirstToken().isImplicit()) {
+                specialTokens = Stream.concat(specialTokens, getSpecialTokensIn(node.getNextSibling()));
+            }
+        } else {
+            specialTokens = getSpecialTokensIn(node);
         }
-        return getSpecialCommentsIn(node).filter(JavaComment::isComment)
+        
+        return specialTokens.filter(JavaComment::isComment)
                                          .map(JavaComment::toComment);
     }
 

@@ -8,6 +8,7 @@ import static net.sourceforge.pmd.lang.java.types.TypeConversion.capture;
 import static net.sourceforge.pmd.lang.java.types.TypeConversion.isWilcardParameterized;
 import static net.sourceforge.pmd.lang.java.types.TypeOps.asList;
 import static net.sourceforge.pmd.lang.java.types.TypeOps.subst;
+import static net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf.cast;
 import static net.sourceforge.pmd.lang.java.types.internal.infer.ExprOps.isPertinentToApplicability;
 import static net.sourceforge.pmd.lang.java.types.internal.infer.MethodResolutionPhase.INVOC_LOOSE;
 import static net.sourceforge.pmd.util.CollectionUtil.listOf;
@@ -120,7 +121,11 @@ public final class Infer {
     }
 
     InferenceContext newContextFor(List<JTypeVar> tvars) {
-        return new InferenceContext(ts, supertypeCheckCache, tvars, LOG);
+        return newContextFor(tvars, true);
+    }
+
+    InferenceContext newContextFor(List<JTypeVar> tvars, boolean addPrimaryBound) {
+        return new InferenceContext(ts, supertypeCheckCache, tvars, LOG, addPrimaryBound);
     }
 
     /**
@@ -196,7 +201,7 @@ public final class Infer {
         }
         // ok we failed, we can still use some info from the ctdecl
 
-        JMethodSig fallback = deleteTypeParams(ctdecl.getMethodType().internalApi().adaptedMethod());
+        JMethodSig fallback = deleteTypeParams(cast(ctdecl.getMethodType()).adaptedMethod());
         LOG.fallbackInvocation(fallback, site);
 
         return ctdecl.withMethod(fallback, true);
@@ -326,7 +331,7 @@ public final class Infer {
 
         return logInference(site,
                             ctdecl.getResolvePhase().asInvoc(),
-                            ctdecl.getMethodType().internalApi().adaptedMethod());
+                            cast(ctdecl.getMethodType()).adaptedMethod());
     }
 
     // this is skipped when running without assertions
@@ -420,9 +425,9 @@ public final class Infer {
             if (!rtype.isInterface()) {
                 // this is for anonymous class ctors
                 // an interface cannot declare a constructor
-                result = result.internalApi().withOwner(rtype);
+                result = cast(result).withOwner(rtype);
             }
-            return result.internalApi().withTypeParams(null);
+            return cast(result).withTypeParams(null);
 
         }
         return result;
@@ -459,7 +464,7 @@ public final class Infer {
         }
 
         // replace the return type so that anonymous class ctors return the supertype
-        JMethodSig adaptedSig = cons.internalApi().withReturnType(newType).internalApi().markAsAdapted();
+        JMethodSig adaptedSig = cast(cast(cons).withReturnType(newType)).markAsAdapted();
 
         List<JTypeVar> newTypeFormals = newType.getFormalTypeParams();
         if (newTypeFormals.isEmpty()) {
@@ -482,7 +487,7 @@ public final class Infer {
 
             // type parameters are not part of the adapted signature, so that when we reset
             // the signature for invocation inference, we don't duplicate new type parameters
-            return adaptedSig.internalApi().withTypeParams(tparams).internalApi().markAsAdapted();
+            return cast(cast(adaptedSig).withTypeParams(tparams)).markAsAdapted();
         }
     }
 
@@ -545,6 +550,8 @@ public final class Infer {
      * then we delegate the solving to the call site's inference context,
      * which knows more, however we add inference vars and their constraints
      * to it.
+     * During non-invocation phases, this inference
+     * checks for validity but doesn't commit any inferred types.
      */
     private JMethodSig instantiateImpl(JMethodSig m, MethodCallSite site, MethodResolutionPhase phase) {
 
@@ -560,57 +567,80 @@ public final class Infer {
             addArgsConstraints(infCtx, m, site, phase); // c
             infCtx.incorporate(); // b2
 
-            if (phase.isInvocation()) {
+            if (phase.isInvocation() || site.canSkipInvocation()) {
+                // this may throw for incompatible bounds
+                return tryToSolve(m, site, infCtx, phase);
+            } else {
+                // we solve on a **copy**. We are only testing applicability
+                // see: https://docs.oracle.com/javase/specs/jls/se9/html/jls-18.html#jls-18.5.1
+                // as per https://docs.oracle.com/javase/specs/jls/se9/html/jls-18.html#jls-18.5.2
+                // we only test it can reduce, we don't commit inferred types at this stage
+                InferenceContext ctxCopy = infCtx.copy();
+                LOG.applicabilityTest(ctxCopy, m);
+                ctxCopy.solve(/*onlyBoundedVars:*/isPreJava8());
 
-                boolean shouldPropagate = shouldPropagateOutwards(m.getReturnType(), site, infCtx);
-
-                //propagate outwards if needed
-                if (shouldPropagate) {
-                    // propagate inference context outwards and exit
-                    // the outer context will solve the variables and call listeners
-                    // of this context
-                    LOG.propagateAndAbort(infCtx, site.getOuterCtx());
-                    infCtx.duplicateInto(site.getOuterCtx());
-                    return infCtx.mapToIVars(m);
+                // if unchecked conversion was needed, update the site for invocation pass
+                if (ctxCopy.needsUncheckedConversion()) {
+                    site.setNeedsUncheckedConversion();
                 }
+
+                // don't commit any types
+                return m;
             }
-
-            // this may throw for incompatible bounds
-            boolean isDone = infCtx.solve(/*onlyBoundedVars:*/isPreJava8());
-
-            if (isPreJava8() && !isDone) {
-                // this means we're not in an invocation context,
-                // if we are, we must ignore it in java 7
-                if (site.getOuterCtx().isEmpty()) {
-                    // Then add the return contraints late
-                    // Java 7 only uses the context type if the arguments are not enough
-                    // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.12.2.8
-                    m = doReturnChecksAndChangeReturnType(m, site, infCtx);
-                }
-                // otherwise force solving remaining vars
-                infCtx.solve();
-            }
-
-            if (infCtx.needsUncheckedConversion()) {
-                site.setNeedsUncheckedConversion();
-            }
-
-            // instantiate vars and return
-            return InferenceContext.finalGround(infCtx.mapToIVars(m));
         } finally {
             // Note that even if solve succeeded, listeners checking deferred
             // bounds may still throw ResolutionFailedException, in which case
             // by the laws of finally, this exception will be thrown and the
             // return value will be ignored.
-            infCtx.callListeners();
+            if (phase.isInvocation() || site.canSkipInvocation()) {
+                infCtx.callListeners();
+            }
         }
+    }
+
+    /**
+     * Actually tries to solve and commit inference types as per
+     * https://docs.oracle.com/javase/specs/jls/se9/html/jls-18.html#jls-18.5.2
+     * {@code infCtx} must already at the B2 state for this method to be called.
+     */
+    private JMethodSig tryToSolve(JMethodSig m, MethodCallSite site, InferenceContext infCtx, MethodResolutionPhase phase) {
+        boolean shouldPropagate = phase.isInvocation() && shouldPropagateOutwards(m.getReturnType(), site, infCtx);
+
+        //propagate outwards if needed
+        if (shouldPropagate) {
+            // propagate inference context outwards and exit
+            // the outer context will solve the variables and call listeners
+            // of this context
+            LOG.propagateAndAbort(infCtx, site.getOuterCtx());
+            infCtx.duplicateInto(site.getOuterCtx());
+            return infCtx.mapToIVars(m);
+        }
+
+        // this may throw for incompatible bounds
+        boolean isDone = infCtx.solve(/*onlyBoundedVars:*/isPreJava8());
+
+        if (isPreJava8() && !isDone) {
+            // this means we're not in an invocation context,
+            // if we are, we must ignore it in java 7
+            if (site.getOuterCtx().isEmpty()) {
+                // Then add the return contraints late
+                // Java 7 only uses the context type if the arguments are not enough
+                // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.12.2.8
+                m = doReturnChecksAndChangeReturnType(m, site, infCtx);
+            }
+            // otherwise force solving remaining vars
+            infCtx.solve();
+        }
+
+        // instantiate vars and return
+        return InferenceContext.finalGround(infCtx.mapToIVars(m));
     }
 
     private JMethodSig doReturnChecksAndChangeReturnType(JMethodSig m, MethodCallSite site, InferenceContext infCtx) {
         LOG.startReturnChecks();
         JTypeMirror actualResType = addReturnConstraints(infCtx, m, site); // b3
         LOG.endReturnChecks();
-        m = m.internalApi().withReturnType(actualResType);
+        m = cast(m).withReturnType(actualResType);
         return m;
     }
 

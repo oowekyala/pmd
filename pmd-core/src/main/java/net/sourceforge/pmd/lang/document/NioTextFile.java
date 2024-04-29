@@ -5,9 +5,7 @@
 package net.sourceforge.pmd.lang.document;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -16,9 +14,9 @@ import java.nio.file.Path;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.internal.util.BaseCloseable;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * A {@link TextFile} backed by a file in some {@link FileSystem}.
@@ -28,26 +26,23 @@ class NioTextFile extends BaseCloseable implements TextFile {
     private final Path path;
     private final Charset charset;
     private final LanguageVersion languageVersion;
-    private final @Nullable String displayName;
-    private final String pathId;
+    private final FileId fileId;
     private boolean readOnly;
 
     NioTextFile(Path path,
+                @Nullable FileId parentFsPath,
                 Charset charset,
                 LanguageVersion languageVersion,
-                @Nullable String displayName,
                 boolean readOnly) {
         AssertionUtil.requireParamNotNull("path", path);
         AssertionUtil.requireParamNotNull("charset", charset);
         AssertionUtil.requireParamNotNull("language version", languageVersion);
 
-        this.displayName = displayName;
         this.readOnly = readOnly;
         this.path = path;
         this.charset = charset;
         this.languageVersion = languageVersion;
-        // using the URI here, that handles files inside zip archives automatically (schema "jar:file:...!/path/inside/zip")
-        this.pathId = path.toUri().toString();
+        this.fileId = FileId.fromPath(path, parentFsPath);
     }
 
     @Override
@@ -56,19 +51,8 @@ class NioTextFile extends BaseCloseable implements TextFile {
     }
 
     @Override
-    public @NonNull String getDisplayName() {
-        if (displayName != null) {
-            return displayName;
-        }
-        if ("jar".equals(path.toUri().getScheme())) {
-            return new File(URI.create(path.toUri().getSchemeSpecificPart()).getPath()).toString();
-        }
-        return path.toString();
-    }
-
-    @Override
-    public String getPathId() {
-        return pathId;
+    public FileId getFileId() {
+        return fileId;
     }
 
     @Override

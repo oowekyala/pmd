@@ -4,29 +4,39 @@
 
 package net.sourceforge.pmd;
 
-import static net.sourceforge.pmd.properties.constraints.NumericConstraints.inRange;
+import static net.sourceforge.pmd.properties.NumericConstraints.inRange;
+import static net.sourceforge.pmd.reporting.ReportTestUtil.getReportForRuleApply;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import net.sourceforge.pmd.Report.SuppressedViolation;
-import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
-import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
-import net.sourceforge.pmd.lang.rule.impl.DefaultRuleViolationFactory;
+import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.FileAnalysisListener;
+import net.sourceforge.pmd.reporting.InternalApiBridge;
+import net.sourceforge.pmd.reporting.RuleContext;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 
-public class AbstractRuleTest {
+class AbstractRuleTest {
 
-    public static class MyRule extends AbstractRule {
+    private static class MyRule extends AbstractRule {
         private static final PropertyDescriptor<String> FOO_PROPERTY = PropertyFactory.stringProperty("foo").desc("foo property").defaultValue("x").build();
         private static final PropertyDescriptor<String> FOO_DEFAULT_PROPERTY = PropertyFactory.stringProperty("fooDefault")
                 .defaultValue("bar")
@@ -35,7 +45,7 @@ public class AbstractRuleTest {
 
         private static final PropertyDescriptor<String> XPATH_PROPERTY = PropertyFactory.stringProperty("xpath").desc("xpath property").defaultValue("").build();
 
-        public MyRule() {
+        MyRule() {
             definePropertyDescriptor(FOO_PROPERTY);
             definePropertyDescriptor(XPATH_PROPERTY);
             definePropertyDescriptor(FOO_DEFAULT_PROPERTY);
@@ -66,29 +76,35 @@ public class AbstractRuleTest {
         }
     }
 
+    @RegisterExtension
+    private final DummyParsingHelper helper = new DummyParsingHelper();
+
     @Test
     void testCreateRV() {
         MyRule r = new MyRule();
         r.setRuleSetName("foo");
-        DummyRootNode s = DummyLanguageModule.parse("abc()", "filename");
+        DummyRootNode s = helper.parse("abc()", FileId.fromPathLikeString("abc"));
 
-        RuleViolation rv = new ParametricRuleViolation(r, s, r.getMessage());
-        assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
-        assertEquals("filename", rv.getFilename(), "Filename mismatch!");
-        assertEquals(r, rv.getRule(), "Rule object mismatch!");
-        assertEquals("my rule msg", rv.getDescription(), "Rule msg mismatch!");
-        assertEquals("foo", rv.getRule().getRuleSetName(), "RuleSet name mismatch!");
+        InternalApiBridge.createRuleContext((rv) -> {
+            assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
+            assertEquals("abc", rv.getFileId().getOriginalPath(), "Filename mismatch!");
+            assertEquals(r, rv.getRule(), "Rule object mismatch!");
+            assertEquals("my rule msg", rv.getDescription(), "Rule msg mismatch!");
+            assertEquals("foo", rv.getRule().getRuleSetName(), "RuleSet name mismatch!");
+        }, r).addViolation(s);
     }
 
     @Test
     void testCreateRV2() {
         MyRule r = new MyRule();
-        DummyRootNode s = DummyLanguageModule.parse("abc()", "filename");
-        RuleViolation rv = new ParametricRuleViolation(r, s, "specificdescription");
-        assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
-        assertEquals("filename", rv.getFilename(), "Filename mismatch!");
-        assertEquals(r, rv.getRule(), "Rule object mismatch!");
-        assertEquals("specificdescription", rv.getDescription(), "Rule description mismatch!");
+        DummyRootNode s = helper.parse("abc()", FileId.fromPathLikeString("filename"));
+
+        InternalApiBridge.createRuleContext((rv) -> {
+            assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
+            assertEquals("filename", rv.getFileId().getOriginalPath(), "Filename mismatch!");
+            assertEquals(r, rv.getRule(), "Rule object mismatch!");
+            assertEquals("specificdescription", rv.getDescription(), "Rule description mismatch!");
+        }, r).addViolationWithMessage(s, "specificdescription");
     }
 
     @Test
@@ -102,20 +118,23 @@ public class AbstractRuleTest {
         r.definePropertyDescriptor(PropertyFactory.intProperty("testInt").desc("description").require(inRange(0, 100)).defaultValue(10).build());
         r.setMessage("Message ${packageName} ${className} ${methodName} ${variableName} ${testInt} ${noSuchProperty}");
 
-        DummyRootNode s = DummyLanguageModule.parse("abc()", "filename");
+        DummyRootNode s = helper.parse("abc()", FileId.UNKNOWN);
 
-        RuleViolation rv = RuleContextTest.getReportForRuleApply(r, s).getViolations().get(0);
-        assertEquals("Message foo    10 ${noSuchProperty}", rv.getDescription());
+        RuleViolation rv = getReportForRuleApply(r, s).getViolations().get(0);
+        assertEquals("Message foo ${className} ${methodName} ${variableName} 10 ${noSuchProperty}", rv.getDescription());
     }
 
     @Test
     void testRuleSuppress() {
-        DummyRootNode n = DummyLanguageModule.parse("abc()", "filename")
-            .withNoPmdComments(Collections.singletonMap(1, "ohio"));
-        RuleViolation violation = DefaultRuleViolationFactory.defaultInstance().createViolation(new MyRule(), n, n.getReportLocation(), "specificdescription");
-        SuppressedViolation suppressed = DefaultRuleViolationFactory.defaultInstance().suppressOrNull(n, violation);
+        DummyRootNode n = helper.parse("abc()", FileId.UNKNOWN)
+                                .withNoPmdComments(Collections.singletonMap(1, "ohio"));
 
-        assertNotNull(suppressed);
+        FileAnalysisListener listener = mock(FileAnalysisListener.class);
+        RuleContext ctx = InternalApiBridge.createRuleContext(listener, new MyRule());
+        ctx.addViolationWithMessage(n, "message");
+
+        verify(listener, never()).onRuleViolation(any());
+        verify(listener, times(1)).onSuppressedRuleViolation(any());
     }
 
     @Test
@@ -191,6 +210,37 @@ public class AbstractRuleTest {
         r2.setMessage("another message");
         assertEquals(r1, r2, "Rules with different messages are still equal");
         assertEquals(r1.hashCode(), r2.hashCode(), "Rules that are equal must have the an equal hashcode");
+    }
+
+    @Test
+    void twoRulesUsingPatternPropertiesShouldBeEqual() {
+        class MockRuleWithPatternProperty extends net.sourceforge.pmd.lang.rule.MockRule {
+            MockRuleWithPatternProperty(String defaultValue) {
+                super();
+                definePropertyDescriptor(PropertyFactory.regexProperty("myRegexProperty")
+                        .desc("description")
+                        .defaultValue(defaultValue)
+                        .build());
+            }
+        }
+
+        assertEquals(new MockRuleWithPatternProperty("abc"), new MockRuleWithPatternProperty("abc"));
+        assertNotEquals(new MockRuleWithPatternProperty("abc"), new MockRuleWithPatternProperty("def"));
+
+        MockRuleWithPatternProperty rule1 = new MockRuleWithPatternProperty("abc");
+        PropertyDescriptor<Pattern> myRegexProperty1 = (PropertyDescriptor<Pattern>) rule1.getPropertyDescriptor("myRegexProperty");
+        rule1.setProperty(myRegexProperty1, Pattern.compile("ghi"));
+        MockRuleWithPatternProperty rule2 = new MockRuleWithPatternProperty("abc");
+        PropertyDescriptor<Pattern> myRegexProperty2 = (PropertyDescriptor<Pattern>) rule1.getPropertyDescriptor("myRegexProperty");
+        rule2.setProperty(myRegexProperty2, Pattern.compile("ghi"));
+        assertEquals(rule1, rule2);
+
+        rule2.setProperty(myRegexProperty2, Pattern.compile("jkl"));
+        assertNotEquals(rule1, rule2);
+
+        // the two rules have the same value, one using default, the other using an explicit value.
+        // they use effectively the same value, although the default values of the properties are different.
+        assertEquals(new MockRuleWithPatternProperty("jkl"), rule2);
     }
 
     @Test

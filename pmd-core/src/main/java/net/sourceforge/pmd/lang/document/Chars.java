@@ -21,7 +21,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil.AbstractIterator;
+import net.sourceforge.pmd.util.IteratorUtil.AbstractIterator;
 
 /**
  * View on a string which doesn't copy the array for subsequence operations.
@@ -40,7 +40,11 @@ import net.sourceforge.pmd.internal.util.IteratorUtil.AbstractIterator;
  */
 public final class Chars implements CharSequence {
 
-    public static final Chars EMPTY = wrap("");
+    /**
+     * An empty Chars instance.
+     */
+    public static final Chars EMPTY = new Chars("", 0, 0);
+
     /**
      * Special sentinel used by {@link #lines()}.
      */
@@ -68,6 +72,7 @@ public final class Chars implements CharSequence {
 
 
     /** Whether this slice is the empty string. */
+    @SuppressWarnings("PMD.MissingOverride") // with Java 15, isEmpty() has been added to java.lang.CharSequence (#4291)
     public boolean isEmpty() {
         return len == 0;
     }
@@ -82,6 +87,8 @@ public final class Chars implements CharSequence {
     public static Chars wrap(CharSequence chars) {
         if (chars instanceof Chars) {
             return (Chars) chars;
+        } else if (chars.length() == 0) {
+            return EMPTY;
         }
         return new Chars(chars.toString(), 0, chars.length());
     }
@@ -189,6 +196,13 @@ public final class Chars implements CharSequence {
             strpos = str.indexOf(fst, strpos + 1);
         }
         return NOT_FOUND;
+    }
+
+    /**
+     * See {@link String#indexOf(int)}
+     */
+    public int indexOf(int ch) {
+        return indexOf(ch, 0);
     }
 
     /**

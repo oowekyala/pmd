@@ -11,7 +11,6 @@ import static net.sourceforge.pmd.lang.java.rule.codestyle.UselessParenthesesRul
 import static net.sourceforge.pmd.lang.java.rule.codestyle.UselessParenthesesRule.Necessity.definitely;
 import static net.sourceforge.pmd.lang.java.rule.codestyle.UselessParenthesesRule.Necessity.necessaryIf;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
@@ -26,6 +25,7 @@ import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 
 public final class UselessParenthesesRule extends AbstractJavaRulechainRule {
@@ -82,13 +82,13 @@ public final class UselessParenthesesRule extends AbstractJavaRulechainRule {
         if (necessity == NEVER
             || reportClarifying() && necessity == CLARIFYING
             || reportBalancing() && necessity == BALANCING) {
-            addViolation(data, e);
+            asCtx(data).addViolation(e);
         }
 
     }
 
 
-    static Necessity needsParentheses(ASTExpression inner, JavaNode outer) {
+    public static Necessity needsParentheses(ASTExpression inner, JavaNode outer) {
         // Note: as of jdk 15, PatternExpression cannot be parenthesized
         // TypeExpression may never be parenthesized either
         assert inner.isParenthesized() : inner + " is not parenthesized";
@@ -265,7 +265,7 @@ public final class UselessParenthesesRule extends AbstractJavaRulechainRule {
         }
     }
 
-    enum Necessity {
+    public enum Necessity {
         ALWAYS,
         NEVER,
         CLARIFYING,

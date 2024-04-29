@@ -44,12 +44,12 @@ import net.sourceforge.pmd.lang.ast.AstVisitor;
     static final AntlrNameDictionary DICO = new SwiftNameDictionary(VOCABULARY, ruleNames);
 
     @Override
-    public SwiftTerminalNode createPmdTerminal(ParserRuleContext parent, Token t) {
+    protected SwiftTerminalNode createPmdTerminal(ParserRuleContext parent, Token t) {
         return new SwiftTerminalNode(t);
     }
 
     @Override
-    public SwiftErrorNode createPmdError(ParserRuleContext parent, Token t) {
+    protected SwiftErrorNode createPmdError(ParserRuleContext parent, Token t) {
         return new SwiftErrorNode(t);
     }
 }
@@ -176,7 +176,7 @@ whereExpression: expression ;
 
 // GRAMMAR OF AN AVAILABILITY CONDITION
 
-availabilityCondition: '#available' '(' availabilityArguments ')' ;
+availabilityCondition: '#available' | '#unavailable' '(' availabilityArguments ')' ;
 availabilityArguments: availabilityArgument (',' availabilityArguments)* ;
 availabilityArgument: platformName platformVersion | '*' ;
 platformName: 'iOS' | 'iOSApplicationExtension' | 'OSX' | 'OSXApplicationExtension' | 'watchOS'
@@ -596,6 +596,7 @@ primaryExpression
  | implicitMemberExpression
 // | implicit_member_expression disallow as ambig with explicit member expr in postfix_expression
  | wildcardExpression
+ | macroExpansionExpression
  | selectorExpression
  | keyPathExpression
  ;
@@ -684,6 +685,11 @@ tupleElement: (identifier ':')? expression ;
 // GRAMMAR OF A WILDCARD EXPRESSION
 
 wildcardExpression : '_'  ;
+
+// GRAMMAR OF A MACRO EXPANSION EXPRESSION
+// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/expressions#Macro-Expansion-Expression
+// https://github.com/apple/swift-evolution/blob/main/proposals/0382-expression-macros.md#macro-expansion
+macroExpansionExpression: '#' identifier genericArgumentClause? functionCallArgumentClause? ;
 
 // GRAMMAR OF A SELECTOR EXPRESSION
 
@@ -831,6 +837,7 @@ sType
  | sType '?'  // optional-type
  | sType '!'  // implicitly-unwrapped-optional-type
  | protocolCompositionType
+ | 'some' sType // opaque-type
  | sType '.' 'Type' | sType '.' 'Protocol' // metatype
  | 'Any' | 'Self'
  ;
@@ -954,7 +961,7 @@ keyword :
  // Keywords used in patterns
  | '_'
  // Keywords that begin with a number sign (#)
- | '#available' | '#colorLiteral' | '#column' | '#else' | '#elseif' | '#endif' | '#file' | 'fileLiteral' | '#function'
+ | '#available' | '#unavailable' | '#colorLiteral' | '#column' | '#else' | '#elseif' | '#endif' | '#file' | 'fileLiteral' | '#function'
  | '#if' | 'imageLiteral' | '#line' | '#selector'
  ;
 
@@ -963,7 +970,8 @@ contextSensitiveKeyword :
  'lazy' | 'left' | 'mutating' | 'none' | 'nonmutating' | 'optional' | 'operator' | 'override' | 'postfix' | 'precedence' |
  'prefix' | 'Protocol' | 'required' | 'right' | 'set' | 'Type' | 'unowned' | 'weak' | 'willSet' |
  'iOS' | 'iOSApplicationExtension' | 'OSX' | 'OSXApplicationExtension­' | 'watchOS' | 'x86_64' |
- 'arm' | 'arm64' | 'i386' | 'os' | 'arch' | 'safe' | 'tvOS' | 'file' | 'line' | 'default' | 'Self' | 'var'
+ 'arm' | 'arm64' | 'i386' | 'os' | 'arch' | 'safe' | 'tvOS' | 'file' | 'line' | 'default' | 'Self' | 'var' |
+ 'some'
  ;
 
 grammarString:

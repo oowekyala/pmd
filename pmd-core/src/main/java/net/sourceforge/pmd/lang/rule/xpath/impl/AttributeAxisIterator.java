@@ -4,9 +4,16 @@
 
 package net.sourceforge.pmd.lang.rule.xpath.impl;
 
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
+import static net.sourceforge.pmd.util.CollectionUtil.setOf;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -14,11 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
+import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute.NoAttrScope;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 
 /**
@@ -26,6 +37,8 @@ import net.sourceforge.pmd.lang.rule.xpath.NoAttribute.NoAttrScope;
  * attributes. This is the default way the attributes of a node
  * are made accessible to XPath rules, and defines an important
  * piece of PMD's XPath support.
+ *
+ * @see Node#getXPathAttributesIterator()
  */
 public class AttributeAxisIterator implements Iterator<Attribute> {
 
@@ -34,25 +47,25 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
 
     /* Constants used to determine which methods are accessors */
     private static final Set<Class<?>> CONSIDERED_RETURN_TYPES
-            = new HashSet<>(Arrays.<Class<?>>asList(Integer.TYPE, Boolean.TYPE, Double.TYPE, String.class,
-                    Long.TYPE, Character.TYPE, Float.TYPE));
+            = setOf(Integer.TYPE, Boolean.TYPE, Double.TYPE, String.class,
+                    Long.TYPE, Character.TYPE, Float.TYPE, Chars.class);
 
     private static final Set<String> FILTERED_OUT_NAMES
-        = new HashSet<>(Arrays.asList("toString",
-                                      "getNumChildren",
-                                      "getIndexInParent",
-                                      "getParent",
-                                      "getClass",
-                                      "getSourceCodeFile",
-                                      "isFindBoundary",
-                                      "getRuleIndex",
-                                      "getXPathNodeName",
-                                      "altNumber",
-                                      "toStringTree",
-                                      "getTypeNameNode",
-                                      "hashCode",
-                                      "getImportedNameNode",
-                                      "getScope"));
+        = setOf("toString",
+                "getNumChildren",
+                "getIndexInParent",
+                "getParent",
+                "getClass",
+                "getSourceCodeFile",
+                "isFindBoundary",
+                "getRuleIndex",
+                "getXPathNodeName",
+                "altNumber",
+                "toStringTree",
+                "getTypeNameNode",
+                "hashCode",
+                "getImportedNameNode",
+                "getScope");
 
     /* Iteration variables */
     private final Iterator<MethodWrapper> iterator;
@@ -64,7 +77,7 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
      * Note: if you want to access the attributes of a node, don't use this directly,
      * use instead the overridable {@link Node#getXPathAttributesIterator()}.
      */
-    public AttributeAxisIterator(Node contextNode) {
+    public AttributeAxisIterator(@NonNull Node contextNode) {
         this.node = contextNode;
         this.iterator = METHOD_CACHE.computeIfAbsent(contextNode.getClass(), this::getWrappersForClass).iterator();
     }
@@ -72,7 +85,13 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
     private List<MethodWrapper> getWrappersForClass(Class<?> nodeClass) {
         return Arrays.stream(nodeClass.getMethods())
                      .filter(m -> isAttributeAccessor(nodeClass, m))
-                     .map(MethodWrapper::new)
+                     .map(m -> {
+                         try {
+                             return new MethodWrapper(m, nodeClass);
+                         } catch (ReflectiveOperationException e) {
+                             throw AssertionUtil.shouldNotReachHere("Method '" + m + "' should be accessible, but: " + e, e);
+                         }
+                     })
                      .collect(Collectors.toList());
     }
 
@@ -93,6 +112,8 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
             // filter out methods declared in supertypes like the
             // Antlr ones, unless they're opted-in
             && Node.class.isAssignableFrom(method.getDeclaringClass())
+            // Methods of package-private classes are not accessible.
+            && Modifier.isPublic(method.getModifiers())
             && !isIgnored(nodeClass, method);
     }
 
@@ -124,8 +145,11 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
 
         if (localAnnot == null) {
             return false;
-        } else if (!declaration.equals(nodeClass)) {
-            // then the node suppressed the attributes of its parent
+        } else if (!declaration.equals(nodeClass) || method.isBridge()) {
+            // Bridge methods appear declared in the subclass but represent
+            // an inherited method.
+
+            // Then the node suppressed the attributes of its parent
             return localAnnot.scope() == NoAttrScope.INHERITED;
         } else {
             // then declaration == nodeClass so we need the scope to be ALL
@@ -138,7 +162,7 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
     @Override
     public Attribute next() {
         MethodWrapper m = iterator.next();
-        return new Attribute(node, m.name, m.method);
+        return new Attribute(node, m.name, m.methodHandle, m.method);
     }
 
 
@@ -155,13 +179,26 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
      * once and put inside the {@link #METHOD_CACHE}).
      */
     private static class MethodWrapper {
-        public Method method;
-        public String name;
+        static final Lookup LOOKUP = MethodHandles.publicLookup();
+        private static final MethodType GETTER_TYPE = MethodType.methodType(Object.class, Node.class);
+        public final MethodHandle methodHandle;
+        public final Method method;
+        public final String name;
 
 
-        MethodWrapper(Method m) {
+        MethodWrapper(Method m, Class<?> nodeClass) throws IllegalAccessException, NoSuchMethodException {
             this.method = m;
             this.name = truncateMethodName(m.getName());
+
+            if (!Modifier.isPublic(m.getDeclaringClass().getModifiers())) {
+                // This is a public method of a non-public class.
+                // To call it from reflection we need to call it via invokevirtual,
+                // whereas the default handle would use invokespecial.
+                MethodType methodType = MethodType.methodType(m.getReturnType(), emptyList());
+                this.methodHandle = MethodWrapper.LOOKUP.findVirtual(nodeClass, m.getName(), methodType).asType(GETTER_TYPE);
+            } else {
+                this.methodHandle = LOOKUP.unreflect(m).asType(GETTER_TYPE);
+            }
         }
 
 

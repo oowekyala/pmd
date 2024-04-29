@@ -58,8 +58,10 @@ public class SchemaConstant {
     }
 
     public @Nullable String getAttributeOrNull(Element element) {
-        String attr = element.getAttribute(name);
-        return attr.isEmpty() ? null : attr;
+        if (element.hasAttribute(name)) {
+            return element.getAttribute(name);
+        }
+        return null;
     }
 
     public Optional<String> getAttributeOpt(Element element) {
@@ -85,11 +87,11 @@ public class SchemaConstant {
                       .collect(Collectors.toList());
     }
 
-    public Element getSingleChildIn(Element elt, PmdXmlReporter err) {
+    public @NonNull Element getSingleChildIn(Element elt, PmdXmlReporter err) {
         return XmlUtil.getSingleChildIn(elt, true, err, setOf(this));
     }
 
-    public Element getOptChildIn(Element elt, PmdXmlReporter err) {
+    public @Nullable Element getOptChildIn(Element elt, PmdXmlReporter err) {
         return XmlUtil.getSingleChildIn(elt, false, err, setOf(this));
     }
 

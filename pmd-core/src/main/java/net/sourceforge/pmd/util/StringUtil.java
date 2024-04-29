@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.util;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -15,28 +14,18 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.document.Chars;
 
 /**
- * A number of String-specific utility methods for use by PMD or its IDE
- * plugins.
+ * String-related utility functions. See also {@link StringUtils}.
  *
  * @author BrianRemedios
- * @deprecated Is internal API
+ * @author Clément Fournier
  */
-@Deprecated
-@InternalApi
 public final class StringUtil {
 
-    private static final String[] EMPTY_STRINGS = new String[0];
 
-    private static final Pattern XML_10_INVALID_CHARS = Pattern.compile(
-            "\\x00|\\x01|\\x02|\\x03|\\x04|\\x05|\\x06|\\x07|\\x08|"
-          + "\\x0b|\\x0c|\\x0e|\\x0f|"
-          + "\\x10|\\x11|\\x12|\\x13|\\x14|\\x15|\\x16|\\x17|\\x18|"
-          + "\\x19|\\x1a|\\x1b|\\x1c|\\x1d|\\x1e|\\x1f");
+    private static final Pattern XML_10_INVALID_CHARS = Pattern.compile("[[\\x00-\\x1F]&&[^\\x09\\x0A\\x0D]]");
 
     private StringUtil() {
     }
@@ -46,6 +35,10 @@ public final class StringUtil {
             s = "";
         }
         return "'" + s + "'";
+    }
+
+    public static @NonNull String inDoubleQuotes(String expected) {
+        return "\"" + expected + "\"";
     }
 
 
@@ -235,47 +228,6 @@ public final class StringUtil {
         return text;
     }
 
-
-    /**
-     * @param supportUTF8 override the default setting, whether special characters should be replaced with entities (
-     *                    <code>false</code>) or should be included as is ( <code>true</code>).
-     * @deprecated for removal. Use Java's XML implementations, that do the escaping,
-     *             use {@link #removedInvalidXml10Characters(String)} for fixing invalid characters in XML 1.0
-     *             documents or use {@code StringEscapeUtils#escapeXml10(String)} from apache commons-text instead.
-     */
-    @Deprecated
-    public static void appendXmlEscaped(StringBuilder buf, String src, boolean supportUTF8) {
-        char c;
-        int i = 0;
-        while (i < src.length()) {
-            c = src.charAt(i++);
-            if (c > '~') {
-                // 126
-                if (!supportUTF8) {
-                    int codepoint = c;
-                    // surrogate characters are not allowed in XML
-                    if (Character.isHighSurrogate(c)) {
-                        char low = src.charAt(i++);
-                        codepoint = Character.toCodePoint(c, low);
-                    }
-                    buf.append("&#x").append(Integer.toHexString(codepoint)).append(';');
-                } else {
-                    buf.append(c);
-                }
-            } else if (c == '&') {
-                buf.append("&amp;");
-            } else if (c == '"') {
-                buf.append("&quot;");
-            } else if (c == '<') {
-                buf.append("&lt;");
-            } else if (c == '>') {
-                buf.append("&gt;");
-            } else {
-                buf.append(c);
-            }
-        }
-    }
-
     /**
      * Remove characters, that are not allowed in XML 1.0 documents.
      *
@@ -348,9 +300,8 @@ public final class StringUtil {
     /**
      * Returns a list of
      */
-    public static List<Chars> linesWithTrimIndent(String source) {
-        List<String> lines = Arrays.asList(source.split("\n"));
-        List<Chars> result = lines.stream().map(Chars::wrap).collect(CollectionUtil.toMutableList());
+    public static List<Chars> linesWithTrimIndent(Chars source) {
+        List<Chars> result = source.lineStream().collect(CollectionUtil.toMutableList());
         trimIndentInPlace(result);
         return result;
     }
@@ -499,15 +450,6 @@ public final class StringUtil {
         return truncated + ellipsis;
     }
 
-    /**
-     * Returns an empty array of string
-     *
-     * @return String
-     */
-    public static String[] getEmptyStrings() {
-        return EMPTY_STRINGS;
-    }
-
 
     /**
      * Replaces unprintable characters by their escaped (or unicode escaped)
@@ -565,8 +507,10 @@ public final class StringUtil {
         return str.replaceAll("'", "''");
     }
 
-    public static @NonNull String inDoubleQuotes(String expected) {
-        return "\"" + expected + "\"";
+
+    /** Return the empty string if the parameter is null. */
+    public static String nullToEmpty(final String value) {
+        return value == null ? "" : value;
     }
 
 
@@ -580,7 +524,7 @@ public final class StringUtil {
 
             @Override
             String joinWords(List<String> words) {
-                return words.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.joining("_"));
+                return words.stream().map(s -> s.toUpperCase(Locale.ROOT)).collect(Collectors.joining("_"));
             }
         },
         /** camelCase. */

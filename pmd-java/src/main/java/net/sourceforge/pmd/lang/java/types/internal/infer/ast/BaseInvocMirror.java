@@ -10,12 +10,11 @@ import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTList;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.InvocationNode;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
@@ -25,6 +24,7 @@ import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.MethodCallSite;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ast.JavaExprMirrors.MirrorMaker;
+import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<T> implements InvocationMirror {
@@ -40,6 +40,9 @@ abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<
     public boolean isEquivalentToUnderlyingAst() {
         MethodCtDecl ctDecl = getCtDecl();
         AssertionUtil.validateState(ctDecl != null, "overload resolution is not complete");
+        if (ctDecl.isFailed()) {
+            return false; // be conservative
+        }
         if (!myNode.getMethodType().getSymbol().equals(ctDecl.getMethodType().getSymbol())) {
             return false;
         } else if (myNode instanceof ASTConstructorCall && ((ASTConstructorCall) myNode).isAnonymousClass()
@@ -47,7 +50,7 @@ abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<
             // check anon class has same type args
             return false;
         } else if (myNode.getParent() instanceof ASTVariableDeclarator) {
-            ASTVariableDeclaratorId varId = ((ASTVariableDeclarator) myNode.getParent()).getVarId();
+            ASTVariableId varId = ((ASTVariableDeclarator) myNode.getParent()).getVarId();
             if (varId.isTypeInferred() && !getInferredType().equals(varId.getTypeMirror())) {
                 return false;
             }

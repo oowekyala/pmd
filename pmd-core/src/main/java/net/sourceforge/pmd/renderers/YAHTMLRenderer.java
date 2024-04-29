@@ -16,11 +16,11 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.sourceforge.pmd.PMD;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.RuleViolation;
+import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * Renderer to another HTML format.
@@ -28,7 +28,6 @@ import net.sourceforge.pmd.properties.PropertyFactory;
 public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
 
     public static final String NAME = "yahtml";
-    // TODO 7.0.0 use PropertyDescriptor<Optional<File>> with a constraint that the file is an existing directory
     public static final PropertyDescriptor<String> OUTPUT_DIR =
         PropertyFactory.stringProperty("outputDir")
                        .desc("Output directory.")
@@ -49,7 +48,8 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
     }
 
     private void addViolation(RuleViolation violation) {
-        String packageName = violation.getPackageName();
+        String packageName = violation.getAdditionalInfo().getOrDefault(RuleViolation.PACKAGE_NAME, "");
+        String className = violation.getAdditionalInfo().getOrDefault(RuleViolation.CLASS_NAME, "");
 
         // report each part of the package name: e.g. net.sf.pmd.test will create nodes for
         // net, net.sf, net.sf.pmd, and net.sf.pmd.test
@@ -71,10 +71,10 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
         }
 
         // add one node per class collecting the actual violations
-        String fqClassName = packageName + "." + violation.getClassName();
+        String fqClassName = packageName + "." + className;
         ReportNode classNode = reportNodesByPackage.get(fqClassName);
         if (classNode == null) {
-            classNode = new ReportNode(packageName, violation.getClassName());
+            classNode = new ReportNode(packageName, className);
             reportNodesByPackage.put(fqClassName, classNode);
         }
         classNode.addRuleViolation(violation);
@@ -99,8 +99,8 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
         renderIndex(outputDir);
         renderClasses(outputDir);
 
-        writer.write("<h3 align=\"center\">The HTML files are located "
-                + (outputDir == null ? "above the project directory" : "in '" + outputDir + '\'') + ".</h3>" + PMD.EOL);
+        writer.println("<h3 align=\"center\">The HTML files are located "
+                + (outputDir == null ? "above the project directory" : "in '" + outputDir + '\'') + ".</h3>");
     }
 
     private void renderIndex(String outputDir) throws IOException {
@@ -163,15 +163,17 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
                     out.println("        <tr><th>Method</th><th>Violation</th></tr>");
                     for (RuleViolation violation : node.getViolations()) {
                         out.print("        <tr><td>");
-                        out.print(violation.getMethodName());
+                        String methodName = violation.getAdditionalInfo().get(RuleViolation.METHOD_NAME);
+                        out.print(StringUtil.nullToEmpty(methodName));
                         out.print("</td><td>");
                         out.print("<table border=\"0\">");
 
                         out.print(renderViolationRow("Rule:", violation.getRule().getName()));
                         out.print(renderViolationRow("Description:", violation.getDescription()));
 
-                        if (StringUtils.isNotBlank(violation.getVariableName())) {
-                            out.print(renderViolationRow("Variable:", violation.getVariableName()));
+                        String variableName = violation.getAdditionalInfo().get(RuleViolation.VARIABLE_NAME);
+                        if (StringUtils.isNotBlank(variableName)) {
+                            out.print(renderViolationRow("Variable:", variableName));
                         }
 
                         out.print(renderViolationRow("Line:", violation.getEndLine() > 0
@@ -192,14 +194,12 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
     }
 
     private String renderViolationRow(String name, String value) {
-        StringBuilder row = new StringBuilder(40 + name.length() + value.length());
-        row.append("<tr><td><b>")
-            .append(name)
-            .append("</b></td>")
-            .append("<td>")
-            .append(value)
-            .append("</td></tr>");
-        return row.toString();
+        return "<tr><td><b>"
+            + name
+            + "</b></td>"
+            + "<td>"
+            + value
+            + "</td></tr>";
     }
 
     private static class ReportNode {

@@ -13,9 +13,9 @@ import io.kotest.matchers.shouldNot
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import net.sourceforge.pmd.lang.ast.test.IntelliMarker
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestCtx
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
 import net.sourceforge.pmd.lang.java.symbols.internal.FakeSymAnnot
@@ -74,7 +74,7 @@ class TypeSystemTest : IntelliMarker, FunSpec({
     }
 
     test("Test typeOf type var") {
-        val (tvar) = ParserTestCtx().makeDummyTVars("T")
+        val (tvar) = ParserTestCtx(this).makeDummyTVars("T")
         val type = ts.typeOf(tvar.symbol, false)
         withClue("erased should be the same as not erased") {
             type shouldBe ts.typeOf(tvar.symbol, true)
@@ -83,7 +83,7 @@ class TypeSystemTest : IntelliMarker, FunSpec({
     }
 
     test("Test typeOf array of type var") {
-        val (tvar) = ParserTestCtx().makeDummyTVars("T")
+        val (tvar) = ParserTestCtx(this).makeDummyTVars("T")
         val type = ts.arrayType(ts.typeOf(tvar.symbol, false))
         type.shouldBeA<JArrayType> {
             it.componentType shouldBeSameInstanceAs tvar

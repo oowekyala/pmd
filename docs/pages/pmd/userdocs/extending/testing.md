@@ -3,7 +3,7 @@ title: Testing your rules
 tags: [extending, userdocs]
 summary: "Learn how to use PMD's simple test framework for unit testing rules."
 permalink: pmd_userdocs_extending_testing.html
-last_updated: July 2022
+last_updated: December 2023 (7.0.0)
 author: Andreas Dangel <andreas.dangel@adangel.org>
 ---
 
@@ -15,7 +15,7 @@ Of course, the more tests, the better the rule is verified. If the rule is more 
 with which the behavior can be modified, then these different cases can also be tested.
 
 And if there is a bug fix for a rule, be it a false positive or a false negative case, it should be accompanied
-with an additional test case, so that the bug is not accidentally reintroduced later on.
+by an additional test case, so that the bug is not accidentally reintroduced later on.
 
 ## How it works
 
@@ -25,8 +25,8 @@ Each category-ruleset has a single abstract base test class, from which the indi
 We have one test class per rule, which executes all test cases for a single rule. The actual test cases are
 stored in separate XML files, for each rule a separate file is used.
 
-All the test classes inherit from `net.sourceforge.pmd.testframework.PmdRuleTst`,
-which provides the seamless integration with JUnit. This base class determines the language, the category name
+All the test classes inherit from {% jdoc test::test.PmdRuleTst %},
+which provides the seamless integration with JUnit5. This base class determines the language, the category name
 and the rule name from the concrete test class. It then searches the test code on its own.
 E.g. the individual rule test class
 `net.sourceforge.pmd.lang.java.rule.bestpractices.AbstractClassWithoutAbstractMethodTest` tests the
@@ -41,8 +41,9 @@ test case and just execute this one.
 
 ## Where to place the test code
 
-The `PmdRuleTst` class searches the XML file, that describes the test cases for a certain rule
-using the following convention:
+The {% jdoc test::test.PmdRuleTst %} class searches the XML file, that describes the test cases
+for a certain rule using the following convention:
+
 The XML file is a test resource, so it is searched in the tree under `src/test/resources`.
 
 The sub package `xml` of the test class's package should contain a file with the same name as the rule's name
@@ -58,11 +59,13 @@ The test code for the rule can be found in the file:
 
 In general, the class name and file name pattern for the test class and data is this:
 
-    net.sourceforge.pmd.lang.<Language Terse Name>.rule.<Category Name>.<Rule Name>Test
-    src/test/resources/net/sourceforge/pmd/lang/<Language Terse Name>/rule/<Category Name>/xml/<Rule Name>.xml
+    net.sourceforge.pmd.lang.<Language Id>.rule.<Category Name>.<Rule Name>Test
+    src/test/resources/net/sourceforge/pmd/lang/<Language Id>/rule/<Category Name>/xml/<Rule Name>.xml
+
+Note: Language Id is the id defined by the language module, see {% jdoc core::lang.Language#getId() %}.
 
 {%include tip.html content="This convention allows you to quickly find the test cases for a given rule:
-Just search in the project for a file `<RuleName>.xml`. Search for a class `<Rule Name>Test` to find the
+Just search in the project for a file `<Rule Name>.xml`. Search for a class `<Rule Name>Test` to find the
 unit test class for the given rule. And if the rule is a Java-based rule, the search for `<Rule Name>Rule`
 finds the rule implementation class." %}
 
@@ -73,15 +76,15 @@ see [Using the test framework externally](#using-the-test-framework-externally).
 
 ### Test Class: AbstractClassWithoutAbstractMethodTest
 
-This class inherits from `PmdRuleTst` and is located in the package "bestpractices", since the rule
-belongs to the category "Best Practices":
+This class inherits from {% jdoc test::test.PmdRuleTst %} and is located in the package "bestpractices",
+since the rule belongs to the category "Best Practices":
 
 ``` java
 package net.sourceforge.pmd.lang.java.rule.bestpractices;
 
-import net.sourceforge.pmd.testframework.PmdRuleTst;
+import net.sourceforge.pmd.test.PmdRuleTst;
 
-public class AbstractClassWithoutAbstractMethodTest extends PmdRuleTst {
+class AbstractClassWithoutAbstractMethodTest extends PmdRuleTst {
     // no additional unit tests
 }
 ```
@@ -129,7 +132,7 @@ The root element is `<test-data>`. It can contain one or more `<test-code>` and 
 Each `<test-code>` element defines a single test case. `<code-fragment>` elements are used to share code snippets
 between different test cases.
 
-{%include note.html content="The XML schema is available at [rule-tests.xsd](https://github.com/pmd/pmd/blob/master/pmd-test/src/main/resources/rule-tests_1_0_0.xsd)." %}
+{%include note.html content="The XML schema is available at [rule-tests.xsd](https://github.com/pmd/pmd/blob/master/pmd-test-schema/src/main/resources/net/sourceforge/pmd/test/schema/rule-tests_1_0_0.xsd)." %}
 
 ### `<test-code>` attributes
 
@@ -137,18 +140,8 @@ The `<test-code>` elements understands the following optional attributes:
 
 * **disabled**: By default, it's `false`. Set it to `true`, to ignore and skip a test case.
 
-* **focused**: By default, it's `false`. Set it to `true`, to ignore all other test cases.
-
-* **useAuxClasspath**: _deprecated since PMD 6.48.0: assumed true, has no effect anymore._
-    By default, it's `true`. Set it to `false` to reproduce issues which only
-    appear without type resolution.
-
-* **reinitializeRule**: _deprecated since PMD 6.48.0: assumed true, has no effect anymore._
-    By default, it's `true`, so each test case starts with a fresh instantiated rule. Set it
-    to `false` to reproduce cases, where the previous run has influences.
-
-* **regressionTest**: _deprecated since PMD 6.48.0: Use `disabled` instead. Note: It has the opposite boolean
-  semantic._ By default, it's `true`. Set it to `false`, to ignore and skip a test case.
+* **focused**: By default, it's `false`. Set it to `true`, to ignore all other test cases. This is useful while
+  debugging a rule and you want to focus only on one specific case.
 
 ### `<test-code>` children
 
@@ -158,7 +151,7 @@ The `<test-code>` elements understands the following optional attributes:
 *   **`<rule-property>`**: Optional rule properties, if the rule is configurable. Just add multiple elements, to
     set multiple properties for one test case. For an example, see below.
 
-*   **`<expected-problems>`**: The the raw number of expected rule violations, that this rule is expected to report.
+*   **`<expected-problems>`**: The raw number of expected rule violations, that this rule is expected to report.
     For false-positive test cases, this is always "0". For false-negative test cases, it can be any positive number.
 
 *   **`<expected-linenumbers>`**: Optional element. It's a comma separated list of line numbers.
@@ -196,7 +189,7 @@ in a "CDATA" section, so that no further XML escapes (entity references such as 
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.sourceforge.io/rule-tests_1_0_0.xsd">
 
-    <test-code reinitializeRule="true" disabled="false" useAuxClasspath="true">
+    <test-code disabled="false">
         <description>Just a description, will be used as the test name for JUnit in the reports</description>
         <rule-property name="somePropName">propValue</rule-property>    <!-- optional -->
         <expected-problems>2</expected-problems>
@@ -237,7 +230,7 @@ better readability. The description can be written directly without a CDATA sect
 ## Using the test framework externally
 
 It is also possible to use the test framework for custom rules developed outside the PMD source base.
-Therefore you just need to reference the dependency `net.sourceforge.pmd:pmd-test`.
+In order to use the test framework you just need to reference the dependency `net.sourceforge.pmd:pmd-test`.
 
 For maven, you can use this snippet:
 
@@ -258,11 +251,11 @@ the rule test manually, as SimpleAggregatorTst will fail to determine it correct
 ``` java
 package com.example.pmd.rules;
 
-import net.sourceforge.pmd.testframework.SimpleAggregatorTst;
+import net.sourceforge.pmd.test.SimpleAggregatorTst;
 
-public class CustomRuleTest extends SimpleAggregatorTst {
+class CustomRuleTest extends SimpleAggregatorTst {
     @Override
-    public void setUp() {
+    protected void setUp() {
         addRule("com/example/pmd/ruleset.xml", "CustomRule");
     }
 }
@@ -271,32 +264,32 @@ public class CustomRuleTest extends SimpleAggregatorTst {
 This will then search for a rule named "CustomRule" in the ruleset, that is located in "src/main/resources" under
 the path "com/example/pmd/ruleset.xml".
 
-The test data should be placed in an xml file located in "src/test/resources" under the path
+The test data should be placed in an XML file located in "src/test/resources" under the path
 "com/example/pmd/rules/xml/CustomRule.xml".
 
 ## How the test framework is implemented
 
-The framework uses a custom JUnit test runner under the hood, among a couple of utility classes:
+The framework uses the [dynamic test feature](https://junit.org/junit5/docs/current/user-guide/#writing-tests-dynamic-tests)
+of JUnit5 under the hood, among a couple of utility classes:
 
-* `PmdRuleTst`: This is the base class for tests in PMD's code base. It is a subclass of `RuleTst` and just
-    contains the logic to determine the test resources based on the test class name.
+* {% jdoc test::test.PmdRuleTst %}: This is the base class for tests in PMD's code base. It is a subclass of
+  {% jdoc test::test.RuleTst %} and just
+  contains the logic to determine the test resources based on the test class name.
 
-* `SimpleAggregatorTst`: This is a more generic base class for the test classes and defines
-    the custom JUnit test runner. It doesn't register any test cases on its own.
-    It itself is a subclass of `RuleTst`.
+* {% jdoc test::test.SimpleAggregatorTst %}: This is a more generic base class for the test classes.
+  It doesn't register any test cases on its own. You can register your own rule tests.
+  It itself is a subclass of {% jdoc test::test.RuleTst %}.
 
-* The maven module "pmd-test-schema" contains the logic to parse the XML files and provide a `RuleTestCollection`. This
-  in turn contains a list of `RuleTestDescriptor`s. Each rule test descriptor describes a single test case.
+* The maven module "pmd-test-schema" contains the logic to parse the XML files and provides a
+  {% jdoc test-schema::test.schema.RuleTestCollection %}. This in turn contains a list of
+  {% jdoc test-schema::test.schema.RuleTestDescriptor %}s. Each rule test descriptor describes a single test case.
 
-* `RuleTst`: uses the `TestSchemaParser` from module "pmd-test-schema" to parse the test cases, executes each
-  rule test descriptor and asserts the results.
+* {% jdoc test::test.RuleTst %}: uses the {%jdoc test-schema::test.schema.TestSchemaParser %}
+  from module "pmd-test-schema" to parse the test cases, executes each
+  rule test descriptor and asserts the results. It defines a test method `ruleTests()` which is a test factory
+  and returns one dynamic test per rule test.
 
-* `PMDTestRunner`: A custom JUnit test runner, that combines two separate test runners: The custom `RuleTestRunner`
-    and the standard `JUnit4` test runner. This combination allows you to add additional standard unit test methods
-    annotated with `@Test` to your test class.
+## Example projects
 
-    *Note:* Since the test class is executed through two test runners, it is actually instantiated twice. Be aware
-    of this, if you do any initialization in the constructor. Also, the static hooks `@BeforeClass` and `@AfterClass`
-    will be executed twice.
-
-* `RuleTestRunner`: This test runner executes the test descriptors with the help of `RuleTst`.
+See <https://github.com/pmd/pmd-examples> for a couple of example projects, that
+create custom PMD rules for different languages including tests.

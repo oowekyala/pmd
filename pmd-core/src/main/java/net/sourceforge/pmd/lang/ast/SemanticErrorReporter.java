@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.event.Level;
 
 import net.sourceforge.pmd.util.StringUtil;
-import net.sourceforge.pmd.util.log.MessageReporter;
+import net.sourceforge.pmd.util.log.PmdReporter;
 
 /**
  * Reports errors that occur after parsing. This may be used to implement
@@ -83,16 +83,16 @@ public interface SemanticErrorReporter {
 
 
     /**
-     * Forwards to a {@link MessageReporter}, except trace and debug
+     * Forwards to a {@link PmdReporter}, except trace and debug
      * messages which are reported on a logger.
      */
-    static SemanticErrorReporter reportToLogger(MessageReporter reporter) {
+    static SemanticErrorReporter reportToLogger(PmdReporter reporter) {
         return new SemanticErrorReporter() {
 
             private SemanticException exception = null;
 
             private String locPrefix(Node loc) {
-                return "at " + loc.getReportLocation()
+                return "at " + loc.getReportLocation().startPosToStringWithFile()
                     + ": ";
             }
 
@@ -108,7 +108,7 @@ public interface SemanticErrorReporter {
 
             @Override
             public void warning(Node location, String message, Object... args) {
-                logMessage(Level.WARN, location, message, args);
+                logMessage(Level.DEBUG, location, message, args);
             }
 
             @Override

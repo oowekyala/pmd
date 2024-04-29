@@ -4,49 +4,41 @@
 
 package net.sourceforge.pmd.lang.apex.ast;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.lang.apex.ApexJorjeLogging;
-import net.sourceforge.pmd.lang.apex.multifile.ApexMultifileAnalysis;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.apex.ApexLanguageProcessor;
 import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.Parser;
-import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.properties.PropertyFactory;
 
-import apex.jorje.data.Locations;
-import apex.jorje.semantic.ast.compilation.Compilation;
+import com.google.summit.SummitAST;
+import com.google.summit.ast.CompilationUnit;
+import com.google.summit.translation.Translate;
 
-@InternalApi
+@SuppressWarnings("PMD.DoNotUseJavaUtilLogging")
 public final class ApexParser implements Parser {
 
-    @InternalApi // todo change that to optional<file> when properties are updated
-    public static final PropertyDescriptor<String> MULTIFILE_DIRECTORY =
-        PropertyFactory.stringProperty("rootDirectory")
-                       .desc("The root directory of the Salesforce metadata, where `sfdx-project.json` resides. "
-                                 + "Set environment variable PMD_APEX_ROOTDIRECTORY to use this.")
-                       .defaultValue("") // is this ok?
-                       .build();
+    // This is static - it keeps the Logger from being garbage collected
+    // we want to configure the log level for this once.
+    private static final Logger TRANSLATE_LOGGER = Logger.getLogger(Translate.class.getName());
 
-    public ApexParser() {
-        ApexJorjeLogging.disableLogging();
-        Locations.useIndexFactory();
+    static {
+        // Suppress INFO-level output
+        TRANSLATE_LOGGER.setLevel(Level.WARNING);
     }
 
     @Override
     public ASTApexFile parse(final ParserTask task) {
+        CompilationUnit astRoot = null;
         try {
-
-            final Compilation astRoot = CompilerService.INSTANCE.parseApex(task.getTextDocument());
-
-            assert astRoot != null : "Normally replaced by Compilation.INVALID";
-
-            String property = task.getProperties().getProperty(MULTIFILE_DIRECTORY);
-            ApexMultifileAnalysis analysisHandler = ApexMultifileAnalysis.getAnalysisInstance(property);
-
-
-            final ApexTreeBuilder treeBuilder = new ApexTreeBuilder(task);
-            return treeBuilder.buildTree(astRoot, analysisHandler);
-        } catch (apex.jorje.services.exception.ParseException e) {
-            throw new ParseException(e).setFileName(task.getFileDisplayName());
+            astRoot = SummitAST.INSTANCE.parseAndTranslate(task.getFileId().getOriginalPath(), task.getTextDocument().getText().toString(), null);
+        } catch (SummitAST.ParseException e) {
+            throw new ParseException(e);
         }
+
+        assert astRoot != null;
+
+        final ApexTreeBuilder treeBuilder = new ApexTreeBuilder(task, (ApexLanguageProcessor) task.getLanguageProcessor());
+        return treeBuilder.buildTree(astRoot);
     }
 }

@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.renderers.internal.sarif.SarifLog;
 import net.sourceforge.pmd.renderers.internal.sarif.SarifLogBuilder;
-import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -71,6 +71,7 @@ public class SarifRenderer extends AbstractIncrementingRenderer {
         final SarifLog sarifLog = sarifLogBuilder.build();
         final String json = gson.toJson(sarifLog);
         writer.write(json);
+        writer.println();
     }
 
     @Override

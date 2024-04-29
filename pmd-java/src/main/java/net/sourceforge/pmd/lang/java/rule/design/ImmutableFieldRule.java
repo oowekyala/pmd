@@ -6,68 +6,70 @@ package net.sourceforge.pmd.lang.java.rule.design;
 
 import static net.sourceforge.pmd.util.CollectionUtil.setOf;
 
-import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import net.sourceforge.pmd.lang.ast.NodeStream;
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.AccessType;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTLambdaExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
-import net.sourceforge.pmd.lang.java.ast.AccessNode.Visibility;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JModifier;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
 import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.AssignmentEntry;
 import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.JavaPropertyUtil;
-import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 public class ImmutableFieldRule extends AbstractJavaRulechainRule {
-
-    private static final PropertyDescriptor<List<String>> IGNORED_ANNOTS =
-        JavaPropertyUtil.ignoredAnnotationsDescriptor();
 
     private static final Set<String> INVALIDATING_CLASS_ANNOT =
         setOf(
             "lombok.Builder",
             "lombok.Data",
-            "lombok.Getter",
             "lombok.Setter",
             "lombok.Value"
         );
 
+    private static final Set<String> INVALIDATING_FIELD_ANNOT =
+        setOf(
+            "lombok.Setter"
+        );
+    private static final Function<Object, JavaNode> INTERESTING_ANCESTOR =
+        NodeStream.asInstanceOf(ASTLambdaExpression.class,
+                                ASTTypeDeclaration.class,
+                                ASTConstructorDeclaration.class);
+
     public ImmutableFieldRule() {
         super(ASTFieldDeclaration.class);
-        definePropertyDescriptor(IGNORED_ANNOTS);
     }
 
 
     @Override
     public Object visit(ASTFieldDeclaration field, Object data) {
-        ASTAnyTypeDeclaration enclosingType = field.getEnclosingType();
+        ASTTypeDeclaration enclosingType = field.getEnclosingType();
         if (field.getEffectiveVisibility().isAtMost(Visibility.V_PRIVATE)
             && !field.getModifiers().hasAny(JModifier.VOLATILE, JModifier.STATIC, JModifier.FINAL)
             && !JavaAstUtils.hasAnyAnnotation(enclosingType, INVALIDATING_CLASS_ANNOT)
-            && !JavaAstUtils.hasAnyAnnotation(field, getProperty(IGNORED_ANNOTS))) {
+            && !JavaAstUtils.hasAnyAnnotation(field, INVALIDATING_FIELD_ANNOT)) {
 
             DataflowResult dataflow = DataflowPass.getDataflowResult(field.getRoot());
 
             outer:
-            for (ASTVariableDeclaratorId varId : field.getVarIds()) {
+            for (ASTVariableId varId : field.getVarIds()) {
 
                 boolean hasWrite = false;
                 for (ASTNamedReferenceExpr usage : varId.getLocalUsages()) {
                     if (usage.getAccessType() == AccessType.WRITE) {
                         hasWrite = true;
 
-                        JavaNode enclosing = usage.ancestors().map(NodeStream.asInstanceOf(ASTLambdaExpression.class, ASTAnyTypeDeclaration.class, ASTConstructorDeclaration.class)).first();
+                        JavaNode enclosing = usage.ancestors().map(INTERESTING_ANCESTOR).first();
                         if (!(enclosing instanceof ASTConstructorDeclaration)
                             || enclosing.getEnclosingType() != enclosingType) {
                             continue outer; // written-to outside ctor
@@ -82,9 +84,9 @@ public class ImmutableFieldRule extends AbstractJavaRulechainRule {
 
                 if (!hasWrite && !isBlank) {
                     //todo this case may also handle static fields easily.
-                    addViolation(data, varId, varId.getName());
+                    asCtx(data).addViolation(varId, varId.getName());
                 } else if (hasWrite && defaultValueDoesNotReachEndOfCtor(dataflow, varId)) {
-                    addViolation(data, varId, varId.getName());
+                    asCtx(data).addViolation(varId, varId.getName());
                 }
             }
 
@@ -92,7 +94,7 @@ public class ImmutableFieldRule extends AbstractJavaRulechainRule {
         return null;
     }
 
-    private boolean defaultValueDoesNotReachEndOfCtor(DataflowResult dataflow, ASTVariableDeclaratorId varId) {
+    private boolean defaultValueDoesNotReachEndOfCtor(DataflowResult dataflow, ASTVariableId varId) {
         AssignmentEntry fieldDef = DataflowPass.getFieldDefinition(varId);
         // first assignments to the field
         Set<AssignmentEntry> killers = dataflow.getKillers(fieldDef);
@@ -106,7 +108,16 @@ public class ImmutableFieldRule extends AbstractJavaRulechainRule {
     }
 
     private boolean isReassignedOnSomeCodePath(DataflowResult dataflow, AssignmentEntry anAssignment) {
+        // Ie, return whether there exists an assignment that overwrites the given assignment,
+        // and simultaneously is not unbound (=happens for sure). Unbound assignments are introduced by the
+        // dataflow pass to help analysis, but are overly conservative. They represent the
+        // "final value" of a field when a ctor ends, and also the value a field may have
+        // been set to when an instance method is called (we don't know whether the method
+        // actually sets anything, but we assume it does). The first case can be ignored
+        // because we already check for that in the logic of this rule. The second case
+        // can be ignored because we already made sure that the field is only written to
+        // in ctors, but not in any instance method.
         Set<AssignmentEntry> killers = dataflow.getKillers(anAssignment);
-        return CollectionUtil.any(killers, killer -> !killer.isFieldAssignmentAtEndOfCtor());
+        return CollectionUtil.any(killers, killer -> !killer.isUnbound());
     }
 }

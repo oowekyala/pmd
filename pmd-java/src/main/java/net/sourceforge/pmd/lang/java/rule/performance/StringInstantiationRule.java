@@ -24,11 +24,13 @@ public class StringInstantiationRule extends AbstractJavaRule {
         ASTArgumentList args = node.getArguments();
         if (args.size() <= 1
             && TypeTestUtil.isExactlyA(String.class, node.getTypeNode())) {
-            if (args.size() == 1 && TypeTestUtil.isExactlyA(byte[].class, args.get(0))) {
-                // byte array ctor is ok
+            if (args.size() == 1 && (
+                    TypeTestUtil.isExactlyA(byte[].class, args.get(0))
+                    || TypeTestUtil.isExactlyA(char[].class, args.get(0)))) {
+                // byte/char array ctor is ok
                 return data;
             }
-            addViolation(data, node);
+            asCtx(data).addViolation(node);
         }
         return data;
     }

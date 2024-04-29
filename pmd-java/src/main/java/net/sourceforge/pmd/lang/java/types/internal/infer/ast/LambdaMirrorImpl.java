@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
@@ -29,6 +28,7 @@ import net.sourceforge.pmd.lang.java.types.TypingContext;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.LambdaExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ast.JavaExprMirrors.MirrorMaker;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> implements LambdaExprMirror {
 
@@ -91,9 +91,9 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
 
     @Override
     public List<ExprMirror> getResultExpressions() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         if (block == null) {
-            return Collections.singletonList(createSubexpression(myNode.getExpression()));
+            return Collections.singletonList(createSubexpression(myNode.getExpressionBody()));
         } else {
             return block.descendants(ASTReturnStatement.class)
                         .map(ASTReturnStatement::getExpr)
@@ -111,15 +111,15 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
 
     @Override
     public boolean isValueCompatible() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         return block == null || isLambdaBodyCompatible(block, false);
     }
 
     @Override
     public boolean isVoidCompatible() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         if (block == null) {
-            return isExpressionStatement(myNode.getExpression());
+            return isExpressionStatement(myNode.getExpressionBody());
         } else {
             return isLambdaBodyCompatible(block, true);
         }

@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * Base class to scan a type signature.
@@ -15,7 +15,7 @@ class SignatureScanner {
 
     protected final String chars;
     protected final int start;
-    protected final int end;
+    protected final int end; // exclusive
 
 
     SignatureScanner(String descriptor) {
@@ -38,7 +38,7 @@ class SignatureScanner {
 
 
     public char charAt(int off) {
-        return off == end ? 0 : chars.charAt(off);
+        return off < end ? chars.charAt(off) : 0;
     }
 
     public void dumpChars(int start, int end, StringBuilder builder) {
@@ -82,7 +82,7 @@ class SignatureScanner {
         String sb = "Expected " + expectedWhat + ":\n"
             + indent + bufferToString() + "\n"
             + indent + StringUtils.repeat(' ', pos - start) + '^' + "\n";
-        return new IllegalArgumentException(sb);
+        return new InvalidTypeSignatureException(sb);
     }
 
     public void expectEoI(int e) {

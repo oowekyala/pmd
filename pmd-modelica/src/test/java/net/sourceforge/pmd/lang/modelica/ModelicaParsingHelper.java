@@ -5,8 +5,8 @@
 package net.sourceforge.pmd.lang.modelica;
 
 
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
 import net.sourceforge.pmd.lang.modelica.ast.ASTStoredDefinition;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 public class ModelicaParsingHelper extends BaseParsingHelper<ModelicaParsingHelper, ASTStoredDefinition> {
 
@@ -14,7 +14,7 @@ public class ModelicaParsingHelper extends BaseParsingHelper<ModelicaParsingHelp
     public static final ModelicaParsingHelper DEFAULT = new ModelicaParsingHelper(Params.getDefault());
 
     private ModelicaParsingHelper(Params params) {
-        super(ModelicaLanguageModule.NAME, ASTStoredDefinition.class, params);
+        super(ModelicaLanguageModule.getInstance(), ASTStoredDefinition.class, params);
     }
 
     @Override

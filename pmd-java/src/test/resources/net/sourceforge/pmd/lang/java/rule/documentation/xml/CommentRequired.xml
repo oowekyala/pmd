@@ -514,8 +514,8 @@ public class CommentRequired {
     </test-code>
 
     <test-code>
-        <description>#1683 [java] CommentRequired property names are inconsistent - use deprecated property</description>
-        <rule-property name="headerCommentRequirement">Unwanted</rule-property>
+        <description>#1683 [java] CommentRequired property names are inconsistent</description>
+        <rule-property name="classCommentRequirement">Unwanted</rule-property>
         <expected-problems>1</expected-problems>
         <code><![CDATA[
 /** Unwanted class comment */
@@ -524,12 +524,31 @@ public class CommentRequirement {}
     </test-code>
 
     <test-code>
-        <description>#1683 [java] CommentRequired property names are inconsistent - use new property</description>
-        <rule-property name="classCommentRequirement">Unwanted</rule-property>
+        <description>Method overridden without @Override (#3123)</description>
+        <rule-property name="methodWithOverrideCommentRequirement">Required</rule-property>
         <expected-problems>1</expected-problems>
+        <expected-linenumbers>4</expected-linenumbers>
         <code><![CDATA[
-/** Unwanted class comment */
-public class CommentRequirement {}
-        ]]></code>
+/** Comment */
+public class CommentRequirement {
+    //no @Override annotation
+    public String toString() { // comment required
+        return "";
+    }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Methods inside annotations (#3123)</description>
+        <expected-problems>2</expected-problems>
+        <expected-linenumbers>3,4</expected-linenumbers>
+        <code><![CDATA[
+/** Comment */
+@interface MyAnnotation1 {
+    String name(); // comment required
+    int version(); // comment required
+}
+]]></code>
     </test-code>
 </test-data>

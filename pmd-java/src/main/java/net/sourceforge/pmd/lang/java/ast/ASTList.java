@@ -157,19 +157,9 @@ public abstract class ASTList<N extends JavaNode> extends AbstractJavaNode imple
         }
 
         @Override
-        @SuppressWarnings("unchecked")
-        public NodeStream<T> children() {
-            return (NodeStream<T>) super.children();
-        }
-
-        @Override
         public NodeStream<T> toStream() {
-            return children();
+            return (NodeStream<T>) children();
         }
 
-        @Override
-        public T getChild(int index) {
-            return (T) super.getChild(index);
-        }
     }
 }

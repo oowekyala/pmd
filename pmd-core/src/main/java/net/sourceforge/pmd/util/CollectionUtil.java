@@ -14,12 +14,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -40,110 +41,20 @@ import org.pcollections.PMap;
 import org.pcollections.PSequence;
 import org.pcollections.PSet;
 
-import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.internal.util.AssertionUtil;
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.document.Chars;
 
 /**
- * Generic collection and array-related utility functions for java.util types.
- * See ClassUtil for comparable facilities for short name lookup.
+ * Generic collection-related utility functions for java.util types.
  *
  * @author Brian Remedios
- * @version $Revision$
- * @deprecated Is internal API
+ * @author Clément Fournier
  */
-@Deprecated
-@InternalApi
 public final class CollectionUtil {
 
     private static final int UNKNOWN_SIZE = -1;
 
-    @SuppressWarnings("PMD.UnnecessaryFullyQualifiedName")
-    public static final Set<String> COLLECTION_INTERFACES_BY_NAMES = collectionTypes(List.class, Collection.class, Map.class, Set.class);
-
-    @SuppressWarnings({"PMD.LooseCoupling", "PMD.UnnecessaryFullyQualifiedName"})
-    public static final Set<String> COLLECTION_CLASSES_BY_NAMES
-        = collectionTypes(ArrayList.class, java.util.LinkedList.class, java.util.Vector.class, HashMap.class,
-                          java.util.LinkedHashMap.class, java.util.TreeMap.class, java.util.TreeSet.class,
-                          HashSet.class, java.util.LinkedHashSet.class, java.util.Hashtable.class);
-
-
     private CollectionUtil() {
     }
-
-    private static Set<String> collectionTypes(Class<?>... types) {
-        Set<String> set = new HashSet<>();
-
-        for (Class<?> type : types) {
-            if (!set.add(type.getSimpleName()) || !set.add(type.getName())) {
-                throw new IllegalArgumentException("Duplicate or name collision for " + type);
-            }
-        }
-
-        return set;
-    }
-
-    /**
-     * Return whether we can identify the typeName as a java.util collection
-     * class or interface as specified.
-     *
-     * @param typeName
-     *            String
-     * @param includeInterfaces
-     *            boolean
-     * @return boolean
-     *
-     * @deprecated Will be replaced with type resolution
-     */
-    @Deprecated
-    public static boolean isCollectionType(String typeName, boolean includeInterfaces) {
-        return COLLECTION_CLASSES_BY_NAMES.contains(typeName)
-                || includeInterfaces && COLLECTION_INTERFACES_BY_NAMES.contains(typeName);
-    }
-
-    /**
-     * Creates and returns a map populated with the keyValuesSets where the
-     * value held by the tuples are they key and value in that order.
-     *
-     * @param keys
-     *            K[]
-     * @param values
-     *            V[]
-     * @return Map
-     *
-     * @deprecated Used by deprecated property types
-     */
-    @Deprecated
-    public static <K, V> Map<K, V> mapFrom(K[] keys, V[] values) {
-        if (keys.length != values.length) {
-            throw new RuntimeException("mapFrom keys and values arrays have different sizes");
-        }
-        Map<K, V> map = new HashMap<>(keys.length);
-        for (int i = 0; i < keys.length; i++) {
-            map.put(keys[i], values[i]);
-        }
-        return map;
-    }
-
-    /**
-     * Returns a map based on the source but with the key &amp; values swapped.
-     *
-     * @param source
-     *            Map
-     * @return Map
-     *
-     * @deprecated Used by deprecated property types
-     */
-    @Deprecated
-    public static <K, V> Map<V, K> invertedMapFrom(Map<K, V> source) {
-        Map<V, K> map = new HashMap<>(source.size());
-        for (Map.Entry<K, V> entry : source.entrySet()) {
-            map.put(entry.getValue(), entry.getKey());
-        }
-        return map;
-    }
-
 
     /**
      * Returns a list view that pretends it is the concatenation of
@@ -280,6 +191,13 @@ public final class CollectionUtil {
         return Collections.singletonMap(k0, v0);
     }
 
+    public static <K, V> Map<K, V> mapOf(K k1, V v1, K k2, V v2) {
+        Map<K, V> map = new LinkedHashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        return Collections.unmodifiableMap(map);
+    }
+
     public static <K, V> Map<K, V> buildMap(Consumer<Map<K, V>> effect) {
         Map<K, V> map = new LinkedHashMap<>();
         effect.accept(map);
@@ -312,6 +230,7 @@ public final class CollectionUtil {
      * mapping. The returned map may be unmodifiable.
      */
     public static <K, V> Map<K, V> plus(Map<K, V> m, K k, V v) {
+        AssertionUtil.requireParamNotNull("map", m);
         if (m instanceof PMap) {
             return ((PMap<K, V>) m).plus(k, v);
         }
@@ -358,6 +277,29 @@ public final class CollectionUtil {
         newSet.add(first);
         Collections.addAll(newSet, newElements);
         return Collections.unmodifiableSet(newSet);
+    }
+
+    /**
+     * Returns the key that corresponds to the given value in the map,
+     * or null if it is not contained in the map.
+     *
+     * @param m   Map
+     * @param v   Value
+     * @param <K> Type of keys
+     * @param <V> Type of values
+     *
+     * @throws NullPointerException If the entry is found, but the key
+     *                              is null
+     * @throws NullPointerException If the map is null
+     */
+    public static <@NonNull K, V> @Nullable K getKeyOfValue(Map<K, V> m, V v) {
+        AssertionUtil.requireParamNotNull("map", m);
+        for (Entry<K, V> it : m.entrySet()) {
+            if (it.getValue().equals(v)) {
+                return Objects.requireNonNull(it.getKey(), "This method uses null as a sentinel value");
+            }
+        }
+        return null;
     }
 
 
@@ -718,6 +660,18 @@ public final class CollectionUtil {
             V otherInfo = other.get(otherKey); // non-null
             result.merge(otherKey, otherInfo, mergeFun);
         }
+    }
+
+    /**
+     * Union of two PSets, which avoids creating a new pset if possible.
+     */
+    public static <V> PSet<V> union(PSet<V> as, PSet<V> bs) {
+        if (as.isEmpty()) {
+            return bs;
+        } else if (bs.isEmpty()) {
+            return as;
+        }
+        return as.plusAll(bs);
     }
 
     public static @NonNull <T> List<T> makeUnmodifiableAndNonNull(@Nullable List<? extends T> list) {

@@ -14,14 +14,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.event.Level;
 
-import net.sourceforge.pmd.util.log.MessageReporter;
+import net.sourceforge.pmd.util.log.PmdReporter;
 
 /**
  * Base implementation.
  *
  * @author Clément Fournier
  */
-abstract class MessageReporterBase implements MessageReporter {
+public abstract class MessageReporterBase implements PmdReporter {
 
     private int numErrors;
     private @Nullable Level minLevel = Level.TRACE;
@@ -64,6 +64,11 @@ abstract class MessageReporterBase implements MessageReporter {
             if (isLoggable(Level.DEBUG)) {
                 String stackTrace = quoteMessageFormat(ExceptionUtils.getStackTrace(error));
                 log(Level.DEBUG, stackTrace);
+            }
+        } else {
+            // should be incremented even if not logged
+            if (level == Level.ERROR) {
+                this.numErrors++;
             }
         }
     }

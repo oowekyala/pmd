@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.ast
 
 import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode
 
@@ -118,7 +119,7 @@ object StatementParsingCtx : NodeParsingCtx<ASTStatement>("statement") {
     override fun retrieveNode(acu: ASTCompilationUnit): ASTStatement =
             TypeBodyParsingCtx.retrieveNode(acu)
                     .descendants(ASTBlock::class.java)
-                    .firstOrThrow().getChild(0)
+                    .firstOrThrow().firstChild as ASTStatement
 }
 
 object TypeBodyParsingCtx : NodeParsingCtx<ASTBodyDeclaration>("body declaration") {
@@ -140,17 +141,17 @@ $construct
     }
 
     override fun retrieveNode(acu: ASTCompilationUnit): ASTBodyDeclaration =
-            acu.typeDeclarations.firstOrThrow().getDeclarations().firstOrThrow()
+            acu.typeDeclarations.firstOrThrow().declarations.firstOrThrow()
 }
 
-object TopLevelTypeDeclarationParsingCtx : NodeParsingCtx<ASTAnyTypeDeclaration>("top-level declaration") {
+object TopLevelTypeDeclarationParsingCtx : NodeParsingCtx<ASTTypeDeclaration>("top-level declaration") {
 
     override fun getTemplate(construct: String, ctx: ParserTestCtx): String = """
             ${ctx.imports.joinToString(separator = "\n")}
             $construct
             """.trimIndent()
 
-    override fun retrieveNode(acu: ASTCompilationUnit): ASTAnyTypeDeclaration = acu.typeDeclarations.firstOrThrow()
+    override fun retrieveNode(acu: ASTCompilationUnit): ASTTypeDeclaration = acu.typeDeclarations.firstOrThrow()
 }
 
 object TypeParsingCtx : NodeParsingCtx<ASTType>("type") {
