@@ -5,7 +5,9 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.LanguageProcessor;
 import net.sourceforge.pmd.lang.LanguageProcessorRegistry;
+import net.sourceforge.pmd.lang.LanguagePropertyBundle;
 import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
@@ -44,6 +46,14 @@ public final class JavadocParserFacade {
         return new MainJdocParser(task).parse();
     }
 
+    private static final LanguageProcessorRegistry GLOBAL_PROCESSOR;
+
+    static {
+        LanguagePropertyBundle bundle = JavadocLanguage.INSTANCE.newPropertyBundle();
+        LanguageProcessor processor = JavadocLanguage.INSTANCE.createProcessor(bundle);
+        GLOBAL_PROCESSOR = LanguageProcessorRegistry.singleton(processor);
+    }
+
     /**
      * Parse a <i>Java</i> token corresponding to a javadoc comment as if
      * with {@link #parseJavadoc(ParserTask)}.
@@ -52,7 +62,7 @@ public final class JavadocParserFacade {
         assert token.kind == JavaTokenKinds.FORMAL_COMMENT;
         TextDocument baseDocument = token.getDocument().getTextDocument();
         TextDocument textDocument = baseDocument.subDocument(token.getRegion(), JavadocLanguage.INSTANCE.getDefaultVersion());
-        ParserTask task = new ParserTask(textDocument, SemanticErrorReporter.noop(), LanguageProcessorRegistry.EMPTY);
+        ParserTask task = new ParserTask(textDocument, SemanticErrorReporter.noop(), GLOBAL_PROCESSOR);
         JdocComment comment = parseJavadoc(task);
         comment.setJavaLeaf(parent == null ? null : parent.getOwner());
         return comment;

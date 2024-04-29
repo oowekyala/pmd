@@ -22,7 +22,6 @@ import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.SymbolTableResolver;
-import net.sourceforge.pmd.lang.java.types.TypeInternals;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 
@@ -42,6 +41,8 @@ public final class JavaAstProcessor {
     private final JavaLanguageProcessor globalProc;
     private final SemanticErrorReporter logger;
 
+    private SymbolResolver symResolver;
+
     private final UnresolvedClassStore unresolvedTypes;
     private final ASTCompilationUnit acu;
 
@@ -51,6 +52,7 @@ public final class JavaAstProcessor {
                              TypeInferenceLogger typeInfLogger,
                              ASTCompilationUnit acu) {
 
+        this.symResolver = globalProc.getTypeSystem().bootstrapResolver();
         this.globalProc = globalProc;
         this.logger = logger;
         this.typeInferenceLogger = typeInfLogger;
@@ -102,7 +104,7 @@ public final class JavaAstProcessor {
     }
 
     public SymbolResolver getSymResolver() {
-        return globalProc.getTypeSystem().symbolResolver();
+        return symResolver;
     }
 
     public SemanticErrorReporter getLogger() {
@@ -121,10 +123,7 @@ public final class JavaAstProcessor {
         SymbolResolver knownSyms = TimeTracker.bench("Symbol resolution", () -> SymbolResolutionPass.traverse(this, acu));
 
         // Now symbols are on the relevant nodes
-        // Improve the resolver so that it always picks the types
-        // declared in the compilation unit from our AST symbols.
-        // Note: the type system is local to this JavaAstProcessor.
-        TypeInternals.transformResolver(this.getTypeSystem(), r -> SymbolResolver.layer(knownSyms, r));
+        this.symResolver = SymbolResolver.layer(knownSyms, this.symResolver);
 
         // this needs to be initialized before the symbol table resolution
         // as scopes depend on type resolution in some cases.
@@ -149,10 +148,11 @@ public final class JavaAstProcessor {
         process(globalProcessor, semanticErrorReporter, globalProcessor.newTypeInfLogger(), ast);
     }
 
-    private static void process(JavaLanguageProcessor globalProcessor,
-                                           SemanticErrorReporter semanticErrorReporter,
-                                           TypeInferenceLogger typeInfLogger,
+    public static void process(JavaLanguageProcessor globalProcessor,
+                                          SemanticErrorReporter semanticErrorReporter,
+                                          TypeInferenceLogger typeInfLogger,
                                            ASTCompilationUnit ast) {
+
 
         JavaAstProcessor astProc = new JavaAstProcessor(
             globalProcessor,

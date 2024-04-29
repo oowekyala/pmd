@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -174,8 +173,7 @@ public final class TypeSystem {
     /** Contains special types, that must be shared to be comparable by reference. */
     private final Map<JTypeDeclSymbol, JTypeMirror> sharedTypes;
     // test only
-    SymbolResolver resolver;
-    private final TypeSystem parent;
+    final SymbolResolver resolver;
 
     /**
      * Builds a new type system. Its public fields will be initialized
@@ -217,7 +215,6 @@ public final class TypeSystem {
      *                         {@link #SERIALIZABLE}, {@link #BOXED_VOID}.
      */
     public TypeSystem(Function<TypeSystem, ? extends SymbolResolver> symResolverMaker) {
-        this.parent = null;
         this.resolver = symResolverMaker.apply(this); // leak the this
 
         // initialize primitives. their constructor also initializes their box + box erasure
@@ -295,62 +292,12 @@ public final class TypeSystem {
         UNBOUNDED_WILD = new WildcardTypeImpl(this, true, OBJECT, HashTreePSet.empty());
     }
 
-    @SuppressWarnings("IncompleteCopyConstructor")
-    private TypeSystem(TypeSystem other) {
-        // create a new symbol factory, with an independent cache.
-        this.parent = other;
-        this.resolver = other.resolver;
-
-        this.sharedTypes = other.sharedTypes;
-
-        this.OBJECT = other.OBJECT;
-        this.BOOLEAN = other.BOOLEAN;
-        this.CHAR = other.CHAR;
-        this.BYTE = other.BYTE;
-        this.SHORT = other.SHORT;
-        this.INT = other.INT;
-        this.LONG = other.LONG;
-        this.FLOAT = other.FLOAT;
-        this.DOUBLE = other.DOUBLE;
-        this.NO_TYPE = other.NO_TYPE;
-        this.ERROR = other.ERROR;
-        this.UNKNOWN = other.UNKNOWN;
-        this.allPrimitives = other.allPrimitives;
-        this.primitivesByKind = other.primitivesByKind;
-
-        this.UNBOUNDED_WILD = other.UNBOUNDED_WILD;
-        this.CLONEABLE = other.CLONEABLE;
-        this.SERIALIZABLE = other.SERIALIZABLE;
-        this.BOXED_VOID = other.BOXED_VOID;
-
-    }
-
     /**
-     * Returns a new, distinct type system, whose special types are all
-     * the same (instances), but whose resolver can be overwritten, eg
-     * to use types defined in the current compilation unit.
-     *
-     * @return A new type system, based on this one.
-     */
-    public TypeSystem newScope() {
-        return new TypeSystem(this);
-    }
-
-
-    /**
-     * Returns the symbol resolver. Concrete analysis passes
+     * Returns the bootstrap symbol resolver. Concrete analysis passes
      * may decorate this with different resolvers.
      */
-    public SymbolResolver symbolResolver() {
+    public SymbolResolver bootstrapResolver() {
         return resolver;
-    }
-
-    /**
-     * Apply a transformation on the resolver of this type system.
-     */
-    void transformResolver(UnaryOperator<@NonNull SymbolResolver> map) {
-        this.resolver = map.apply(this.resolver);
-        Objects.requireNonNull(this.resolver);
     }
 
     // helpers for the constructor, cannot use typeOf, only for trusted types

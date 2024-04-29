@@ -15,7 +15,7 @@ public class JavadocLanguage extends SimpleLanguageModuleBase {
 
 
     public JavadocLanguage() {
-        super(LanguageMetadata.withId("javadoc").name("Javadoc").extensions("_not_an_extension").dependsOnLanguage("java"),
+        super(LanguageMetadata.withId("javadoc").name("Javadoc").extensions("_not_an_extension").addDefaultVersion("default"),
               () -> JavadocParserFacade::parseJavadoc);
     }
 
