@@ -36,7 +36,15 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     }
 
     /** Returns the kind of this token. */
-    public JdocTokenType getKind() {
+    @Override
+    public int getKind() {
+        return kind.ordinal();
+    }
+
+    /**
+     * Returns the kind of this token.
+     */
+    public JdocTokenType getKindEnum() {
         return kind;
     }
 

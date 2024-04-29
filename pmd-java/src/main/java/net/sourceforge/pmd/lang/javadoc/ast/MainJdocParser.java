@@ -30,6 +30,7 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.ast.Parser;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCharacterReference;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
@@ -44,18 +45,18 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 class MainJdocParser extends BaseJavadocParser {
 
     protected final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
-    private final JavadocLexer lexer;
+    private final Parser.ParserTask task;
 
-    MainJdocParser(JavadocLexer lexer) {
-        super(lexer);
-        this.lexer = lexer;
+    MainJdocParser(Parser.ParserTask task) {
+        super(new JavadocLexer(task.getTextDocument()));
+        this.task = task;
     }
 
     /**
      * Root production.
      */
     public JdocComment parse() {
-        JdocComment comment = new JdocComment(lexer.getDoc().getTextDocument());
+        JdocComment comment = new JdocComment(task);
 
         advance();
         if (head() == null) {
@@ -75,7 +76,7 @@ class MainJdocParser extends BaseJavadocParser {
     }
 
     private void dispatch() {
-        switch (head().getKind()) {
+        switch (head().getKindEnum()) {
         case COMMENT_END:
         case WHITESPACE:
         case LINE_BREAK:
@@ -107,7 +108,7 @@ class MainJdocParser extends BaseJavadocParser {
     private void blockTag() {
 
         JdocToken tagname = head();
-        assert tagname.getKind() == TAG_NAME;
+        assert tagname.getKindEnum() == TAG_NAME;
 
         finishStack(head().prev, true);
 
@@ -319,7 +320,7 @@ class MainJdocParser extends BaseJavadocParser {
                 if (tokIsAny(ATTR_DELIMITERS)) {
                     // name="
                     //      ^
-                    JdocTokenType firstDelimKind = head().getKind();
+                    JdocTokenType firstDelimKind = head().getKindEnum();
                     HtmlAttrSyntax syntax = firstDelimKind == HTML_SQUOTE ? SINGLE_QUOTED : DOUBLE_QUOTED;
                     nextNonWs();
                     final @Nullable JdocToken value;

@@ -101,8 +101,8 @@ class CommentAssignmentTest extends BaseParserTest {
                                                  + "}");
 
 
-        ASTAnyTypeDeclaration type = node.descendants(ASTAnyTypeDeclaration.class).firstOrThrow();
-        ASTVariableDeclaratorId fieldId = node.descendants(ASTVariableDeclaratorId.class).firstOrThrow();
+        ASTTypeDeclaration type = node.descendants(ASTTypeDeclaration.class).firstOrThrow();
+        ASTVariableId fieldId = node.descendants(ASTVariableId.class).firstOrThrow();
         JdocComment tree = type.getJavadocTree();
         assertNotNull(tree);
         JdocFieldRef ref = tree.descendants(JdocFieldRef.class).firstOrThrow();

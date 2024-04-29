@@ -477,7 +477,7 @@ public final class PmdAnalysis implements AutoCloseable {
             } catch (Exception ioe) {
                 // close listeners so far, throw their close exception or the ioe
                 IOUtil.ensureClosed(rendererListeners, ioe);
-                throw AssertionUtil.shouldNotReachHere("ensureClosed should have thrown", ioe);
+                throw AssertionUtil.shouldNotReachHere(ioe, "ensureClosed should have thrown");
             }
         }
         return GlobalAnalysisListener.tee(rendererListeners);

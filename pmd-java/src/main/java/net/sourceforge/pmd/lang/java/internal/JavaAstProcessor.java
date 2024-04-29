@@ -51,7 +51,6 @@ public final class JavaAstProcessor {
                              TypeInferenceLogger typeInfLogger,
                              ASTCompilationUnit acu) {
 
-        this.symResolver = globalProc.getTypeSystem().bootstrapResolver();
         this.globalProc = globalProc;
         this.logger = logger;
         this.typeInferenceLogger = typeInfLogger;
@@ -103,7 +102,7 @@ public final class JavaAstProcessor {
     }
 
     public SymbolResolver getSymResolver() {
-        return typeSystem.symbolResolver();
+        return globalProc.getTypeSystem().symbolResolver();
     }
 
     public SemanticErrorReporter getLogger() {
@@ -125,7 +124,7 @@ public final class JavaAstProcessor {
         // Improve the resolver so that it always picks the types
         // declared in the compilation unit from our AST symbols.
         // Note: the type system is local to this JavaAstProcessor.
-        TypeInternals.transformResolver(this.typeSystem, r -> SymbolResolver.layer(knownSyms, r));
+        TypeInternals.transformResolver(this.getTypeSystem(), r -> SymbolResolver.layer(knownSyms, r));
 
         // this needs to be initialized before the symbol table resolution
         // as scopes depend on type resolution in some cases.
@@ -154,9 +153,6 @@ public final class JavaAstProcessor {
                                            SemanticErrorReporter semanticErrorReporter,
                                            TypeInferenceLogger typeInfLogger,
                                            ASTCompilationUnit ast) {
-        // fixme remove this static cache
-        TypeSystem globalTypeSystem = TYPE_SYSTEMS.computeIfAbsent(classLoader, TypeSystem::usingClassLoaderClasspath);
-
 
         JavaAstProcessor astProc = new JavaAstProcessor(
             globalProcessor,

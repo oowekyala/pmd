@@ -5,6 +5,9 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.LanguageProcessorRegistry;
+import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
+import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.java.ast.JavaTokenKinds;
@@ -33,24 +36,24 @@ public final class JavadocParserFacade {
      * because there is already a preliminary translation phase before we parse
      * java source.
      *
-     * @param document Text document for the comment
+     * @param task Text document for the comment
      *
      * @return A Javadoc comment tree
      */
-    public static JdocComment parseJavadoc(TextDocument document) {
-        final JavadocLexer lexer = new JavadocLexer(document);
-        return new MainJdocParser(lexer).parse();
+    public static JdocComment parseJavadoc(ParserTask task) {
+        return new MainJdocParser(task).parse();
     }
 
     /**
      * Parse a <i>Java</i> token corresponding to a javadoc comment as if
-     * with {@link #parseJavadoc(TextDocument)}.
+     * with {@link #parseJavadoc(ParserTask)}.
      */
     public static JdocComment parseJavaToken(JavadocComment parent, JavaccToken token) {
         assert token.kind == JavaTokenKinds.FORMAL_COMMENT;
         TextDocument baseDocument = token.getDocument().getTextDocument();
         TextDocument textDocument = baseDocument.subDocument(token.getRegion(), JavadocLanguage.INSTANCE.getDefaultVersion());
-        JdocComment comment = parseJavadoc(textDocument);
+        ParserTask task = new ParserTask(textDocument, SemanticErrorReporter.noop(), LanguageProcessorRegistry.EMPTY);
+        JdocComment comment = parseJavadoc(task);
         comment.setJavaLeaf(parent == null ? null : parent.getOwner());
         return comment;
     }

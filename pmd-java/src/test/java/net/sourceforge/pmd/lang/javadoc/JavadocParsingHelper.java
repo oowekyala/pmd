@@ -6,10 +6,10 @@ package net.sourceforge.pmd.lang.javadoc;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.lang.Language;
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
+import net.sourceforge.pmd.lang.PmdCapableLanguage;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocLanguage;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 /**
  *
@@ -18,14 +18,14 @@ public class JavadocParsingHelper extends BaseParsingHelper<JavadocParsingHelper
 
     public static final JavadocParsingHelper DEFAULT = new JavadocParsingHelper(Params.getDefault());
 
-    private final Language myLanguage = new JavadocLanguage();
+    private final PmdCapableLanguage myLanguage = JavadocLanguage.INSTANCE;
 
-    public JavadocParsingHelper(Params params) {
-        super(JavadocLanguage.NAME, JdocComment.class, params);
+    public JavadocParsingHelper(BaseParsingHelper.Params params) {
+        super(JavadocLanguage.INSTANCE.getId(), JdocComment.class, params);
     }
 
     @Override
-    public @NonNull Language getLanguage() {
+    public @NonNull PmdCapableLanguage getLanguage() {
         return myLanguage;
     }
 

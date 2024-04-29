@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.rule.documentation;
 
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
@@ -25,7 +25,7 @@ public class JavadocExplorerRule extends AbstractJavaRule {
     private int total;
 
     @Override
-    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+    public Object visit(ASTClassDeclaration node, Object data) {
         process(node, data);
         return super.visit(node, data);
     }
@@ -76,6 +76,6 @@ public class JavadocExplorerRule extends AbstractJavaRule {
         }
 
         System.out.println(commentOwner.getReportLocation().startPosToStringWithFile() + " "
-                               + comment.findDescendantsOfType(JavadocNode.class).size());
+                               + comment.descendants(JavadocNode.class).count());
     }
 }

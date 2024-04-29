@@ -4,10 +4,10 @@
 
 package net.sourceforge.pmd.lang.java.rule.security;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 public class JdocTestRule extends AbstractJavaRule {
 

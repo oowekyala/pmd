@@ -18,12 +18,12 @@ import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.TokenManager;
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.lang.ast.LexException;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * Wraps the generated JFlex lexer into a {@link TokenManager}. The parsers
@@ -92,7 +92,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
     }
 
     /**
-     * Note that this never throws {@link TokenMgrError}, because we want to
+     * Note that this never throws {@link LexException}, because we want to
      * be very resilient to invalid comment source.
      */
     @Override

@@ -7,7 +7,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.NodeStream;
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
@@ -69,7 +69,7 @@ public interface JdocRef extends JavadocNode {
 
             String ref = getSimpleRef();
             if (ref.isEmpty()) {
-                ASTAnyTypeDeclaration ctx = getRoot().getContextType();
+                ASTTypeDeclaration ctx = getRoot().getContextType();
                 return ctx == null ? null : ctx.getTypeMirror();
             }
             JTypeMirror type = symTable.types().resolveFirst(ref);
@@ -128,7 +128,7 @@ public interface JdocRef extends JavadocNode {
 
             JdocComment root = getRoot();
             // null if we're eg in a package-info comment
-            ASTAnyTypeDeclaration contextType = root.getContextType();
+            ASTTypeDeclaration contextType = root.getContextType();
             String packageName = root.getPackageName();
             String fieldName = getName();
             if (packageName == null) {

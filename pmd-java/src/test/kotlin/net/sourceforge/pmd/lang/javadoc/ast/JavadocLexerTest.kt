@@ -6,10 +6,10 @@ package net.sourceforge.pmd.lang.javadoc.ast
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.IntelliMarker
 import net.sourceforge.pmd.lang.document.TextRegion
 import net.sourceforge.pmd.lang.java.ast.makeJavaTranslatedDocument
 import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
 import kotlin.test.assertEquals
@@ -417,7 +417,7 @@ private fun JdocToken.assertMatches(ttype: JdocTokenType, start: Int, end: Int, 
 
 
 private fun String.shouldHaveTokens(vararg tokens: Tok) {
-    val actual = newLexer(this).consume().map { Tok(it.kind, it.image) }
+    val actual = newLexer(this).consume().map { Tok(it.kindEnum, it.image) }
 
     val diff = DiffUtils.diff(tokens.toList(), actual)
     if (diff.deltas.isEmpty()) {

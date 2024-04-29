@@ -210,6 +210,11 @@ public class JavaccToken implements GenericToken<JavaccToken> {
         return tok;
     }
 
+    @Override
+    public int getKind() {
+        return kind;
+    }
+
     /**
      * Creates an implicit token, with zero length, that is linked to
      * the given token as its special predecessor.

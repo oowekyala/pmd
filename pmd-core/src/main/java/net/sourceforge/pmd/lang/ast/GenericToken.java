@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.IteratorUtil;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.reporting.Reportable;

@@ -7,14 +7,13 @@ package net.sourceforge.pmd.lang.javadoc.ast
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
 import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.internal.util.IteratorUtil
 import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.textStr
-import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx
+import net.sourceforge.pmd.lang.test.ast.NodeSpec
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.textStr
 
 abstract class JdocParserTestSpec(body: ParserTestSpec.() -> Unit)
     : ProcessorTestSpec(body)
