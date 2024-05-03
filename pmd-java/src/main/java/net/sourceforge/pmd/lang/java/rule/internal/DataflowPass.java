@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal;
 
+import static net.sourceforge.pmd.util.CollectionUtil.asSingle;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,13 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTArrayAllocation;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.AccessType;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
@@ -55,6 +60,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTLocalVariableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTLoopStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTRecordComponent;
 import net.sourceforge.pmd.lang.java.ast.ASTResourceList;
 import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTStatement;
@@ -64,13 +70,15 @@ import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchFallthroughBranch;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchLike;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTSynchronizedStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThrowStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTTryStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.ASTWhileStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTYieldStatement;
 import net.sourceforge.pmd.lang.java.ast.BinaryOp;
@@ -81,7 +89,6 @@ import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.bestpractices.UnusedAssignmentRule;
-import net.sourceforge.pmd.lang.java.rule.design.SingularFieldRule;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
@@ -130,7 +137,7 @@ public final class DataflowPass {
      * there, using the kill record, we can draw the graph of all assignments.
      * Returns null if not a field, or the compilation unit has not been processed.
      */
-    public static @Nullable AssignmentEntry getFieldDefinition(ASTVariableDeclaratorId varId) {
+    public static @Nullable AssignmentEntry getFieldDefinition(ASTVariableId varId) {
         if (!varId.isField()) {
             return null;
         }
@@ -139,9 +146,9 @@ public final class DataflowPass {
 
     private static DataflowResult process(ASTCompilationUnit node) {
         DataflowResult dataflowResult = new DataflowResult();
-        for (ASTAnyTypeDeclaration typeDecl : node.getTypeDeclarations()) {
+        for (ASTTypeDeclaration typeDecl : node.getTypeDeclarations()) {
             GlobalAlgoState subResult = new GlobalAlgoState();
-            typeDecl.acceptVisitor(ReachingDefsVisitor.ONLY_LOCALS, new SpanInfo(subResult));
+            ReachingDefsVisitor.processTypeDecl(typeDecl, new SpanInfo(subResult));
             if (subResult.usedAssignments.size() < subResult.allAssignments.size()) {
                 Set<AssignmentEntry> unused = subResult.allAssignments;
                 unused.removeAll(subResult.usedAssignments);
@@ -281,7 +288,7 @@ public final class DataflowPass {
                 return ReachingDefinitionSet.unknown();
             }
 
-            ASTVariableDeclaratorId node = sym.tryGetNode();
+            ASTVariableId node = sym.tryGetNode();
             if (node == null) {
                 return ReachingDefinitionSet.unknown(); // we don't care about non-local declarations
             }
@@ -314,18 +321,12 @@ public final class DataflowPass {
 
     private static final class ReachingDefsVisitor extends JavaVisitorBase<SpanInfo, SpanInfo> {
 
-
-        static final ReachingDefsVisitor ONLY_LOCALS = new ReachingDefsVisitor(null, false);
-
         // The class scope for the "this" reference, used to find fields
         // of this class
-        // null if we're not processing instance/static initializers,
-        // so in methods we don't care about fields
-        // If not null, fields are effectively treated as locals
-        private final JClassSymbol enclosingClassScope;
+        private final @NonNull JClassSymbol enclosingClassScope;
         private final boolean inStaticCtx;
 
-        private ReachingDefsVisitor(JClassSymbol scope, boolean inStaticCtx) {
+        private ReachingDefsVisitor(@NonNull JClassSymbol scope, boolean inStaticCtx) {
             this.enclosingClassScope = scope;
             this.inStaticCtx = inStaticCtx;
         }
@@ -336,11 +337,6 @@ public final class DataflowPass {
          */
         private boolean trackThisInstance() {
             return !inStaticCtx;
-        }
-
-        private boolean trackStaticFields() {
-            // only tracked in initializers
-            return enclosingClassScope != null && inStaticCtx;
         }
 
         // following deals with control flow structures
@@ -356,27 +352,29 @@ public final class DataflowPass {
 
         @Override
         public SpanInfo visit(ASTBlock node, final SpanInfo data) {
-            // variables local to a loop iteration must be killed before the
-            // next iteration
+            return processBreakableStmt(node, data, () -> {
+                // variables local to a loop iteration must be killed before the
+                // next iteration
 
-            SpanInfo state = data;
-            Set<ASTVariableDeclaratorId> localsToKill = new LinkedHashSet<>();
+                SpanInfo state = data;
+                List<ASTVariableId> localsToKill = new ArrayList<>(0);
 
-            for (JavaNode child : node.children()) {
-                // each output is passed as input to the next (most relevant for blocks)
-                state = acceptOpt(child, state);
-                if (child instanceof ASTLocalVariableDeclaration) {
-                    for (ASTVariableDeclaratorId id : (ASTLocalVariableDeclaration) child) {
-                        localsToKill.add(id);
+                for (JavaNode child : node.children()) {
+                    // each output is passed as input to the next (most relevant for blocks)
+                    state = acceptOpt(child, state);
+                    if (child instanceof ASTLocalVariableDeclaration) {
+                        for (ASTVariableId id : (ASTLocalVariableDeclaration) child) {
+                            localsToKill.add(id);
+                        }
                     }
                 }
-            }
 
-            for (ASTVariableDeclaratorId var : localsToKill) {
-                state.deleteVar(var.getSymbol());
-            }
+                for (ASTVariableId var : localsToKill) {
+                    state.deleteVar(var.getSymbol());
+                }
 
-            return state;
+                return state;
+            });
         }
 
         @Override
@@ -393,8 +391,19 @@ public final class DataflowPass {
             GlobalAlgoState global = data.global;
             SpanInfo before = acceptOpt(switchLike.getTestedExpression(), data);
 
-            global.breakTargets.push(before.fork());
+            SpanInfo breakTarget = before.fork();
+            global.breakTargets.push(breakTarget);
+            accLabels(switchLike, global, breakTarget, null);
 
+            // If switch non-total then there is a path where the switch completes normally
+            // (value not matched).
+            // Todo make that an attribute of ASTSwitchLike, check for totality when pattern matching is involved
+            boolean isTotal = switchLike.hasDefaultCase()
+                || switchLike instanceof ASTSwitchExpression
+                || switchLike.isExhaustiveEnumSwitch();
+
+            PSet<SpanInfo> successors = HashTreePSet.empty();
+            boolean allBranchesCompleteAbruptly = true;
             SpanInfo current = before;
             for (ASTSwitchBranch branch : switchLike.getBranches()) {
                 if (branch instanceof ASTSwitchArrowBranch) {
@@ -403,20 +412,42 @@ public final class DataflowPass {
                 } else {
                     // fallthrough branch
                     current = acceptOpt(branch, before.fork().absorb(current));
-                    branch.getUserMap().set(SWITCH_BRANCH_FALLS_THROUGH, current.hasCompletedAbruptly.complement());
+                    OptionalBool isFallingThrough = current.hasCompletedAbruptly.complement();
+                    branch.getUserMap().set(SWITCH_BRANCH_FALLS_THROUGH, isFallingThrough);
+                    successors = CollectionUtil.union(successors, current.abruptCompletionTargets);
+                    allBranchesCompleteAbruptly &= current.hasCompletedAbruptly.isTrue();
+
+                    if (isFallingThrough == OptionalBool.NO) {
+                        current = before.fork();
+                    }
                 }
             }
 
             before = global.breakTargets.pop();
 
+            PSet<@Nullable SpanInfo> externalTargets = successors.minus(before);
+            OptionalBool switchCompletesAbruptly;
+            if (isTotal && allBranchesCompleteAbruptly && externalTargets.equals(successors)) {
+                // then all branches complete abruptly, and none of them because of a break to this switch
+                switchCompletesAbruptly = OptionalBool.YES;
+            } else if (successors.isEmpty() || asSingle(successors) == breakTarget) { // NOPMD CompareObjectsWithEqual this is what we want
+                // then the branches complete normally, or they just break the switch
+                switchCompletesAbruptly = OptionalBool.NO;
+            } else {
+                switchCompletesAbruptly = OptionalBool.UNKNOWN;
+            }
+
             // join with the last state, which is the exit point of the
             // switch, if it's not closed by a break;
-            return before.absorb(current);
+            SpanInfo result = before.absorb(current);
+            result.hasCompletedAbruptly = switchCompletesAbruptly;
+            result.abruptCompletionTargets = externalTargets;
+            return result;
         }
 
         @Override
         public SpanInfo visit(ASTIfStatement node, SpanInfo data) {
-            return makeConditional(data, node.getCondition(), node.getThenBranch(), node.getElseBranch());
+            return processBreakableStmt(node, data, () -> makeConditional(data, node.getCondition(), node.getThenBranch(), node.getElseBranch()));
         }
 
         @Override
@@ -518,6 +549,17 @@ public final class DataflowPass {
             return cur;
         }
 
+        @Override
+        public SpanInfo visit(ASTSynchronizedStatement node, SpanInfo data) {
+            return processBreakableStmt(node, data, () -> {
+                // visit lock expr and child block
+                SpanInfo body = super.visit(node, data);
+                // We should assume that all assignments may be observed by other threads
+                // at the end of the critical section.
+                useAllSelfFields(body, JavaAstUtils.isInStaticCtx(node), enclosingClassScope);
+                return body;
+            });
+        }
 
         @Override
         public SpanInfo visit(ASTTryStatement node, final SpanInfo before) {
@@ -543,53 +585,66 @@ public final class DataflowPass {
              */
             ASTFinallyClause finallyClause = node.getFinallyClause();
 
+            SpanInfo finalState = processBreakableStmt(node, before, () -> {
+
+                if (finallyClause != null) {
+                    before.myFinally = before.forkEmpty();
+                }
+
+                final List<ASTCatchClause> catchClauses = node.getCatchClauses().toList();
+                final List<SpanInfo> catchSpans = catchClauses.isEmpty() ? Collections.emptyList()
+                                                                         : new ArrayList<>();
+
+                // pre-fill catch spans
+                for (int i = 0; i < catchClauses.size(); i++) {
+                    catchSpans.add(before.forkEmpty());
+                }
+
+                @Nullable ASTResourceList resources = node.getResources();
+
+                SpanInfo bodyState = before.fork();
+                bodyState = bodyState.withCatchBlocks(catchSpans);
+                bodyState = acceptOpt(resources, bodyState);
+                bodyState = acceptOpt(node.getBody(), bodyState);
+                bodyState = bodyState.withCatchBlocks(Collections.emptyList());
+
+                SpanInfo exceptionalState = null;
+                int i = 0;
+                for (ASTCatchClause catchClause : node.getCatchClauses()) {
+                    SpanInfo current = acceptOpt(catchClause, catchSpans.get(i));
+                    exceptionalState = current.absorb(exceptionalState);
+                    i++;
+                }
+                return bodyState.absorb(exceptionalState);
+            });
+
             if (finallyClause != null) {
-                before.myFinally = before.forkEmpty();
-            }
-
-            final List<ASTCatchClause> catchClauses = node.getCatchClauses().toList();
-            final List<SpanInfo> catchSpans = catchClauses.isEmpty() ? Collections.emptyList()
-                                                                     : new ArrayList<>();
-
-            // pre-fill catch spans
-            for (int i = 0; i < catchClauses.size(); i++) {
-                catchSpans.add(before.forkEmpty());
-            }
-
-            @Nullable ASTResourceList resources = node.getResources();
-
-            SpanInfo bodyState = before.fork();
-            bodyState = bodyState.withCatchBlocks(catchSpans);
-            bodyState = acceptOpt(resources, bodyState);
-            bodyState = acceptOpt(node.getBody(), bodyState);
-            bodyState = bodyState.withCatchBlocks(Collections.emptyList());
-
-            SpanInfo exceptionalState = null;
-            int i = 0;
-            for (ASTCatchClause catchClause : node.getCatchClauses()) {
-                SpanInfo current = acceptOpt(catchClause, catchSpans.get(i));
-                exceptionalState = current.absorb(exceptionalState);
-                i++;
-            }
-
-            SpanInfo finalState;
-            finalState = bodyState.absorb(exceptionalState);
-            if (finallyClause != null) {
-                // this represents the finally clause when it was entered
-                // because of abrupt completion
-                // since we don't know when it terminated we must join it with before
-                SpanInfo abruptFinally = before.myFinally.absorb(before);
-                acceptOpt(finallyClause, abruptFinally);
-                before.myFinally = null;
-                abruptFinally.abruptCompletionByThrow(false); // propagate to enclosing catch/finallies
+                if (finalState.abruptCompletionTargets.contains(finalState.returnOrThrowTarget)) {
+                    // this represents the finally clause when it was entered
+                    // because of abrupt completion
+                    // since we don't know when it terminated we must join it with before
+                    SpanInfo abruptFinally = before.myFinally.absorb(before);
+                    acceptOpt(finallyClause, abruptFinally);
+                    before.myFinally = null;
+                    abruptFinally.abruptCompletionByThrow(false); // propagate to enclosing catch/finallies
+                }
 
                 // this is the normal finally
                 finalState = acceptOpt(finallyClause, finalState);
+                // then all break targets are successors of the finally
+                for (SpanInfo target : finalState.abruptCompletionTargets) {
+                    // Then there is a return or throw within the try or catch blocks.
+                    // Control first passes to the finally, then tries to get out of the function
+                    // (stopping on finally).
+                    // before.myFinally = null;
+                    //finalState.abruptCompletionByThrow(false); // propagate to enclosing catch/finallies
+                    target.absorb(finalState);
+                }
             }
 
             // In the 7.0 grammar, the resources should be explicitly
             // used here. For now they don't trigger anything as their
-            // node is not a VariableDeclaratorId. There's a test to
+            // node is not a VariableId. There's a test to
             // check that.
 
             return finalState;
@@ -654,7 +709,7 @@ public final class DataflowPass {
                                     JavaNode update,
                                     ASTStatement body,
                                     boolean checkFirstIter,
-                                    ASTVariableDeclaratorId foreachVar) {
+                                    ASTVariableId foreachVar) {
             final GlobalAlgoState globalState = before.global;
 
             //todo while(true) and do {}while(true); are special-cased
@@ -708,33 +763,73 @@ public final class DataflowPass {
             }
 
             SpanInfo result = popTargets(loop, breakTarget, continueTarget);
-            result = result.absorb(iter);
+            result.absorb(iter);
             if (checkFirstIter) {
                 // if the first iteration is checked,
                 // then it could be false on the first try, meaning
                 // the definitions before the loop reach after too
-                result = result.absorb(before);
+                result.absorb(before);
             }
 
             if (foreachVar != null) {
                 result.deleteVar(foreachVar.getSymbol());
             }
 
+            // These targets are now obsolete
+            result.abruptCompletionTargets =
+                result.abruptCompletionTargets.minus(breakTarget).minus(continueTarget);
             return result;
+        }
+
+        /**
+         * Process a statement that may be broken out of if it is annotated with a label.
+         * This is theoretically all statements, as all of them may be annotated. However,
+         * some statements may not contain a break. Eg if a return statement has a label,
+         * the label can never be used. The weirdest example is probably an annotated break
+         * statement, which may break out of itself.
+         *
+         * <p>Try statements are handled specially because of the finally.
+         */
+        private SpanInfo processBreakableStmt(ASTStatement statement, SpanInfo input, Supplier<SpanInfo> processFun) {
+            if (!(statement.getParent() instanceof ASTLabeledStatement)) {
+                // happy path, no labels
+                return processFun.get();
+            }
+            GlobalAlgoState globalState = input.global;
+            // this will be filled with the reaching defs of the break statements, then merged with the actual exit state
+            SpanInfo placeholderForExitState = input.forkEmpty();
+
+            PSet<String> labels = accLabels(statement, globalState, placeholderForExitState, null);
+            SpanInfo endState = processFun.get();
+
+            // remove the labels
+            globalState.breakTargets.namedTargets.keySet().removeAll(labels);
+            SpanInfo result = endState.absorb(placeholderForExitState);
+            result.abruptCompletionTargets = result.abruptCompletionTargets.minus(placeholderForExitState);
+            return result;
+        }
+
+        private static PSet<String> accLabels(JavaNode statement, GlobalAlgoState globalState, SpanInfo breakTarget, @Nullable SpanInfo continueTarget) {
+            Node parent = statement.getParent();
+            PSet<String> labels = HashTreePSet.empty();
+            // collect labels and give a name to the exit state.
+            while (parent instanceof ASTLabeledStatement) {
+                String label = ((ASTLabeledStatement) parent).getLabel();
+                labels = labels.plus(label);
+                globalState.breakTargets.namedTargets.put(label, breakTarget);
+                if (continueTarget != null) {
+                    globalState.continueTargets.namedTargets.put(label, continueTarget);
+                }
+                parent = parent.getParent();
+            }
+            return labels;
         }
 
         private void pushTargets(ASTLoopStatement loop, SpanInfo breakTarget, SpanInfo continueTarget) {
             GlobalAlgoState globalState = breakTarget.global;
+            accLabels(loop, globalState, breakTarget, continueTarget);
             globalState.breakTargets.unnamedTargets.push(breakTarget);
             globalState.continueTargets.unnamedTargets.push(continueTarget);
-
-            Node parent = loop.getParent();
-            while (parent instanceof ASTLabeledStatement) {
-                String label = ((ASTLabeledStatement) parent).getLabel();
-                globalState.breakTargets.namedTargets.put(label, breakTarget);
-                globalState.continueTargets.namedTargets.put(label, continueTarget);
-                parent = parent.getParent();
-            }
         }
 
         private SpanInfo popTargets(ASTLoopStatement loop, SpanInfo breakTarget, SpanInfo continueTarget) {
@@ -765,7 +860,7 @@ public final class DataflowPass {
 
         @Override
         public SpanInfo visit(ASTBreakStatement node, SpanInfo data) {
-            return data.global.breakTargets.doBreak(data, node.getImage());
+            return processBreakableStmt(node, data, () -> data.global.breakTargets.doBreak(data, node.getImage()));
         }
 
         @Override
@@ -788,7 +883,7 @@ public final class DataflowPass {
         @Override
         public SpanInfo visit(ASTReturnStatement node, SpanInfo data) {
             super.visit(node, data);
-            return data.abruptCompletion(null);
+            return data.abruptCompletion(data.returnOrThrowTarget);
         }
 
         // following deals with assignment
@@ -818,6 +913,23 @@ public final class DataflowPass {
             return data;
         }
 
+        @Override
+        public SpanInfo visit(ASTCompactConstructorDeclaration node, SpanInfo data) {
+            super.visit(node, data);
+
+            // mark any write to a variable that is named like a record component as usage
+            // record compact constructors do an implicit assignment at the end.
+            for (ASTRecordComponent component : node.getEnclosingType().getRecordComponents()) {
+                node.descendants(ASTAssignmentExpression.class)
+                        .descendants(ASTVariableAccess.class)
+                        .filter(v -> v.getAccessType() == AccessType.WRITE)
+                        .filter(v -> v.getName().equals(component.getVarId().getName()))
+                        .forEach(varAccess -> data.use(varAccess.getReferencedSym(), null));
+            }
+
+            return data;
+        }
+
         /**
          * Whether the variable has an implicit initializer, that is not
          * an expression. For instance, formal parameters have a value
@@ -825,7 +937,7 @@ public final class DataflowPass {
          * fields (default value), etc. Only blank local variables have
          * no initial value.
          */
-        private boolean isAssignedImplicitly(ASTVariableDeclaratorId var) {
+        private boolean isAssignedImplicitly(ASTVariableId var) {
             return !var.isLocalVariable() || var.isForeachVariable();
         }
 
@@ -876,15 +988,13 @@ public final class DataflowPass {
         }
 
         private boolean isRelevantField(ASTExpression lhs) {
-            return lhs instanceof ASTNamedReferenceExpr
-                && (trackThisInstance() && JavaAstUtils.isThisFieldAccess(lhs)
-                || trackStaticFields() && isStaticFieldOfThisClass(((ASTNamedReferenceExpr) lhs).getReferencedSym()));
+            return lhs instanceof ASTNamedReferenceExpr && (trackThisInstance() && JavaAstUtils.isThisFieldAccess(lhs)
+                || isStaticFieldOfThisClass(((ASTNamedReferenceExpr) lhs).getReferencedSym()));
         }
 
         private boolean isStaticFieldOfThisClass(JVariableSymbol var) {
             return var instanceof JFieldSymbol
                 && ((JFieldSymbol) var).isStatic()
-                // must be non-null
                 && enclosingClassScope.equals(((JFieldSymbol) var).getEnclosingClass());
         }
 
@@ -909,8 +1019,7 @@ public final class DataflowPass {
         @Override
         public SpanInfo visit(ASTFieldAccess node, SpanInfo data) {
             data = node.getQualifier().acceptVisitor(this, data);
-
-            if (isRelevantField(node) && node.getAccessType() == AccessType.READ) {
+            if (node.getAccessType() == AccessType.READ) {
                 data.use(node.getReferencedSym(), node);
             }
             return data;
@@ -919,13 +1028,16 @@ public final class DataflowPass {
         @Override
         public SpanInfo visit(ASTThisExpression node, SpanInfo data) {
             if (trackThisInstance() && !(node.getParent() instanceof ASTFieldAccess)) {
-                data.recordThisLeak(true, enclosingClassScope, node);
+                data.recordThisLeak(enclosingClassScope, node);
             }
             return data;
         }
 
         @Override
         public SpanInfo visit(ASTMethodCall node, SpanInfo state) {
+            if (trackThisInstance() && JavaAstUtils.isCallOnThisInstance(node) != OptionalBool.NO) {
+                state.recordThisLeak(enclosingClassScope, node);
+            }
             return visitInvocationExpr(node, state);
         }
 
@@ -933,6 +1045,16 @@ public final class DataflowPass {
         public SpanInfo visit(ASTConstructorCall node, SpanInfo state) {
             state = visitInvocationExpr(node, state);
             acceptOpt(node.getAnonymousClassDeclaration(), state);
+            return state;
+        }
+
+        @Override
+        public SpanInfo visit(ASTArrayAllocation node, SpanInfo state) {
+            state = acceptOpt(node.getArrayInitializer(), state);
+            state = acceptOpt(node.getTypeNode().getDimensions(), state);
+            // May throw OOM error for instance. This abrupt completion routine is
+            // noop if we are outside a try block.
+            state.abruptCompletionByThrow(true);
             return state;
         }
 
@@ -952,40 +1074,51 @@ public final class DataflowPass {
         // ctor/initializer handling
 
         @Override
-        public SpanInfo visitTypeDecl(ASTAnyTypeDeclaration node, SpanInfo data) {
+        public SpanInfo visitTypeDecl(ASTTypeDeclaration node, SpanInfo data) {
+            return processTypeDecl(node, data);
+        }
+
+        private static SpanInfo processTypeDecl(ASTTypeDeclaration node, SpanInfo data) {
+            ReachingDefsVisitor instanceVisitor = new ReachingDefsVisitor(node.getSymbol(), false);
+            ReachingDefsVisitor staticVisitor = new ReachingDefsVisitor(node.getSymbol(), true);
             // process initializers and ctors first
-            processInitializers(node.getDeclarations(), data, node.getSymbol());
+            processInitializers(node.getDeclarations(), data, node.getSymbol(),
+                                instanceVisitor, staticVisitor);
 
             for (ASTBodyDeclaration decl : node.getDeclarations()) {
                 if (decl instanceof ASTMethodDeclaration) {
                     ASTMethodDeclaration method = (ASTMethodDeclaration) decl;
                     if (method.getBody() != null) {
                         SpanInfo span = data.forkCapturingNonLocal();
-                        if (!method.isStatic()) {
-                            span.declareSpecialFieldValues(node.getSymbol());
+                        boolean staticCtx = method.isStatic();
+                        span.declareSpecialFieldValues(node.getSymbol(), staticCtx);
+                        SpanInfo endState;
+                        if (staticCtx) {
+                            endState = staticVisitor.acceptOpt(decl, span);
+                        } else {
+                            endState = instanceVisitor.acceptOpt(decl, span);
                         }
-                        ONLY_LOCALS.acceptOpt(decl, span);
+                        useAllSelfFields(endState, staticCtx, node.getSymbol());
                     }
-                } else if (decl instanceof ASTAnyTypeDeclaration) {
-                    visitTypeDecl((ASTAnyTypeDeclaration) decl, data.forkEmptyNonLocal());
+                } else if (decl instanceof ASTTypeDeclaration) {
+                    processTypeDecl((ASTTypeDeclaration) decl, data.forkEmptyNonLocal());
                 }
             }
-            return data; // type doesn't contribute anything to the enclosing control flow
+            return data;
         }
 
         private static void processInitializers(NodeStream<ASTBodyDeclaration> declarations,
                                                 SpanInfo beforeLocal,
-                                                JClassSymbol classSymbol) {
+                                                @NonNull JClassSymbol classSymbol,
+                                                ReachingDefsVisitor instanceVisitor,
+                                                ReachingDefsVisitor staticVisitor) {
 
-            ReachingDefsVisitor instanceVisitor = new ReachingDefsVisitor(classSymbol, false);
-            ReachingDefsVisitor staticVisitor = new ReachingDefsVisitor(classSymbol, true);
-
-            // All field initializers + instance initializers
-            SpanInfo ctorHeader = beforeLocal.forkCapturingNonLocal();
             // All static field initializers + static initializers
             SpanInfo staticInit = beforeLocal.forkEmptyNonLocal();
 
             List<ASTBodyDeclaration> ctors = new ArrayList<>();
+            // Those are initializer blocks and instance field initializers
+            List<ASTBodyDeclaration> ctorHeaders = new ArrayList<>();
 
             for (ASTBodyDeclaration declaration : declarations) {
                 final boolean isStatic;
@@ -1006,28 +1139,43 @@ public final class DataflowPass {
                 if (isStatic) {
                     staticInit = staticVisitor.acceptOpt(declaration, staticInit);
                 } else {
-                    ctorHeader = instanceVisitor.acceptOpt(declaration, ctorHeader);
+                    ctorHeaders.add(declaration);
                 }
+            }
+
+            // Static init is done, mark all static fields as escaping
+            useAllSelfFields(staticInit, true, classSymbol);
+
+
+            // All field initializers + instance initializers
+            // This also contains the static definitions, as the class must be
+            // initialized before an instance is created.
+            SpanInfo ctorHeader = beforeLocal.forkCapturingNonLocal().absorb(staticInit);
+
+            // Static fields get an "initial value" placeholder before starting instance ctors
+            ctorHeader.declareSpecialFieldValues(classSymbol, true);
+
+            for (ASTBodyDeclaration fieldInit : ctorHeaders) {
+                ctorHeader = instanceVisitor.acceptOpt(fieldInit, ctorHeader);
             }
 
             SpanInfo ctorEndState = ctors.isEmpty() ? ctorHeader : null;
             for (ASTBodyDeclaration ctor : ctors) {
-                SpanInfo state = instanceVisitor.acceptOpt(ctor, ctorHeader.forkCapturingNonLocal());
+                SpanInfo ctorBody = ctorHeader.forkCapturingNonLocal();
+                ctorBody.declareSpecialFieldValues(classSymbol, true);
+                SpanInfo state = instanceVisitor.acceptOpt(ctor, ctorBody);
                 ctorEndState = ctorEndState == null ? state : ctorEndState.absorb(state);
             }
 
             // assignments that reach the end of any constructor must be considered used
-            useAllSelfFields(staticInit, ctorEndState, classSymbol, classSymbol.tryGetNode());
+            useAllSelfFields(ctorEndState, false, classSymbol);
         }
 
-        static void useAllSelfFields(@Nullable SpanInfo staticState, SpanInfo instanceState, JClassSymbol enclosingSym, JavaNode escapingNode) {
+        static void useAllSelfFields(SpanInfo state, boolean inStaticCtx, JClassSymbol enclosingSym) {
             for (JFieldSymbol field : enclosingSym.getDeclaredFields()) {
-                if (field.isStatic()) {
-                    if (staticState != null) {
-                        staticState.assignOutOfScope(field, escapingNode);
-                    }
-                } else {
-                    instanceState.assignOutOfScope(field, escapingNode);
+                if (!inStaticCtx || field.isStatic()) {
+                    JavaNode escapingNode = enclosingSym.tryGetNode();
+                    state.assignOutOfScope(field, escapingNode, SpecialAssignmentKind.END_OF_CTOR);
                 }
             }
         }
@@ -1120,42 +1268,81 @@ public final class DataflowPass {
         final GlobalAlgoState global;
 
         final Map<JVariableSymbol, VarLocalInfo> symtable;
+
+        /**
+         * Whether the current span completed abruptly. Abrupt
+         * completion occurs with break, continue, return or throw
+         * statements. A loop whose body completes abruptly may or
+         * may not complete abruptly itself. For instance in
+         * <pre>{@code
+         * for (int i = 0; i < 5; i++) {
+         *     break;
+         * }
+         * }</pre>
+         * the loop body completes abruptly on all paths, but the loop
+         * itself completes normally. This is also the case in a switch
+         * statement where all cases are followed by a break.
+         */
         private OptionalBool hasCompletedAbruptly = OptionalBool.NO;
+
+        /**
+         * Collects the abrupt completion targets of the current span.
+         * The value {@link #returnOrThrowTarget}
+         * represents a return statement or a throw that
+         * is not followed by an enclosing finally block.
+         */
+        private PSet<SpanInfo> abruptCompletionTargets = HashTreePSet.empty();
+
+        /**
+         * Sentinel to represent the target of a throw or return statement.
+         */
+        private final SpanInfo returnOrThrowTarget;
+
 
         private SpanInfo(GlobalAlgoState global) {
             this(null, global, new LinkedHashMap<>());
         }
 
-        private SpanInfo(SpanInfo parent,
+        private SpanInfo(@Nullable SpanInfo parent,
                          GlobalAlgoState global,
                          Map<JVariableSymbol, VarLocalInfo> symtable) {
             this.parent = parent;
+            this.returnOrThrowTarget = parent == null ? this : parent.returnOrThrowTarget;
             this.global = global;
             this.symtable = symtable;
             this.myCatches = Collections.emptyList();
         }
 
-        boolean hasVar(ASTVariableDeclaratorId var) {
+        boolean hasVar(ASTVariableId var) {
             return symtable.containsKey(var.getSymbol());
         }
 
-        void declareBlank(ASTVariableDeclaratorId id) {
+        void declareBlank(ASTVariableId id) {
             assign(id.getSymbol(), id);
         }
 
         void assign(JVariableSymbol var, JavaNode rhs) {
-            assign(var, rhs, false, false);
+            assign(var, rhs, SpecialAssignmentKind.NOT_SPECIAL);
         }
 
-        void assign(JVariableSymbol var, JavaNode rhs, boolean outOfScope, boolean isFieldBeforeMethod) {
-            ASTVariableDeclaratorId node = var.tryGetNode();
+        @Nullable AssignmentEntry assign(JVariableSymbol var, JavaNode rhs, SpecialAssignmentKind kind) {
+            ASTVariableId node = var.tryGetNode();
             if (node == null) {
-                return; // we don't care about non-local declarations
+                return null; // we don't care about non-local declarations
             }
-            AssignmentEntry entry = outOfScope || isFieldBeforeMethod
-                                    ? new UnboundAssignment(var, node, rhs, isFieldBeforeMethod)
+            AssignmentEntry entry = kind != SpecialAssignmentKind.NOT_SPECIAL
+                                    ? new UnboundAssignment(var, node, rhs, kind)
                                     : new AssignmentEntry(var, node, rhs);
-            VarLocalInfo previous = symtable.put(var, new VarLocalInfo(Collections.singleton(entry)));
+            VarLocalInfo newInfo = new VarLocalInfo(Collections.singleton(entry));
+            if (kind.shouldJoinWithPreviousAssignment()) {
+                // For unknown method calls, we don't know if the existing reaching defs were killed or not.
+                // In that case we just add an unbound entry to the existing reaching def set.
+                VarLocalInfo prev = symtable.remove(var);
+                if (prev != null) {
+                    newInfo = prev.merge(newInfo);
+                }
+            }
+            VarLocalInfo previous = symtable.put(var, newInfo);
             if (previous != null) {
                 // those assignments were overwritten ("killed")
                 for (AssignmentEntry killed : previous.reachingDefs) {
@@ -1168,32 +1355,42 @@ public final class DataflowPass {
                 }
             }
             global.allAssignments.add(entry);
+            return entry;
         }
 
-        void declareSpecialFieldValues(JClassSymbol sym) {
+        void declareSpecialFieldValues(JClassSymbol sym, boolean onlyStatic) {
             List<JFieldSymbol> declaredFields = sym.getDeclaredFields();
             for (JFieldSymbol field : declaredFields) {
-                ASTVariableDeclaratorId id = field.tryGetNode();
-                if (id == null || !SingularFieldRule.mayBeSingular(id)) {
-                    // useless to track final fields
-                    // static fields are out of scope of this impl for now
+                if (onlyStatic && !field.isStatic()) {
+                    continue;
+                }
+                ASTVariableId id = field.tryGetNode();
+                if (id == null) {
                     continue;
                 }
 
-                assign(field, id, true, true);
+                // Final fields definitions are fully known since they
+                // have to occur in a ctor.
+                if (!field.isFinal()) {
+                    assign(field, id, SpecialAssignmentKind.INITIAL_FIELD_VALUE);
+                }
             }
         }
 
 
-        void assignOutOfScope(@Nullable JVariableSymbol var, JavaNode escapingNode) {
+        void assignOutOfScope(@Nullable JVariableSymbol var, JavaNode escapingNode, SpecialAssignmentKind kind) {
             if (var == null) {
                 return;
             }
+            if (!symtable.containsKey(var)) {
+                // just an optimization, no need to assign this var since it's not being tracked
+                return;
+            }
             use(var, null);
-            assign(var, escapingNode, true, false);
+            assign(var, escapingNode, kind);
         }
 
-        void use(@Nullable JVariableSymbol var, ASTNamedReferenceExpr reachingDefSink) {
+        void use(@Nullable JVariableSymbol var, @Nullable ASTNamedReferenceExpr reachingDefSink) {
             if (var == null) {
                 return;
             }
@@ -1232,7 +1429,7 @@ public final class DataflowPass {
          * <p>Constructs that are considered to leak the `this` reference
          * (only processed if they occur in a ctor):
          * - using `this` as a method/ctor argument
-         * - using `this` as the receiver of a method/ctor invocation
+         * - using `this` as the receiver of a method/ctor invocation (also implicitly)
          *
          * <p>Because `this` may be aliased (eg in a field, a local var,
          * inside an anon class or capturing lambda, etc), any method
@@ -1240,10 +1437,12 @@ public final class DataflowPass {
          * of `this`. So the analysis may show some false positives, which
          * hopefully should be rare enough.
          */
-        public void recordThisLeak(boolean thisIsLeaking, JClassSymbol enclosingClassSym, JavaNode escapingNode) {
-            if (thisIsLeaking && enclosingClassSym != null) {
-                // all reaching defs to fields until now may be observed
-                ReachingDefsVisitor.useAllSelfFields(null, this, enclosingClassSym, escapingNode);
+        public void recordThisLeak(JClassSymbol enclosingClassSym, JavaNode escapingNode) {
+            // all reaching defs to fields until now may be observed
+            for (JFieldSymbol field : enclosingClassSym.getDeclaredFields()) {
+                if (!field.isStatic()) {
+                    assignOutOfScope(field, escapingNode, SpecialAssignmentKind.UNKNOWN_METHOD_CALL);
+                }
             }
         }
 
@@ -1277,20 +1476,26 @@ public final class DataflowPass {
         }
 
         /** Abrupt completion for return, continue, break. */
-        SpanInfo abruptCompletion(SpanInfo target) {
-            // if target == null then this will unwind all the parents
+        SpanInfo abruptCompletion(@NonNull SpanInfo target) {
             hasCompletedAbruptly = OptionalBool.YES;
+            abruptCompletionTargets = abruptCompletionTargets.plus(target);
+
             SpanInfo parent = this;
-            while (parent != target && parent != null) { // NOPMD CompareObjectsWithEqual this is what we want
+            while (parent != null) {
                 if (parent.myFinally != null) {
                     parent.myFinally.absorb(this);
                     // stop on the first finally, its own end state will
                     // be merged into the nearest enclosing finally
-                    return this;
+                    break;
+                }
+                if (parent == target) { // NOPMD CompareObjectsWithEqual this is what we want
+                    break;
                 }
                 parent = parent.parent;
+
             }
 
+            // rest of this block is dead code so we don't track declarations
             this.symtable.clear();
             return this;
         }
@@ -1308,12 +1513,13 @@ public final class DataflowPass {
             // Find the first block that has a finally
             // Be absorbed into every catch block on the way.
 
-            // In 7.0, with the precise type/overload resolution, we
+            // todo In 7.0, with the precise type/overload resolution, we
             // can target the specific catch block that would catch the
             // exception.
             if (!byMethodCall) {
                 hasCompletedAbruptly = OptionalBool.YES;
             }
+            abruptCompletionTargets = abruptCompletionTargets.plus(returnOrThrowTarget);
 
             SpanInfo parent = this;
             while (parent != null) {
@@ -1332,6 +1538,7 @@ public final class DataflowPass {
                 }
                 parent = parent.parent;
             }
+
 
             if (!byMethodCall) {
                 this.symtable.clear(); // following is dead code
@@ -1357,10 +1564,11 @@ public final class DataflowPass {
 
             CollectionUtil.mergeMaps(this.symtable, other.symtable, VarLocalInfo::merge);
             this.hasCompletedAbruptly = mergeCertitude(this.hasCompletedAbruptly, other.hasCompletedAbruptly);
+            this.abruptCompletionTargets = CollectionUtil.union(this.abruptCompletionTargets, other.abruptCompletionTargets);
             return this;
         }
 
-        private OptionalBool mergeCertitude(OptionalBool first, OptionalBool other) {
+        static OptionalBool mergeCertitude(OptionalBool first, OptionalBool other) {
             if (first.isKnown() && other.isKnown()) {
                 return first == other ? first : OptionalBool.UNKNOWN;
             }
@@ -1404,21 +1612,22 @@ public final class DataflowPass {
 
             if (target != null) { // otherwise CT error
                 target.absorb(data);
+                return data.abruptCompletion(target);
             }
-            return data.abruptCompletion(target);
+            return data;
         }
     }
 
     public static class AssignmentEntry implements Comparable<AssignmentEntry> {
 
         final JVariableSymbol var;
-        final ASTVariableDeclaratorId node;
+        final ASTVariableId node;
 
         // this is not necessarily an expression, it may be also the
         // variable declarator of a foreach loop
         final JavaNode rhs;
 
-        AssignmentEntry(JVariableSymbol var, ASTVariableDeclaratorId node, JavaNode rhs) {
+        AssignmentEntry(JVariableSymbol var, ASTVariableId node, JavaNode rhs) {
             this.var = var;
             this.node = node;
             this.rhs = rhs;
@@ -1436,7 +1645,7 @@ public final class DataflowPass {
         }
 
         public boolean isBlankDeclaration() {
-            return rhs instanceof ASTVariableDeclaratorId;
+            return rhs instanceof ASTVariableId;
         }
 
         public boolean isFieldDefaultValue() {
@@ -1472,7 +1681,7 @@ public final class DataflowPass {
             return node.isForeachVariable();
         }
 
-        public ASTVariableDeclaratorId getVarId() {
+        public ASTVariableId getVarId() {
             return node;
         }
 
@@ -1524,6 +1733,9 @@ public final class DataflowPass {
          * If true, then this "assignment" is not real. We conservatively
          * assume that the variable may have been set to another value by
          * a call to some external code.
+         *
+         * @see #isFieldAssignmentAtEndOfCtor()
+         * @see #isFieldAssignmentAtStartOfMethod()
          */
         public boolean isUnbound() {
             return false;
@@ -1573,15 +1785,11 @@ public final class DataflowPass {
 
     static class UnboundAssignment extends AssignmentEntry {
 
-        /**
-         * If true, then this is the unknown value of a field
-         * before an instance method call.
-         */
-        private final boolean isFieldStartValue;
+        private final SpecialAssignmentKind kind;
 
-        UnboundAssignment(JVariableSymbol var, ASTVariableDeclaratorId node, JavaNode rhs, boolean isFieldStartValue) {
+        UnboundAssignment(JVariableSymbol var, ASTVariableId node, JavaNode rhs, SpecialAssignmentKind kind) {
             super(var, node, rhs);
-            this.isFieldStartValue = isFieldStartValue;
+            this.kind = kind;
         }
 
         @Override
@@ -1591,12 +1799,23 @@ public final class DataflowPass {
 
         @Override
         public boolean isFieldAssignmentAtStartOfMethod() {
-            return isFieldStartValue;
+            return kind == SpecialAssignmentKind.INITIAL_FIELD_VALUE;
         }
 
         @Override
         public boolean isFieldAssignmentAtEndOfCtor() {
-            return rhs instanceof ASTAnyTypeDeclaration;
+            return rhs instanceof ASTTypeDeclaration;
+        }
+    }
+
+    enum SpecialAssignmentKind {
+        NOT_SPECIAL,
+        UNKNOWN_METHOD_CALL,
+        INITIAL_FIELD_VALUE,
+        END_OF_CTOR;
+
+        boolean shouldJoinWithPreviousAssignment() {
+            return this == UNKNOWN_METHOD_CALL;
         }
     }
 }

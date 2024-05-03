@@ -20,11 +20,12 @@ import org.junit.jupiter.api.Timeout;
 
 import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException;
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.BaseJavaTreeDumpTest;
 import net.sourceforge.pmd.lang.java.JavaParsingHelper;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.types.AstTestUtil;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 class ParserCornersTest extends BaseJavaTreeDumpTest {
     private final JavaParsingHelper java = JavaParsingHelper.DEFAULT.withResourceContext(getClass());
@@ -44,7 +45,7 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testInvalidUnicodeEscape() {
         MalformedSourceException thrown = assertThrows(MalformedSourceException.class, // previously Error
-                () -> java.parse("\\u00k0", null, "x/filename.java"));
+                () -> java.parse("\\u00k0", null, FileId.fromPathLikeString("x/filename.java")));
         assertThat(thrown.getMessage(), startsWith("Source format error in file 'x/filename.java' at line 1, column 1: Invalid unicode escape"));
     }
 
@@ -322,8 +323,8 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testMethodReferenceConfused() {
         ASTCompilationUnit ast = java.parseResource("MethodReferenceConfused.java", "10");
-        ASTVariableDeclaratorId varWithMethodName = AstTestUtil.varId(ast, "method");
-        ASTVariableDeclaratorId someObject = AstTestUtil.varId(ast, "someObject");
+        ASTVariableId varWithMethodName = AstTestUtil.varId(ast, "method");
+        ASTVariableId someObject = AstTestUtil.varId(ast, "someObject");
 
         assertThat(varWithMethodName.getLocalUsages(), empty());
         assertThat(someObject.getLocalUsages(), hasSize(1));
@@ -355,5 +356,15 @@ class ParserCornersTest extends BaseJavaTreeDumpTest {
     @Test
     void testGitHubBug3642() {
         doTest("GitHubBug3642");
+    }
+
+    @Test
+    void testGitHubBug1780() {
+        doTest("GitHubBug1780OuterClass");
+    }
+
+    @Test
+    void testGithubBug4947() {
+        java15.parseResource("testdata/Issue4947TextBlock.java");
     }
 }

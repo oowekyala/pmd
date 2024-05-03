@@ -1133,7 +1133,7 @@ public class CloseResourceJMS {
     </test-code>
 
     <test-code>
-        <description>CloseResource for closable - ignored if the types do not contain AutoClosable</description>
+        <description>CloseResource for closable - ignored if the types do not contain AutoCloseable</description>
         <rule-property name="types">java.sql.Connection,java.sql.Statement,java.sql.ResultSet</rule-property>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
@@ -2025,6 +2025,24 @@ public class LocalVariableTypeInference {
     public void aMethod() {
         var list = new ArrayList<String>();  // infers ArrayList<String>
         var stream = list.stream();          // infers Stream<String>, is never closed
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Parameters don't need to be closed even if casted #2056</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.net.URLClassLoader;
+
+public class CastedParameter {
+
+    public void checkValidity(ClassLoader auxclassPathClassLoader) {
+        if (auxclassPathClassLoader instanceof URLClassLoader) {
+            final URLClassLoader urlClassLoader = (URLClassLoader) auxclassPathClassLoader;
+            // doesn't need to be closed, it's still a paramter…
+        }
     }
 }
         ]]></code>

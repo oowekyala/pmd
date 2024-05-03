@@ -99,6 +99,9 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
                     } else {
                         return false;
                     }
+                } catch (IOException e) {
+                    // add a bit more info to the exception
+                    throw new IOException("While loading class from " + loader, e);
                 }
             }
 
@@ -132,6 +135,15 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
                                                         .map(JElementSymbol::getSimpleName)
                                                         .collect(CollectionUtil.toPersistentSet())
                                   : HashTreePSet.empty();
+            }
+
+            @Override
+            protected boolean canReenter() {
+                // We might call the parsing logic again in the same thread,
+                // e.g. in order to determine "annotAttributes", getDeclaredMethods() is called, which
+                // calls ensureParsed().
+                // Note: Other threads can't reenter, since our thread own the ParseLock monitor.
+                return true;
             }
 
             @Override
@@ -538,6 +550,14 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
     @Override
     public boolean isAnonymousClass() {
         return getSimpleName().isEmpty();
+    }
+
+    boolean isFailed() {
+        return this.parseLock.isFailed();
+    }
+
+    boolean isNotParsed() {
+        return this.parseLock.isNotParsed();
     }
 
 

@@ -19,15 +19,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import net.sourceforge.pmd.FooRule;
+import net.sourceforge.pmd.InternalApiBridgeForTestsOnly;
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
-import net.sourceforge.pmd.Rule;
-import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.RuleSet;
-import net.sourceforge.pmd.cache.AnalysisCache;
-import net.sourceforge.pmd.cache.NoopAnalysisCache;
+import net.sourceforge.pmd.cache.internal.AnalysisCache;
+import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
 import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.document.FileId;
+import net.sourceforge.pmd.lang.rule.Rule;
+import net.sourceforge.pmd.lang.rule.RuleSet;
 
 class GlobalAnalysisListenerTest {
 
@@ -71,12 +72,12 @@ class GlobalAnalysisListenerTest {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
-        config.setAnalysisCache(mockCache);
+        InternalApiBridgeForTestsOnly.setAnalysisCache(config, mockCache);
 
         MyFooRule rule = new MyFooRule();
         runPmd(config, GlobalAnalysisListener.noop(), rule);
 
-        verify(mockCache).checkValidity(any(), any());
+        verify(mockCache).checkValidity(any(), any(), any());
         verify(mockCache, times(1)).persist();
         verify(mockCache, times(NUM_DATA_SOURCES)).isUpToDate(any());
     }
@@ -86,13 +87,13 @@ class GlobalAnalysisListenerTest {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
-        config.setAnalysisCache(mockCache);
+        InternalApiBridgeForTestsOnly.setAnalysisCache(config, mockCache);
 
         BrokenRule rule = new BrokenRule();  // the broken rule throws
         runPmd(config, GlobalAnalysisListener.noop(), rule);
 
         // cache methods are called regardless
-        verify(mockCache).checkValidity(any(), any());
+        verify(mockCache).checkValidity(any(), any(), any());
         verify(mockCache, times(1)).persist();
         verify(mockCache, times(NUM_DATA_SOURCES)).isUpToDate(any());
     }
@@ -102,7 +103,7 @@ class GlobalAnalysisListenerTest {
 
         PMDConfiguration config = newConfig();
         AnalysisCache mockCache = spy(NoopAnalysisCache.class);
-        config.setAnalysisCache(mockCache);
+        InternalApiBridgeForTestsOnly.setAnalysisCache(config, mockCache);
 
         BrokenRule rule = new BrokenRule();  // the broken rule throws
         // now the exception should be propagated
@@ -111,10 +112,10 @@ class GlobalAnalysisListenerTest {
             runPmd(config, listener, rule);
         });
 
-        assertEquals("fname1.dummy", exception.getFileName());
+        assertEquals("fname1.dummy", exception.getFileId().getOriginalPath());
 
         // cache methods are called regardless
-        verify(mockCache).checkValidity(any(), any());
+        verify(mockCache).checkValidity(any(), any(), any());
         verify(mockCache, times(1)).persist();
         verify(mockCache, times(1)).isUpToDate(any());
     }
@@ -122,7 +123,7 @@ class GlobalAnalysisListenerTest {
     @NonNull
     private PMDConfiguration newConfig() {
         PMDConfiguration config = new PMDConfiguration();
-        config.setAnalysisCache(new NoopAnalysisCache());
+        config.setAnalysisCacheLocation(null);
         config.setIgnoreIncrementalAnalysis(true);
         config.setThreads(0); // no multithreading for this test
         return config;
@@ -131,9 +132,9 @@ class GlobalAnalysisListenerTest {
     private void runPmd(PMDConfiguration config, GlobalAnalysisListener listener, Rule rule) {
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             pmd.addRuleSet(RuleSet.forSingleRule(rule));
-            pmd.files().addSourceFile("abc", "fname1.dummy");
-            pmd.files().addSourceFile("abcd", "fname2.dummy");
-            pmd.files().addSourceFile("abcd", "fname21.dummy");
+            pmd.files().addSourceFile(FileId.fromPathLikeString("fname1.dummy"), "abc");
+            pmd.files().addSourceFile(FileId.fromPathLikeString("fname2.dummy"), "abcd");
+            pmd.files().addSourceFile(FileId.fromPathLikeString("fname21.dummy"), "abcd");
             pmd.addListener(listener);
             pmd.performAnalysis();
         }
@@ -144,7 +145,7 @@ class GlobalAnalysisListenerTest {
 
         @Override
         public void apply(Node node, RuleContext ctx) {
-            if (node.getTextDocument().getDisplayName().contains("1")) {
+            if (node.getTextDocument().getFileId().getFileName().contains("1")) {
                 ctx.addViolation(node);
             }
         }

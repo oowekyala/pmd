@@ -5,6 +5,8 @@
 
 package net.sourceforge.pmd.lang.java.types.internal.infer;
 
+import static net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf.cast;
+
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -58,6 +60,8 @@ public interface TypeInferenceLogger {
 
 
     default void ctxInitialization(InferenceContext ctx, JMethodSig sig) { }
+
+    default void applicabilityTest(InferenceContext ctx, JMethodSig sig) { }
 
     default void startArgsChecks() { }
 
@@ -281,11 +285,11 @@ public interface TypeInferenceLogger {
             printExpr(site.getExpr());
             startSection("[WARNING] Ambiguity error: all methods are maximally specific");
             for (MethodCtDecl m : methods) {
-                println(color(m.getMethodType().internalApi().originalMethod(), ANSI_RED));
+                println(color(cast(m.getMethodType()).originalMethod(), ANSI_RED));
             }
 
             if (selected != null) {
-                endSection("Will select " + color(selected.getMethodType().internalApi().originalMethod(), ANSI_BLUE));
+                endSection("Will select " + color(cast(selected.getMethodType()).originalMethod(), ANSI_BLUE));
             } else {
                 endSection(""); // no fallback?
             }
@@ -362,6 +366,11 @@ public interface TypeInferenceLogger {
         @Override
         public void ctxInitialization(InferenceContext ctx, JMethodSig sig) {
             println(String.format("Context %-11d%s", ctx.getId(), ppHighlight(ctx.mapToIVars(sig))));
+        }
+
+        @Override
+        public void applicabilityTest(InferenceContext ctx, JMethodSig sig) {
+            println(String.format("Applicability testing with Context %-11d%s", ctx.getId(), ppHighlight(ctx.mapToIVars(sig))));
         }
 
         @Override

@@ -16,8 +16,10 @@ import org.apache.commons.lang3.exception.ContextedRuntimeException;
 import org.w3c.dom.Document;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.xpath.impl.XPathFunctionDefinition;
 import net.sourceforge.pmd.lang.rule.xpath.impl.XPathHandler;
 import net.sourceforge.pmd.lang.rule.xpath.internal.DomainConversion;
+import net.sourceforge.pmd.lang.rule.xpath.internal.SaxonExtensionFunctionDefinitionAdapter;
 import net.sourceforge.pmd.lang.xml.ast.XmlNode;
 import net.sourceforge.pmd.lang.xml.ast.internal.XmlParserImpl.RootXmlNode;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -29,10 +31,10 @@ import net.sourceforge.pmd.util.DataMap.SimpleDataKey;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.dom.DocumentWrapper;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.lib.NamespaceConstant;
 import net.sf.saxon.om.AtomicSequence;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.sxpath.XPathDynamicContext;
@@ -72,15 +74,13 @@ final class SaxonDomXPathQuery {
 
     private XPathExpressionWithProperties makeXPathExpression(String xpath, String defaultUri, List<PropertyDescriptor<?>> properties) {
         final IndependentContext xpathStaticContext = new IndependentContext(configuration);
-        xpathStaticContext.declareNamespace("fn", NamespaceConstant.FN);
-        xpathStaticContext.setDefaultElementNamespace(defaultUri);
+        xpathStaticContext.declareNamespace("fn", NamespaceUri.FN);
+        xpathStaticContext.setDefaultElementNamespace(NamespaceUri.of(defaultUri));
 
-
-
-
-        for (ExtensionFunctionDefinition fun : xpathHandler.getRegisteredExtensionFunctions()) {
+        for (XPathFunctionDefinition xpathFun : xpathHandler.getRegisteredExtensionFunctions()) {
+            ExtensionFunctionDefinition fun = new SaxonExtensionFunctionDefinitionAdapter(xpathFun);
             StructuredQName qname = fun.getFunctionQName();
-            xpathStaticContext.declareNamespace(qname.getPrefix(), qname.getURI());
+            xpathStaticContext.declareNamespace(qname.getPrefix(), qname.getNamespaceUri());
             this.configuration.registerExtensionFunction(fun);
         }
 

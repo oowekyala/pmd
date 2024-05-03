@@ -96,7 +96,7 @@
         <description>#432 empty try-with-resource - not ok</description>
         <expected-problems>1</expected-problems>
         <expected-messages>
-            <message>Empty try body - you could rename the resource to 'ignored'</message>
+            <message>Empty try-with-resources statement. Rename the resource to `ignored`, `unused` or `_` (Java 22+).</message>
         </expected-messages>
         <code><![CDATA[
             class X {
@@ -130,13 +130,29 @@
         <expected-problems>1</expected-problems>
         <expected-linenumbers>4</expected-linenumbers>
         <expected-messages>
-            <message>Empty try body - you could rename the resource to 'ignored'</message>
+            <message>Empty try-with-resources statement. Should be written in.close()</message>
         </expected-messages>
         <code><![CDATA[
             import java.io.InputStream;
             class X {
                 void method(InputStream in) {
                     try (in) {
+                    }
+                }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Try with resources with several vars, ok</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            import java.io.InputStream;
+            class X {
+                void method(InputStream in) {
+                    try (final var something = executeSomething(in);
+                        something.field) {
+                        // this is ok because writing the corresponding sequence of var decls
+                        // and close statements would be noisy
                     }
                 }
             }
@@ -228,7 +244,7 @@
             }
             ]]></code>
     </test-code>
-    
+
     <test-code>
         <description>empty initializer failure case (non static)</description>
         <expected-problems>1</expected-problems>
@@ -502,7 +518,8 @@ public class Foo {
     </test-code>
 
     <test-code>
-        <description>empty if statement with comment</description>
+        <description>empty if statement with comment, disallow commented block</description>
+        <rule-property name="allowCommentedBlocks">false</rule-property>
         <expected-problems>1</expected-problems>
         <expected-messages>
             <message>Empty if statement</message>
@@ -516,5 +533,21 @@ public class Foo {
     }
 }
         ]]></code>
+
+    </test-code>
+    <test-code>
+        <description>empty if statement with comment, allow commented block (#4754)</description>
+        <rule-property name="allowCommentedBlocks">true</rule-property>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    void bar(int x) {
+        if (x == 0) {
+            // empty!
+        }
+    }
+}
+        ]]></code>
+
     </test-code>
 </test-data>

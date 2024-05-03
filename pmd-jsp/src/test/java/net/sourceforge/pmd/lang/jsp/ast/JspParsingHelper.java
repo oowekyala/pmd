@@ -4,15 +4,15 @@
 
 package net.sourceforge.pmd.lang.jsp.ast;
 
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
 import net.sourceforge.pmd.lang.jsp.JspLanguageModule;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 public final class JspParsingHelper extends BaseParsingHelper<JspParsingHelper, ASTCompilationUnit> {
 
     public static final JspParsingHelper DEFAULT = new JspParsingHelper(Params.getDefault());
 
     private JspParsingHelper(Params params) {
-        super(JspLanguageModule.NAME, ASTCompilationUnit.class, params);
+        super(JspLanguageModule.getInstance(), ASTCompilationUnit.class, params);
     }
 
     @Override

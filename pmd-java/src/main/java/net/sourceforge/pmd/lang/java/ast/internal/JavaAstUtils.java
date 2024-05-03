@@ -26,7 +26,6 @@ import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
 import net.sourceforge.pmd.lang.java.ast.ASTArrayAllocation;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
@@ -37,8 +36,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTBreakStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTCatchClause;
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTClassType;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
+import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTExplicitConstructorInvocation;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpressionStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
@@ -46,13 +47,13 @@ import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
 import net.sourceforge.pmd.lang.java.ast.ASTFormalParameters;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTInitializer;
 import net.sourceforge.pmd.lang.java.ast.ASTLabeledStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTList;
 import net.sourceforge.pmd.lang.java.ast.ASTLocalVariableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTLoopStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTMethodOrConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTNumericLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTStatement;
@@ -61,18 +62,21 @@ import net.sourceforge.pmd.lang.java.ast.ASTSwitchBranch;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThrowStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
-import net.sourceforge.pmd.lang.java.ast.AccessNode.Visibility;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.Annotatable;
+import net.sourceforge.pmd.lang.java.ast.AssignmentOp;
 import net.sourceforge.pmd.lang.java.ast.BinaryOp;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavaTokenKinds;
+import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleUtil;
+import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.AstLocalVarSym;
@@ -150,7 +154,11 @@ public final class JavaAstUtils {
                 && ((ASTMethodDeclaration) node).isMainMethod();
     }
 
-    public static boolean hasField(ASTAnyTypeDeclaration node, String name) {
+    public static boolean hasField(ASTTypeDeclaration node, String name) {
+        if (node == null) {
+            return false;
+        }
+
         for (JFieldSymbol f : node.getSymbol().getDeclaredFields()) {
             String fname = f.getSimpleName();
             if (fname.startsWith("m_") || fname.startsWith("_")) {
@@ -175,7 +183,7 @@ public final class JavaAstUtils {
      * @throws NullPointerException If any of the classes is null, or the node is null
      * @see TypeTestUtil#isExactlyA(Class, TypeNode)
      */
-    public static boolean hasParameters(ASTMethodOrConstructorDeclaration node, Class<?>... types) {
+    public static boolean hasParameters(ASTExecutableDeclaration node, Class<?>... types) {
         ASTFormalParameters formals = node.getFormalParameters();
         if (formals.size() != types.length) {
             return false;
@@ -200,13 +208,13 @@ public final class JavaAstUtils {
      * @see TypeTestUtil#isExactlyA(Class, TypeNode)
      */
     @SafeVarargs
-    public static boolean hasExceptionList(ASTMethodOrConstructorDeclaration node, Class<? extends Throwable>... types) {
-        @NonNull List<ASTClassOrInterfaceType> formals = ASTList.orEmpty(node.getThrowsList());
+    public static boolean hasExceptionList(ASTExecutableDeclaration node, Class<? extends Throwable>... types) {
+        @NonNull List<ASTClassType> formals = ASTList.orEmpty(node.getThrowsList());
         if (formals.size() != types.length) {
             return false;
         }
         for (int i = 0; i < formals.size(); i++) {
-            ASTClassOrInterfaceType fi = formals.get(i);
+            ASTClassType fi = formals.get(i);
             if (!TypeTestUtil.isExactlyA(types[i], fi)) {
                 return false;
             }
@@ -219,7 +227,7 @@ public final class JavaAstUtils {
      * the variable must be less than {@link Visibility#V_PRIVATE} for
      * us to be sure of it.
      */
-    public static boolean isNeverUsed(ASTVariableDeclaratorId varId) {
+    public static boolean isNeverUsed(ASTVariableId varId) {
         return CollectionUtil.none(varId.getLocalUsages(), JavaAstUtils::isReadUsage);
     }
 
@@ -284,7 +292,7 @@ public final class JavaAstUtils {
      * Returns the variable IDS corresponding to variables declared in
      * the init clause of the loop.
      */
-    public static NodeStream<ASTVariableDeclaratorId> getLoopVariables(ASTForStatement loop) {
+    public static NodeStream<ASTVariableId> getLoopVariables(ASTForStatement loop) {
         return NodeStream.of(loop.getInit())
                          .filterIs(ASTLocalVariableDeclaration.class)
                          .flatMap(ASTLocalVariableDeclaration::getVarIds);
@@ -445,7 +453,7 @@ public final class JavaAstUtils {
     }
 
     public static boolean hasAnyAnnotation(Annotatable node, Collection<String> qualifiedNames) {
-        return qualifiedNames.stream().anyMatch(node::isAnnotationPresent);
+        return node != null && qualifiedNames.stream().anyMatch(node::isAnnotationPresent);
     }
 
     /**
@@ -586,25 +594,39 @@ public final class JavaAstUtils {
         if (usage instanceof ASTVariableAccess) {
             return !Modifier.isStatic(((JFieldSymbol) symbol).getModifiers());
         } else if (usage instanceof ASTFieldAccess) {
-            return Objects.equals(((JFieldSymbol) symbol).getEnclosingClass(),
-                                  usage.getEnclosingType().getSymbol());
+            if (usage.getEnclosingType() != null) {
+                return Objects.equals(((JFieldSymbol) symbol).getEnclosingClass(),
+                        usage.getEnclosingType().getSymbol());
+            }
         }
         return false;
     }
 
-    public static boolean isCallOnThisInstance(ASTMethodCall call) {
+    /**
+     * Return whether the method call is a call whose receiver is the
+     * {@code this} object. This is the case also if the method is called
+     * with a {@code super} qualifier, or if it is not syntactically
+     * qualified but refers to a non-static method of the enclosing class.
+     */
+    public static OptionalBool isCallOnThisInstance(ASTMethodCall call) {
         // syntactic approach.
         if (call.getQualifier() != null) {
-            return isUnqualifiedThisOrSuper(call.getQualifier());
+            return OptionalBool.definitely(isUnqualifiedThisOrSuper(call.getQualifier()));
         }
 
         // unqualified call
         JMethodSig mtype = call.getMethodType();
-        return !mtype.getSymbol().isUnresolved()
-            && mtype.getSymbol().getEnclosingClass().equals(call.getEnclosingType().getSymbol());
+        JExecutableSymbol methodSym = mtype.getSymbol();
+        if (methodSym.isUnresolved()) {
+            return OptionalBool.UNKNOWN;
+        }
+        return OptionalBool.definitely(
+            !methodSym.isStatic()
+                && methodSym.getEnclosingClass().equals(call.getEnclosingType().getSymbol())
+        );
     }
 
-    public static ASTClassOrInterfaceType getThisOrSuperQualifier(ASTExpression expr) {
+    public static ASTClassType getThisOrSuperQualifier(ASTExpression expr) {
         if (expr instanceof ASTThisExpression) {
             return ((ASTThisExpression) expr).getQualifier();
         } else if (expr instanceof ASTSuperExpression) {
@@ -732,6 +754,18 @@ public final class JavaAstUtils {
         return false;
     }
 
+
+    /**
+     * Tests if the node is an {@link ASTAssignmentExpression} with the given operator.
+     */
+    public static boolean isAssignmentExprWithOperator(@Nullable JavaNode e, AssignmentOp operator) {
+        if (e instanceof ASTAssignmentExpression) {
+            ASTAssignmentExpression infix = (ASTAssignmentExpression) e;
+            return operator == infix.getOperator();
+        }
+        return false;
+    }
+
     /**
      * Returns true if the given token is a Java comment.
      */
@@ -759,5 +793,13 @@ public final class JavaAstUtils {
                                     clause.getParameter().getVarId().getSymbol());
         }
         return false;
+    }
+
+    public static boolean isInStaticCtx(JavaNode node) {
+        return node.ancestors()
+                   .any(it -> it instanceof ASTExecutableDeclaration && ((ASTExecutableDeclaration) it).isStatic()
+                       || it instanceof ASTInitializer && ((ASTInitializer) it).isStatic()
+                       || it instanceof ASTExplicitConstructorInvocation
+                   );
     }
 }

@@ -1168,4 +1168,73 @@ public class Sample {
             }
             ]]></code>
     </test-code>
+
+    <test-code>
+        <description>[java] UnnecessaryImport false-positive on generic method call with on lambda #4816</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+package net.sourceforge.pmd.lang.java.rule.codestyle.unnecessaryimport;
+
+import java.util.function.Function;
+import java.util.stream.Collectors; // UnnecessaryImport:	Unused import 'java.util.stream.Collectors'
+import java.util.TreeSet; // UnnecessaryImport:	Unused import 'java.util.TreeSet'
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.java.rule.codestyle.unnecessaryimport.item.Item; // UnnecessaryImport:	Unused import 'net.sourceforge.pmd.lang.java.rule.codestyle.unnecessaryimport.item.Item'
+import net.sourceforge.pmd.lang.java.rule.codestyle.unnecessaryimport.item.ItemProducer;
+
+public class Example {
+    private <X> X run(Function<ItemProducer, X> f) { return null; }
+
+    public Set<String> sample() {
+        return run((producer) -> producer
+            .stream()
+            .map(Item::getValue)
+            .collect(Collectors.toCollection(TreeSet::new)));
+    }
+}
+]]></code>
+    </test-code>
+    <test-code>
+        <description>FP with unknown symbols</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import static something.Foo.*;
+
+public class Example {
+    public Set<String> sample() {
+        foo();
+    }
+}
+]]></code>
+    </test-code>
+    <test-code>
+        <description>FP with unknown symbols 2</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            import static something.Foo.foo;
+
+            public class Example {
+                public Set<String> sample() {
+                    foo(x);
+                }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>FP with unknown symbols 3</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>1</expected-linenumbers>
+        <code><![CDATA[
+            import static something.Foo.bar;
+            import static something.Bar.*; // this is marked as not unnecessary
+            import static something.Other.*; // this is marked as not unnecessary
+
+            public class Example {
+                public Set<String> sample() {
+                    foo(x);
+                }
+            }
+            ]]></code>
+    </test-code>
 </test-data>

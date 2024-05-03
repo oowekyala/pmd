@@ -11,7 +11,7 @@
     <parent>
         <artifactId>pmd</artifactId>
         <groupId>net.sourceforge.pmd</groupId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -19,6 +19,23 @@
         <java.version>8</java.version>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- overrides the configuration from parent pom: we only have pmd-core yet -->
+                    <offlineLinks combine.self="override">
+                        <offlineLink>
+                            <location>${project.basedir}/../pmd-core/target/apidocs</location>
+                            <url>../../pmd-core/${project.version}</url>
+                        </offlineLink>
+                    </offlineLinks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
@@ -28,8 +45,6 @@
         <dependency>
             <groupId>com.github.oowekyala.ooxml</groupId>
             <artifactId>nice-xml-messages</artifactId>
-            <version>3.1</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>

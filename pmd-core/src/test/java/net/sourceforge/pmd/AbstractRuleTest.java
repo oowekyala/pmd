@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd;
 
-import static net.sourceforge.pmd.ReportTestUtil.getReportForRuleApply;
-import static net.sourceforge.pmd.properties.constraints.NumericConstraints.inRange;
+import static net.sourceforge.pmd.properties.NumericConstraints.inRange;
+import static net.sourceforge.pmd.reporting.ReportTestUtil.getReportForRuleApply;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -23,11 +23,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
-import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
+import net.sourceforge.pmd.reporting.InternalApiBridge;
+import net.sourceforge.pmd.reporting.RuleContext;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 
 class AbstractRuleTest {
@@ -79,25 +83,28 @@ class AbstractRuleTest {
     void testCreateRV() {
         MyRule r = new MyRule();
         r.setRuleSetName("foo");
-        DummyRootNode s = helper.parse("abc()", "filename");
+        DummyRootNode s = helper.parse("abc()", FileId.fromPathLikeString("abc"));
 
-        RuleViolation rv = new ParametricRuleViolation(r, s, r.getMessage());
-        assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
-        assertEquals("filename", rv.getFilename(), "Filename mismatch!");
-        assertEquals(r, rv.getRule(), "Rule object mismatch!");
-        assertEquals("my rule msg", rv.getDescription(), "Rule msg mismatch!");
-        assertEquals("foo", rv.getRule().getRuleSetName(), "RuleSet name mismatch!");
+        InternalApiBridge.createRuleContext((rv) -> {
+            assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
+            assertEquals("abc", rv.getFileId().getOriginalPath(), "Filename mismatch!");
+            assertEquals(r, rv.getRule(), "Rule object mismatch!");
+            assertEquals("my rule msg", rv.getDescription(), "Rule msg mismatch!");
+            assertEquals("foo", rv.getRule().getRuleSetName(), "RuleSet name mismatch!");
+        }, r).addViolation(s);
     }
 
     @Test
     void testCreateRV2() {
         MyRule r = new MyRule();
-        DummyRootNode s = helper.parse("abc()", "filename");
-        RuleViolation rv = new ParametricRuleViolation(r, s, "specificdescription");
-        assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
-        assertEquals("filename", rv.getFilename(), "Filename mismatch!");
-        assertEquals(r, rv.getRule(), "Rule object mismatch!");
-        assertEquals("specificdescription", rv.getDescription(), "Rule description mismatch!");
+        DummyRootNode s = helper.parse("abc()", FileId.fromPathLikeString("filename"));
+
+        InternalApiBridge.createRuleContext((rv) -> {
+            assertEquals(1, rv.getBeginLine(), "Line number mismatch!");
+            assertEquals("filename", rv.getFileId().getOriginalPath(), "Filename mismatch!");
+            assertEquals(r, rv.getRule(), "Rule object mismatch!");
+            assertEquals("specificdescription", rv.getDescription(), "Rule description mismatch!");
+        }, r).addViolationWithMessage(s, "specificdescription");
     }
 
     @Test
@@ -111,7 +118,7 @@ class AbstractRuleTest {
         r.definePropertyDescriptor(PropertyFactory.intProperty("testInt").desc("description").require(inRange(0, 100)).defaultValue(10).build());
         r.setMessage("Message ${packageName} ${className} ${methodName} ${variableName} ${testInt} ${noSuchProperty}");
 
-        DummyRootNode s = helper.parse("abc()", "filename");
+        DummyRootNode s = helper.parse("abc()", FileId.UNKNOWN);
 
         RuleViolation rv = getReportForRuleApply(r, s).getViolations().get(0);
         assertEquals("Message foo ${className} ${methodName} ${variableName} 10 ${noSuchProperty}", rv.getDescription());
@@ -119,11 +126,11 @@ class AbstractRuleTest {
 
     @Test
     void testRuleSuppress() {
-        DummyRootNode n = helper.parse("abc()", "filename")
+        DummyRootNode n = helper.parse("abc()", FileId.UNKNOWN)
                                 .withNoPmdComments(Collections.singletonMap(1, "ohio"));
 
         FileAnalysisListener listener = mock(FileAnalysisListener.class);
-        RuleContext ctx = RuleContext.create(listener, new MyRule());
+        RuleContext ctx = InternalApiBridge.createRuleContext(listener, new MyRule());
         ctx.addViolationWithMessage(n, "message");
 
         verify(listener, never()).onRuleViolation(any());

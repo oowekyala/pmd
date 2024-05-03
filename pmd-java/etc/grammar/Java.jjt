@@ -1,4 +1,35 @@
 /**
+ * Support "JEP 447: Statements before super(...) (Preview)" (Java 22)
+ *     Changes in ConstructorBlock
+ * Support "JEP 456: Unnamed Variables & Patterns" (Java 22)
+ *     This is now a regular language feature. Otherwise no changes.
+ * Support "JEP 463: Implicitly Declared Classes and Instance Main Methods (Second Preview)" (Java 22)
+ *     No changes.
+ * Support "JEP 459: String Templates (Second Preview)" (Java 22)
+ *     Use ASTTemplate.setContent instead of setImage.
+ * Remove support for Record pattern in enhanced for statements. This was only a Java 20 Preview feature.
+ * Remove support for ParenthesizedPatterns. This was only a Java 20 Preview feature.
+ * Andreas Dangel 02/2024
+ *====================================================================
+ * Renamed various nodes:
+ * ClassOrInterfaceType -> ClassType
+ * ClassOrInterfaceDeclaration -> ClassDeclaration
+ * ClassOrInterfaceBody -> ClassBody
+ * AnyTypeDeclaration -> TypeDeclaration
+ * MethodOrConstructorDeclaration -> ExecutableDeclaration
+ * VariableDeclaratorId -> VariableId
+ * Andreas Dangel 12/2023
+ *====================================================================
+ * Support "JEP 443: Unnamed Patterns and Variables" for Java 21 Preview.
+ *    New AST nodes: ASTUnnamedPattern
+ * Support "JEP 430: String Templates" for Java 21 Preview.
+ *    New AST nodes: ASTTemplateExpression, ASTTemplate, ASTTemplateFragment
+ * Promote "JEP 441: Pattern Matching for switch" as permanent language feature for Java 21.
+ *    Renamed SwitchGuard to Guard.
+ * Promote "JEP 440: Record Patterns" as permanent language feature for Java 21.
+ *    Renamed ComponentPatternList to PatternList
+ * Andreas Dangel 08/2023
+ *====================================================================
  * Support "JEP 433: Pattern Matching for switch (Fourth Preview)" for Java 20 Preview
  *    SwitchLabel simplified
  * Support "JEP 432: Record Patterns (Second Preview)" for Java 20 Preview
@@ -282,18 +313,15 @@ options {
 
 PARSER_BEGIN(JavaParserImpl)
 package net.sourceforge.pmd.lang.java.ast;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Collections;
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
-import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
-import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
-import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 
@@ -311,13 +339,7 @@ class JavaParserImpl {
   }
 
   private void throwParseException(String message) {
-    int line = -1;
-    int col = -1;
-    if (jj_lastpos != null) {
-      line = jj_lastpos.beginLine;
-      col = jj_lastpos.beginColumn;
-    }
-    throw new ParseException("Line " + line + ", Column " + col + ": " + message);
+    throw new ParseException(message).withLocation(token);
   }
 
 
@@ -393,8 +415,8 @@ class JavaParserImpl {
           JavaccToken nonToken = getToken(1);
           JavaccToken minusToken = getToken(2);
           JavaccToken sealedToken = getToken(3);
-          return nonToken.getEndColumn() == minusToken.getBeginColumn()
-            && minusToken.getEndColumn() == sealedToken.getBeginColumn();
+          return nonToken.getReportLocation().getEndColumn() == minusToken.getReportLocation().getStartColumn()
+            && minusToken.getReportLocation().getEndColumn() == sealedToken.getReportLocation().getStartColumn();
       }
       return false;
   }
@@ -571,7 +593,7 @@ class JavaParserImpl {
        prev.setLastToken(top.getLastToken());
   }
 
-  /**
+    /**
      * Keeps track during tree construction, whether we are currently building an
      * explicit constructor invocation. Then the PrimaryExpression that may prefix
      * a qualified super constructor call may not consume "super" tokens.
@@ -584,6 +606,70 @@ PARSER_END(JavaParserImpl)
 TOKEN_MGR_DECLS :
 {
     protected List<JavaComment> comments = new ArrayList<JavaComment>();
+    private Deque<Boolean> savedTemplateKind = new ArrayDeque<Boolean>();
+    private Deque<Integer> braceDepthInTemplate = new ArrayDeque<Integer>();
+    private int braceDepthCurrentTemplate;
+    private boolean templateKind;
+
+    private static final java.util.regex.Pattern TEXT_BLOCK_TEMPLATE_END_PATTERN =
+        java.util.regex.Pattern.compile("^}[^\"]*\"\"\"");
+    private static final java.util.regex.Pattern STRING_TEMPLATE_MID_OR_END_PATTERN =
+        java.util.regex.Pattern.compile("^}(?:[^\"\\\\\n\r]|\\\\(?:[ntbrfs\\\\'\"]|[0-7][0-7]?|[0-3][0-7][0-7]))*(\\{|\")");
+
+    private void pushBrace() {
+        braceDepthCurrentTemplate++;
+    }
+    private void pushTemplate(boolean isTextBlockTemplate) {
+        braceDepthInTemplate.push(braceDepthCurrentTemplate);
+        savedTemplateKind.push(templateKind);
+        templateKind = isTextBlockTemplate;
+        braceDepthCurrentTemplate = 1;
+    }
+    private boolean isInTemplate() {
+        return braceDepthCurrentTemplate > 0;
+    }
+    private void popBrace() {
+        if (!isInTemplate())
+            return;
+        if (--braceDepthCurrentTemplate == 0) {
+            // this brace ends the template
+            popTemplate();
+        }
+    }
+    private void popTemplate() {
+        boolean isInTextBlockTemplate = templateKind;
+        if (!braceDepthInTemplate.isEmpty()) {
+            braceDepthCurrentTemplate = braceDepthInTemplate.pop();
+            templateKind = savedTemplateKind.pop();
+            if (isInTextBlockTemplate) {
+                SwitchTo(JavaTokenKinds.IN_TEXT_BLOCK_LITERAL);
+            } else {
+                SwitchTo(JavaTokenKinds.IN_STRING_TEMPLATE);
+            }
+        } else {
+            SwitchTo(JavaTokenKinds.DEFAULT);
+        }
+    }
+    private net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken rereadTokenAs(int kind, int length) {
+        input_stream.backup(lengthOfMatch);
+        try {
+            for (int i = 0; i < length; i++) {
+                input_stream.readChar();
+            }
+        } catch (java.io.EOFException eofException) {
+            throw new IllegalStateException(eofException);
+        }
+        jjmatchedKind = kind;
+        return jjFillToken();
+    }
+
+    private net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken handleBlock() {
+       net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken matchedToken = rereadTokenAs(JavaTokenKinds.RBRACE, 1);
+       if (!"}".equals(input_stream.getTokenImage())) {
+        throw new IllegalStateException("Expected '}'");
+       }
+       return matchedToken;
+    }
 }
 
 /* WHITE SPACE */
@@ -607,7 +693,7 @@ SPECIAL_TOKEN :
     {
         int startOfNOPMD = matchedToken.getImage().indexOf(suppressMarker);
         if (startOfNOPMD != -1) {
-            suppressMap.put(matchedToken.getBeginLine(), matchedToken.getImage().substring(startOfNOPMD + suppressMarker.length()));
+            suppressMap.put(matchedToken.getReportLocation().getStartLine(), matchedToken.getImage().substring(startOfNOPMD + suppressMarker.length()));
         }
         comments.add(new JavaComment(matchedToken));
     }
@@ -754,7 +840,8 @@ TOKEN :
 | < #EXPONENT_TAIL: (["+","-"])? <DIGIT_SEQ>  >
 
 | < CHARACTER_LITERAL: "'"  ( ~["'", "\\","\n","\r"] | <STRING_ESCAPE> )  "'"  >
-| < STRING_LITERAL:    "\"" ( ~["\"","\\","\n","\r"] | <STRING_ESCAPE> )* "\"" >
+| < STRING_LITERAL:    "\"" (<STRING_CHARACTER>)* "\"" >
+| < #STRING_CHARACTER: ~["\"","\\","\n","\r"] | <STRING_ESCAPE> >
 | < #STRING_ESCAPE:
         "\\"
         ( ["n","t","b","r","f","s","\\","'","\""]
@@ -763,24 +850,36 @@ TOKEN :
         | ["0"-"3"] ["0"-"7"] ["0"-"7"]
         )
   >
+| < #TEXT_BLOCK_CHARACTER: ~["\\"] | <STRING_ESCAPE> | ("\\")? <LINE_TERMINATOR> >
+| < #STRING_FRAGMENT: (<STRING_CHARACTER>)* >
+| < STRING_TEMPLATE_BEGIN: "\"" <STRING_FRAGMENT> "\\{" > { pushTemplate(false); }
 }
 
 /* TEXT BLOCKS */
+// note: Text Blocks need an own lexical state, so that we can reliably determine
+// the end of the text block (""") which is 3 characters long.
 MORE :
 {
   < "\"\"\"" (<HORIZONTAL_WHITESPACE>)* <LINE_TERMINATOR> > : IN_TEXT_BLOCK_LITERAL
 }
 
 <IN_TEXT_BLOCK_LITERAL>
-TOKEN :
-{
+TOKEN : {
   <TEXT_BLOCK_LITERAL: "\"\"\"" > : DEFAULT
+| <TEXT_BLOCK_TEMPLATE_MID: "\\{"> { pushTemplate(true); }: DEFAULT
 }
 
 <IN_TEXT_BLOCK_LITERAL>
 MORE :
 {
-  < ~["\\"] | <STRING_ESCAPE> | ("\\")? <LINE_TERMINATOR> >
+  < <TEXT_BLOCK_CHARACTER> >
+}
+
+<IN_STRING_TEMPLATE>
+TOKEN:
+{
+    < STRING_TEMPLATE_END: <STRING_FRAGMENT> "\""  > : DEFAULT
+|   < STRING_TEMPLATE_MID: <STRING_FRAGMENT> "\\{" > { pushTemplate(false); } : DEFAULT
 }
 
 /* IDENTIFIERS */
@@ -920,8 +1019,8 @@ TOKEN :
 {
   < LPAREN: "(" >
 | < RPAREN: ")" >
-| < LBRACE: "{" >
-| < RBRACE: "}" >
+| < LBRACE: "{" > { pushBrace(); }
+| < RBRACE: "}" > { popBrace(); }
 | < LBRACKET: "[" >
 | < RBRACKET: "]" >
 | < SEMICOLON: ";" >
@@ -995,16 +1094,42 @@ ASTCompilationUnit CompilationUnit() :
 {
   [ LOOKAHEAD( ( Annotation() )* "package" ) PackageDeclaration() ( EmptyDeclaration() )* ]
   ( ImportDeclaration() ( EmptyDeclaration() )* )*
+
+  // ModularCompilationUnit:
   // the module decl lookahead needs to be before the type declaration branch,
   // looking for annotations + "open" | "module" will fail faster if it's *not*
   // a module (most common case)
   [ LOOKAHEAD(ModuleDeclLahead()) ModuleDeclaration() ( EmptyDeclaration() )* ]
+
+  // OrdinaryCompilationUnit: -> TopLevelClassOrInterfaceDeclaration
   ( TypeDeclaration() ( EmptyDeclaration() )* )*
+
+  // SimpleCompilationUnit:
+  [
+      ( LOOKAHEAD(3) ClassMemberDeclarationNoMethod() )*
+      ModifierList() MethodDeclaration()
+      ( ClassOrInterfaceBodyDeclaration() )*
+  ]
+
   <EOF>
   {
      jjtThis.setComments(token_source.comments);
      return jjtThis;
   }
+}
+
+// see ClassOrInterfaceBodyDeclaration()
+void ClassMemberDeclarationNoMethod() #void:
+{}
+{
+  ModifierList()
+  ( LOOKAHEAD(3) ClassOrInterfaceDeclaration()
+    | LOOKAHEAD({isKeyword("enum")}) EnumDeclaration()
+    | LOOKAHEAD({isKeyword("record")}) RecordDeclaration()
+    | LOOKAHEAD( [ TypeParameters() ] <IDENTIFIER> "(" ) ConstructorDeclaration()
+    | LOOKAHEAD( Type() <IDENTIFIER> (AnnotationList() "[" "]")* ( "," | "=" | ";" ) )  FieldDeclaration()
+    | LOOKAHEAD(2) AnnotationTypeDeclaration()
+  )
 }
 
 private void ModuleDeclLahead() #void:
@@ -1078,11 +1203,11 @@ void TypeDeclaration() #void:
   )
 }
 
-void ClassOrInterfaceDeclaration():
+void ClassOrInterfaceDeclaration() #ClassDeclaration:
 {}
 {
   ( "class" | "interface" { jjtThis.setInterface(); } )
-  <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  <IDENTIFIER> { jjtThis.setSimpleName(getToken(0).getImage()); }
   [ TypeParameters() ]
   [ ExtendsList() ]
   [ ImplementsList() ]
@@ -1105,30 +1230,18 @@ void ImplementsList():
 }
 
 void PermittedSubclasses() #PermitsList:
+{}
 {
-    Token t;
-}
-{
-    t = <IDENTIFIER> {
-        if (!"permits".equals(t.image)) {
-          throw new ParseException("ERROR: expecting permits");
-        }
-    }
+   softKeyword("permits")
     ClassOrInterfaceType()
     ( "," ClassOrInterfaceType() )*
 }
 
 void EnumDeclaration():
+{}
 {
-  JavaccToken t;
-}
-{
-  t = <IDENTIFIER> {
-    if (!"enum".equals(t.image)) {
-      throw new ParseException("ERROR: expecting enum");
-    }
-  }
-  t=<IDENTIFIER> {jjtThis.setImage(t.image);}
+  softKeyword("enum")
+  <IDENTIFIER> { jjtThis.setSimpleName(getToken(0).getImage()); }
   [ ImplementsList() ]
   EnumBody()
 }
@@ -1150,16 +1263,10 @@ void EnumConstant():
 }
 
 void RecordDeclaration():
+{}
 {
-    JavaccToken t;
-}
-{
-  t = <IDENTIFIER> {
-    if (!"record".equals(t.image)) {
-      throw new ParseException("ERROR: expecting record");
-    }
-  }
-  t=<IDENTIFIER> {jjtThis.setImage(t.image);}
+  softKeyword("record")
+  <IDENTIFIER> { jjtThis.setSimpleName(getToken(0).getImage()); }
   [ TypeParameters() ]
   RecordHeader()
   [ ImplementsList() ]
@@ -1228,10 +1335,12 @@ void TypeParameter():
    <IDENTIFIER> {setLastTokenImage(jjtThis);} [ "extends" IntersectionType() ]
 }
 
-void ClassOrInterfaceBody():
+void ClassOrInterfaceBody() #ClassBody:
 {}
 {
-  "{" ( ClassOrInterfaceBodyDeclaration() )* "}"
+  "{"
+  ( ClassOrInterfaceBodyDeclaration() )*
+  "}"
 }
 
 void ClassOrInterfaceBodyDeclaration() #void:
@@ -1263,16 +1372,16 @@ void VariableDeclarator() :
   VariableIdWithDims() [ "=" VariableInitializer() ]
 }
 
-void VariableDeclaratorId() :
+void VariableDeclaratorId() #VariableId:
 {}
 {
-  <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  <IDENTIFIER> { jjtThis.setName(getToken(0).getImage()); }
 }
 
-void VariableIdWithDims() #VariableDeclaratorId :
+void VariableIdWithDims() #VariableId :
 {}
 {
-  <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  <IDENTIFIER> { jjtThis.setName(getToken(0).getImage()); }
   [ Dims() ]
 }
 
@@ -1292,7 +1401,9 @@ void VariableInitializer() #void:
 void ArrayInitializer() :
 {}
 {
-  "{" [ VariableInitializer() ( LOOKAHEAD(2) "," VariableInitializer() )* ] [ "," ] "}"
+  "{"
+  [ VariableInitializer() ( LOOKAHEAD(2) "," VariableInitializer() )* ] [ "," ]
+  "}"
 }
 
 void MethodDeclaration() :
@@ -1300,7 +1411,7 @@ void MethodDeclaration() :
 {
   [ TypeParameters() ]
   ResultType()
-  <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  <IDENTIFIER> { jjtThis.setName(getToken(0).getImage()); }
   FormalParameters()
   [ Dims() ]
   [ ThrowsList() ]
@@ -1358,7 +1469,12 @@ private void ConstructorBlock() #Block:
 {}
 {
     "{"
-        [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
+        (
+            LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation()
+               |
+            ( LOOKAHEAD(2) BlockStatement() )*
+            [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
+        )
         ( BlockStatement() )*
     "}"
 }
@@ -1535,7 +1651,7 @@ void ClassOrInterfaceType() #void:
         // a type name, otherwise it wouldn't have compiled. So it's not ambiguous and we can
         // start fresh: "@B Map.Entry" will be unambiguously [[@B Map].Entry]
 
-        (<IDENTIFIER> {setLastTokenImage(jjtThis);} [ TypeArguments() ]) #ClassOrInterfaceType
+        (<IDENTIFIER> { jjtThis.setSimpleName(getToken(0).getImage()); } [ TypeArguments() ]) #ClassType
   |
 
 
@@ -1545,15 +1661,15 @@ void ClassOrInterfaceType() #void:
        // be sure that the last segment is a type name.
 
       AmbiguousName()
-      [ TypeArguments() #ClassOrInterfaceType(2) ]
+      [ TypeArguments() #ClassType(2) ]
       {
-        // At this point the first ClassOrInterfaceType may be on top of the stack,
+        // At this point the first ClassType may be on top of the stack,
         // but its image is not set. If it is on the stack we need to shrink the bounds
         // of the ambiguous name, or delete it.
         Node first = jjtree.peekNode();
-        if (first instanceof ASTClassOrInterfaceType) {
+        if (first instanceof ASTClassType) {
           // then we saw type arguments, so the last segment is definitely a type name
-          ASTAmbiguousName name = first.getFirstChildOfType(ASTAmbiguousName.class);
+          ASTAmbiguousName name = first.firstChild(ASTAmbiguousName.class);
           name.shrinkOrDeleteInParentSetImage();
         }
       }
@@ -1571,13 +1687,13 @@ void ClassOrInterfaceType() #void:
   { forceTypeContext(); }
 }
 
-private void ClassTypeSegment() #ClassOrInterfaceType(jjtree.nodeArity() + 1):
+private void ClassTypeSegment() #ClassType(jjtree.nodeArity() + 1):
 {}
 {
      TypeAnnotListNoInject()
      <IDENTIFIER>
      // We'll enclose the previous segment
-     { setLastTokenImage(jjtThis); }
+     { jjtThis.setSimpleName(getToken(0).getImage()); }
      [ TypeArguments() ]
 }
 
@@ -1741,14 +1857,7 @@ void Pattern() #void:
 {}
 {
     LOOKAHEAD((Annotation())* ReferenceType() "(") RecordPattern()
-    | LOOKAHEAD("(") ParenthesizedPattern()
     | TypePattern()
-}
-
-void ParenthesizedPattern() #void:
-{}
-{
-    "(" Pattern() ")" { AstImplUtil.bumpParenDepth((ASTPattern) jjtree.peekNode()); }
 }
 
 void TypePattern():
@@ -1763,16 +1872,29 @@ void RecordPattern():
   (Annotation())* ReferenceType() RecordStructurePattern()
 }
 
-void RecordStructurePattern() #ComponentPatternList:
+void RecordStructurePattern() #void:
 {}
 {
-  "(" [ RecordComponentPatternList() ] ")"
+    "(" [ ComponentPatternList() ] ")"
 }
 
-void RecordComponentPatternList() #void:
+void ComponentPatternList() #PatternList :
 {}
 {
-  Pattern() ( "," Pattern() )*
+  ComponentPattern() ( "," ComponentPattern() )*
+}
+
+void ComponentPattern() #void:
+{}
+{
+      LOOKAHEAD({isKeyword("_")}) UnnamedPattern()
+    | Pattern()
+}
+
+void UnnamedPattern():
+{}
+{
+    softKeyword("_")
 }
 
 void InstanceOfExpression() #void:
@@ -2047,6 +2169,7 @@ void PrimaryStep2() #void:
             // "super" alone is not a valid expression
             ("." MemberSelector() | MethodReference())
         | MemberSelector()
+        | {forceExprContext();} Template() #TemplateExpression(2)
     )
     // catches the case where the ambig name is the start of an array type
     | LOOKAHEAD("@" | "[" "]") {forceTypeContext();} Dims() #ArrayType(2)  (MethodReference() | "." "class" #ClassLiteral(1))
@@ -2089,7 +2212,7 @@ void MethodReference() #MethodReference(jjtree.nodeArity() + 1): // LHS is injec
 {
   "::"
   [TypeArguments()]
-  ( "new" | <IDENTIFIER> ) {setLastTokenImage(jjtThis);}
+  ( "new" | <IDENTIFIER> ) { jjtThis.setMethodName(getToken(0).getImage()); }
   {/* empty, to set the image before jjtClose */}
 }
 
@@ -2149,6 +2272,41 @@ boolean LambdaParameterType() #void :
     LOOKAHEAD( { jdkVersion >= 11 && isKeyword("var") } )
         <IDENTIFIER>    { return true; }
     | FormalParamType() { return false; }
+}
+
+void Template() :
+{}
+{
+      StringTemplate()
+    | TextBlockTemplate()
+    | <STRING_LITERAL> #TemplateFragment
+    | <TEXT_BLOCK_LITERAL> #TemplateFragment
+
+}
+
+void StringTemplate() #void :
+{}
+{
+        <STRING_TEMPLATE_BEGIN>  #TemplateFragment
+        EmbeddedExpression()
+        (LOOKAHEAD(2) (<RBRACE> <STRING_TEMPLATE_MID> ) #TemplateFragment EmbeddedExpression() )*
+        (<RBRACE> <STRING_TEMPLATE_END>)  #TemplateFragment
+}
+
+void TextBlockTemplate() #void :
+{}
+{
+
+        <TEXT_BLOCK_TEMPLATE_MID>  #TemplateFragment
+        EmbeddedExpression()
+        (LOOKAHEAD(2) ( <RBRACE> <TEXT_BLOCK_TEMPLATE_MID> ) #TemplateFragment EmbeddedExpression() )*
+        (<RBRACE> <TEXT_BLOCK_LITERAL>)  #TemplateFragment
+}
+
+void EmbeddedExpression() #void :
+{}
+{
+    [ Expression() ]
 }
 
 void Literal() #void :
@@ -2308,7 +2466,9 @@ void LabeledStatement() :
 void Block() :
 {}
 {
-    "{" ( BlockStatement() )* "}"
+    "{"
+    ( BlockStatement() )*
+    "}"
 }
 
 void BlockStatement() #void:
@@ -2361,7 +2521,7 @@ void LocalTypeDecl() #void:
     // Wrap the type decl into a statement
     // This can't be done with regular jjtree constructs, as the ModifierList
     // is adopted by the first node to be opened.
-    ASTAnyTypeDeclaration type = (ASTAnyTypeDeclaration) jjtree.popNode();
+    ASTTypeDeclaration type = (ASTTypeDeclaration) jjtree.popNode();
     ASTLocalClassStatement stmt = new ASTLocalClassStatement(type);
     jjtree.pushNode(stmt);
   }
@@ -2439,12 +2599,12 @@ void SwitchStatement():
 void SwitchBlock() #void:
 {}
 {
-    "{"
+  "{"
         (
           LOOKAHEAD(SwitchLabel() ":") (SwitchFallthroughBranch())+
         | (SwitchArrowBranch())*
         )
-    "}"
+  "}"
 }
 
 void SwitchArrowBranch():
@@ -2477,32 +2637,29 @@ void SwitchLabel() :
 void CaseLabelElement(ASTSwitchLabel label) #void:
 {}
 {
-    "default" {label.setDefault();} // only valid in java-19-preview
+    "null" #NullLiteral [ "," "default" {label.setDefault();} ]
     |
-    "null" #NullLiteral
-        [
-            // this lookahead is only required to allow parsing java-19-preview code
-            // since java-20-preview, combining null is only allowed with default
-            LOOKAHEAD(2)
-            "," "default" {label.setDefault();}
-        ]
+    LOOKAHEAD(Pattern()) CasePattern() [ LOOKAHEAD({isKeyword("when")}) Guard() ]
     |
-    LOOKAHEAD(Pattern()) Pattern() [ LOOKAHEAD({isKeyword("when")}) Guard() ]
-    |
+    CaseConstant()
+}
+
+void CaseConstant() #void:
+{}
+{
     ConditionalExpression()
 }
 
-void Guard() #SwitchGuard:
+void CasePattern() #void:
+{}
 {
-    Token t;
+    Pattern()
 }
-{
-    t = <IDENTIFIER> {
-        if (!"when".equals(t.image)) {
-            throw new ParseException("ERROR: expected 'when'");
-        }
-    }
 
+void Guard() :
+{}
+{
+    softKeyword("when")
     Expression()
 }
 
@@ -2555,8 +2712,7 @@ void ForStatement() #void:
 void EnhancedForDeclaration() #void:
 {}
 {
-      LOOKAHEAD(LocalVariableDeclaration()) LocalVariableDeclaration()
-    | RecordPattern()
+      LocalVariableDeclaration()
 }
 
 void ForInit() :
@@ -2644,8 +2800,8 @@ void Resource() :
    PrimaryExpression()
    {
     Node top = jjtree.peekNode();
-    if (!(top instanceof ASTVariableAccess || top instanceof ASTFieldAccess))
-      throwParseException("Expected a variable access, but was a " + top.getXPathNodeName());
+    if (!(top instanceof ASTVariableAccess || top instanceof ASTFieldAccess || top instanceof ASTThisExpression))
+      throwParseException("Expected a variable or field access, but was a " + top.getXPathNodeName());
    }
    {}
 }
@@ -2743,7 +2899,9 @@ void MemberValue() #void:
 void  MemberValueArrayInitializer():
 {}
 {
-  "{" (MemberValue() ( LOOKAHEAD(2) "," MemberValue() )*)? [ "," ] "}"
+  "{"
+  (MemberValue() ( LOOKAHEAD(2) "," MemberValue() )*)? [ "," ]
+  "}"
 }
 
 /*
@@ -2761,14 +2919,16 @@ void TypeAnnotation() #void:
 void AnnotationTypeDeclaration():
 {}
 {
-  "@" "interface" <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  "@" "interface" <IDENTIFIER> { jjtThis.setSimpleName(getToken(0).getImage()); }
   AnnotationTypeBody()
 }
 
 void AnnotationTypeBody():
 {}
 {
-  "{" ( AnnotationTypeMemberDeclaration() )* "}"
+  "{"
+  ( AnnotationTypeMemberDeclaration() )*
+  "}"
 }
 
 void AnnotationTypeMemberDeclaration() #void:
@@ -2794,7 +2954,7 @@ void AnnotationMethodDeclaration() #MethodDeclaration:
 {}
 {
   Type()
-  <IDENTIFIER> { setLastTokenImage(jjtThis); }
+  <IDENTIFIER> { jjtThis.setName(getToken(0).getImage()); }
   ("(" ")") #FormalParameters
   [ Dims() ]
   [ DefaultValue() ] ";"
@@ -2813,7 +2973,9 @@ void ModuleDeclaration():
   [LOOKAHEAD({isKeyword("open")}) <IDENTIFIER> {jjtThis.setOpen(true);}]
   LOOKAHEAD({isKeyword("module")}) <IDENTIFIER>
   ModuleName()
-  "{" (ModuleDirective())* "}"
+  "{"
+  (ModuleDirective())*
+  "}"
 }
 
 void ModuleDirective() #void:
@@ -2834,7 +2996,7 @@ void ModuleDirective() #void:
 void ModuleName():
 { String name; }
 {
-  name=VoidNameNoLookahead() { jjtThis.setImage(name); }
+  name=VoidNameNoLookahead() { jjtThis.setName(name); }
 }
 
 void AmbiguousName():
@@ -2890,3 +3052,10 @@ void VariableAccess(): {} { <IDENTIFIER> }
 void TypeExpression(): {} { <IDENTIFIER> }
 void PatternExpression(): {} { <IDENTIFIER> }
 void LocalClassStatement(): {} { TypeDeclaration() }
+
+void softKeyword(String name) #void: {} {
+    <IDENTIFIER> {
+        if (!getToken(0).getImageCs().contentEquals(name))
+            throwParseException("Expecting keyword '" + name + "'");
+    }
+}

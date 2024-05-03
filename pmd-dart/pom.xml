@@ -7,7 +7,7 @@
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
         <artifactId>pmd</artifactId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -31,7 +31,7 @@
                             <target>
                                 <ant antfile="${antlr4.ant.wrapper}" target="cpd-language">
                                     <property name="lang-name" value="Dart" />
-                                    <property name="lang-terse-name" value="dart" />
+                                    <property name="lang-id" value="dart" />
                                 </ant>
                             </target>
                         </configuration>

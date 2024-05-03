@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ruleset name="quickstart"
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -45,6 +45,7 @@
     <rule ref="category/java/bestpractices.xml/SimplifiableTestAssertion"/>
     <rule ref="category/java/bestpractices.xml/SwitchStmtsShouldHaveDefault"/>
     <!-- <rule ref="category/java/bestpractices.xml/SystemPrintln" /> -->
+    <!-- <rule ref="category/java/bestpractices.xml/UnnecessaryVarargsArrayCreation" /> -->
     <!-- <rule ref="category/java/bestpractices.xml/UnusedAssignment"/> -->
     <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
@@ -62,6 +63,7 @@
     <!--<rule ref="category/java/codestyle.xml/FieldNamingConventions" />-->
     <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions"/>
     <rule ref="category/java/codestyle.xml/GenericsNaming"/>
+    <rule ref="category/java/codestyle.xml/LambdaCanBeMethodReference"/>
     <!-- <rule ref="category/java/codestyle.xml/LinguisticNaming" /> -->
     <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions"/>
     <!-- <rule ref="category/java/codestyle.xml/LongVariable" /> -->
@@ -97,6 +99,7 @@
     <!-- <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal" /> -->
     <!-- <rule ref="category/java/codestyle.xml/MethodArgumentCouldBeFinal" /> -->
     <rule ref="category/java/codestyle.xml/NoPackage"/>
+    <!-- <rule ref="category/java/codestyle.xml/UseExplicitTypes"/> -->
     <!-- <rule ref="category/java/codestyle.xml/UseUnderscoresInNumericLiterals" /> -->
     <!-- <rule ref="category/java/codestyle.xml/OnlyOneReturn" /> -->
     <!-- <rule ref="category/java/codestyle.xml/PrematureDeclaration" /> -->
@@ -208,6 +211,7 @@
     <rule ref="category/java/errorprone.xml/CloneMethodReturnTypeMustMatchClassName"/>
     <!-- <rule ref="category/java/errorprone.xml/CloneThrowsCloneNotSupportedException"/> deprecated since 6.35.0 -->
     <rule ref="category/java/errorprone.xml/CloseResource"/>
+    <!-- <rule ref="category/java/errorprone.xml/ConfusingArgumentToVarargsMethod"/> -->
     <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
     <rule ref="category/java/errorprone.xml/ComparisonWithNaN"/>
     <!-- <rule ref="category/java/errorprone.xml/ConstructorCallsOverridableMethod" /> -->

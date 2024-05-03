@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd.lang.plsql;
 
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
 import net.sourceforge.pmd.lang.plsql.ast.ASTInput;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
 
 public class PlsqlParsingHelper extends BaseParsingHelper<PlsqlParsingHelper, ASTInput> {
 
@@ -13,7 +13,7 @@ public class PlsqlParsingHelper extends BaseParsingHelper<PlsqlParsingHelper, AS
     public static final PlsqlParsingHelper DEFAULT = new PlsqlParsingHelper(Params.getDefault());
 
     private PlsqlParsingHelper(Params params) {
-        super(PLSQLLanguageModule.NAME, ASTInput.class, params);
+        super(PLSQLLanguageModule.getInstance(), ASTInput.class, params);
     }
 
     @Override

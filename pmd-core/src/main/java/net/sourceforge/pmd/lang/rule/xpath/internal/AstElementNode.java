@@ -5,12 +5,11 @@
 package net.sourceforge.pmd.lang.rule.xpath.internal;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -18,16 +17,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
+import net.sourceforge.pmd.lang.rule.xpath.CommentNode;
+import net.sourceforge.pmd.lang.rule.xpath.TextNode;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 import net.sf.saxon.Configuration;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.pattern.NameTest;
+import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.tree.iter.AxisIterator;
 import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.tree.iter.LookaheadIterator;
 import net.sf.saxon.tree.iter.SingleNodeIterator;
-import net.sf.saxon.tree.util.FastStringBuffer;
 import net.sf.saxon.tree.util.Navigator;
 import net.sf.saxon.tree.wrapper.SiblingCountingNode;
 import net.sf.saxon.type.Type;
@@ -67,13 +69,10 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
     }
 
     private static int determineType(Node node) {
-        // As of PMD 6.48.0, only the experimental HTML module uses this naming
-        // convention to identify non-element nodes.
-        // TODO PMD 7: maybe generalize this to other languages
-        String name = node.getXPathNodeName();
-        if ("#text".equals(name)) {
+        // As of PMD 7, only the HTML module uses these interfaces
+        if (node instanceof TextNode) {
             return Type.TEXT;
-        } else if ("#comment".equals(name)) {
+        } else if (node instanceof CommentNode) {
             return Type.COMMENT;
         }
         return Type.ELEMENT;
@@ -146,7 +145,7 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
     }
 
     @Override
-    protected AxisIterator iterateAttributes(Predicate<? super NodeInfo> predicate) {
+    protected AxisIterator iterateAttributes(NodeTest predicate) {
         if (predicate instanceof NameTest) {
             String local = ((NameTest) predicate).getLocalPart();
             return SingleNodeIterator.makeIterator(getAttributes().get(local));
@@ -156,12 +155,12 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
     }
 
     @Override
-    protected AxisIterator iterateChildren(Predicate<? super NodeInfo> nodeTest) {
+    protected AxisIterator iterateChildren(NodeTest nodeTest) {
         return filter(nodeTest, iterateList(children));
     }
 
     @Override // this excludes self
-    protected AxisIterator iterateSiblings(Predicate<? super NodeInfo> nodeTest, boolean forwards) {
+    protected AxisIterator iterateSiblings(NodeTest nodeTest, boolean forwards) {
         if (parent == null) {
             return EmptyIterator.ofNodes();
         }
@@ -174,7 +173,7 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
     }
 
     @Override
-    public String getAttributeValue(String uri, String local) {
+    public String getAttributeValue(NamespaceUri uri, String local) {
         Attribute attribute = getLightAttributes().get(local);
         if (attribute != null) {
             getTreeInfo().getLogger().recordUsageOf(attribute);
@@ -197,8 +196,8 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
 
 
     @Override
-    public void generateId(FastStringBuffer buffer) {
-        buffer.append(Integer.toString(id));
+    public void generateId(StringBuilder buffer) {
+        buffer.append(id);
     }
 
     @Override
@@ -206,11 +205,14 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
         return wrappedNode.getXPathNodeName();
     }
 
-
     @Override
-    public CharSequence getStringValueCS() {
-        if (getNodeKind() == Type.TEXT || getNodeKind() == Type.COMMENT) {
-            return getUnderlyingNode().getImage();
+    public String getStringValue() {
+        Node node = getUnderlyingNode();
+        if (node instanceof TextNode) {
+            return ((TextNode) node).getText();
+        }
+        if (node instanceof CommentNode) {
+            return ((CommentNode) node).getData();
         }
 
         // https://www.w3.org/TR/xpath-datamodel-31/#ElementNode
@@ -220,9 +222,11 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
         // descendants, the zero-length string.
 
         // Since we represent all our Nodes as elements, there are no
-        // text nodes
-        // TODO: for some languages like html we have text nodes
-        return "";
+        // text nodes usually, except for HTML module - there we have
+        // potentially text nodes
+        return node.descendants(TextNode.class).toStream()
+                .map(TextNode::getText)
+                .collect(Collectors.joining(""));
     }
 
     @Override
@@ -234,8 +238,6 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
 
     private static class IteratorAdapter implements AxisIterator, LookaheadIterator {
 
-        @SuppressWarnings("PMD.LooseCoupling") // getProperties() below has to return EnumSet
-        private static final EnumSet<Property> PROPERTIES = EnumSet.of(Property.LOOKAHEAD);
         private final Iterator<? extends NodeInfo> it;
 
         IteratorAdapter(Iterator<? extends NodeInfo> it) {
@@ -257,10 +259,9 @@ public final class AstElementNode extends BaseNodeInfo implements SiblingCountin
             // nothing to do
         }
 
-
         @Override
-        public EnumSet<Property> getProperties() {
-            return PROPERTIES;
+        public boolean supportsHasNext() {
+            return true;
         }
     }
 }

@@ -4,27 +4,16 @@
 
 package net.sourceforge.pmd.lang.java.rule.xpath.internal;
 
-import java.util.List;
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
 
-import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
-import net.sourceforge.pmd.lang.rule.xpath.internal.AstElementNode;
-import net.sourceforge.pmd.lang.rule.xpath.internal.AstTreeInfo;
-import net.sourceforge.pmd.util.CollectionUtil;
-
-import net.sf.saxon.expr.XPathContext;
-import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.om.Sequence;
-import net.sf.saxon.value.EmptySequence;
-import net.sf.saxon.value.SequenceExtent;
-import net.sf.saxon.value.SequenceType;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 
 /**
  * The function "localUsages".
  */
 public final class GetUsagesFun extends BaseJavaXPathFunction {
 
-    private static final SequenceType[] ARGTYPES = { };
+    private static final Type[] ARGTYPES = { };
 
     public static final GetUsagesFun INSTANCE = new GetUsagesFun("localUsages");
 
@@ -33,37 +22,23 @@ public final class GetUsagesFun extends BaseJavaXPathFunction {
     }
 
     @Override
-    public SequenceType[] getArgumentTypes() {
+    public Type[] getArgumentTypes() {
         return ARGTYPES;
     }
 
     @Override
-    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-        return SequenceType.NODE_SEQUENCE;
+    public Type getResultType() {
+        return Type.ELEMENT_SEQUENCE;
     }
 
     @Override
-    public boolean dependsOnFocus() {
+    public boolean dependsOnContext() {
         return true;
     }
 
     @Override
-    public ExtensionFunctionCall makeCallExpression() {
-        return new ExtensionFunctionCall() {
-            @Override
-            public Sequence call(XPathContext context, Sequence[] arguments) {
-                Node contextNode = ((AstElementNode) context.getContextItem()).getUnderlyingNode();
-
-                if (contextNode instanceof ASTVariableDeclaratorId) {
-                    AstTreeInfo treeInfo = ((AstElementNode) context.getContextItem()).getTreeInfo();
-                    List<AstElementNode> usages = CollectionUtil.map(
-                        ((ASTVariableDeclaratorId) contextNode).getLocalUsages(),
-                        treeInfo::findWrapperFor
-                    );
-                    return new SequenceExtent(usages);
-                }
-                return EmptySequence.getInstance();
-            }
-        };
+    public FunctionCall makeCallExpression() {
+        return (contextNode, arguments)
+            -> contextNode instanceof ASTVariableId ? ((ASTVariableId) contextNode).getLocalUsages() : emptyList();
     }
 }

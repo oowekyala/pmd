@@ -6,7 +6,7 @@ require 'etc'
 
 @logger = Logger.new(STDOUT)
 
-def get_args(base_branch, autogen = TRUE, patch_config = './pmd/.ci/files/all-regression-rules.xml')
+def get_args(base_branch, autogen = true, patch_config = './pmd/.ci/files/all-regression-rules.xml')
   ['--local-git-repo', './pmd',
    '--list-of-project', './pmd/.ci/files/project-list.xml',
    '--base-branch', base_branch,
@@ -44,25 +44,23 @@ def run_pmdtester
         @base_branch = 'master'
         @logger.info "\n\n--------------------------------------"
         @logger.info "Run against #{@base_branch}"
-        @summary = PmdTester::Runner.new(get_args(@base_branch, FALSE, 'target/diff1/patch_config.xml')).run
+        @summary = PmdTester::Runner.new(get_args(@base_branch, false, 'target/diff1/patch_config.xml')).run
 
         # move the generated report out of the way
         FileUtils.mv 'target/reports/diff', 'target/diff2'
         message2 = create_message
       end
 
-      report_url = upload_report
+      tar_report
 
-      if report_url
-        message1 += "[Full report](#{report_url}/diff1/index.html)"
+      message1 += "[Download full report as build artifact](#{ENV['PMD_CI_JOB_URL']}?pr=#{ENV['PMD_CI_PULL_REQUEST_NUMBER']})"
+      # set value of sticky to true and the message is kept after new commits are submitted to the PR
+      message(message1, sticky: true)
+
+      if message2
+        message2 += "[Download full report as build artifact](#{ENV['PMD_CI_JOB_URL']}?pr=#{ENV['PMD_CI_PULL_REQUEST_NUMBER']})"
         # set value of sticky to true and the message is kept after new commits are submitted to the PR
-        message(message1, sticky: true)
-
-        if message2
-          message2 += "[Full report](#{report_url}/diff2/index.html)"
-          # set value of sticky to true and the message is kept after new commits are submitted to the PR
-          message(message2, sticky: true)
-        end
+        message(message2, sticky: true)
       end
 
     rescue StandardError => e
@@ -84,23 +82,13 @@ def create_message
   "#{@summary[:configerrors][:removed]} configuration errors.\n"
 end
 
-def upload_report
+def tar_report
   Dir.chdir('target') do
     tar_filename = "pr-#{ENV['PMD_CI_PULL_REQUEST_NUMBER']}-diff-report-#{Time.now.strftime("%Y-%m-%dT%H-%M-%SZ")}.tar.gz"
 
     `tar czf #{tar_filename} diff1/ diff2/`
     tar_size = (10 * File.size(tar_filename) / 1024 / 1024)/10.0
-    @logger.info "Uploading file #{tar_filename} (#{tar_size}mb) now..."
-    report_url = `curl -u #{ENV['PMD_CI_CHUNK_TOKEN']} -T #{tar_filename} https://chunk.io`
-    if $?.success?
-      report_url.chomp!
-      @logger.info "Successfully uploaded #{tar_filename} to #{report_url}"
-      report_url
-    else
-      @logger.error "Error while uploading #{tar_filename} to chunk.io: #{report_url}"
-      warn("Uploading the diff report failed, this message is mainly used to remind the maintainers of PMD.")
-      nil
-    end
+    @logger.info "Created file #{tar_filename} (#{tar_size}mb)"
   end
 end
 
