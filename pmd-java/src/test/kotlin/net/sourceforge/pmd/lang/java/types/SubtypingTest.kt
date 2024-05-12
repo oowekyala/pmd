@@ -13,15 +13,14 @@ import io.kotest.property.Exhaustive
 import io.kotest.property.checkAll
 import io.kotest.property.exhaustive.ints
 import io.kotest.property.forAll
-import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestCtx
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.createUnresolvedAsmSymbol
-import net.sourceforge.pmd.lang.java.types.TypeConversion.*
-import net.sourceforge.pmd.lang.java.types.TypeOps.Convertibility.*
+import net.sourceforge.pmd.lang.java.types.TypeConversion.capture
+import net.sourceforge.pmd.lang.java.types.TypeOps.Convertibility.UNCHECKED_NO_WARNING
 import net.sourceforge.pmd.lang.java.types.testdata.ComparableList
 import net.sourceforge.pmd.lang.java.types.testdata.SomeEnum
-import kotlin.test.assertTrue
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 
 /**
  * @author Clément Fournier
@@ -243,7 +242,8 @@ class SubtypingTest : FunSpec({
                 }
 
                 ts.allPrimitives.forNone {
-                    assertTrue(ts.NULL_TYPE.isSubtypeOf(it))
+
+                    ts.NULL_TYPE.isSubtypeOf(it) shouldBe true
                 }
             }
 

@@ -21,7 +21,6 @@ import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import org.hamcrest.Description
 import java.util.stream.Collectors
 import kotlin.String
-import kotlin.test.assertTrue
 
 /*
     Note: in parser tests, you can get a log for the inference by calling
@@ -170,8 +169,8 @@ fun JClassType.parameterize(m1: JTypeMirror, vararg mirror: JTypeMirror): JClass
 
 fun assertSubtype(t: JTypeMirror, s: JTypeMirror, capture: Boolean = true, passes: Convertibility.() -> Boolean) {
     val res = if (capture) TypeOps.isConvertiblePure(t, s) else TypeOps.isConvertibleNoCapture(t, s)
-    assertTrue("$t \n\t\t<: $s") {
-        res.passes()
+    withClue("$t \n\t\t<: $s") {
+        res.passes() shouldBe true
     }
 }
 

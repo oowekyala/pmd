@@ -20,11 +20,10 @@ import javasymbols.testdata.deep.AClassWithLocals
 import javasymbols.testdata.deep.`Another$ClassWith$Dollar`
 import javasymbols.testdata.deep.OuterWithoutDollar
 import javasymbols.testdata.impls.GenericClass
+import net.sourceforge.pmd.lang.java.types.testTypeSystem
 import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import net.sourceforge.pmd.lang.test.ast.shouldBe
-import net.sourceforge.pmd.lang.java.types.testTypeSystem
 import org.objectweb.asm.Opcodes
-import kotlin.test.assertSame
 
 /**
  * @author Clément Fournier
@@ -207,7 +206,7 @@ class AsmLoaderTest : IntelliMarker, FunSpec({
         val inner = symLoader.resolveClassFromCanonicalName("$outerName.ProtectedStatic")!!
         val second = symLoader.resolveClassFromBinaryName("$outerName\$ProtectedStatic")!!
 
-        assertSame(inner, second)
+        inner shouldBeSameInstanceAs second
     }
 
     test("Unresolved class should have object as superclass") {
@@ -216,7 +215,7 @@ class AsmLoaderTest : IntelliMarker, FunSpec({
         val inner = symLoader.resolveFromInternalNameCannotFail("does/not/exist")!!
         val second = symLoader.resolveFromInternalNameCannotFail("does/not/exist")!!
 
-        assertSame(inner, second)
+        inner shouldBeSameInstanceAs second
 
         inner.superclass shouldBe ts.OBJECT.symbol
     }

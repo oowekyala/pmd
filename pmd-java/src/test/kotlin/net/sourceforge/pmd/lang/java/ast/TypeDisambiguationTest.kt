@@ -4,8 +4,10 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
@@ -13,8 +15,6 @@ import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors.*
 import net.sourceforge.pmd.lang.java.types.JClassType
 import net.sourceforge.pmd.lang.test.ast.*
 import net.sourceforge.pmd.lang.test.ast.shouldBe
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class TypeDisambiguationTest : ParserTestSpec({
 
@@ -207,13 +207,17 @@ class TypeDisambiguationTest : ParserTestSpec({
         fun assertErrored(t: ASTClassType, expected: Int, actual: Int) {
             val errs = logger.warnings[MALFORMED_GENERIC_TYPE]?.filter { it.first == t }
                     ?: emptyList()
-            assertEquals(errs.size, 1, "`${t.text}` should have produced a single error")
+            withClue("`${t.text}` should have produced a single error") {
+                errs.size shouldBe 1
+            }
             errs.single().second.toList() shouldBe listOf(expected, actual)
         }
 
         fun assertNoError(t: ASTClassType) {
             val err = logger.warnings[MALFORMED_GENERIC_TYPE]?.firstOrNull { it.first == t }
-            assertNull(err, "`${t.text}` should not have produced an error")
+            withClue("`${t.text}` should not have produced an error") {
+                err.shouldBeNull()
+            }
         }
 
         assertNoError(m0)
@@ -289,13 +293,17 @@ class TypeDisambiguationTest : ParserTestSpec({
         fun assertErrored(t: ASTClassType) {
             val errs = logger.warnings[EXPECTED_ANNOTATION_TYPE]?.filter { it.first == t }
                     ?: emptyList()
-            assertEquals(errs.size, 1, "`${t.text}` should have produced a single error")
+            withClue("`${t.text}` should have produced a single error") {
+                errs.size shouldBe 1
+            }
             errs.single().second.toList() shouldBe emptyList()
         }
 
         fun assertNoError(t: ASTClassType) {
             val err = logger.warnings[MALFORMED_GENERIC_TYPE]?.firstOrNull { it.first == t }
-            assertNull(err, "`${t.text}` should not have produced an error")
+            withClue("`${t.text}` should not have produced an error") {
+                err.shouldBeNull()
+            }
         }
 
         assertNoError(aUnresolved)

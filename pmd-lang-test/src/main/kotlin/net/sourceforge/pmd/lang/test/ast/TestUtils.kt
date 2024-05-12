@@ -5,29 +5,28 @@
 package net.sourceforge.pmd.lang.test.ast
 
 import io.kotest.assertions.withClue
-import io.kotest.matchers.Matcher
 import io.kotest.matchers.equalityMatcher
 import io.kotest.matchers.should
-import net.sourceforge.pmd.reporting.Report
-import net.sourceforge.pmd.reporting.RuleViolation
+import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.document.Chars
+import net.sourceforge.pmd.reporting.Report
+import net.sourceforge.pmd.reporting.RuleViolation
 import java.util.*
 import kotlin.reflect.KCallable
 import kotlin.reflect.jvm.isAccessible
-import kotlin.test.assertEquals
 
 /**
  * Extension to add the name of a property to error messages.
  *
  * @see [shouldBe].
  */
-infix fun <N, V : N> KCallable<N>.shouldEqual(expected: V?) =
+infix fun <N, V> KCallable<N>.shouldEqual(expected: V) =
         assertWrapper(this, expected) { n, v ->
             // using shouldBe would perform numeric conversion
             // eg (3.0 shouldBe 3L) passes, even though (3.0 != 3L)
             // equalityMatcher doesn't do this conversion
-            n.should(equalityMatcher(v) as Matcher<N>)
+            n.should(equalityMatcher(v))
         }
 
 private fun <N, V> assertWrapper(callable: KCallable<N>, expected: V, asserter: (N, V) -> Unit) {
@@ -64,7 +63,7 @@ private fun <N, V> assertWrapper(callable: KCallable<N>, expected: V, asserter: 
  * If this conflicts with [io.kotest.matchers.shouldBe], use the equivalent [shouldEqual]
  *
  */
-infix fun <N, V : N> KCallable<N>.shouldBe(expected: V?) = this.shouldEqual(expected)
+infix fun <N> KCallable<N>.shouldBe(expected: N) = this.shouldEqual(expected)
 
 infix fun <T> KCallable<T>.shouldMatch(expected: T.() -> Unit) = assertWrapper(this, expected) { n, v -> n should v }
 
@@ -86,13 +85,17 @@ operator fun <T> List<T>.component11() = get(10)
 
 /** Assert number of violations. */
 fun assertSize(report: Report, size: Int): List<RuleViolation> {
-    assertEquals(size, report.violations.size, message = "Wrong number of violations!")
+    withClue("Wrong number of violations!") {
+        report.violations.size shouldBe size
+    }
     return report.violations
 }
 
 /** Assert number of suppressed violations. */
 fun assertSuppressed(report: Report, size: Int): List<Report.SuppressedViolation> {
-    assertEquals(size, report.suppressedViolations.size, message = "Wrong number of suppressed violations!")
+    withClue("Wrong number of suppressed violations!") {
+        report.suppressedViolations.size shouldBe size
+    }
     return report.suppressedViolations
 }
 
@@ -117,5 +120,5 @@ fun Node.assertPosition(bline: Int, bcol: Int, eline: Int, ecol: Int) {
 fun Chars.shouldEqual(charSeq:CharSequence) {
     // note there is also Chars.contentEquals
     // but the following gives a better error message
-    assertEquals(toString(), charSeq.toString())
+    toString() shouldBe charSeq.toString()
 }

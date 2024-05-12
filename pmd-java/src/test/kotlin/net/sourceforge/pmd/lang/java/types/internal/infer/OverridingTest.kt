@@ -6,12 +6,13 @@
 
 package net.sourceforge.pmd.lang.java.types.internal.infer
 
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.java.ast.*
+import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 import net.sourceforge.pmd.lang.java.types.*
 import net.sourceforge.pmd.util.OptionalBool
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  */
@@ -130,8 +131,8 @@ class Scratch {
         val (scratchM, otherM) = acu.methodDeclarations().toList { it.genericSignature }
 
 
-        assertFalse("Methods are not override-equivalent") {
-            TypeOps.areOverrideEquivalent(scratchM, otherM)
+        withClue("Methods are not override-equivalent") {
+            TypeOps.areOverrideEquivalent(scratchM, otherM).shouldBeFalse()
         }
     }
 
@@ -150,8 +151,8 @@ class Scratch {
         val (scratchM, otherM) = acu.methodDeclarations().toList { it.genericSignature }
 
 
-        assertFalse("Methods are not override-equivalent") {
-            TypeOps.areOverrideEquivalent(scratchM, otherM)
+        withClue("Methods are not override-equivalent") {
+            TypeOps.areOverrideEquivalent(scratchM, otherM).shouldBeFalse()
         }
     }
 
@@ -178,8 +179,8 @@ class F<G> {
         val (supE, subE) = acu.declaredMethodSignatures()
 
 
-        assertTrue("Methods are override-equivalent") {
-            TypeOps.areOverrideEquivalent(supE, subE)
+        withClue("Methods are override-equivalent") {
+            TypeOps.areOverrideEquivalent(supE, subE).shouldBeTrue()
         }
     }
 
@@ -212,8 +213,8 @@ class F<G> {
         // their type parameters have a different bound
         // technically this is a compile-time error:
         // both methods have the same erasure but neither hides the other
-        assertFalse("Methods should not override each other\n\t$subE\n\t$supE") {
-            TypeOps.overrides(subE, supE, subE.declaringType)
+        withClue("Methods should not override each other\n\t$subE\n\t$supE") {
+            TypeOps.overrides(subE, supE, subE.declaringType).shouldBeFalse()
         }
 
         spy.shouldBeAmbiguous(acu.firstMethodCall())
@@ -250,8 +251,8 @@ class F<G> implements List<F<G>> {
 
 
         // their type parameters have a different bound
-        assertFalse("Methods should not be override-equivalent") {
-            TypeOps.overrides(subE, supE, subE.declaringType)
+        withClue("Methods should not be override-equivalent") {
+            TypeOps.overrides(subE, supE, subE.declaringType).shouldBeFalse()
         }
 
         spy.shouldBeOk {
@@ -288,8 +289,8 @@ class F<G> implements List<F<G>> {
 
 
         // their type parameters have a different bound
-        assertFalse("Methods should not be override-equivalent") {
-            TypeOps.overrides(subE, supE, subE.declaringType)
+        withClue("Methods should not be override-equivalent") {
+            TypeOps.overrides(subE, supE, subE.declaringType).shouldBeFalse()
         }
 
         spy.shouldBeOk {

@@ -4,10 +4,11 @@
 
 package net.sourceforge.pmd.lang.test
 
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.document.FileId
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.test.assertEquals
 
 
 /**
@@ -56,7 +57,9 @@ abstract class BaseTextComparisonTest {
 
         val expected = expectedFile.readText()
 
-        assertEquals(expected.normalize(), actual.normalize(), "File comparison failed, see the reference: $expectedFile")
+        withClue("File comparison failed, see the reference: $expectedFile") {
+            actual.normalize() shouldBe expected.normalize()
+        }
     }
 
     protected fun sourceText(fileBaseName: String): FileData {

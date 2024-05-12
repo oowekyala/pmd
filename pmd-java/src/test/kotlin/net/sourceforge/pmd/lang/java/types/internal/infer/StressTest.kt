@@ -6,20 +6,20 @@
 package net.sourceforge.pmd.lang.java.types.internal.infer
 
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.test.ast.NodeSpec
-import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.types.JClassType
 import net.sourceforge.pmd.lang.java.types.shouldHaveType
 import net.sourceforge.pmd.lang.java.types.testdata.BoolLogic
 import net.sourceforge.pmd.lang.java.types.testdata.TypeInferenceTestCases
 import net.sourceforge.pmd.lang.java.types.typeDsl
+import net.sourceforge.pmd.lang.test.ast.NodeSpec
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import java.util.*
 import kotlin.system.measureTimeMillis
-import kotlin.test.assertFalse
 
 /**
  * Expensive test cases for the overload resolution phase.
@@ -237,8 +237,8 @@ class StressTest : ProcessorTestSpec({
                 .map { it.initializer!! }
                 .forEachIndexed { i, expr ->
                     val t = measureTimeMillis { // todo these measurements are not accurate because typeres is done strictly now
-                        assertFalse {
-                            expr.typeMirror == expr.typeSystem.UNKNOWN
+                        withClue(expr) {
+                            expr.typeMirror shouldNotBe expr.typeSystem.UNKNOWN
                         }
                     }
                     myLog("asList$i: $t ms")

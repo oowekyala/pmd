@@ -18,7 +18,6 @@ import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.test.ast.shouldMatchN
 import java.util.function.DoubleConsumer
 import java.util.function.Supplier
-import kotlin.test.assertEquals
 
 @Suppress("UNUSED_VARIABLE")
 class LambdaInferenceTest : ProcessorTestSpec({
@@ -479,8 +478,12 @@ class Scratch {
 
         fun ExprMirror.LambdaExprMirror.shouldBeCompat(void: Boolean = false, value: Boolean = false) {
             withClue(this) {
-                assertEquals(void, this.isVoidCompatible, "void compatible")
-                assertEquals(value, this.isValueCompatible, "value compatible")
+                withClue("void compatible") {
+                    void shouldBe this.isVoidCompatible
+                }
+                withClue("value compatible") {
+                    value shouldBe this.isValueCompatible
+                }
             }
         }
 
