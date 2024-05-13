@@ -92,10 +92,11 @@
 
 
         <kotlin.compiler.jvmTarget>${maven.compiler.test.target}</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.7.20</kotlin.version>
-        <kotest.version>5.5.5</kotest.version>
+        <kotlin.version>1.9.22</kotlin.version>
+        <kotest.version>5.6.2</kotest.version>
         <junit5.version>5.8.2</junit5.version> <!-- needed by kotest -->
-        <dokka.version>1.7.20</dokka.version>
+        <junit.platform.version>1.8.2</junit.platform.version>
+        <dokka.version>1.9.20</dokka.version>
 
         <javacc.version>5.0</javacc.version>
         <surefire.version>3.2.5</surefire.version>
@@ -336,6 +337,7 @@
                         <runOrder>alphabetical</runOrder>
                         <systemPropertyVariables>
                             <mvn.project.src.test.resources>${project.build.testResources[0].directory}</mvn.project.src.test.resources>
+<!--                            <kotest.framework.classpath.scanning.autoscan.disable>true</kotest.framework.classpath.scanning.autoscan.disable>-->
                         </systemPropertyVariables>
                         <statelessTestsetInfoReporter implementation="net.sourceforge.pmd.buildtools.surefire.PMDStatelessTestSetInfoConsoleReporter">
                             <showFailedTests>true</showFailedTests>
@@ -953,7 +955,19 @@
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-suite</artifactId>
-                <version>1.10.2</version>
+                <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-engine</artifactId>
+                <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${junit.platform.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -1088,7 +1102,7 @@
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-commons</artifactId>
-                <version>1.8.2</version>
+                <version>${junit.platform.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
