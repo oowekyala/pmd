@@ -23,6 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 
+import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.java.ast.ASTArrayAllocation;
@@ -116,6 +117,7 @@ public final class DataflowPass {
 
     private static final SimpleDataKey<DataflowResult> DATAFLOW_RESULT_K = DataMap.simpleDataKey("java.dataflow.global");
     private static final SimpleDataKey<ReachingDefinitionSet> REACHING_DEFS = DataMap.simpleDataKey("java.dataflow.reaching.backwards");
+    private static final SimpleDataKey<SpanInfo> LOOP_INIT_INFO = DataMap.simpleDataKey("java.dataflow.reaching.loop.start");
     private static final SimpleDataKey<AssignmentEntry> VAR_DEFINITION = DataMap.simpleDataKey("java.dataflow.field.def");
     private static final SimpleDataKey<OptionalBool> SWITCH_BRANCH_FALLS_THROUGH = DataMap.simpleDataKey("java.dataflow.switch.fallthrough");
     
@@ -271,6 +273,16 @@ public final class DataflowPass {
                 return Objects.requireNonNull(b.getUserMap().get(SWITCH_BRANCH_FALLS_THROUGH));
             }
             return OptionalBool.NO;
+        }
+
+        @Experimental
+        public ReachingDefinitionSet getReachingDefinitionsAtStartOfLoop(ASTForStatement loop, JVariableSymbol sym) {
+            SpanInfo spanInfo = loop.getUserMap().get(LOOP_INIT_INFO);
+            VarLocalInfo varInfo = spanInfo.symtable.get(sym);
+            if (varInfo == null) {
+                return ReachingDefinitionSet.unknown();
+            }
+            return new ReachingDefinitionSet(new LinkedHashSet<>(varInfo.reachingDefs));
         }
 
 
@@ -736,6 +748,12 @@ public final class DataflowPass {
             }
 
 
+            // Record the definitions reaching the start of the loop
+            if (loop instanceof ASTForStatement) {
+                loop.getUserMap().set(LOOP_INIT_INFO, before.forkCapturingNonLocal());
+            }
+
+            // First iteration.
             // make the defs of the body reach the other parts of the loop,
             // including itself
             SpanInfo iter = acceptOpt(body, before.fork());

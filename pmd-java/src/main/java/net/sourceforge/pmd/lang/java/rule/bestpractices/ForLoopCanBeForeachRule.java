@@ -34,6 +34,10 @@ import net.sourceforge.pmd.lang.java.ast.AssignmentOp;
 import net.sourceforge.pmd.lang.java.ast.BinaryOp;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.InvocationMatcher;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
@@ -212,7 +216,8 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return arrayDeclaration.getTypeMirror().isArray()
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable));
+            && occurrencesMatch(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable))
+            && hasValueZeroBeforeLoop(loop, index);
 
     }
 
@@ -223,7 +228,24 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return TypeTestUtil.isA(List.class, listDeclaration.getTypeMirror())
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable));
+            && occurrencesMatch(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable))
+            && hasValueZeroBeforeLoop(loop, index);
+    }
+
+    private boolean hasValueZeroBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+        DataflowResult dataflow = DataflowPass.getDataflowResult(loop.getRoot());
+        ReachingDefinitionSet reaching = dataflow.getReachingDefinitionsAtStartOfLoop(loop, index.getSymbol());
+        if (reaching.isNotFullyKnown() || reaching.getReaching().isEmpty()) {
+            return false;
+        }
+
+        for (AssignmentEntry assignment : reaching.getReaching()) {
+            ASTExpression rhs = assignment.getRhsAsExpression();
+            if (!JavaAstUtils.isLiteralInt(rhs, 0)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isArrayAccessIndex(ASTNamedReferenceExpr usage, ASTNamedReferenceExpr arrayVar) {
