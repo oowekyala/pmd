@@ -1422,8 +1422,10 @@ public final class DataflowPass {
                     reachingDefSink.getUserMap().compute(REACHING_DEFS, current -> {
                         if (current != null) {
                             current.absorb(reaching);
+                            current.getReaching().forEach(it -> it.addUse(reachingDefSink));
                             return current;
                         } else {
+                            reaching.getReaching().forEach(it -> it.addUse(reachingDefSink));
                             return reaching;
                         }
                     });
@@ -1798,6 +1800,17 @@ public final class DataflowPass {
         @Override
         public int hashCode() {
             return 31 * var.hashCode() + rhs.hashCode();
+        }
+
+        private final Set<ASTNamedReferenceExpr> usages = new LinkedHashSet<>(1);
+
+        void addUse(ASTNamedReferenceExpr useExpr) {
+            usages.add(useExpr);
+        }
+
+        @Experimental
+        public Set<ASTNamedReferenceExpr> getUsages() {
+            return usages;
         }
     }
 

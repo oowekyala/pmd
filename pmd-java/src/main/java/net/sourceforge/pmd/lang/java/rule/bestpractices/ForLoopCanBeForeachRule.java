@@ -216,8 +216,7 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return arrayDeclaration.getTypeMirror().isArray()
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable))
-            && hasValueZeroBeforeLoop(loop, index);
+            && isDataflowOk(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable));
 
     }
 
@@ -228,16 +227,37 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return TypeTestUtil.isA(List.class, listDeclaration.getTypeMirror())
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable))
-            && hasValueZeroBeforeLoop(loop, index);
+            && isDataflowOk(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable));
     }
 
-    private boolean hasValueZeroBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+    private boolean isDataflowOk(ASTForStatement loop, ASTVariableId index, ASTNamedReferenceExpr collection, OccurrenceMatcher getMatcher) {
         DataflowResult dataflow = DataflowPass.getDataflowResult(loop.getRoot());
         ReachingDefinitionSet reaching = dataflow.getReachingDefinitionsAtStartOfLoop(loop, index.getSymbol());
         if (reaching.isNotFullyKnown() || reaching.getReaching().isEmpty()) {
             return false;
         }
+
+        if (!hasValueZero(reaching)) {
+            return false;
+        }
+
+        for (AssignmentEntry def : reaching.getReaching()) {
+            for (ASTNamedReferenceExpr usage : def.getUsages()) {
+                ASTExpression toplevel = JavaAstUtils.getTopLevelExpr(usage);
+                boolean isInUpdateOrCond =
+                    loop.getUpdate() == toplevel.getParent()
+                        || loop.getCondition() == toplevel;
+
+                if (!isInUpdateOrCond && !getMatcher.matches(index, collection, usage)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    private boolean hasValueZero(ReachingDefinitionSet reaching) {
 
         for (AssignmentEntry assignment : reaching.getReaching()) {
             ASTExpression rhs = assignment.getRhsAsExpression();
@@ -270,23 +290,6 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
         boolean matches(ASTVariableId index, ASTNamedReferenceExpr iterable, ASTNamedReferenceExpr indexOcc1);
     }
 
-    private boolean occurrencesMatch(ASTForStatement loop,
-                                     ASTVariableId index,
-                                     ASTNamedReferenceExpr collection,
-                                     OccurrenceMatcher getMatcher) {
-
-        for (ASTNamedReferenceExpr usage : index.getLocalUsages()) {
-            ASTExpression toplevel = JavaAstUtils.getTopLevelExpr(usage);
-            boolean isInUpdateOrCond =
-                loop.getUpdate() == toplevel.getParent()
-                    || loop.getCondition() == toplevel;
-
-            if (!isInUpdateOrCond && !getMatcher.matches(index, collection, usage)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     private static boolean isReplaceableIteratorLoop(ASTVariableId var, ASTForStatement stmt) {
         List<ASTNamedReferenceExpr> usages = var.getLocalUsages();
