@@ -168,6 +168,11 @@ public class MyClass {
             builder.append(' ');
             builder.append(filters.get(i));
         }
+        int i = 1;
+        for (; i < filters.size(); i++) {
+            builder.append(' ');
+            builder.append(filters.get(i));
+        }
     }
 }
         ]]></code>
@@ -447,6 +452,82 @@ public class Test {
 
                     for (int i = 0; i < list.size(); i += 3) { // Ok
                         System.out.println(list.get(i));
+                    }
+                }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>#4094 use dataflow to get initial value of iterator</description>
+        <expected-problems>5</expected-problems>
+        <code><![CDATA[
+            import java.util.*;
+
+            public class Test {
+                void loop1(List<String> l, boolean tag) {
+                    int i = 0;
+                    if (tag) {
+                        for (; i < l.size(); i++) {
+                            System.out.println(l.get(i));
+                        }
+                    } else {
+                        for (; i < l.size(); i++) {
+                            System.out.println(l.get(i));
+                        }
+                    }
+                }
+                void loop2(List<String> l, boolean tag) {
+                    int i = 0;
+                    if (tag) {
+                        for (; i < l.size(); i++) {
+                            System.out.println(l.get(i));
+                        }
+                    } else {
+                    }
+                }
+                void loop3(List<String> l) {
+                    int i = 0;
+                    for (; i < l.size(); i++) {
+                        System.out.println(l.get(i));
+                    }
+                    i = 0;
+                    for (; i < l.size(); i++) {
+                        System.out.println(l.get(i));
+                    }
+                }
+
+                 void loop4(List<String> l) {
+                    int i = 4;
+                    if (foo()) {
+                        doSomething(i);
+                    }
+                    i = 0;
+                    for (; i < l.size(); i++) {
+                        System.out.println(l.get(i));
+                    }
+                    i = 0;
+                    for (; i < l.size(); i++) {
+                        System.out.println(l.get(i));
+                    }
+                }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>#4094 use dataflow to get initial value of iterator, neg</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            import java.util.*;
+
+            public class Test {
+                 void loop4(List<String> l) {
+                    int i = 0;
+                    if (foo()) {
+                        i = 4;
+                    }
+                    // i could be 0 or 4, no warning
+                    for (; i < l.size(); i++) {
+                        System.out.println(l.get(i));
                     }
                 }
             }

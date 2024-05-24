@@ -19,6 +19,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.AccessType;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTBodyDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
@@ -34,6 +35,10 @@ import net.sourceforge.pmd.lang.java.ast.AssignmentOp;
 import net.sourceforge.pmd.lang.java.ast.BinaryOp;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.InvocationMatcher;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
@@ -212,7 +217,8 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return arrayDeclaration.getTypeMirror().isArray()
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable));
+            && occurrencesMatch(loop, index, arrayDeclaration, (i, iterable, expr) -> isArrayAccessIndex(expr, iterable))
+            && hasValueZeroBeforeLoop(loop, index);
 
     }
 
@@ -223,7 +229,24 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         return TypeTestUtil.isA(List.class, listDeclaration.getTypeMirror())
             && isSimpleIncrementUpdate(loop.getUpdate(), index)
-            && occurrencesMatch(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable));
+            && occurrencesMatch(loop, index, listDeclaration, (i, iterable, expr) -> isListGetIndex(expr, iterable))
+            && hasValueZeroBeforeLoop(loop, index);
+    }
+
+    private boolean hasValueZeroBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+        DataflowResult dataflow = DataflowPass.getDataflowResult(loop.getRoot());
+        ReachingDefinitionSet reaching = dataflow.getReachingDefinitionsAtStartOfLoop(loop, index.getSymbol());
+        if (reaching.isNotFullyKnown() || reaching.getReaching().isEmpty()) {
+            return false;
+        }
+
+        for (AssignmentEntry assignment : reaching.getReaching()) {
+            ASTExpression rhs = assignment.getRhsAsExpression();
+            if (!JavaAstUtils.isLiteralInt(rhs, 0)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isArrayAccessIndex(ASTNamedReferenceExpr usage, ASTNamedReferenceExpr arrayVar) {
@@ -254,6 +277,14 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
                                      OccurrenceMatcher getMatcher) {
 
         for (ASTNamedReferenceExpr usage : index.getLocalUsages()) {
+            if (!isWithinLoop(loop, usage)) {
+                // If the usage is not within this loop, it doesn't count.
+                // If the index is used after the loop, then it can be set
+                // to the collection size after the foreach.
+                // If it is used in parallel control-flow branches, this
+                // does not matter.
+                continue;
+            }
             ASTExpression toplevel = JavaAstUtils.getTopLevelExpr(usage);
             boolean isInUpdateOrCond =
                 loop.getUpdate() == toplevel.getParent()
@@ -264,6 +295,12 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
             }
         }
         return true;
+    }
+
+    private static boolean isWithinLoop(ASTForStatement loop, ASTNamedReferenceExpr usage) {
+        return usage.ancestors()
+                    .takeWhile(it -> !(it instanceof ASTBodyDeclaration))
+                    .any(it -> loop == it);
     }
 
     private static boolean isReplaceableIteratorLoop(ASTVariableId var, ASTForStatement stmt) {
