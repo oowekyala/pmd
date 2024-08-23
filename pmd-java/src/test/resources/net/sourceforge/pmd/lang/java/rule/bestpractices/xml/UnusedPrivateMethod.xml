@@ -2074,4 +2074,21 @@ class FooTest{
             }
             ]]></code>
     </test-code>
+    <test-code>
+        <description>Issue 5097</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            import java.util.List;
+
+            public class UnusedPrivateMethodFalsePositive {
+                private void doWork(List obj) {
+                    obj.toString();
+                }
+
+                public void execute(Set<List<?>> listOfLists) {
+                    listOfLists.forEach(this::doWork);
+                }
+            }
+            ]]></code>
+    </test-code>
 </test-data>
