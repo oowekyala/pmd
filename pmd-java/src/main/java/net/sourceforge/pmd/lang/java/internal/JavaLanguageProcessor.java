@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.java.internal;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +22,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.NodeStream;
@@ -162,20 +160,20 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             binaryNamesToSymbols.put(incompleteSymbol.getBinaryName(), incompleteSymbol);
         }
     }
-
-    @Override
-    public @NonNull AutoCloseable launchAnalysis(@NonNull AnalysisTask task) {
-        // The given analysis task has all files to analyse, not only the ones for this language.
-        List<TextFile> files = new ArrayList<>(task.getFiles());
-        files.removeIf(it -> !it.getLanguageVersion().getLanguage().equals(getLanguage()));
-        AnalysisTask newTask = InternalApiBridge.taskWithFiles(task, files);
-
-        task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
-
-        SourceSymbolResolver collector = new SourceSymbolResolver(newTask);
-        collector.collectSources();
-        return () -> {};
-    }
+//
+//    @Override
+//    public @NonNull AutoCloseable launchAnalysis(@NonNull AnalysisTask task) {
+//        // The given analysis task has all files to analyse, not only the ones for this language.
+//        List<TextFile> files = new ArrayList<>(task.getFiles());
+//        files.removeIf(it -> !it.getLanguageVersion().getLanguage().equals(getLanguage()));
+//        AnalysisTask newTask = InternalApiBridge.taskWithFiles(task, files);
+//
+//        task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
+//
+//        SourceSymbolResolver collector = new SourceSymbolResolver(newTask);
+//        collector.collectSources();
+//        return () -> {};
+//    }
 
     @Override
     public @NonNull LanguageVersionHandler services() {
