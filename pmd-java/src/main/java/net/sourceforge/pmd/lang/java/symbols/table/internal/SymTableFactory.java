@@ -36,7 +36,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeParameter;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeParameters;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
-import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
@@ -48,7 +47,6 @@ import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
-import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainBuilder;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainNode;
@@ -102,10 +100,6 @@ class SymTableFactory {
 
     // <editor-fold defaultstate="collapsed" desc="Utilities for classloading">
 
-
-    public void disambig(NodeStream<? extends JavaNode> nodes, ReferenceCtx context) {
-        InternalApiBridge.disambigWithCtx(nodes, context);
-    }
 
     SemanticErrorReporter getLogger() {
         return processor.getLogger();
@@ -189,9 +183,7 @@ class SymTableFactory {
 
                 JClassSymbol sym = loadClassOrFail(containerName);
                 if (sym == null) {
-                    vars = CoreResolvers.emptyResolver();
-                    types = CoreResolvers.emptyResolver();
-                    return;
+                    continue;
                 }
                 JClassType containerType = (JClassType) sym.getTypeSystem().typeOf(sym, false);
 
@@ -228,7 +220,7 @@ class SymTableFactory {
 
         ShadowChainNode<JTypeMirror, ScopeInfo> types = TYPES.shadow(typeNode(parent), IMPORT_ON_DEMAND, name -> statics.getTypes().resolveHere(name));
         if (!packageAndTypesImportsOD.isEmpty()) {
-            types = TYPES.shadowWithCache(types, IMPORT_ON_DEMAND, new HashMap<>(), JavaResolvers.importedOnDemand(packageAndTypesImportsOD, processor.getSymResolver(), thisPackage));
+            types = TYPES.shadowWithCache(types, IMPORT_ON_DEMAND, new HashMap<>(), JavaResolvers.importedOnDemand(packageAndTypesImportsOD, processor, thisPackage));
         }
         return buildTable(
             parent,
@@ -256,7 +248,7 @@ class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.MODULE_IMPORT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(lazyImportedModules, processor.getSymResolver(), thisPackage)
+                JavaResolvers.moduleImport(lazyImportedModules, processor, thisPackage)
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -383,7 +375,7 @@ class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.SIMPLE_COMPILATION_UNIT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor.getSymResolver(), thisPackage)
+                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor, thisPackage)
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -411,7 +403,7 @@ class SymTableFactory {
 
         return SymbolTableImpl.withTypes(
             parent,
-            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor.getSymResolver(), packageName))
+            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor, packageName))
         );
     }
 

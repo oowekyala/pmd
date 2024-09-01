@@ -10,7 +10,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.benchmark.TimeTracker;
-import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
@@ -120,27 +119,10 @@ public final class JavaAstProcessor {
      * Performs semantic analysis on the given source file.
      */
     public void process() {
-
-        SymbolResolver knownSyms = TimeTracker.bench("Symbol resolution", () -> SymbolResolutionPass.traverse(this, acu));
-
-        // Now symbols are on the relevant nodes
-        this.symResolver = SymbolResolver.layer(knownSyms, this.symResolver);
-
-        // this needs to be initialized before the symbol table resolution
-        // as scopes depend on type resolution in some cases.
-        InternalApiBridge.initTypeResolver(acu, this, typeInferenceLogger);
-
-        TimeTracker.bench("Symbol table resolution", () -> SymbolTableResolver.traverse(this, acu));
-        TimeTracker.bench("AST disambiguation", () -> InternalApiBridge.disambigWithCtx(NodeStream.of(acu), ReferenceCtx.root(this, acu)));
-        if (globalProc.getProperties().getProperty(JavaLanguageProperties.INTERNAL_DO_STRICT_TYPERES)) {
-            TimeTracker.bench("Force type resolution", () -> InternalApiBridge.forceTypeResolutionPhase(this, acu));
-        }
-        TimeTracker.bench("Comment assignment", () -> InternalApiBridge.assignComments(acu));
-        TimeTracker.bench("Usage resolution", () -> InternalApiBridge.usageResolution(this, acu));
-        TimeTracker.bench("Override resolution", () -> InternalApiBridge.overrideResolution(this, acu));
+        process(false);
     }
 
-    public void processSkeletton() {
+    private void process(boolean skeletton) {
         SymbolResolver symResolver = this.symResolver;
         // poison the resolver, to make sure that we are not querying the auxclasspath at this point
         this.symResolver = PoisonedResolver.INSTANCE;
@@ -159,6 +141,21 @@ public final class JavaAstProcessor {
 
         // We are not poisoned anymore. TODO do disambig
         this.symResolver = symResolver;
+        if (skeletton) {
+            return;
+        }
+
+        TimeTracker.bench("AST disambiguation", () -> InternalApiBridge.disambigWithCtx(acu, ReferenceCtx.root(this, acu)));
+        if (globalProc.getProperties().getProperty(JavaLanguageProperties.INTERNAL_DO_STRICT_TYPERES)) {
+            TimeTracker.bench("Force type resolution", () -> InternalApiBridge.forceTypeResolutionPhase(this, acu));
+        }
+        TimeTracker.bench("Comment assignment", () -> InternalApiBridge.assignComments(acu));
+        TimeTracker.bench("Usage resolution", () -> InternalApiBridge.usageResolution(this, acu));
+        TimeTracker.bench("Override resolution", () -> InternalApiBridge.overrideResolution(this, acu));
+    }
+
+    public void processSkeletton() {
+        process(true);
     }
 
     static class PoisonedResolver implements SymbolResolver {

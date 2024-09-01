@@ -4,6 +4,9 @@
 
 package net.sourceforge.pmd.lang.java.symbols.internal.ast;
 
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
+import static net.sourceforge.pmd.util.CollectionUtil.listOf;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -251,6 +254,7 @@ final class AstClassSym
 
             } else if (node.getParent() instanceof ASTConstructorCall) {
 
+                // Note that this triggers overload resolution of the constructor call.
                 @NonNull JTypeMirror sym = ((ASTConstructorCall) node.getParent()).getTypeMirror();
 
                 return sym instanceof JClassType && !sym.isInterface()
@@ -294,6 +298,14 @@ final class AstClassSym
 
     @Override
     public List<JClassSymbol> getSuperInterfaces() {
+        if (isAnonymousClass() && node.getParent() instanceof ASTConstructorCall) {
+            @NonNull JTypeMirror sym = ((ASTConstructorCall) node.getParent()).getTypeNode().getTypeMirror();
+            if (sym instanceof JClassType && sym.isInterface()) {
+                return listOf(((JClassType) sym).getSymbol());
+            }
+
+            return emptyList();
+        }
         List<JClassSymbol> itfs = CollectionUtil.mapNotNull(
             node.getSuperInterfaceTypeNodes(),
             n -> {
@@ -312,6 +324,15 @@ final class AstClassSym
 
     @Override
     public List<JClassType> getSuperInterfaceTypes(Substitution subst) {
+        if (isAnonymousClass() && node.getParent() instanceof ASTConstructorCall) {
+            @NonNull JTypeMirror sym = ((ASTConstructorCall) node.getParent()).getTypeMirror();
+            if (sym instanceof JClassType && sym.isInterface()) {
+                return listOf((JClassType) sym);
+            }
+
+            return emptyList();
+        }
+
         List<JClassType> itfs = CollectionUtil.map(node.getSuperInterfaceTypeNodes(), n -> (JClassType) TypeOps.subst(n.getTypeMirror(), subst));
         if (isAnnotation()) {
             itfs = CollectionUtil.concatView(Collections.singletonList(factory.annotationType()), itfs);

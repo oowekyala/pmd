@@ -26,7 +26,6 @@ import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.java.ast.ASTAmbiguousName;
-import net.sourceforge.pmd.lang.java.ast.ASTAnonymousClassDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTBreakStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTCatchClause;
@@ -34,7 +33,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTClassType;
 import net.sourceforge.pmd.lang.java.ast.ASTCompactConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
@@ -141,14 +139,10 @@ public final class SymbolTableResolver {
 
         private final Deque<JClassType> enclosingType = new ArrayDeque<>();
 
-        private final Set<DeferredNode> deferredInPrevRound;
-        private final Set<DeferredNode> newDeferred;
         private final StatementVisitor stmtVisitor = new StatementVisitor();
 
         MyVisitor(SymTableFactory helper, Set<DeferredNode> deferredInPrevRound, Set<DeferredNode> newDeferred) {
             f = helper;
-            this.deferredInPrevRound = deferredInPrevRound;
-            this.newDeferred = newDeferred;
         }
 
 
@@ -299,23 +293,6 @@ public final class SymbolTableResolver {
             popStack(pushed);
 
             return null;
-        }
-
-        @Override
-        public Void visit(ASTAnonymousClassDeclaration node, @NonNull ReferenceCtx ctx) {
-            if (node.getParent() instanceof ASTConstructorCall) {
-                // deferred to later, the symbol table for its body depends
-                // on typeres of the ctor which may be qualified, and refer
-                // to stuff that are declared later in the compilation unit,
-                // and not yet disambiged.
-                DeferredNode deferredSpec = new DeferredNode(node, ctx, top());
-                if (!deferredInPrevRound.contains(deferredSpec)) {
-                    newDeferred.add(deferredSpec);
-                    return null;
-                }
-                // otherwise fallthrough
-            }
-            return visitTypeDecl(node, ctx);
         }
 
         @Override

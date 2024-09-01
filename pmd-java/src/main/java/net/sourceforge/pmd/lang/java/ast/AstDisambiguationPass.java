@@ -7,18 +7,22 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import static net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors.CANNOT_RESOLVE_AMBIGUOUS_NAME;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
+import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaResolvers;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.types.JClassType;
@@ -53,9 +57,46 @@ final class AstDisambiguationPass {
      * for the worst kind of ambiguity
      * </ul>
      */
-    public static void disambigWithCtx(NodeStream<? extends JavaNode> nodes, ReferenceCtx ctx) {
+    public static void disambigWithCtx(ASTCompilationUnit root, ReferenceCtx ctx) {
         assert ctx != null : "Null context";
-        nodes.forEach(it -> it.acceptVisitor(DisambigVisitor.INSTANCE, ctx));
+        Set<DeferredNode> todo = Collections.singleton(new DeferredNode(root, ctx));
+        do {
+            Set<DeferredNode> newDeferred = new HashSet<>();
+            for (DeferredNode deferred : todo) {
+                DisambigVisitor visitor = new DisambigVisitor(todo, newDeferred);
+                deferred.node.acceptVisitor(visitor, deferred.enclosingCtx);
+            }
+            todo = newDeferred;
+        } while (!todo.isEmpty());
+    }
+
+    private static final class DeferredNode {
+
+        final JavaNode node;
+        // this is data used to resume the traversal
+        final ReferenceCtx enclosingCtx;
+
+        private DeferredNode(JavaNode node, ReferenceCtx enclosingCtx) {
+            this.node = node;
+            this.enclosingCtx = enclosingCtx;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            DeferredNode that = (DeferredNode) o;
+            return node.equals(that.node);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(node);
+        }
     }
 
 
@@ -79,7 +120,14 @@ final class AstDisambiguationPass {
 
     private static final class DisambigVisitor extends JavaVisitorBase<ReferenceCtx, Void> {
 
-        public static final DisambigVisitor INSTANCE = new DisambigVisitor();
+        private final Set<DeferredNode> deferredInPrevRound;
+        private final Set<DeferredNode> newDeferred;
+
+        DisambigVisitor(Set<DeferredNode> deferredInPrevRound, Set<DeferredNode> newDeferred) {
+            this.deferredInPrevRound = deferredInPrevRound;
+            this.newDeferred = newDeferred;
+        }
+
 
 
         @Override
@@ -173,9 +221,7 @@ final class AstDisambiguationPass {
             } else {
                 if (type.getParent() instanceof ASTConstructorCall
                     && ((ASTConstructorCall) type.getParent()).isQualifiedInstanceCreation()) {
-                    // Leave the reference null, this is handled lazily,
-                    // because the interaction it depends on the type of
-                    // the qualifier
+                    handleQualifiedCtorCall(((ASTConstructorCall) type.getParent()).getQualifier(), type);
                     return null;
                 }
 
@@ -188,6 +234,50 @@ final class AstDisambiguationPass {
 
             postProcess(type, ctx);
             return null;
+        }
+
+        private static void handleQualifiedCtorCall(ASTExpression qualifier, ASTClassType node) {
+            // note: this triggers recursive type resolution of the qualifier
+            JTypeMirror qualifierType = qualifier.getTypeMirror();
+            JClassSymbol symbol;
+            if (qualifierType instanceof JClassType) {
+                JClassType enclosing = (JClassType) qualifierType;
+                JClassType resolved = JavaResolvers.getMemberClassResolver(enclosing, node.getRoot().getPackageName(), node.getEnclosingType().getSymbol(), node.getSimpleName())
+                                                   .resolveFirst(node.getSimpleName());
+                if (resolved == null) {
+                    // compile-time error
+                    symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
+                } else {
+                    symbol = resolved.getSymbol();
+                    JClassType actualEnclosing = enclosing.getAsSuper(symbol.getEnclosingClass());
+                    assert actualEnclosing != null : "We got this symbol by looking into enclosing";
+                    node.setImplicitEnclosing(actualEnclosing);
+                }
+            } else {
+                // qualifier is unresolved, compile-time error
+                symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
+            }
+            node.setSymbol(symbol);
+        }
+
+
+        @Override
+        public Void visit(ASTConstructorCall node, ReferenceCtx ctx) {
+            if (node.isQualifiedInstanceCreation()) {
+                // Leave the reference null, this is handled lazily,
+                // because the interaction it depends on the type of
+                // the qualifier
+                // deferred to later, the symbol table for its body depends
+                // on typeres of the ctor which may be qualified, and refer
+                // to stuff that are declared later in the compilation unit,
+                // and not yet disambiged.
+                DeferredNode deferredSpec = new DeferredNode(node, ctx);
+                if (!deferredInPrevRound.contains(deferredSpec)) {
+                    newDeferred.add(deferredSpec);
+                    return null;
+                }
+            }
+            return super.visit(node, ctx);
         }
 
         private static void setClassSymbolIfNoQualifier(ASTClassType type, ReferenceCtx ctx) {

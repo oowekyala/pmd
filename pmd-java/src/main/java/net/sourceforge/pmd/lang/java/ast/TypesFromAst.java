@@ -19,7 +19,6 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
-import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaResolvers;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.Substitution;
@@ -212,36 +211,8 @@ final class TypesFromAst {
     private static @NonNull JTypeDeclSymbol getReferenceEnsureResolved(ASTClassType node) {
         if (node.getReferencedSym() != null) {
             return node.getReferencedSym();
-        } else if (node.getParent() instanceof ASTConstructorCall) {
-            ASTExpression qualifier = ((ASTConstructorCall) node.getParent()).getQualifier();
-            if (qualifier != null) {
-                assert node.getImplicitEnclosing() == null
-                    : "Qualified ctor calls should be handled lazily";
-                // note: this triggers recursive type resolution of the qualifier
-                JTypeMirror qualifierType = qualifier.getTypeMirror();
-                JClassSymbol symbol;
-                if (qualifierType instanceof JClassType) {
-                    JClassType enclosing = (JClassType) qualifierType;
-                    JClassType resolved = JavaResolvers.getMemberClassResolver(enclosing, node.getRoot().getPackageName(), node.getEnclosingType().getSymbol(), node.getSimpleName())
-                                                       .resolveFirst(node.getSimpleName());
-                    if (resolved == null) {
-                        // compile-time error
-                        symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
-                    } else {
-                        symbol = resolved.getSymbol();
-                        JClassType actualEnclosing = enclosing.getAsSuper(symbol.getEnclosingClass());
-                        assert actualEnclosing != null : "We got this symbol by looking into enclosing";
-                        node.setImplicitEnclosing(actualEnclosing);
-                    }
-                } else {
-                    // qualifier is unresolved, compile-time error
-                    symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
-                }
-                node.setSymbol(symbol);
-                return symbol;
-            } // else fallthrough
         }
-        throw new IllegalStateException("Disambiguation pass should resolve everything except qualified ctor calls");
+        throw new IllegalStateException("Disambiguation pass failed to resolve symbol for " + node);
     }
 
     // Whether the reference is a non-static inner type of the enclosing type
