@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.java.symbols.table.internal;
 
 import static net.sourceforge.pmd.lang.java.symbols.table.internal.SuperTypesEnumerator.DIRECT_STRICT_SUPERTYPES;
 import static net.sourceforge.pmd.lang.java.symbols.table.internal.SuperTypesEnumerator.JUST_SELF;
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
 import static net.sourceforge.pmd.util.CollectionUtil.listOfNotNull;
 
 import java.lang.reflect.Modifier;
@@ -18,6 +19,7 @@ import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -112,6 +114,11 @@ public final class JavaResolvers {
                                                       final SymbolResolver symResolver,
                                                       final String thisPackage) {
         return new SingleNameResolver<JTypeMirror>() {
+            @Override
+            public boolean isDefinitelyEmpty() {
+                return lazyImportedPackagesAndTypes.isEmpty();
+            }
+
             @Nullable
             @Override
             public JTypeMirror resolveFirst(String simpleName) {
@@ -181,13 +188,20 @@ public final class JavaResolvers {
     }
 
     /** Static methods with a given name. */
-    static NameResolver<JMethodSig> staticImportMethodResolver(JClassType container, @NonNull String accessPackageName, String importedSimpleName) {
+    static NameResolver<JMethodSig> staticImportMethodResolver(Supplier<JClassType> containerGetter,
+                                                               @NonNull String accessPackageName,
+                                                               String importedSimpleName) {
         assert importedSimpleName != null;
         assert accessPackageName != null;
         return new NameResolver<JMethodSig>() {
+
             @Override
             public @NonNull List<JMethodSig> resolveHere(String simpleName) {
                 if (!simpleName.equals(importedSimpleName)) {
+                    return Collections.emptyList();
+                }
+                JClassType container = containerGetter.get();
+                if (container == null) {
                     return Collections.emptyList();
                 }
                 return container.streamMethods(
@@ -204,13 +218,14 @@ public final class JavaResolvers {
 
             @Override
             public String toString() {
-                return "static methods w/ name " + importedSimpleName + " of " + container;
+                return "static methods w/ name " + importedSimpleName + " of " + containerGetter;
             }
         };
     }
 
     /** Static fields with a given name. */
-    static NameResolver<FieldSig> staticImportFieldResolver(JClassType containerType, @NonNull String accessPackageName, String importedSimpleName) {
+    static NameResolver<FieldSig> staticImportFieldResolver(Supplier<JClassType> containerGetter,
+                                                            @NonNull String accessPackageName, String importedSimpleName) {
         return new NameResolver<FieldSig>() {
             List<FieldSig> result;
 
@@ -220,21 +235,26 @@ public final class JavaResolvers {
                     return Collections.emptyList();
                 }
                 if (result == null) {
-                    result = JavaResolvers.getMemberFieldResolver(containerType, accessPackageName, null, simpleName)
-                                          .resolveHere(simpleName);
+                    JClassType containerType = containerGetter.get();
+                    if (containerType == null) {
+                        result = emptyList();
+                    } else {
+                        result = JavaResolvers.getMemberFieldResolver(containerType, accessPackageName, null, simpleName)
+                                              .resolveHere(simpleName);
+                    }
                 }
                 return result;
             }
 
             @Override
             public String toString() {
-                return "static methods w/ name " + importedSimpleName + " of " + containerType;
+                return "static methods w/ name " + importedSimpleName + " of " + containerGetter;
             }
         };
     }
 
     /** Static classes with a given name. */
-    static NameResolver<JClassType> staticImportClassResolver(JClassType containerType, @NonNull String accessPackageName, String importedSimpleName) {
+    static NameResolver<JClassType> staticImportClassResolver(Supplier<JClassType> containerGetter, @NonNull String accessPackageName, String importedSimpleName) {
         return new NameResolver<JClassType>() {
             List<JClassType> result;
 
@@ -245,15 +265,20 @@ public final class JavaResolvers {
                 }
 
                 if (result == null) {
-                    result = JavaResolvers.getMemberClassResolver(containerType, accessPackageName, null, simpleName)
-                                          .resolveHere(simpleName);
+                    JClassType containerType = containerGetter.get();
+                    if (containerType == null) {
+                        result = emptyList();
+                    } else {
+                        result = JavaResolvers.getMemberClassResolver(containerType, accessPackageName, null, simpleName)
+                                              .resolveHere(simpleName);
+                    }
                 }
                 return result;
             }
 
             @Override
             public String toString() {
-                return "static classes w/ name " + importedSimpleName + " of " + containerType;
+                return "static classes w/ name " + importedSimpleName + " of " + containerGetter;
             }
         };
     }
@@ -354,9 +379,30 @@ public final class JavaResolvers {
      * and it's ok performance-wise to process them on-demand.
      */
     static Pair<NameResolver<JTypeMirror>, NameResolver<JVariableSig>> inheritedMembersResolvers(JClassType t) {
-        Pair<ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder, ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder> builders =
-            hidingWalkResolvers(t, t, t.getSymbol().getPackageName(), true, /* onlyStatic: */false, DIRECT_STRICT_SUPERTYPES);
-        return Pair.of(builders.getLeft().build(), builders.getRight().build());
+        // suspend computation so as not to require disambiguation.
+        class Lazy {
+            NameResolver<JTypeMirror> types;
+            NameResolver<JVariableSig> vars;
+
+            public NameResolver<JTypeMirror> getTypes() {
+                populate();
+                return types;
+            }
+
+            public NameResolver<JVariableSig> getVars() {
+                populate();
+                return vars;
+            }
+
+            void populate() {
+                Pair<ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder, ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder> builders =
+                    hidingWalkResolvers(t, t, t.getSymbol().getPackageName(), true, /* onlyStatic: */false, DIRECT_STRICT_SUPERTYPES);
+                types = builders.getLeft().build();
+                vars = builders.getRight().build();
+            }
+        }
+        Lazy lazy = new Lazy();
+        return Pair.of(name -> lazy.getTypes().resolveHere(name), name -> lazy.getVars().resolveHere(name));
     }
 
     static Pair<ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder,

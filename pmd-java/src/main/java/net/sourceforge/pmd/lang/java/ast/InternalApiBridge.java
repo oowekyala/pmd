@@ -4,20 +4,15 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-import java.util.function.Consumer;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
-import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.NodeStream;
-import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.SemanticException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
-import net.sourceforge.pmd.lang.java.internal.JavaLanguageProcessor;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JElementSymbol;
@@ -57,30 +52,6 @@ import net.sourceforge.pmd.util.AssertionUtil;
 @InternalApi
 public final class InternalApiBridge {
     private InternalApiBridge() {}
-
-    public interface SymbolCollector extends Consumer<JClassSymbol> {
-        void accept(JClassSymbol incompleteSymbol);
-    }
-    public interface SymbolParser {
-
-        /**
-         * Parse the symbols of this file and accumulate them into the given
-         * collector. Compared to regular parsing, this parser
-         * <ul>
-         * <li>Does not read code blocks, only the signatures of methods and fields and classes
-         * <li>Does not perform type resolution or disambiguation (symbols are incomplete).
-         * </ul>
-         * Disambiguation requires information about the types of the whole project.
-         * This information is collected by this pass. This pass only collects the names
-         * of symbols and their signatures and performs disambiguation and linking of
-         * symbols together later on.
-         */
-        void parseFile(ParserTask doc, SymbolCollector collector) throws FileAnalysisException;
-    }
-
-    public static SymbolParser getSymbolParser(JavaLanguageProcessor processor) {
-        return new JavaParser("ignored", processor, false).symbolParser();
-    }
 
     public static void setSymbol(SymbolDeclaratorNode node, JElementSymbol symbol) {
         if (node instanceof ASTMethodDeclaration) {

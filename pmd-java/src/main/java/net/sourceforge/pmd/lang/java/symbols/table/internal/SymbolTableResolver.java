@@ -37,7 +37,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTForeachStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
@@ -185,14 +184,14 @@ public final class SymbolTableResolver {
             // symbols of all class types. For that reason we disambiguate
             // them early.
             // Todo test ambig names in expressions depended on by the qualifier
-            f.disambig(NodeStream.of(node), data);
+//            f.disambig(NodeStream.of(node), data);
             return null;
         }
 
         @Override
         public Void visit(ASTAmbiguousName node, @NonNull ReferenceCtx data) {
             // see comment in visit(ClassType)
-            f.disambig(NodeStream.of(node), data);
+//            f.disambig(NodeStream.of(node), data);
             return null;
         }
 
@@ -266,7 +265,7 @@ public final class SymbolTableResolver {
             popStack(pushed - 1);
 
             // resolve the supertypes, necessary for TypeMemberSymTable
-            f.disambig(notBody, ctx); // extends/implements
+            // f.disambig(notBody, ctx); // extends/implements
 
             setTopSymbolTable(node);
             popStack();
@@ -290,9 +289,9 @@ public final class SymbolTableResolver {
 
 
             // process fields first, their type is needed for JSymbolTable#resolveValue
-            f.disambig(node.getDeclarations(ASTFieldDeclaration.class)
-                           .map(ASTFieldDeclaration::getTypeNode),
-                       bodyCtx);
+//            f.disambig(node.getDeclarations(ASTFieldDeclaration.class)
+//                           .map(ASTFieldDeclaration::getTypeNode),
+//                       bodyCtx);
             visitChildren(node.getBody(), bodyCtx);
 
             enclosingType.pop();

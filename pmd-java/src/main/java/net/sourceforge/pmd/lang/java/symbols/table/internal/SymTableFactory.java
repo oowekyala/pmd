@@ -6,19 +6,22 @@ package net.sourceforge.pmd.lang.java.symbols.table.internal;
 
 
 import static net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo.FORMAL_PARAM;
+import static net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo.IMPORT_ON_DEMAND;
 import static net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo.SAME_FILE;
+import static net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo.SIMPLE_COMPILATION_UNIT;
 import static net.sourceforge.pmd.util.AssertionUtil.isValidJavaPackageName;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -45,6 +48,7 @@ import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
+import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainBuilder;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainNode;
@@ -53,13 +57,12 @@ import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
 import net.sourceforge.pmd.lang.java.types.JVariableSig;
-import net.sourceforge.pmd.util.CollectionUtil;
 
-final class SymTableFactory {
+class SymTableFactory {
 
 
-    private final String thisPackage;
-    private final JavaAstProcessor processor;
+    protected final String thisPackage;
+    protected final JavaAstProcessor processor;
 
     static final ShadowChainBuilder<JTypeMirror, ScopeInfo> TYPES = new ShadowChainBuilder<JTypeMirror, ScopeInfo>() {
 
@@ -96,6 +99,7 @@ final class SymTableFactory {
         this.processor = processor;
     }
 
+
     // <editor-fold defaultstate="collapsed" desc="Utilities for classloading">
 
 
@@ -124,7 +128,7 @@ final class SymTableFactory {
 
     // </editor-fold>
 
-    private @NonNull JSymbolTable buildTable(JSymbolTable parent,
+    protected @NonNull JSymbolTable buildTable(JSymbolTable parent,
                                              ShadowChainNode<JVariableSig, ScopeInfo> vars,
                                              ShadowChainNode<JMethodSig, ScopeInfo> methods,
                                              ShadowChainNode<JTypeMirror, ScopeInfo> types) {
@@ -135,16 +139,76 @@ final class SymTableFactory {
         }
     }
 
-    private ShadowChainNode<JTypeMirror, ScopeInfo> typeNode(JSymbolTable parent) {
+    protected ShadowChainNode<JTypeMirror, ScopeInfo> typeNode(JSymbolTable parent) {
         return parent.types().asNode();
     }
 
-    private ShadowChainNode<JVariableSig, ScopeInfo> varNode(JSymbolTable parent) {
+    protected ShadowChainNode<JVariableSig, ScopeInfo> varNode(JSymbolTable parent) {
         return parent.variables().asNode();
     }
 
-    private ShadowChainNode<JMethodSig, ScopeInfo> methodNode(JSymbolTable parent) {
+    protected ShadowChainNode<JMethodSig, ScopeInfo> methodNode(JSymbolTable parent) {
         return parent.methods().asNode();
+    }
+
+    /**
+     * Create name resolvers from a set of static imported names. This happens lazily.
+     */
+    class StaticImportOnDemandWalks {
+
+        private final List<String> staticImportedNames = new ArrayList<>();
+
+        NameResolver<JVariableSig> vars;
+        NameResolver<JTypeMirror> types;
+        NameResolver<JMethodSig> methods;
+
+        public NameResolver<JVariableSig> getVars() {
+            populate();
+            return vars;
+        }
+
+        public NameResolver<JTypeMirror> getTypes() {
+            populate();
+            return types;
+        }
+
+        public NameResolver<JMethodSig> getMethods() {
+            populate();
+            return methods;
+        }
+
+        void populate() {
+            if (vars != null) {
+                return;
+            }
+            ShadowChainBuilder<JTypeMirror, ScopeInfo>.ResolverBuilder importedTypes = TYPES.new ResolverBuilder();
+            ShadowChainBuilder<JVariableSig, ScopeInfo>.ResolverBuilder importedFields = VARS.new ResolverBuilder();
+            List<NameResolver<JMethodSig>> methodResolvers = new ArrayList<>();
+
+            for (String containerName : staticImportedNames) {
+
+                JClassSymbol sym = loadClassOrFail(containerName);
+                if (sym == null) {
+                    vars = CoreResolvers.emptyResolver();
+                    types = CoreResolvers.emptyResolver();
+                    return;
+                }
+                JClassType containerType = (JClassType) sym.getTypeSystem().typeOf(sym, false);
+
+
+                Pair<ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder, ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder> pair =
+                    JavaResolvers.importOnDemandMembersResolvers(containerType, thisPackage);
+
+                importedTypes.absorb(pair.getLeft());
+                importedFields.absorb(pair.getRight());
+                methodResolvers.add(JavaResolvers.staticImportOnDemandMethodResolver(containerType, thisPackage));
+            }
+
+            types = importedTypes.build();
+            vars = importedFields.build();
+            methods = NameResolver.composite(methodResolvers);
+        }
+
     }
 
     JSymbolTable importsOnDemand(JSymbolTable parent, Collection<ASTImportDeclaration> importsOnDemand) {
@@ -152,84 +216,27 @@ final class SymTableFactory {
             return parent;
         }
 
-        ShadowChainBuilder<JTypeMirror, ScopeInfo>.ResolverBuilder importedTypes = TYPES.new ResolverBuilder();
-        ShadowChainBuilder<JVariableSig, ScopeInfo>.ResolverBuilder importedFields = VARS.new ResolverBuilder();
-        List<JClassType> importedMethodContainers = new ArrayList<>();
-
-        Set<String> lazyImportedPackagesAndTypes = new LinkedHashSet<>();
-
-        fillImportOnDemands(importsOnDemand, importedTypes, importedFields, importedMethodContainers, lazyImportedPackagesAndTypes);
-
-        NameResolver<JMethodSig> methodResolver =
-            NameResolver.composite(CollectionUtil.map(importedMethodContainers, c -> JavaResolvers.staticImportOnDemandMethodResolver(c, thisPackage)));
-
-        ShadowChainNode<JVariableSig, ScopeInfo> vars = VARS.shadow(varNode(parent), ScopeInfo.IMPORT_ON_DEMAND, importedFields);
-        ShadowChainNode<JMethodSig, ScopeInfo> methods = METHODS.shadow(methodNode(parent), ScopeInfo.IMPORT_ON_DEMAND, methodResolver);
-        ShadowChainNode<JTypeMirror, ScopeInfo> types;
-        if (lazyImportedPackagesAndTypes.isEmpty()) {
-            // then we don't need to use the lazy impl
-            types = TYPES.shadow(typeNode(parent), ScopeInfo.IMPORT_ON_DEMAND, importedTypes);
-        } else {
-            types = TYPES.shadowWithCache(
-                typeNode(parent),
-                ScopeInfo.IMPORT_ON_DEMAND,
-                importedTypes.getMutableMap(),
-                JavaResolvers.importedOnDemand(lazyImportedPackagesAndTypes, processor.getSymResolver(), thisPackage)
-            );
-        }
-
-        return buildTable(parent, vars, methods, types);
-    }
-
-    private void fillImportOnDemands(Iterable<ASTImportDeclaration> importsOnDemand,
-                                     ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder importedTypes,
-                                     ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder importedFields,
-                                     List<JClassType> importedMethodContainers,
-                                     Set<String> importedPackagesAndTypes) {
-
-        for (ASTImportDeclaration anImport : importsOnDemand) {
-            assert anImport.isImportOnDemand() : "Expected import on demand: " + anImport;
-
-            if (anImport.isStatic()) {
-                fillStaticImportOnDemand(Optional.of(anImport), anImport.getImportedName(),
-                        importedTypes, importedFields, importedMethodContainers);
+        StaticImportOnDemandWalks statics = new StaticImportOnDemandWalks();
+        Set<String> packageAndTypesImportsOD = new HashSet<>();
+        for (ASTImportDeclaration importDecl : importsOnDemand) {
+            if (importDecl.isStatic()) {
+                statics.staticImportedNames.add(importDecl.getImportedName());
             } else {
-                // Type-Import-on-Demand Declaration
-                // This is of the kind <packageName>.*;
-                importedPackagesAndTypes.add(anImport.getPackageName());
+                packageAndTypesImportsOD.add(importDecl.getImportedName());
             }
         }
-    }
 
-    private void fillStaticImportOnDemand(Optional<JavaNode> reportLocation, String importedName,
-                                          ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder importedTypes,
-                                          ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder importedFields,
-                                          List<JClassType> importedMethodContainers) {
-        // Static-Import-on-Demand Declaration
-        // A static-import-on-demand declaration allows all accessible static members of a named type to be imported as needed.
-        // includes types members, methods & fields
-
-        @Nullable JClassSymbol containerClass;
-        if (reportLocation.isPresent()) {
-            containerClass = loadClassReportFailure(reportLocation.get(), importedName);
-        } else {
-            containerClass = loadClassOrFail(importedName);
+        ShadowChainNode<JTypeMirror, ScopeInfo> types = TYPES.shadow(typeNode(parent), IMPORT_ON_DEMAND, name -> statics.getTypes().resolveHere(name));
+        if (!packageAndTypesImportsOD.isEmpty()) {
+            types = TYPES.shadowWithCache(types, IMPORT_ON_DEMAND, new HashMap<>(), JavaResolvers.importedOnDemand(packageAndTypesImportsOD, processor.getSymResolver(), thisPackage));
         }
-        if (containerClass != null) {
-            // populate the inherited state
+        return buildTable(
+            parent,
+            VARS.shadow(varNode(parent), IMPORT_ON_DEMAND, name -> statics.getVars().resolveHere(name)),
+            METHODS.shadow(methodNode(parent), IMPORT_ON_DEMAND, name -> statics.getMethods().resolveHere(name)),
+            types
+        );
 
-            JClassType containerType = (JClassType) containerClass.getTypeSystem().typeOf(containerClass, false);
-
-            Pair<ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder, ShadowChainBuilder<JVariableSig, ?>.ResolverBuilder> pair =
-                    JavaResolvers.importOnDemandMembersResolvers(containerType, thisPackage);
-
-            importedTypes.absorb(pair.getLeft());
-            importedFields.absorb(pair.getRight());
-
-            importedMethodContainers.add(containerType);
-        }
-
-        // can't be resolved sorry
     }
 
     JSymbolTable moduleImports(JSymbolTable parent, Collection<ASTImportDeclaration> moduleImports) {
@@ -261,13 +268,11 @@ final class SymTableFactory {
             return parent;
         }
 
-        ShadowChainBuilder<JTypeMirror, ScopeInfo>.ResolverBuilder importedTypes = TYPES.new ResolverBuilder();
-
         List<NameResolver<? extends JTypeMirror>> importedStaticTypes = new ArrayList<>();
         List<NameResolver<? extends JVariableSig>> importedStaticFields = new ArrayList<>();
         List<NameResolver<? extends JMethodSig>> importedStaticMethods = new ArrayList<>();
 
-        fillSingleImports(singleImports, importedTypes);
+        NameResolver<JTypeMirror> types = fillSingleImports(singleImports);
         fillSingleStaticImports(singleImports, importedStaticTypes, importedStaticFields, importedStaticMethods);
 
         return buildTable(
@@ -275,7 +280,7 @@ final class SymTableFactory {
             VARS.shadow(varNode(parent), ScopeInfo.SINGLE_IMPORT, NameResolver.composite(importedStaticFields)),
             METHODS.shadow(methodNode(parent), ScopeInfo.SINGLE_IMPORT, NameResolver.composite(importedStaticMethods)),
             TYPES.augment(
-                TYPES.shadow(typeNode(parent), ScopeInfo.SINGLE_IMPORT, importedTypes.build()),
+                TYPES.shadow(typeNode(parent), ScopeInfo.SINGLE_IMPORT, types),
                 false,
                 ScopeInfo.SINGLE_IMPORT,
                 NameResolver.composite(importedStaticTypes)
@@ -285,9 +290,9 @@ final class SymTableFactory {
     }
 
 
-    private void fillSingleImports(Iterable<ASTImportDeclaration> singleImports,
-                                   ShadowChainBuilder<JTypeMirror, ?>.ResolverBuilder importedTypes) {
+    private NameResolver<JTypeMirror> fillSingleImports(Iterable<ASTImportDeclaration> singleImports) {
 
+        Map<String, ASTImportDeclaration> importedTypes = new HashMap<>();
         for (ASTImportDeclaration anImport : singleImports) {
             if (anImport.isImportOnDemand()) {
                 throw new IllegalArgumentException(anImport.toString());
@@ -295,10 +300,25 @@ final class SymTableFactory {
 
             if (!anImport.isStatic()) {
                 // Single-Type-Import Declaration
-                JClassSymbol type = processor.findSymbolCannotFail(anImport, anImport.getImportedName());
-                importedTypes.append(type.getTypeSystem().typeOf(type, false));
+                importedTypes.put(anImport.getImportedSimpleName(), anImport);
             }
         }
+        return new NameResolver<JTypeMirror>() {
+            @Override
+            public @NonNull List<JTypeMirror> resolveHere(String simpleName) {
+                ASTImportDeclaration anImport = importedTypes.get(simpleName);
+                if (anImport != null) {
+                    JClassSymbol sym = processor.findSymbolCannotFail(anImport, anImport.getImportedName());
+                    return Collections.singletonList(sym.getTypeSystem().typeOf(sym, false));
+                }
+                return Collections.emptyList();
+            }
+
+            @Override
+            public boolean isDefinitelyEmpty() {
+                return importedTypes.isEmpty();
+            }
+        };
     }
 
     private void fillSingleStaticImports(Iterable<ASTImportDeclaration> singleImports,
@@ -322,21 +342,32 @@ final class SymTableFactory {
                     continue; // invalid syntax
                 }
                 String className = name.substring(0, idx);
+                class LazyGetter implements Supplier<JClassType> {
+                    JClassType type;
+                    boolean tried;
 
-                JClassSymbol containerClass = loadClassReportFailure(anImport, className);
+                    public JClassType get() {
+                        if (tried) {
+                            return type;
+                        }
+                        tried = true;
+                        JClassSymbol containerClass = loadClassReportFailure(anImport, className);
 
-                if (containerClass == null) {
-                    // the auxclasspath is wrong
-                    // bc static imports can't import toplevel types
-                    // already reported
-                    continue;
+                        if (containerClass != null) {
+                            type = (JClassType) containerClass.getTypeSystem().declaration(containerClass);
+                        }
+                        return type;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return className;
+                    }
                 }
-
-                JClassType containerType = (JClassType) containerClass.getTypeSystem().declaration(containerClass);
-
-                importedStaticMethods.add(JavaResolvers.staticImportMethodResolver(containerType, thisPackage, simpleName));
-                importedFields.add(JavaResolvers.staticImportFieldResolver(containerType, thisPackage, simpleName));
-                importedTypes.add(JavaResolvers.staticImportClassResolver(containerType, thisPackage, simpleName));
+                LazyGetter lazyGetter = new LazyGetter();
+                importedStaticMethods.add(JavaResolvers.staticImportMethodResolver(lazyGetter, thisPackage, simpleName));
+                importedFields.add(JavaResolvers.staticImportFieldResolver(lazyGetter, thisPackage, simpleName));
+                importedTypes.add(JavaResolvers.staticImportClassResolver(lazyGetter, thisPackage, simpleName));
             }
         }
     }
@@ -359,21 +390,15 @@ final class SymTableFactory {
     }
 
     JSymbolTable importsOnDemandJavaIo(JSymbolTable parent) {
-        ShadowChainBuilder<JTypeMirror, ScopeInfo>.ResolverBuilder importedTypes = TYPES.new ResolverBuilder();
-        ShadowChainBuilder<JVariableSig, ScopeInfo>.ResolverBuilder importedFields = VARS.new ResolverBuilder();
-        List<JClassType> importedMethodContainers = new ArrayList<>();
+        StaticImportOnDemandWalks statics = new StaticImportOnDemandWalks();
+        statics.staticImportedNames.add("java.io.IO");
 
-        fillStaticImportOnDemand(Optional.empty(), "java.io.IO", importedTypes, importedFields, importedMethodContainers);
-
-        NameResolver<JMethodSig> methodResolver =
-                NameResolver.composite(CollectionUtil.map(importedMethodContainers, c -> JavaResolvers.staticImportOnDemandMethodResolver(c, thisPackage)));
-
-        ShadowChainNode<JVariableSig, ScopeInfo> vars = VARS.shadow(varNode(parent), ScopeInfo.SIMPLE_COMPILATION_UNIT, importedFields);
-        ShadowChainNode<JMethodSig, ScopeInfo> methods = METHODS.shadow(methodNode(parent), ScopeInfo.SIMPLE_COMPILATION_UNIT, methodResolver);
-        // then we don't need to use the lazy impl
-        ShadowChainNode<JTypeMirror, ScopeInfo> types = TYPES.shadow(typeNode(parent), ScopeInfo.SIMPLE_COMPILATION_UNIT, importedTypes);
-
-        return buildTable(parent, vars, methods, types);
+        return buildTable(
+            parent,
+            VARS.shadow(varNode(parent), IMPORT_ON_DEMAND, name -> statics.getVars().resolveHere(name)),
+            METHODS.shadow(methodNode(parent), IMPORT_ON_DEMAND, name -> statics.getMethods().resolveHere(name)),
+            TYPES.shadow(typeNode(parent), SIMPLE_COMPILATION_UNIT, name1 -> statics.getTypes().resolveHere(name1))
+        );
     }
 
     JSymbolTable samePackageSymTable(JSymbolTable parent) {

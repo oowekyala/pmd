@@ -6,9 +6,13 @@ package net.sourceforge.pmd.lang.java.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -21,15 +25,16 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
+import net.sourceforge.pmd.lang.ast.FileAnalysisException;
+import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.Parser;
 import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
-import net.sourceforge.pmd.lang.ast.SemanticException;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.impl.BatchLanguageProcessor;
-import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolCollector;
-import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolParser;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.internal.JavaLanguageProperties.InferenceLoggingVerbosity;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.BaseContextNodeTestFun;
@@ -96,8 +101,10 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
 
     }
 
-    class SourceSymbolResolver implements SymbolCollector {
+    class SourceSymbolResolver {
         Map<String, JClassSymbol> binaryNamesToSymbols = new ConcurrentHashMap<>();
+        Set<ASTCompilationUnit> compilationUnits = Collections.synchronizedSet(new HashSet<>());
+
         final AnalysisTask task;
 
         SourceSymbolResolver(AnalysisTask task) {
@@ -113,19 +120,32 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
                                                        reporter,
                                                        task.getLpRegistry());
 
-                SymbolParser parser = net.sourceforge.pmd.lang.java.ast.InternalApiBridge.getSymbolParser(JavaLanguageProcessor.this);
-
-
-                parser.parseFile(parserTask, this);
-
-                SemanticException semanticError = reporter.getFirstError();
-                if (semanticError != null) {
-                    // cause a processing error to be reported and rule analysis to be skipped
-                    throw semanticError;
+                JavaParser parser = JavaParser.getSkelettonParser(JavaLanguageProcessor.this);
+                ASTCompilationUnit root;
+                try {
+                    root = parser.parse(parserTask);
+                } catch (FileAnalysisException e) {
+                    LOG.debug("Cannot parse skeletton for file {}", parserTask.getFileId());
+                    return;
                 }
 
+                HashMap<String, JClassSymbol> symbols = new HashMap<>();
+                NodeStream<ASTTypeDeclaration> typeDecls = root.getTypeDeclarations();
+                for (ASTTypeDeclaration typeDecl : typeDecls) {
+                    collectSymbols(typeDecl.getSymbol(), symbols);
+                }
+
+                binaryNamesToSymbols.putAll(symbols);
+                compilationUnits.add(root);
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            }
+        }
+
+        void collectSymbols(JClassSymbol symbol, Map<String, JClassSymbol> map) {
+            map.put(symbol.getBinaryName(), symbol);
+            for (JClassSymbol child : symbol.getDeclaredClasses()) {
+                collectSymbols(child, map);
             }
         }
 
@@ -137,7 +157,6 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
 
         }
 
-        @Override
         public void accept(JClassSymbol incompleteSymbol) {
             System.out.println("Found " + incompleteSymbol);
             binaryNamesToSymbols.put(incompleteSymbol.getBinaryName(), incompleteSymbol);

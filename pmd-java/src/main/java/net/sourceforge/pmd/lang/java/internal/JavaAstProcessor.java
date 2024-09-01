@@ -16,6 +16,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
@@ -140,11 +141,15 @@ public final class JavaAstProcessor {
     }
 
     public void processSkeletton() {
+        SymbolResolver symResolver = this.symResolver;
+        // poison the resolver, to make sure that we are not querying the auxclasspath at this point
+        this.symResolver = PoisonedResolver.INSTANCE;
 
         SymbolResolver knownSyms = TimeTracker.bench("Symbol resolution", () -> SymbolResolutionPass.traverse(this, acu));
 
         // Now symbols are on the relevant nodes
-        this.symResolver = SymbolResolver.layer(knownSyms, this.symResolver);
+        symResolver = SymbolResolver.layer(knownSyms, symResolver);
+
 
         // this needs to be initialized before the symbol table resolution
         // as scopes depend on type resolution in some cases.
@@ -152,6 +157,27 @@ public final class JavaAstProcessor {
 
         TimeTracker.bench("Symbol table resolution", () -> SymbolTableResolver.traverse(this, acu));
 
+        // We are not poisoned anymore. TODO do disambig
+        this.symResolver = symResolver;
+    }
+
+    static class PoisonedResolver implements SymbolResolver {
+        static final PoisonedResolver INSTANCE = new PoisonedResolver();
+
+        @Override
+        public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
+            throw new IllegalStateException("Should not call the symbol resolver at this stage, asked for " + binaryName);
+        }
+
+        @Override
+        public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+            throw new IllegalStateException("Should not call the symbol resolver at this stage, asked for " + moduleName);
+        }
+
+        @Override
+        public void logStats() {
+
+        }
     }
 
     public TypeSystem getTypeSystem() {

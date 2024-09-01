@@ -6,12 +6,10 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.AstInfo;
-import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument.TokenDocumentBehavior;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JjtreeParserAdapter;
-import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolParser;
 import net.sourceforge.pmd.lang.java.ast.internal.LanguageLevelChecker;
 import net.sourceforge.pmd.lang.java.ast.internal.ReportingStrategy;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
@@ -29,15 +27,40 @@ public class JavaParser extends JjtreeParserAdapter<ASTCompilationUnit> {
     private final String suppressMarker;
     private final JavaLanguageProcessor javaProcessor;
     private final boolean postProcess;
+    private final boolean skelettonMode;
 
     public JavaParser(String suppressMarker,
                       JavaLanguageProcessor javaProcessor,
                       boolean postProcess) {
+        this(suppressMarker, javaProcessor, postProcess, false);
+    }
+
+    private JavaParser(String suppressMarker,
+                       JavaLanguageProcessor javaProcessor,
+                       boolean postProcess,
+                       boolean skelettonMode) {
         this.suppressMarker = suppressMarker;
         this.javaProcessor = javaProcessor;
         this.postProcess = postProcess;
+        this.skelettonMode = skelettonMode;
     }
 
+
+    /**
+     * Parse the symbols of this file and accumulate them into the given
+     * collector. Compared to regular parsing, this parser
+     * <ul>
+     * <li>Does not read code blocks, only the signatures of methods and fields and classes
+     * <li>Does not perform type resolution or disambiguation (symbols are incomplete).
+     * </ul>
+     * Disambiguation requires information about the types of the whole project.
+     * This information is collected by this pass. This pass only collects the names
+     * of symbols and their signatures and performs disambiguation and linking of
+     * symbols together later on.
+     */
+    public static JavaParser getSkelettonParser(JavaLanguageProcessor processor) {
+        return new JavaParser("NOPMD", processor, true, true);
+    }
 
     @Override
     protected TokenDocumentBehavior tokenBehavior() {
@@ -55,54 +78,30 @@ public class JavaParser extends JjtreeParserAdapter<ASTCompilationUnit> {
         parser.setSuppressMarker(suppressMarker);
         parser.setJdkVersion(jdkVersion);
         parser.setPreview(preview);
+        parser.setSkelettonMode(skelettonMode);
 
         ASTCompilationUnit root = parser.CompilationUnit();
         root.setAstInfo(new AstInfo<>(task, root).withSuppressMap(parser.getSuppressMap()));
 
-        LanguageLevelChecker<?> levelChecker =
-            new LanguageLevelChecker<>(jdkVersion,
-                                       preview,
-                                       // TODO change this strategy with a new lang property
-                                       ReportingStrategy.reporterThatThrows());
+        if (!skelettonMode) {
+            LanguageLevelChecker<?> levelChecker =
+                new LanguageLevelChecker<>(jdkVersion,
+                                           preview,
+                                           // TODO change this strategy with a new lang property
+                                           ReportingStrategy.reporterThatThrows());
 
-        levelChecker.check(root);
+            levelChecker.check(root);
+        }
 
         if (postProcess) {
-            JavaAstProcessor.process(javaProcessor, task.getReporter(), root);
+            if (skelettonMode) {
+                JavaAstProcessor.processSkeletton(javaProcessor, task.getReporter(), root);
+            } else {
+                JavaAstProcessor.process(javaProcessor, task.getReporter(), root);
+            }
         }
 
         return root;
     }
 
-    SymbolParser symbolParser() {
-        return (task, collector) -> {
-            CharStream charStream = CharStream.create(task.getTextDocument(), tokenBehavior());
-            // We replace the text document, so that it reflects escapes properly
-            // Escapes are processed by CharStream#create
-            task = task.withTextDocument(charStream.getTokenDocument().getTextDocument());
-
-            LanguageVersion version = task.getLanguageVersion();
-            int jdkVersion = JavaLanguageProperties.getInternalJdkVersion(version);
-            boolean preview = JavaLanguageProperties.isPreviewEnabled(version);
-
-            JavaParserImpl parser = new JavaParserImpl(charStream);
-            parser.setSkelettonMode(true);
-            parser.setJdkVersion(jdkVersion);
-            parser.setPreview(preview);
-
-            ASTCompilationUnit root;
-            try {
-
-                root = parser.CompilationUnit();
-            } catch (FileAnalysisException e) {
-                throw e.setFileId(task.getFileId());
-            }
-            root.setAstInfo(new AstInfo<>(task, root).withSuppressMap(parser.getSuppressMap()));
-
-            JavaAstProcessor.processSkeletton(javaProcessor, task.getReporter(), root);
-
-            // todo use collector
-
-        };
-    }
 }

@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.symbols.table.coreimpl;
 
 
+import static net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers.emptyResolver;
 import static net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers.multimapResolver;
 import static net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers.singleton;
 import static net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers.singularMapResolver;
@@ -107,6 +108,9 @@ public abstract class ShadowChainBuilder<S, I> {
                                                  // is why this parameter is defaulted.
                                                  Map<String, List<S>> cacheMap,
                                                  NameResolver<S> resolver) {
+        if (resolver.isDefinitelyEmpty() && cacheMap.isEmpty()) {
+            return shadow(parent, scopeTag, emptyResolver());
+        }
         return new CachingShadowChainNode<>(parent, cacheMap, resolver, true, scopeTag, ShadowChainNodeBase.defaultMerger());
     }
 
