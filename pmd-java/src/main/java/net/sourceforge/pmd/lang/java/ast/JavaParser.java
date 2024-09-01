@@ -6,10 +6,12 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.ast.AstInfo;
+import net.sourceforge.pmd.lang.ast.FileAnalysisException;
 import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.CharStream;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument.TokenDocumentBehavior;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JjtreeParserAdapter;
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolParser;
 import net.sourceforge.pmd.lang.java.ast.internal.LanguageLevelChecker;
 import net.sourceforge.pmd.lang.java.ast.internal.ReportingStrategy;
 import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
@@ -70,5 +72,37 @@ public class JavaParser extends JjtreeParserAdapter<ASTCompilationUnit> {
         }
 
         return root;
+    }
+
+    SymbolParser symbolParser() {
+        return (task, collector) -> {
+            CharStream charStream = CharStream.create(task.getTextDocument(), tokenBehavior());
+            // We replace the text document, so that it reflects escapes properly
+            // Escapes are processed by CharStream#create
+            task = task.withTextDocument(charStream.getTokenDocument().getTextDocument());
+
+            LanguageVersion version = task.getLanguageVersion();
+            int jdkVersion = JavaLanguageProperties.getInternalJdkVersion(version);
+            boolean preview = JavaLanguageProperties.isPreviewEnabled(version);
+
+            JavaParserImpl parser = new JavaParserImpl(charStream);
+            parser.setSkelettonMode(true);
+            parser.setJdkVersion(jdkVersion);
+            parser.setPreview(preview);
+
+            ASTCompilationUnit root;
+            try {
+
+                root = parser.CompilationUnit();
+            } catch (FileAnalysisException e) {
+                throw e.setFileId(task.getFileId());
+            }
+            root.setAstInfo(new AstInfo<>(task, root).withSuppressMap(parser.getSuppressMap()));
+
+            JavaAstProcessor.processSkeletton(javaProcessor, task.getReporter(), root);
+
+            // todo use collector
+
+        };
     }
 }

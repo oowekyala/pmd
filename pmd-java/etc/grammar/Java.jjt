@@ -337,6 +337,11 @@ class JavaParserImpl {
 
   private int jdkVersion = 0;
   private boolean preview = false;
+  private boolean skelettonMode = false;
+
+  void setSkelettonMode(boolean mode) {
+    this.skelettonMode = mode;
+  }
 
   public void setJdkVersion(int jdkVersion) {
    this.jdkVersion = jdkVersion;
@@ -454,6 +459,26 @@ class JavaParserImpl {
 
   private boolean localTypeDeclGivenNextIsIdent() {
       return localTypesSupported() && (isRecordStart() || isEnumStart());
+  }
+
+  private void skipUntilMatchingBrace() {
+    int nesting = 1;
+    Token next = getToken(1);
+    while (true) {
+        switch (next.kind) {
+        case EOF:
+            throw new ParseException("Unclosed block").withLocation(token);
+        case LBRACE:
+            nesting++;
+            break;
+        case RBRACE:
+            nesting--;
+            if (nesting == 0) return;
+            break;
+        }
+        next = getNextToken();
+    }
+
   }
 
   /**
@@ -1483,9 +1508,15 @@ void ConstructorDeclaration() :
 }
 
 private void ConstructorBlock() #Block:
-{}
 {
-    "{"
+
+}
+{
+   "{"
+   (
+      // In skeletton mode blocks are not read, only empty blocks are produced
+      LOOKAHEAD({skelettonMode}) SkipToMatchingBrace()
+     |
         (
             LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation()
                |
@@ -1493,7 +1524,8 @@ private void ConstructorBlock() #Block:
             [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
         )
         ( BlockStatement() )*
-    "}"
+   )
+   "}"
 }
 
 void ExplicitConstructorInvocation() :
@@ -2484,7 +2516,12 @@ void Block() :
 {}
 {
     "{"
-    ( BlockStatement() )*
+    (
+      // In skeletton mode blocks are not read, only empty blocks are produced
+      LOOKAHEAD({skelettonMode}) SkipToMatchingBrace()
+    |
+      ( BlockStatement() )*
+    )
     "}"
 }
 
@@ -3075,4 +3112,19 @@ void softKeyword(String name) #void: {} {
         if (!getToken(0).getImageCs().contentEquals(name))
             throwParseException("Expecting keyword '" + name + "'");
     }
+}
+
+JAVACODE
+void SkipToMatchingBrace() #void {
+  Token tok;
+  int nesting = 1;
+  while (true) {
+    tok = getToken(1);
+    if (tok.kind == LBRACE) nesting++;
+    if (tok.kind == RBRACE) {
+      nesting--;
+      if (nesting == 0) break;
+    }
+    tok = getNextToken();
+  }
 }

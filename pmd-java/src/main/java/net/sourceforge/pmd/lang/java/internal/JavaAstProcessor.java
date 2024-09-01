@@ -139,10 +139,37 @@ public final class JavaAstProcessor {
         TimeTracker.bench("Override resolution", () -> InternalApiBridge.overrideResolution(this, acu));
     }
 
+    public void processSkeletton() {
+
+        SymbolResolver knownSyms = TimeTracker.bench("Symbol resolution", () -> SymbolResolutionPass.traverse(this, acu));
+
+        // Now symbols are on the relevant nodes
+        this.symResolver = SymbolResolver.layer(knownSyms, this.symResolver);
+
+        // this needs to be initialized before the symbol table resolution
+        // as scopes depend on type resolution in some cases.
+        InternalApiBridge.initTypeResolver(acu, this, typeInferenceLogger);
+
+        TimeTracker.bench("Symbol table resolution", () -> SymbolTableResolver.traverse(this, acu));
+
+    }
+
     public TypeSystem getTypeSystem() {
         return globalProc.getTypeSystem();
     }
 
+
+    public static void processSkeletton(JavaLanguageProcessor globalProcessor, SemanticErrorReporter err, ASTCompilationUnit ast) {
+
+        JavaAstProcessor astProc = new JavaAstProcessor(
+            globalProcessor,
+            err,
+            globalProcessor.newTypeInfLogger(),
+            ast
+        );
+
+        astProc.processSkeletton();
+    }
 
     public static void process(JavaLanguageProcessor globalProcessor,
                                           SemanticErrorReporter semanticErrorReporter,

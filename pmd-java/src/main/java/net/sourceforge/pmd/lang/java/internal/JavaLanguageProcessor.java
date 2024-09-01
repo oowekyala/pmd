@@ -4,16 +4,32 @@
 
 package net.sourceforge.pmd.lang.java.internal;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.ast.Parser;
+import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
+import net.sourceforge.pmd.lang.ast.SemanticErrorReporter;
+import net.sourceforge.pmd.lang.ast.SemanticException;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.impl.BatchLanguageProcessor;
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolCollector;
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge.SymbolParser;
 import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.internal.JavaLanguageProperties.InferenceLoggingVerbosity;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.BaseContextNodeTestFun;
@@ -22,6 +38,7 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetModifiersFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
+import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -57,6 +74,88 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     public JavaLanguageProcessor(JavaLanguageProperties properties) {
         this(properties, TypeSystem.usingClassLoaderClasspath(properties.getAnalysisClassLoader()));
         LOG.debug("Using analysis classloader: {}", properties.getAnalysisClassLoader());
+    }
+
+
+    static <T> void processInParallelStream(Stream<T> data, int parallelism, Consumer<T> task) {
+        if (parallelism == 0) {
+            data.sequential().forEach(task);
+            return;
+        }
+        ForkJoinPool forkJoinPool = null;
+        try {
+            forkJoinPool = new ForkJoinPool(parallelism);
+            forkJoinPool.submit(() -> data.parallel().forEach(task)).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (forkJoinPool != null) {
+                forkJoinPool.shutdown();
+            }
+        }
+
+    }
+
+    class SourceSymbolResolver implements SymbolCollector {
+        Map<String, JClassSymbol> binaryNamesToSymbols = new ConcurrentHashMap<>();
+        final AnalysisTask task;
+
+        SourceSymbolResolver(AnalysisTask task) {
+            this.task = task;
+        }
+
+
+        void readOneFile(TextFile javaFile) {
+            try (TextDocument doc = TextDocument.create(javaFile)) {
+                SemanticErrorReporter reporter = SemanticErrorReporter.reportToLogger(task.getMessageReporter());
+                @SuppressWarnings("PMD.CloseResource")
+                ParserTask parserTask = new ParserTask(doc,
+                                                       reporter,
+                                                       task.getLpRegistry());
+
+                SymbolParser parser = net.sourceforge.pmd.lang.java.ast.InternalApiBridge.getSymbolParser(JavaLanguageProcessor.this);
+
+
+                parser.parseFile(parserTask, this);
+
+                SemanticException semanticError = reporter.getFirstError();
+                if (semanticError != null) {
+                    // cause a processing error to be reported and rule analysis to be skipped
+                    throw semanticError;
+                }
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        void collectSources() {
+
+            processInParallelStream(
+                task.getFiles().stream(), task.getThreadCount(),
+                this::readOneFile);
+
+        }
+
+        @Override
+        public void accept(JClassSymbol incompleteSymbol) {
+            System.out.println("Found " + incompleteSymbol);
+            binaryNamesToSymbols.put(incompleteSymbol.getBinaryName(), incompleteSymbol);
+        }
+    }
+
+    @Override
+    public @NonNull AutoCloseable launchAnalysis(@NonNull AnalysisTask task) {
+        // The given analysis task has all files to analyse, not only the ones for this language.
+        List<TextFile> files = new ArrayList<>(task.getFiles());
+        files.removeIf(it -> !it.getLanguageVersion().getLanguage().equals(getLanguage()));
+        AnalysisTask newTask = InternalApiBridge.taskWithFiles(task, files);
+
+        task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
+
+        SourceSymbolResolver collector = new SourceSymbolResolver(newTask);
+        collector.collectSources();
+        return () -> {};
     }
 
     @Override
