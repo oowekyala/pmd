@@ -20,7 +20,6 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
-import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.SymbolTableResolver;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
@@ -145,7 +144,7 @@ public final class JavaAstProcessor {
             return;
         }
 
-        TimeTracker.bench("AST disambiguation", () -> InternalApiBridge.disambigWithCtx(acu, ReferenceCtx.root(this, acu)));
+        TimeTracker.bench("AST disambiguation", () -> InternalApiBridge.disambiguationPass(acu, this));
         if (globalProc.getProperties().getProperty(JavaLanguageProperties.INTERNAL_DO_STRICT_TYPERES)) {
             TimeTracker.bench("Force type resolution", () -> InternalApiBridge.forceTypeResolutionPhase(this, acu));
         }

@@ -19,10 +19,12 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
+import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaResolvers;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.Substitution;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
+import net.sourceforge.pmd.lang.java.types.TypingContext;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
@@ -34,8 +36,8 @@ final class TypesFromAst {
         // utility class
     }
 
-    public static List<JTypeMirror> fromAst(TypeSystem ts, Substitution subst, List<ASTType> reflected) {
-        return CollectionUtil.map(reflected, it -> fromAst(ts, subst, it));
+    public static List<JTypeMirror> fromAst(TypeSystem ts, Substitution subst, List<ASTType> reflected, TypingContext ctx) {
+        return CollectionUtil.map(reflected, it -> fromAst(ts, subst, it, ctx));
     }
 
     /**
@@ -44,25 +46,25 @@ final class TypesFromAst {
      * @param lexicalSubst A substitution to apply to type variables
      * @param node         An ast node
      */
-    public static JTypeMirror fromAst(TypeSystem ts, Substitution lexicalSubst, ASTType node) {
+    public static JTypeMirror fromAst(TypeSystem ts, Substitution lexicalSubst, ASTType node, TypingContext ctx) {
         if (node == null) {
             return null;
         }
 
-        return fromAstImpl(ts, lexicalSubst, node);
+        return fromAstImpl(ts, lexicalSubst, node, ctx);
     }
 
-    private static JTypeMirror fromAstImpl(TypeSystem ts, Substitution lexicalSubst, ASTType node) {
+    private static JTypeMirror fromAstImpl(TypeSystem ts, Substitution lexicalSubst, ASTType node, TypingContext ctx) {
 
         if (node instanceof ASTClassType) {
 
-            return makeFromClassType(ts, (ASTClassType) node, lexicalSubst);
+            return makeFromClassType(ts, (ASTClassType) node, lexicalSubst, ctx);
 
         } else if (node instanceof ASTWildcardType) {
 
 
             ASTWildcardType wild = (ASTWildcardType) node;
-            @Nullable JTypeMirror bound = fromAst(ts, lexicalSubst, wild.getTypeBoundNode());
+            @Nullable JTypeMirror bound = fromAst(ts, lexicalSubst, wild.getTypeBoundNode(), ctx);
             if (bound == null) {
                 bound = ts.OBJECT;
             }
@@ -73,7 +75,7 @@ final class TypesFromAst {
 
             List<JTypeMirror> components = new ArrayList<>();
             for (ASTType t : (ASTIntersectionType) node) {
-                components.add(fromAst(ts, lexicalSubst, t));
+                components.add(fromAst(ts, lexicalSubst, t, ctx));
             }
 
             try {
@@ -83,7 +85,7 @@ final class TypesFromAst {
             }
         } else if (node instanceof ASTArrayType) {
 
-            JTypeMirror t = fromAst(ts, lexicalSubst, ((ASTArrayType) node).getElementType());
+            JTypeMirror t = fromAst(ts, lexicalSubst, ((ASTArrayType) node).getElementType(), ctx);
             ASTArrayDimensions dimensions = ((ASTArrayType) node).getDimensions();
             // we have to iterate in reverse
             for (int i = dimensions.size() - 1; i >= 0; i--) {
@@ -121,20 +123,20 @@ final class TypesFromAst {
     }
 
 
-    private static JTypeMirror makeFromClassType(TypeSystem ts, ASTClassType node, Substitution subst) {
+    private static JTypeMirror makeFromClassType(TypeSystem ts, ASTClassType node, Substitution subst, TypingContext ctx) {
         if (node == null) {
             return null;
         }
 
 
         PSet<SymAnnot> typeAnnots = getTypeAnnotations(node);
-        JTypeDeclSymbol reference = getReferenceEnsureResolved(node);
+        JTypeDeclSymbol reference = getReferenceEnsureResolved(node, ctx);
 
         if (reference instanceof JTypeParameterSymbol) {
             return subst.apply(((JTypeParameterSymbol) reference).getTypeMirror()).withAnnotations(typeAnnots);
         }
 
-        JClassType enclosing = getEnclosing(ts, node, subst, node.getQualifier(), reference);
+        JClassType enclosing = getEnclosing(ts, node, subst, node.getQualifier(), reference, ctx);
 
         ASTTypeArguments typeArguments = node.getTypeArguments();
 
@@ -143,7 +145,7 @@ final class TypesFromAst {
             if (!typeArguments.isDiamond()) {
                 boundGenerics = new ArrayList<>(typeArguments.getNumChildren());
                 for (ASTType t : typeArguments) {
-                    boundGenerics.add(fromAst(ts, subst, t));
+                    boundGenerics.add(fromAst(ts, subst, t, ctx));
                 }
             }
             // fallthrough, this will be set to the raw type (with the correct enclosing type)
@@ -168,8 +170,8 @@ final class TypesFromAst {
         }
     }
 
-    private static @Nullable JClassType getEnclosing(TypeSystem ts, ASTClassType node, Substitution subst, @Nullable ASTClassType lhsType, JTypeDeclSymbol reference) {
-        @Nullable JTypeMirror enclosing = makeFromClassType(ts, lhsType, subst);
+    private static @Nullable JClassType getEnclosing(TypeSystem ts, ASTClassType node, Substitution subst, @Nullable ASTClassType lhsType, JTypeDeclSymbol reference, TypingContext ctx) {
+        @Nullable JTypeMirror enclosing = makeFromClassType(ts, lhsType, subst, ctx);
 
         if (enclosing != null && !shouldEnclose(reference)) {
             // It's possible to write Map.Entry<A,B> but Entry is a static type,
@@ -208,11 +210,39 @@ final class TypesFromAst {
             && !Modifier.isStatic(reference.getModifiers());
     }
 
-    private static @NonNull JTypeDeclSymbol getReferenceEnsureResolved(ASTClassType node) {
+    private static @NonNull JTypeDeclSymbol getReferenceEnsureResolved(ASTClassType node, TypingContext ctx) {
         if (node.getReferencedSym() != null) {
             return node.getReferencedSym();
+        } else if (node.getParent() instanceof ASTConstructorCall) {
+            ASTExpression qualifier = ((ASTConstructorCall) node.getParent()).getQualifier();
+            if (qualifier != null) {
+                assert node.getImplicitEnclosing() == null
+                    : "Qualified ctor calls should be handled lazily";
+                // note: this triggers recursive type resolution of the qualifier
+                JTypeMirror qualifierType = qualifier.getTypeMirror(ctx);
+                JClassSymbol symbol;
+                if (qualifierType instanceof JClassType) {
+                    JClassType enclosing = (JClassType) qualifierType;
+                    JClassType resolved = JavaResolvers.getMemberClassResolver(enclosing, node.getRoot().getPackageName(), node.getEnclosingType().getSymbol(), node.getSimpleName())
+                                                       .resolveFirst(node.getSimpleName());
+                    if (resolved == null) {
+                        // compile-time error
+                        symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
+                    } else {
+                        symbol = resolved.getSymbol();
+                        JClassType actualEnclosing = enclosing.getAsSuper(symbol.getEnclosingClass());
+                        assert actualEnclosing != null : "We got this symbol by looking into enclosing";
+                        node.setImplicitEnclosing(actualEnclosing);
+                    }
+                } else {
+                    // qualifier is unresolved, compile-time error
+                    symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
+                }
+                node.setSymbol(symbol);
+                return symbol;
+            } // else fallthrough
         }
-        throw new IllegalStateException("Disambiguation pass failed to resolve symbol for " + node);
+        throw new IllegalStateException("Disambiguation pass should resolve everything except qualified ctor calls");
     }
 
     // Whether the reference is a non-static inner type of the enclosing type

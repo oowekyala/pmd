@@ -21,7 +21,6 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
-import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JVariableSig;
@@ -29,6 +28,7 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig.FieldSig;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.lang.java.types.Substitution;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
+import net.sourceforge.pmd.lang.java.types.TypingContext;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext;
 import net.sourceforge.pmd.lang.java.types.ast.internal.LazyTypeResolver;
 import net.sourceforge.pmd.lang.java.types.internal.infer.Infer;
@@ -72,8 +72,8 @@ public final class InternalApiBridge {
         }
     }
 
-    public static void disambigWithCtx(ASTCompilationUnit nodes, ReferenceCtx ctx) {
-        AstDisambiguationPass.disambigWithCtx(nodes, ctx);
+    public static void disambiguationPass(ASTCompilationUnit nodes, JavaAstProcessor processor) {
+        AstDisambiguationPass.disambiguationPass(nodes, processor);
     }
 
     /**
@@ -201,8 +201,8 @@ public final class InternalApiBridge {
         return node.isStandalone();
     }
 
-    public static JTypeMirror buildTypeFromAstInternal(TypeSystem ts, Substitution lexicalSubst, ASTType node) {
-        return TypesFromAst.fromAst(ts, lexicalSubst, node);
+    public static JTypeMirror buildTypeFromAstInternal(TypeSystem ts, Substitution lexicalSubst, ASTType node, TypingContext ctx) {
+        return TypesFromAst.fromAst(ts, lexicalSubst, node, ctx);
     }
 
     public static JTypeDeclSymbol getReferencedSym(ASTClassType type) {

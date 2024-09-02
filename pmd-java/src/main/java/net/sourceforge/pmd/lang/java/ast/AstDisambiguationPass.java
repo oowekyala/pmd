@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import static net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors.CANNOT_RESOLVE_AMBIGUOUS_NAME;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
@@ -19,10 +18,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
+import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
-import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaResolvers;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.types.JClassType;
@@ -57,16 +56,27 @@ final class AstDisambiguationPass {
      * for the worst kind of ambiguity
      * </ul>
      */
-    public static void disambigWithCtx(ASTCompilationUnit root, ReferenceCtx ctx) {
-        assert ctx != null : "Null context";
-        Set<DeferredNode> todo = Collections.singleton(new DeferredNode(root, ctx));
+    public static void disambiguationPass(ASTCompilationUnit root, JavaAstProcessor processor) {
+
+        doDisambiguation(root, processor, true);
+        doDisambiguation(root, processor, false);
+    }
+
+    private static void doDisambiguation(ASTCompilationUnit root, JavaAstProcessor processor, boolean onlyTypeCtx) {
+        Set<DeferredNode> todo = new HashSet<>();
+        ReferenceCtx rootCtx = ReferenceCtx.root(processor, root);
+        todo.add(new DeferredNode(root, rootCtx));
+
+        Set<DeferredNode> newDeferred = new HashSet<>();
         do {
-            Set<DeferredNode> newDeferred = new HashSet<>();
             for (DeferredNode deferred : todo) {
-                DisambigVisitor visitor = new DisambigVisitor(todo, newDeferred);
+                DisambigVisitor visitor = new DisambigVisitor(onlyTypeCtx, todo, newDeferred);
                 deferred.node.acceptVisitor(visitor, deferred.enclosingCtx);
             }
+            Set<DeferredNode> tmp = todo;
             todo = newDeferred;
+            newDeferred = tmp;
+            newDeferred.clear();
         } while (!todo.isEmpty());
     }
 
@@ -120,10 +130,16 @@ final class AstDisambiguationPass {
 
     private static final class DisambigVisitor extends JavaVisitorBase<ReferenceCtx, Void> {
 
+        // we store the set of stuff already deferred, that way they are not deferred
+        // repeatedly, and we have to make progress.
         private final Set<DeferredNode> deferredInPrevRound;
         private final Set<DeferredNode> newDeferred;
+        private final boolean onlyTypeCtx;
 
-        DisambigVisitor(Set<DeferredNode> deferredInPrevRound, Set<DeferredNode> newDeferred) {
+        DisambigVisitor(boolean onlyTypeCtx,
+                        Set<DeferredNode> deferredInPrevRound,
+                        Set<DeferredNode> newDeferred) {
+            this.onlyTypeCtx = onlyTypeCtx;
             this.deferredInPrevRound = deferredInPrevRound;
             this.newDeferred = newDeferred;
         }
@@ -150,7 +166,7 @@ final class AstDisambiguationPass {
         }
 
         @Override
-        public Void visit(ASTAmbiguousName name, ReferenceCtx processor) {
+        public Void visit(ASTAmbiguousName name, ReferenceCtx ctx) {
             if (name.wasProcessed()) {
                 // don't redo analysis
                 return null;
@@ -168,8 +184,13 @@ final class AstDisambiguationPass {
                 throw new AssertionError("Unrecognised context for ambiguous name: " + name.getParent());
             }
 
+            if (onlyTypeCtx && !isPackageOrTypeOnly) {
+             //   newDeferred.add(new DeferredNode(name, ctx));
+                return null;
+            }
+
             // do resolve
-            JavaNode resolved = startResolve(name, processor, isPackageOrTypeOnly);
+            JavaNode resolved = startResolve(name, ctx, isPackageOrTypeOnly);
 
             // finish
             assert !isPackageOrTypeOnly
@@ -184,7 +205,7 @@ final class AstDisambiguationPass {
                 resolved = resolvedType;
                 ASTClassType parent = (ASTClassType) name.getParent();
 
-                checkParentIsMember(processor, resolvedType, parent);
+                checkParentIsMember(ctx, resolvedType, parent);
             }
 
             if (resolved != name) { // NOPMD - intentional check for reference equality
@@ -221,7 +242,7 @@ final class AstDisambiguationPass {
             } else {
                 if (type.getParent() instanceof ASTConstructorCall
                     && ((ASTConstructorCall) type.getParent()).isQualifiedInstanceCreation()) {
-                    handleQualifiedCtorCall(((ASTConstructorCall) type.getParent()).getQualifier(), type);
+                    // leave that null for now, will be done during type resolution of the ctor.
                     return null;
                 }
 
@@ -236,49 +257,23 @@ final class AstDisambiguationPass {
             return null;
         }
 
-        private static void handleQualifiedCtorCall(ASTExpression qualifier, ASTClassType node) {
-            // note: this triggers recursive type resolution of the qualifier
-            JTypeMirror qualifierType = qualifier.getTypeMirror();
-            JClassSymbol symbol;
-            if (qualifierType instanceof JClassType) {
-                JClassType enclosing = (JClassType) qualifierType;
-                JClassType resolved = JavaResolvers.getMemberClassResolver(enclosing, node.getRoot().getPackageName(), node.getEnclosingType().getSymbol(), node.getSimpleName())
-                                                   .resolveFirst(node.getSimpleName());
-                if (resolved == null) {
-                    // compile-time error
-                    symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
-                } else {
-                    symbol = resolved.getSymbol();
-                    JClassType actualEnclosing = enclosing.getAsSuper(symbol.getEnclosingClass());
-                    assert actualEnclosing != null : "We got this symbol by looking into enclosing";
-                    node.setImplicitEnclosing(actualEnclosing);
-                }
-            } else {
-                // qualifier is unresolved, compile-time error
-                symbol = (JClassSymbol) node.getTypeSystem().UNKNOWN.getSymbol();
-            }
-            node.setSymbol(symbol);
-        }
-
 
         @Override
         public Void visit(ASTConstructorCall node, ReferenceCtx ctx) {
-            if (node.isQualifiedInstanceCreation()) {
-                // Leave the reference null, this is handled lazily,
-                // because the interaction it depends on the type of
-                // the qualifier
-                // deferred to later, the symbol table for its body depends
-                // on typeres of the ctor which may be qualified, and refer
-                // to stuff that are declared later in the compilation unit,
-                // and not yet disambiged.
+            if (node.isQualifiedInstanceCreation() || node.isAnonymousClass()) {
+                // For qualified ctor calls and diamond anonymous classes, the scope
+                // of the type depends on type resolution of the ctor. That may
+                // depend on stuff that are declared later in the compilation unit,
+                // and not yet disambiguated.
                 DeferredNode deferredSpec = new DeferredNode(node, ctx);
                 if (!deferredInPrevRound.contains(deferredSpec)) {
                     newDeferred.add(deferredSpec);
                     return null;
                 }
             }
-            return super.visit(node, ctx);
+            return visitChildren(node, ctx);
         }
+
 
         private static void setClassSymbolIfNoQualifier(ASTClassType type, ReferenceCtx ctx) {
             final JTypeMirror resolved = ctx.resolveSingleTypeName(type.getSymbolTable(), type.getSimpleName(), type);

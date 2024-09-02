@@ -184,7 +184,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
 
     @Override
     public JTypeMirror visitType(ASTType node, TypingContext ctx) {
-        return InternalApiBridge.buildTypeFromAstInternal(ts, Substitution.EMPTY, node);
+        return InternalApiBridge.buildTypeFromAstInternal(ts, Substitution.EMPTY, node, ctx);
     }
 
     @Override

@@ -313,7 +313,7 @@ class TypeDisambiguationTest : ParserTestSpec({
         assertErrored(aI)
     }
 
-    parserTest("!TODO Import on demand of class defined in same compilation unit that has an extends clause") {
+    parserTest("f:Import on demand of class defined in same compilation unit that has an extends clause") {
         // the extends clause must be disambiguated early to process the on demand import (ODI),
         // which is itself needed to resolve a supertype of Foo (which is itself part of the ODI)
 
@@ -334,5 +334,7 @@ class Assert2 extends Assert {
 class Foo2 extends Foo { }
 
         """)
+
+
     }
 })
