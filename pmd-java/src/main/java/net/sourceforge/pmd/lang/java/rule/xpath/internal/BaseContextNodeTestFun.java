@@ -6,11 +6,18 @@ package net.sourceforge.pmd.lang.java.rule.xpath.internal;
 
 import java.util.function.BiPredicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.sourceforge.pmd.lang.java.ast.Annotatable;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
+import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
+import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
+import net.sourceforge.pmd.lang.java.types.TypesFromReflection;
+import net.sourceforge.pmd.lang.rule.xpath.impl.XPathFunctionDefinition.Type;
+import net.sourceforge.pmd.lang.rule.xpath.impl.XPathFunctionException;
 
 /**
  * XPath function {@code pmd-java:typeIs(typeName as xs:string) as xs:boolean}
@@ -20,30 +27,26 @@ import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
  *
  * <p>Returns true if the type of the node matches, false otherwise.
  */
-public class BaseContextNodeTestFun<T extends JavaNode> extends BaseJavaXPathFunction {
+public class BaseContextNodeTestFun<T extends JavaNode>
+    extends BaseRewrittenFunction<JTypeMirror, T> {
 
     static final Type[] SINGLE_STRING_SEQ = {Type.SINGLE_STRING};
-    private final Class<T> klass;
-    private final BiPredicate<String, T> checker;
-    protected BaseContextNodeTestFun(TypeSystem ts, Class<T> klass, String localName, BiPredicate<String, T> checker) {
-        super(localName);
-        this.klass = klass;
+    private final TypeSystem ts;
+    private final BiPredicate<JTypeMirror, T> checker;
+    protected BaseContextNodeTestFun(TypeSystem ts, Class<T> klass, String localName, BiPredicate<JTypeMirror, T> checker) {
+        super(localName, klass);
+        this.ts = ts;
         this.checker = checker;
     }
 
     @Override
-    public Type[] getArgumentTypes() {
-        return SINGLE_STRING_SEQ;
+    protected JTypeMirror parseArgument(String arg) throws XPathFunctionException {
+        return TypesFromReflection.loadType(ts, arg, unresolvedStore);
     }
 
     @Override
-    public Type getResultType() {
-        return Type.SINGLE_BOOLEAN;
-    }
-
-    @Override
-    public boolean dependsOnContext() {
-        return true;
+    protected boolean matches(T contextNode, String arg, JTypeMirror parsedArg, boolean isConstant) throws XPathFunctionException {
+        return checker.test(parsedArg, contextNode);
     }
 
     @Override
