@@ -1,0 +1,55 @@
+    [Image] or [Truncated image[            Bcol      Ecol
+L2
+    [public]                                1         7
+    [class]                                 8         13
+    [Foo]                                   14        17
+    [{]                                     18        19
+L5
+    [public]                                5         11
+    [String]                                12        18
+    [formatToFixedSize]                     19        36
+    [(]                                     36        37
+    [final]                                 37        42
+    [String]                                43        49
+    [string]                                50        56
+    [,]                                     56        57
+    [final]                                 58        63
+    [int]                                   64        67
+    [size]                                  68        72
+    [)]                                     72        73
+    [{]                                     74        75
+L6
+    [return]                                9         15
+    [StringUtils]                           16        27
+    [.]                                     27        28
+    [rightPad]                              28        36
+    [(]                                     36        37
+    [StringUtils]                           37        48
+    [.]                                     48        49
+    [trimToEmpty]                           49        60
+    [(]                                     60        61
+    [StringUtils]                           61        72
+    [.]                                     72        73
+    [left]                                  73        77
+    [(]                                     77        78
+    [string]                                78        84
+    [!=]                                    85        87
+    [null]                                  88        92
+    [?]                                     93        94
+    [string]                                95        101
+    [:]                                     102       103
+    [""]                                    104       106
+    [,]                                     106       107
+    [size]                                  108       112
+    [)]                                     112       113
+    [)]                                     113       114
+    [,]                                     114       115
+    [size]                                  116       120
+    [,]                                     120       121
+    [' ']                                   122       130
+    [)]                                     130       131
+L7
+    [}]                                     5         6
+L8
+    [}]                                     1         2
+EOF

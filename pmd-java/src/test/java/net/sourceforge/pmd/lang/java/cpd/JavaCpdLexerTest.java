@@ -31,6 +31,11 @@ class JavaCpdLexerTest extends CpdTextComparisonTest {
     }
 
     @Test
+    void testUnicodeEscape() {
+        doTest("unicodeEscape");
+    }
+
+    @Test
     void testStringTemplateReduction() {
         doTest("StringTemplateReduction");
     }
