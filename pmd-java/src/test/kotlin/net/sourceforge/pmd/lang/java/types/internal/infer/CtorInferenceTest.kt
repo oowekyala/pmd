@@ -353,4 +353,44 @@ class CtorInferenceTest : ProcessorTestSpec({
             ctorCall.methodType.symbol shouldBe ctorSymbol
         }
     }
+
+    parserTest("f:Diamond inference with no constraint") {
+        val (acu, _) = parser.logTypeInferenceVerbose().parseWithTypeInferenceSpy(
+            """
+class Test {
+
+    interface Cache<K, V> {
+    }
+    
+    class CacheLoader<K, V> {
+        V fetch(K key) {
+            return null;
+        }
+    }
+
+    interface CacheBuilder<K, V> {
+        <K1 extends K, V1 extends V> Cache<K1, V1> build(CacheLoader<? super K1, V1> loader);
+    }
+
+
+    static <K, V> CacheBuilder<K, V> newCacheBuilder(String id) {
+    }
+
+    void test() {
+        var cache = Test.<String, Integer>newCacheBuilder("test")
+                        .build(new CacheLoader<>());
+    }
+}
+
+            """
+        )
+
+        val (_, t_Cache, t_CacheLoader) = acu.declaredTypeSignatures()
+        val ctorCall = acu.firstCtorCall()
+
+        ctorCall.withTypeDsl { // for the enclosing method call
+           ctorCall shouldHaveType t_CacheLoader[ts.OBJECT, int.box()]
+            acu.varId("cache") shouldHaveType t_Cache[ts.STRING, int.box()]
+        }
+    }
 })
