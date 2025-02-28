@@ -15,6 +15,8 @@ import net.sourceforge.pmd.lang.LanguagePropertyBundle;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.PmdCapableLanguage;
 import net.sourceforge.pmd.lang.document.TextFile;
+import net.sourceforge.pmd.lang.rule.GlobalAnalysisRule;
+import net.sourceforge.pmd.lang.rule.Rule;
 
 /**
  * A base class for language processors. It processes all files of the
@@ -70,6 +72,15 @@ public abstract class BatchLanguageProcessor<P extends LanguagePropertyBundle> i
         // If this is a multi-threaded processor, this call is non-blocking,
         // the call to close on the returned instance blocks instead.
         processor.processFiles();
+
+        for (Rule rule : task.getRulesets().getAllRules()) {
+            if (rule instanceof GlobalAnalysisRule && rule.getLanguage().equals(getLanguage())) {
+                ((GlobalAnalysisRule) rule).endAnalysis(rv -> {
+                    // todo reporting!
+                });
+            }
+        }
+
         return processor;
     }
 

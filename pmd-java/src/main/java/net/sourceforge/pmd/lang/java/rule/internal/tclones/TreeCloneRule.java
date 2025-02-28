@@ -4,16 +4,17 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 
-import static net.sourceforge.pmd.properties.constraints.NumericConstraints.inRange;
-import static net.sourceforge.pmd.properties.constraints.NumericConstraints.positive;
+import static net.sourceforge.pmd.properties.NumericConstraints.inRange;
+import static net.sourceforge.pmd.properties.NumericConstraints.positive;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.document.Locator;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
+import net.sourceforge.pmd.lang.rule.GlobalAnalysisRule;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 /**
  * A rule that implements tree clone detection as implemented by this package.
@@ -21,7 +22,7 @@ import net.sourceforge.pmd.properties.PropertyFactory;
  * stores a minified copy of each AST in the processed files.
  * TODO like other global rules it does not support incremental analysis.
  */
-public class TreeCloneRule extends AbstractJavaRulechainRule {
+public class TreeCloneRule extends AbstractJavaRulechainRule implements GlobalAnalysisRule {
 
     private static CloneDetectorGlobals globalState;
 
@@ -72,7 +73,7 @@ public class TreeCloneRule extends AbstractJavaRulechainRule {
     }
 
     @Override
-    public void endAnalysis(RuleContext ctx) {
+    public void endAnalysis(GlobalReportingContext ctx) {
         // TODO this is a prototype and does not yet report
         // violations through the rule context.
         globalState.computeDuplicates();

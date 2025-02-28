@@ -7,15 +7,11 @@ package net.sourceforge.pmd.lang.java.rule.internal.tclones;
 import java.util.Objects;
 
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.java.ast.ASTArrayType;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
-import net.sourceforge.pmd.lang.java.ast.ASTClassLiteral;
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
 import net.sourceforge.pmd.lang.java.ast.ASTExtendsList;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTForInit;
 import net.sourceforge.pmd.lang.java.ast.ASTImplementsList;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
@@ -27,10 +23,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType;
 import net.sourceforge.pmd.lang.java.ast.ASTType;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeArguments;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
-import net.sourceforge.pmd.lang.java.ast.AccessNode.Visibility;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
+import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.rule.internal.tclones.MiniTree.MiniTreeBuilder;
 
 /**
@@ -99,7 +95,7 @@ public final class JavaMiniTreeAttributes {
 
 
         @Override
-        public Void visit(ASTVariableDeclaratorId node, MiniTreeBuilder data) {
+        public Void visit(ASTVariableId node, MiniTreeBuilder data) {
             if (node.getVisibility() == Visibility.V_LOCAL) {
                 // local vars can be renamed so they don't count.
                 return null;
@@ -157,7 +153,8 @@ public final class JavaMiniTreeAttributes {
             return parent instanceof ASTFieldDeclaration
                 || parent instanceof ASTExtendsList
                 || parent instanceof ASTImplementsList
-                || true;
+                ;
+//                || true;
         }
 
 

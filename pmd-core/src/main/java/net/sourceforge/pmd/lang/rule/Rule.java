@@ -301,9 +301,6 @@ public interface Rule extends PropertySource {
      */
     void end(RuleContext ctx);
 
-    default void endAnalysis(RuleContext ctx) {
-        // do nothing
-    }
 
     /**
      * Creates a new copy of this rule.

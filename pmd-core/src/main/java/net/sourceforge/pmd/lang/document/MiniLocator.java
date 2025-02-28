@@ -22,6 +22,6 @@ final class MiniLocator implements Locator {
 
     @Override
     public FileLocation toLocation(TextRegion region) {
-        return positioner.toLocation(region, textFile.getDisplayName());
+        return positioner.toLocation(region, textFile.getFileId());
     }
 }
