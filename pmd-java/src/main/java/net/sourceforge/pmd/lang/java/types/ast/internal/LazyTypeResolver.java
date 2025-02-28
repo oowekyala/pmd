@@ -76,6 +76,7 @@ import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JRecordComponentSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaSemanticErrors;
 import net.sourceforge.pmd.lang.java.types.JArrayType;
@@ -88,7 +89,6 @@ import net.sourceforge.pmd.lang.java.types.Substitution;
 import net.sourceforge.pmd.lang.java.types.TypeConversion;
 import net.sourceforge.pmd.lang.java.types.TypeOps;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
-import net.sourceforge.pmd.lang.java.types.TypesFromReflection;
 import net.sourceforge.pmd.lang.java.types.TypingContext;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext.ExprContextKind;
@@ -114,7 +114,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
         this.ts = processor.getTypeSystem();
         this.infer = new Infer(ts, processor.getJdkVersion(), logger);
         this.polyResolution = new PolyResolution(infer);
-        this.stringType = (JClassType) TypesFromReflection.fromReflect(String.class, ts);
+        this.stringType = (JClassType) ts.rawType(ts.getClassSymbol(String.class, ClasspathRequest.noOrigin()));
         this.processor = processor;
         this.err = processor.getLogger();
     }
@@ -247,7 +247,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
             if (iterableType instanceof JArrayType) {
                 return ((JArrayType) iterableType).getComponentType(); // component type is necessarily a type
             } else {
-                JTypeMirror asSuper = iterableType.getAsSuper(ts.getClassSymbol(Iterable.class));
+                JTypeMirror asSuper = iterableType.getAsSuper(ts.getClassSymbol(Iterable.class, ClasspathRequest.noOrigin()));
                 if (asSuper instanceof JClassType) {
                     if (asSuper.isRaw()) {
                         return ts.OBJECT;
@@ -541,7 +541,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
 
     @Override
     public JTypeMirror visit(ASTClassLiteral node, TypingContext ctx) {
-        JClassSymbol klassSym = ts.getClassSymbol(Class.class);
+        JClassSymbol klassSym = ts.getClassSymbol(Class.class, ClasspathRequest.noOrigin());
         assert klassSym != null : Class.class + " is missing from the classpath?";
         if (node.getTypeNode() instanceof ASTVoidType) {
             // void.class : Class<Void>

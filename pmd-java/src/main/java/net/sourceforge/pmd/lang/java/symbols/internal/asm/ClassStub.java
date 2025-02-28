@@ -50,6 +50,9 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
     private final Names names;
 
+    // Fingerprint of all members. TODO for now this is simply hash of classfile
+    long abiFingerprint;
+
     // all the following are lazy and depend on the parse lock
 
     private int accessFlags;

@@ -32,6 +32,7 @@ import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.CoreResolvers;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver.SingleNameResolver;
@@ -74,10 +75,10 @@ public final class JavaResolvers {
         return isAccessibleIn(null, thisPackage, member, false);
     }
 
-    @NonNull
-    static NameResolver<JTypeMirror> moduleImport(Set<String> moduleNames,
-                                                  final SymbolResolver symbolResolver,
-                                                  final String thisPackage) {
+    public static @NonNull NameResolver<JTypeMirror> moduleImport(Set<String> moduleNames,
+                                                                  final SymbolResolver symbolResolver,
+                                                                  final String thisPackage,
+                                                                  ClasspathRequest origin) {
         return new SingleNameResolver<JTypeMirror>() {
             @Override
             public @Nullable JTypeMirror resolveFirst(String simpleName) {
@@ -90,7 +91,7 @@ public final class JavaResolvers {
                     }
 
                     for (String packageName : moduleSymbol.getExportedPackages()) {
-                        JClassSymbol sym = symbolResolver.resolveClassFromCanonicalName(packageName + "." + simpleName);
+                        JClassSymbol sym = symbolResolver.resolveClassFromCanonicalName(packageName + "." + simpleName, origin);
                         if (sym != null && canBeImportedIn(thisPackage, sym)) {
                             return sym.getTypeSystem().typeOf(sym, false);
                         }
@@ -110,7 +111,8 @@ public final class JavaResolvers {
     @NonNull
     static NameResolver<JTypeMirror> importedOnDemand(Set<String> lazyImportedPackagesAndTypes,
                                                       final SymbolResolver symResolver,
-                                                      final String thisPackage) {
+                                                      final String thisPackage,
+                                                      ClasspathRequest origin) {
         return new SingleNameResolver<JTypeMirror>() {
             @Nullable
             @Override
@@ -118,7 +120,7 @@ public final class JavaResolvers {
                 for (String pack : lazyImportedPackagesAndTypes) {
                     // here 'pack' may be a package or a type name, so we must resolve by canonical name
                     String name = prependPackageName(pack, simpleName);
-                    JClassSymbol sym = symResolver.resolveClassFromCanonicalName(name);
+                    JClassSymbol sym = symResolver.resolveClassFromCanonicalName(name, origin);
                     if (sym != null && canBeImportedIn(thisPackage, sym)) {
                         return sym.getTypeSystem().typeOf(sym, false);
                     }
@@ -134,12 +136,12 @@ public final class JavaResolvers {
     }
 
     @NonNull
-    static NameResolver<JTypeMirror> packageResolver(SymbolResolver symResolver, String packageName) {
+    static NameResolver<JTypeMirror> packageResolver(SymbolResolver symResolver, String packageName, ClasspathRequest origin) {
         return new SingleNameResolver<JTypeMirror>() {
             @Nullable
             @Override
             public JTypeMirror resolveFirst(String simpleName) {
-                JClassSymbol sym = symResolver.resolveClassFromBinaryName(prependPackageName(packageName, simpleName));
+                JClassSymbol sym = symResolver.resolveClassFromBinaryName(prependPackageName(packageName, simpleName), origin);
                 if (sym != null) {
                     return sym.getTypeSystem().typeOf(sym, false);
                 }

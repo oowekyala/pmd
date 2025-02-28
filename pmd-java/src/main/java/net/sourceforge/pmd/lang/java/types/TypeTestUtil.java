@@ -17,6 +17,7 @@ import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.OptionalBool;
 
@@ -84,7 +85,7 @@ public final class TypeTestUtil {
             return false;
         }
 
-        JTypeMirror otherType = TypesFromReflection.fromReflect(clazz, type.getTypeSystem());
+        JTypeMirror otherType = new TypesFromReflection(type.getTypeSystem(), ClasspathRequest.unknownOrigin()).fromReflect(clazz);
 
         if (otherType == null || TypeOps.isUnresolved(type) || hasNoSubtypes(clazz)) {
             // We'll return true if the types have equal symbols (same binary name),
@@ -180,7 +181,7 @@ public final class TypeTestUtil {
         }
 
         TypeSystem ts = thisType.getTypeSystem();
-        @Nullable JTypeMirror otherType = TypesFromReflection.loadType(ts, canonicalName, unresolvedStore);
+        @Nullable JTypeMirror otherType = new TypesFromReflection(ts, ClasspathRequest.unknownOrigin()).loadType(canonicalName, unresolvedStore);
 
         return isA(otherType, thisType);
     }

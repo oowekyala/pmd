@@ -14,9 +14,11 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 
 /**
  * A symbol resolver that knows about a few hand-picked symbols.
+ * Does not track dependencies, as this is only used for symbols declared in the same file.
  */
 final class MapSymResolver implements SymbolResolver {
     private static final Logger LOG = LoggerFactory.getLogger(MapSymResolver.class);
@@ -31,7 +33,7 @@ final class MapSymResolver implements SymbolResolver {
     }
 
     @Override
-    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
+    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
         return byBinaryName.get(binaryName);
     }
 

@@ -12,23 +12,39 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
+
 /**
  * Resolves symbols from their global name. This abstracts over whether
  * we're looking on a classpath, in a file tree, in a serialized index, etc.
  */
 public interface SymbolResolver {
 
+
     /**
-     * Resolves a class symbol from its canonical name. Periods ('.') will
+     * Resolves a class symbol from its binary name. Periods ('.') will
      * not be interpreted as nested-class separators, so this performs at
      * most one classloader lookup. Note that external symbol resolvers
      * do not need to implement lookup for primitive types, for local
      * and anonymous classes, or for array classes. This is handled by
      * the AST implementation or by the type system. Looking up such symbols
      * is undefined behaviour.
+     *
+     * @param binaryName Binary name
+     * @param origin Origin of the classpath request, used for tracking dependencies
      */
     @Nullable
-    JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName);
+    JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin);
+
+    /**
+     * Resolves a class symbol from its binary name. This does not record dependencies.
+     *
+     * @see #resolveClassFromBinaryName(String, ClasspathRequest)
+     */
+    @Deprecated
+    default @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
+        return resolveClassFromBinaryName(binaryName, ClasspathRequest.noOrigin());
+    }
 
     /**
      * @since 7.5.0
@@ -37,13 +53,25 @@ public interface SymbolResolver {
     JModuleSymbol resolveModule(@NonNull String moduleName);
 
     /**
+     * Resolves a class symbol from its canonical name. This does not record dependencies.
+     *
+     * @see #resolveClassFromCanonicalName(String, ClasspathRequest)
+     */
+    @Deprecated
+    default @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName) {
+        return resolveClassFromCanonicalName(canonicalName, ClasspathRequest.noOrigin());
+    }
+
+    /**
      * Resolves a class symbol from its canonical name. Periods ('.') may
      * be interpreted as nested-class separators, so for n segments, this
      * performs at most n classloader lookups.
+     *
+     * @param canonicalName Canonical name
+     * @param origin Origin of the classpath request, used for tracking dependencies
      */
-    @Nullable
-    default JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName) {
-        JClassSymbol symbol = resolveClassFromBinaryName(canonicalName);
+    default @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName, ClasspathRequest origin) {
+        JClassSymbol symbol = resolveClassFromBinaryName(canonicalName, origin);
         if (symbol != null) {
             return symbol;
         }
@@ -51,7 +79,7 @@ public interface SymbolResolver {
         if (lastDotIdx < 0) {
             return null;
         } else {
-            JClassSymbol outer = resolveClassFromCanonicalName(canonicalName.substring(0, lastDotIdx));
+            JClassSymbol outer = resolveClassFromCanonicalName(canonicalName.substring(0, lastDotIdx), origin);
             if (outer != null) {
                 String innerName = canonicalName.substring(lastDotIdx + 1);
                 return outer.getDeclaredClass(innerName);
@@ -77,9 +105,9 @@ public interface SymbolResolver {
             private final List<SymbolResolver> stack = listOf(first, others);
 
             @Override
-            public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
+            public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
                 for (SymbolResolver resolver : stack) {
-                    JClassSymbol sym = resolver.resolveClassFromBinaryName(binaryName);
+                    JClassSymbol sym = resolver.resolveClassFromBinaryName(binaryName, origin);
                     if (sym != null) {
                         return sym;
                     }

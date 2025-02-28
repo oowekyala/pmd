@@ -64,8 +64,7 @@ public class LiteralsFirstInComparisonsRule extends AbstractJavaRulechainRule {
             if (symbol != null
                 && symbol.isFinal()
                 && Modifier.isStatic(symbol.getModifiers())) {
-                return reference.getTypeMirror().getSymbol()
-                    .equals(reference.getTypeSystem().getClassSymbol(String.class));
+                return TypeTestUtil.isA(String.class, reference.getTypeMirror());
             }
         }
 

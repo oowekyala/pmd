@@ -36,6 +36,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Classpath;
 import net.sourceforge.pmd.lang.java.types.BasePrimitiveSymbol.RealPrimitiveSymbol;
 import net.sourceforge.pmd.lang.java.types.BasePrimitiveSymbol.VoidSymbol;
@@ -330,7 +331,19 @@ public final class TypeSystem {
      *
      * @param clazz Class
      */
+    @Deprecated
     public @Nullable JClassSymbol getClassSymbol(@Nullable Class<?> clazz) {
+        return getClassSymbol(clazz, ClasspathRequest.noOrigin());
+    }
+
+    /**
+     * Returns the class symbol for the given reflected class. This asks
+     * the classloader of this type system. Returns null if the parameter
+     * is null, or the class is not available in the analysis classpath.
+     *
+     * @param clazz Class
+     */
+    public @Nullable JClassSymbol getClassSymbol(@Nullable Class<?> clazz, ClasspathRequest origin) {
         if (clazz == null) {
             return null;
         } else if (clazz.isPrimitive()) {
@@ -340,10 +353,10 @@ public final class TypeSystem {
             }
             return getPrimitive(kind).getSymbol();
         } else if (clazz.isArray()) {
-            return new ArraySymbolImpl(this, getClassSymbol(clazz.getComponentType()));
+            return new ArraySymbolImpl(this, getClassSymbol(clazz.getComponentType(), origin));
         }
 
-        return resolver.resolveClassFromBinaryName(clazz.getName());
+        return resolver.resolveClassFromBinaryName(clazz.getName(), origin);
     }
 
     /**
@@ -357,8 +370,25 @@ public final class TypeSystem {
      *
      * @throws IllegalArgumentException if the argument is not a binary name
      */
+    @Deprecated
     public @Nullable JClassSymbol getClassSymbol(String binaryName) {
-        return getClassSymbolImpl(binaryName, false);
+        return getClassSymbol(binaryName, ClasspathRequest.unknownOrigin());
+    }
+
+    /**
+     * Returns a symbol for the binary name. Returns null if the name is
+     * null or the symbol is not found on the classpath. The class must
+     * not be an array.
+     *
+     * @param binaryName Binary name
+     * @param origin
+     *
+     * @return A symbol, or null
+     *
+     * @throws IllegalArgumentException if the argument is not a binary name
+     */
+    public @Nullable JClassSymbol getClassSymbol(String binaryName, ClasspathRequest origin) {
+        return getClassSymbolImpl(binaryName, false, origin);
     }
 
     /**
@@ -376,11 +406,11 @@ public final class TypeSystem {
      *
      * @throws IllegalArgumentException if the argument is not a binary name
      */
-    public @Nullable JClassSymbol getClassSymbolFromCanonicalName(String canonicalName) {
-        return getClassSymbolImpl(canonicalName, true);
+    public @Nullable JClassSymbol getClassSymbolFromCanonicalName(String canonicalName, ClasspathRequest origin) {
+        return getClassSymbolImpl(canonicalName, true, origin);
     }
 
-    private @Nullable JClassSymbol getClassSymbolImpl(String name, boolean isCanonical) {
+    private @Nullable JClassSymbol getClassSymbolImpl(String name, boolean isCanonical, ClasspathRequest origin) {
         if (name == null) {
             return null;
         }
@@ -394,8 +424,8 @@ public final class TypeSystem {
 
         AssertionUtil.assertValidJavaBinaryNameNoArray(name);
 
-        return isCanonical ? resolver.resolveClassFromCanonicalName(name)
-                           : resolver.resolveClassFromBinaryName(name);
+        return isCanonical ? resolver.resolveClassFromCanonicalName(name, origin)
+                           : resolver.resolveClassFromBinaryName(name, origin);
     }
 
     /**

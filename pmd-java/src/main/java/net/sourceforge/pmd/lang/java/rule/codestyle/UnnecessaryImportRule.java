@@ -4,8 +4,11 @@
 
 package net.sourceforge.pmd.lang.java.rule.codestyle;
 
+import static net.sourceforge.pmd.util.CollectionUtil.setOf;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -32,11 +35,13 @@ import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
-import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
+import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainIterator;
+import net.sourceforge.pmd.lang.java.symbols.table.internal.JavaResolvers;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -375,23 +380,10 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
                         if (!(symbol instanceof JTypeDeclSymbol)) {
                             return false;
                         }
-
-                        JTypeDeclSymbol typeSymbol = (JTypeDeclSymbol) symbol;
-                        String moduleName = it.node.getImportedName();
-                        String simpleName = typeSymbol.getSimpleName();
-                        TypeSystem typeSystem = typeSymbol.getTypeSystem();
-                        JModuleSymbol moduleSymbol = typeSystem.getModuleSymbol(moduleName);
-                        boolean found = false;
-                        for (String packageName : moduleSymbol.getExportedPackages()) {
-                            JClassSymbol classSymbol = typeSystem.getClassSymbol(packageName + "." + simpleName);
-                            if (classSymbol != null) {
-                                found = TypeTestUtil.isA(typeSystem.rawType(typeSymbol), typeSystem.rawType(classSymbol));
-                            }
-                            if (found) {
-                                break;
-                            }
-                        }
-                        return found;
+                        ClasspathRequest requestOrigin = ClasspathRequest.fromRule(it.node.getAstInfo().getTextDocument().getFileId(), this);
+                        NameResolver<JTypeMirror> resolver = JavaResolvers.moduleImport(setOf(it.node.getImportedName()), symbol.getTypeSystem().bootstrapResolver(), it.node.getRoot().getPackageName(), requestOrigin);
+                        JTypeMirror foundWithThisImport = resolver.resolveFirst(symbol.getSimpleName());
+                        return foundWithThisImport != null && Objects.equals(symbol, foundWithThisImport.getSymbol());
                     });
                 }
                 return;
@@ -403,7 +395,7 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
         // unknown reference
     }
 
-    private static boolean importOnDemandImportsSymbol(JAccessibleElementSymbol symbol, boolean onlyStatic, ImportWrapper it) {
+    private boolean importOnDemandImportsSymbol(JAccessibleElementSymbol symbol, boolean onlyStatic, ImportWrapper it) {
         if (!it.isStatic() && onlyStatic) {
             return false;
         }
@@ -423,7 +415,7 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
             }
             // maybe we're importing a subclass of the container.
             TypeSystem ts = symbolOwner.getTypeSystem();
-            JClassSymbol importedContainer = ts.getClassSymbol(it.node.getImportedName());
+            JClassSymbol importedContainer = ts.getClassSymbol(it.node.getImportedName(), ClasspathRequest.fromRule(it.node, this));
             return importedContainer == null // insufficient classpath, err towards FNs
                 || TypeTestUtil.isA(ts.rawType(symbolOwner), ts.rawType(importedContainer));
         }

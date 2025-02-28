@@ -23,6 +23,7 @@ import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JRecordComponentSymbol;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
 import net.sourceforge.pmd.lang.java.types.Substitution;
@@ -51,7 +52,11 @@ public final class ImplicitMemberSymbols {
             "valueOf",
             Modifier.PUBLIC | Modifier.STATIC,
             TypeSystem::declaration,
-            singletonList(t -> new FakeFormalParamSym(t, "name", (ts, s) -> ts.declaration(ts.getClassSymbol(String.class))))
+            singletonList(
+                t -> new FakeFormalParamSym(
+                    t, "name",
+                    (ts, s) -> ts.declaration(ts.getClassSymbol(String.class, ClasspathRequest.noOrigin())))
+            )
         );
     }
 

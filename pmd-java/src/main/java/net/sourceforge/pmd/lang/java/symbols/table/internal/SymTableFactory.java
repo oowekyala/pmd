@@ -43,6 +43,7 @@ import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.NameResolver;
@@ -89,11 +90,13 @@ final class SymTableFactory {
             return sym.getName();
         }
     };
+    private final ClasspathRequest classpathRequest;
 
 
     SymTableFactory(String thisPackage, JavaAstProcessor processor) {
         this.thisPackage = thisPackage;
         this.processor = processor;
+        this.classpathRequest = ClasspathRequest.signatureDep(processor.getFileId());
     }
 
     // <editor-fold defaultstate="collapsed" desc="Utilities for classloading">
@@ -107,6 +110,10 @@ final class SymTableFactory {
         return processor.getLogger();
     }
 
+    ClasspathRequest classpathRequest() {
+        return classpathRequest;
+    }
+
     JClassSymbol loadClassReportFailure(JavaNode location, String fqcn) {
         JClassSymbol loaded = loadClassOrFail(fqcn);
         if (loaded == null) {
@@ -116,10 +123,10 @@ final class SymTableFactory {
         return loaded;
     }
 
-    /** @see SymbolResolver#resolveClassFromCanonicalName(String) */
+    /** @see SymbolResolver#resolveClassFromCanonicalName(String, ClasspathRequest) */
     @Nullable
     JClassSymbol loadClassOrFail(String fqcn) {
-        return processor.getSymResolver().resolveClassFromCanonicalName(fqcn);
+        return processor.getSymResolver().resolveClassFromCanonicalName(fqcn, classpathRequest());
     }
 
     // </editor-fold>
@@ -174,7 +181,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.IMPORT_ON_DEMAND,
                 importedTypes.getMutableMap(),
-                JavaResolvers.importedOnDemand(lazyImportedPackagesAndTypes, processor.getSymResolver(), thisPackage)
+                JavaResolvers.importedOnDemand(lazyImportedPackagesAndTypes, processor.getSymResolver(), thisPackage, classpathRequest)
             );
         }
 
@@ -249,7 +256,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.MODULE_IMPORT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(lazyImportedModules, processor.getSymResolver(), thisPackage)
+                JavaResolvers.moduleImport(lazyImportedModules, processor.getSymResolver(), thisPackage, classpathRequest())
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -352,7 +359,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.SIMPLE_COMPILATION_UNIT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor.getSymResolver(), thisPackage)
+                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor.getSymResolver(), thisPackage, classpathRequest())
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -386,7 +393,7 @@ final class SymTableFactory {
 
         return SymbolTableImpl.withTypes(
             parent,
-            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor.getSymResolver(), packageName))
+            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor.getSymResolver(), packageName, classpathRequest()))
         );
     }
 

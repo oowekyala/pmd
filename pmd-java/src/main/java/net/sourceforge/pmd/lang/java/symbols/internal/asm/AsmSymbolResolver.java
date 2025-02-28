@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.FailedLoader;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.StreamLoader;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
@@ -42,16 +43,18 @@ public class AsmSymbolResolver implements SymbolResolver {
      * instead of caching failure cases separately.
      */
     private final ClassStub failed;
+    private final ClassDependencyGraph dependencyGraph;
 
     public AsmSymbolResolver(TypeSystem ts, Classpath classLoader) {
         this.ts = ts;
         this.classLoader = classLoader;
         this.typeLoader = new SignatureParser(this);
         this.failed = new ClassStub(this, "/*failed-lookup*/", FailedLoader.INSTANCE, 0);
+        this.dependencyGraph = new ClassDependencyGraph();
     }
 
     @Override
-    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
+    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
         AssertionUtil.requireParamNotNull("binaryName", binaryName);
 
         String internalName = getInternalName(binaryName);
@@ -72,7 +75,11 @@ public class AsmSymbolResolver implements SymbolResolver {
             found = failed;
         }
 
-        return found == failed ? null : found; // NOPMD CompareObjectsWithEquals
+        if (found == failed) { // NOPMD CompareObjectsWithEquals
+            found = null;
+        }
+        dependencyGraph.recordClasspathRequest(origin, binaryName, found);
+        return found;
     }
 
     @Override
