@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -30,11 +32,11 @@ import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainIterator;
-import net.sourceforge.pmd.lang.java.types.JArrayType;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -42,9 +44,6 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocRef;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
@@ -69,14 +68,62 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
     private static final Logger LOG = LoggerFactory.getLogger(UnnecessaryImportRule.class);
 
     private final Set<ImportWrapper> allSingleNameImports = new HashSet<>();
-    private final Set<ImportWrapper> allImportsOnDemand = new HashSet<>();
+    private final Set<ImportWrapper> staticImportsOnDemand = new HashSet<>();
+    private final Set<ImportWrapper> typeImportsOnDemand = new HashSet<>();
+    private final Set<ImportWrapper> moduleImports = new HashSet<>();
     private final Set<ImportWrapper> unnecessaryJavaLangImports = new HashSet<>();
     private final Set<ImportWrapper> unnecessaryImportsFromSamePackage = new HashSet<>();
 
+    /*
+     * Patterns to match the following constructs:
+     *
+     * @see package.class#member(param, param) label
+     * {@linkplain package.class#member(param, param) label}
+     * {@link package.class#member(param, param) label}
+     * {@link package.class#field}
+     * {@value package.class#field}
+     *
+     * @throws package.class label
+     * @exception package.class label
+     */
+
+    /* package.class#member(param, param) */
+    private static final String TYPE_PART_GROUP = "((?:\\p{Alpha}\\w*\\.)*(?:\\p{Alpha}\\w*))?(?:#\\w*(?:\\(([.\\w\\s,\\[\\]]*)\\))?)?";
+
+    private static final Pattern SEE_PATTERN = Pattern.compile("@see\\s+" + TYPE_PART_GROUP);
+
+
+    private static final Pattern LINK_PATTERNS = Pattern.compile("\\{@link(?:plain)?\\s+" + TYPE_PART_GROUP + "[\\s\\}]");
+
+    private static final Pattern VALUE_PATTERN = Pattern.compile("\\{@value\\s+(\\p{Alpha}\\w*)[\\s#\\}]");
+
+    private static final Pattern THROWS_PATTERN = Pattern.compile("@throws\\s+(\\p{Alpha}\\w*)");
+
+    private static final Pattern EXCEPTION_PATTERN = Pattern.compile("@exception\\s+(\\p{Alpha}\\w*)");
+
+    /* // @link substring="a" target="package.class#member(param, param)" */
+    private static final Pattern LINK_IN_SNIPPET = Pattern
+        .compile("//\\s*@link\\s+(?:.*?)?target=[\"']?" + TYPE_PART_GROUP + "[\"']?");
+
+    /*
+     * Java 23, JEP 467: Markdown Documentation Comments
+     *
+     * [Type#method()]
+     * [Type]
+     * [alternative Text][Type#method()]
+     * [alternative Text][Type]
+     */
+    private static final Pattern MARKDOWN_PATTERN = Pattern.compile("\\[" + TYPE_PART_GROUP + "]");
+
+    private static final Pattern[] PATTERNS = { SEE_PATTERN, LINK_PATTERNS, VALUE_PATTERN, THROWS_PATTERN,
+                                                EXCEPTION_PATTERN, LINK_IN_SNIPPET, MARKDOWN_PATTERN };
+
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
+        this.moduleImports.clear();
         this.allSingleNameImports.clear();
-        this.allImportsOnDemand.clear();
+        this.staticImportsOnDemand.clear();
+        this.typeImportsOnDemand.clear();
         this.unnecessaryJavaLangImports.clear();
         this.unnecessaryImportsFromSamePackage.clear();
         String packageName = node.getPackageName();
@@ -107,16 +154,23 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
             String message = wrapper.isStatic() ? UNUSED_STATIC_IMPORT_MESSAGE : UNUSED_IMPORT_MESSAGE;
             reportWithMessage(wrapper.node, data, message);
         }
-        for (ImportWrapper wrapper : allImportsOnDemand) {
-            String message = wrapper.isStatic() ? UNUSED_STATIC_IMPORT_MESSAGE : UNUSED_IMPORT_MESSAGE;
-            reportWithMessage(wrapper.node, data, message);
+        for (ImportWrapper wrapper : staticImportsOnDemand) {
+            reportWithMessage(wrapper.node, data, UNUSED_STATIC_IMPORT_MESSAGE);
+        }
+        for (ImportWrapper wrapper : typeImportsOnDemand) {
+            reportWithMessage(wrapper.node, data, UNUSED_IMPORT_MESSAGE);
+        }
+        for (ImportWrapper wrapper : moduleImports) {
+            reportWithMessage(wrapper.node, data, "Unused module import ''{0}''");
         }
 
         // remove unused ones, they have already been reported
         unnecessaryJavaLangImports.removeAll(allSingleNameImports);
-        unnecessaryJavaLangImports.removeAll(allImportsOnDemand);
+        unnecessaryJavaLangImports.removeAll(staticImportsOnDemand);
+        unnecessaryJavaLangImports.removeAll(typeImportsOnDemand);
         unnecessaryImportsFromSamePackage.removeAll(allSingleNameImports);
-        unnecessaryImportsFromSamePackage.removeAll(allImportsOnDemand);
+        unnecessaryImportsFromSamePackage.removeAll(staticImportsOnDemand);
+        unnecessaryImportsFromSamePackage.removeAll(typeImportsOnDemand);
         for (ImportWrapper wrapper : unnecessaryJavaLangImports) {
             reportWithMessage(wrapper.node, data, IMPORT_FROM_JAVA_LANG_MESSAGE);
         }
@@ -142,30 +196,32 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
     }
 
     private void visitComments(ASTCompilationUnit node) {
+        // todo improve that when we have a javadoc parser
         for (JavaComment comment : node.getComments()) {
             if (!(comment instanceof JavadocComment)) {
                 continue;
             }
-            JdocComment jdocTree = ((JavadocComment) comment).getJdocTree();
-            for (JdocRef jdocRef : jdocTree.descendants(JdocRef.class)) {
-                if (jdocRef instanceof JdocClassRef) {
-                    String simpleRef = ((JdocClassRef) jdocRef).getSimpleRef();
-                    if (simpleRef.isEmpty()) {
-                        continue;
+            for (Pattern p : PATTERNS) {
+                Matcher m = p.matcher(comment.getText());
+                while (m.find()) {
+                    String fullname = m.group(1);
+
+                    if (fullname != null) { // may be null for "@see #" and "@link #"
+                        removeReferenceSingleImport(fullname);
                     }
-                    JTypeMirror resolved = ((JdocClassRef) jdocRef).resolveRef();
-                    if (resolved == null) {
-                        removeReferenceSingleImport(simpleRef);
-                        continue;
+
+                    if (m.groupCount() > 1) {
+                        fullname = m.group(2);
+                        if (fullname != null) {
+                            for (String param : fullname.split("\\s*,\\s*")) {
+                                removeReferenceSingleImport(param);
+                            }
+                        }
                     }
-                    if (resolved instanceof JArrayType) {
-                        resolved = ((JArrayType) resolved).getElementType();
+
+                    if (allSingleNameImports.isEmpty()) {
+                        return;
                     }
-                    JTypeDeclSymbol symbol = resolved.getSymbol();
-                    ShadowChainIterator<JTypeMirror, ScopeInfo> scopeIter =
-                        jdocTree.getJavaSymbolTable().types()
-                                .iterateResults(symbol.getSimpleName());
-                    checkScopeChain(false, symbol, scopeIter, ts -> true, false);
                 }
             }
         }
@@ -176,15 +232,25 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
             unnecessaryImportsFromSamePackage.add(new ImportWrapper(node));
         }
 
-        Set<ImportWrapper> container =
-            node.isImportOnDemand() ? allImportsOnDemand
-                                    : allSingleNameImports;
+        Set<ImportWrapper> container = getImportContainer(node);
 
 
         if (!container.add(new ImportWrapper(node))) {
             // duplicate
             reportWithMessage(node, data, DUPLICATE_IMPORT_MESSAGE);
         }
+    }
+
+    private Set<ImportWrapper> getImportContainer(ASTImportDeclaration node) {
+        if (node.isModuleImport()) {
+            return moduleImports;
+        } else if (node.isImportOnDemand()) {
+            if (node.isStatic()) {
+                return staticImportsOnDemand;
+            }
+            return typeImportsOnDemand;
+        }
+        return allSingleNameImports;
     }
 
     private void reportWithMessage(ASTImportDeclaration node, Object data, String message) {
@@ -224,7 +290,11 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
         if (!foundNamedImport) {
             LOG.debug("+ Since no such named import can be found, all {}on-demand-imports will be marked as used", target);
 
-            allImportsOnDemand.removeIf(it -> !onlyStatics || it.isStatic());
+            if (onlyStatics) {
+                staticImportsOnDemand.clear();
+            } else {
+                typeImportsOnDemand.clear();
+            }
         }
     }
 
@@ -296,29 +366,32 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
 
                 } else if (scopeIter.getScopeTag() == ScopeInfo.IMPORT_ON_DEMAND) {
 
-                    allImportsOnDemand.removeIf(it -> {
-                        if (!it.isStatic() && onlyStatic) {
+                    boolean found = typeImportsOnDemand.removeIf(it -> importOnDemandImportsSymbol(symbol, onlyStatic, it));
+                    if (!found) {
+                        staticImportsOnDemand.removeIf(it -> importOnDemandImportsSymbol(symbol, onlyStatic, it));
+                    }
+                } else if (scopeIter.getScopeTag() == ScopeInfo.MODULE_IMPORT) {
+                    moduleImports.removeIf(it -> {
+                        if (!(symbol instanceof JTypeDeclSymbol)) {
                             return false;
                         }
-                        // This is the class that contains the symbol
-                        // we're looking for.
-                        // We have to test whether this symbol is contained
-                        // by the imported type or package.
-                        JClassSymbol symbolOwner = symbol.getEnclosingClass();
-                        if (symbolOwner == null) {
-                            // package import on demand
-                            return it.node.getImportedName().equals(symbol.getPackageName());
-                        } else {
-                            if (it.node.getImportedName().equals(symbolOwner.getCanonicalName())) {
-                                // importing the container directly
-                                return it.isStatic() == symbol.isStatic();
+
+                        JTypeDeclSymbol typeSymbol = (JTypeDeclSymbol) symbol;
+                        String moduleName = it.node.getImportedName();
+                        String simpleName = typeSymbol.getSimpleName();
+                        TypeSystem typeSystem = typeSymbol.getTypeSystem();
+                        JModuleSymbol moduleSymbol = typeSystem.getModuleSymbol(moduleName);
+                        boolean found = false;
+                        for (String packageName : moduleSymbol.getExportedPackages()) {
+                            JClassSymbol classSymbol = typeSystem.getClassSymbol(packageName + "." + simpleName);
+                            if (classSymbol != null) {
+                                found = TypeTestUtil.isA(typeSystem.rawType(typeSymbol), typeSystem.rawType(classSymbol));
                             }
-                            // maybe we're importing a subclass of the container.
-                            TypeSystem ts = symbolOwner.getTypeSystem();
-                            JClassSymbol importedContainer = ts.getClassSymbol(it.node.getImportedName());
-                            return importedContainer == null // insufficient classpath, err towards FNs
-                                    || TypeTestUtil.isA(ts.rawType(symbolOwner), ts.rawType(importedContainer));
+                            if (found) {
+                                break;
+                            }
                         }
+                        return found;
                     });
                 }
                 return;
@@ -328,6 +401,32 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
             }
         }
         // unknown reference
+    }
+
+    private static boolean importOnDemandImportsSymbol(JAccessibleElementSymbol symbol, boolean onlyStatic, ImportWrapper it) {
+        if (!it.isStatic() && onlyStatic) {
+            return false;
+        }
+        // This is the class that contains the symbol
+        // we're looking for.
+        // We have to test whether this symbol is contained
+        // by the imported type or package.
+        JClassSymbol symbolOwner = symbol.getEnclosingClass();
+        if (symbolOwner == null) {
+            // package import on demand
+            return it.node.getImportedName().equals(symbol.getPackageName());
+        } else {
+            if (it.node.getImportedName().equals(symbolOwner.getCanonicalName())) {
+                // If the import is not static, then it imports static and non-static types.
+                // Otherwise, it imports static members (types + other things)
+                return !it.isStatic() || symbol.isStatic();
+            }
+            // maybe we're importing a subclass of the container.
+            TypeSystem ts = symbolOwner.getTypeSystem();
+            JClassSymbol importedContainer = ts.getClassSymbol(it.node.getImportedName());
+            return importedContainer == null // insufficient classpath, err towards FNs
+                || TypeTestUtil.isA(ts.rawType(symbolOwner), ts.rawType(importedContainer));
+        }
     }
 
 

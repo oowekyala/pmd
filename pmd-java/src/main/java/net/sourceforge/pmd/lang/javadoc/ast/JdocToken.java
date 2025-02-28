@@ -49,14 +49,12 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     }
 
     @Override
-    @Nullable
-    public JdocToken getPrevious() {
+    public @Nullable JdocToken getPrevious() {
         return prev;
     }
 
-    @Nullable
     @Override
-    public JdocToken getNext() {
+    public @Nullable JdocToken getNext() {
         return next;
     }
 

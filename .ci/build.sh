@@ -83,6 +83,16 @@ function build() {
                 ./mvnw clean verify -Dskip-cli-dist --show-version --errors --batch-mode "${PMD_MAVEN_EXTRA_OPTS[@]}"
             else
                 # b) only pmd-cli and pmd-dist
+                #
+                # In the first stage build (without pmd-cli and pmd-dist), cyclonedx:makeAggregateBom tries to
+                # fetch the jars of the to-be-released modules, which don't exist yet. This is recorded in *.lastUpdated
+                # files in the local repo and might end up in the cache, that is used for this 2nd stage build.
+                # Trying to delete the files now, if they exist.
+                # Alternatively, we could run maven with flag "-U" to force update all dependencies...
+                pmd_ci_log_info "Cleanup local maven repo..."
+                find ~/.m2/repository -print0 -wholename "*/net/sourceforge/pmd/*/${PMD_CI_MAVEN_PROJECT_VERSION}/*.lastUpdated" | xargs -0 rm -v
+                pmd_ci_log_info "Cleanup local maven repo finished."
+
                 ./mvnw clean verify -pl pmd-cli,pmd-dist --show-version --errors --batch-mode "${PMD_MAVEN_EXTRA_OPTS[@]}"
             fi
         else
@@ -234,6 +244,11 @@ function pmd_ci_deploy_build_artifacts() {
         # Deploy SBOM
         pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.xml"
         pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.json"
+        # Sign and deploy the binary dist files
+        pmd_ci_gpg_sign_file "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-bin.zip"
+        pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-bin.zip.asc"
+        pmd_ci_gpg_sign_file "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-src.zip"
+        pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-src.zip.asc"
     fi
 
     # release build case a): everything without pmd-cli and pmd-dist is released
@@ -251,6 +266,11 @@ function pmd_ci_deploy_build_artifacts() {
         # Deploy SBOM
         pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.xml"
         pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.json"
+        # Sign and deploy the binary dist files
+        pmd_ci_gpg_sign_file "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-bin.zip"
+        pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-bin.zip.asc"
+        pmd_ci_gpg_sign_file "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-src.zip"
+        pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-src.zip.asc"
 
         # draft release has already been created
         pmd_ci_gh_releases_getLatestDraftRelease
@@ -262,6 +282,9 @@ function pmd_ci_deploy_build_artifacts() {
         # Deploy SBOM
         pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.xml"
         pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "pmd-dist/target/pmd-${PMD_CI_MAVEN_PROJECT_VERSION}-cyclonedx.json"
+        # Deploy signatures
+        pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-bin.zip.asc"
+        pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "pmd-dist/target/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-src.zip.asc"
     fi
 }
 
@@ -270,16 +293,19 @@ function pmd_ci_deploy_build_artifacts() {
 # Renders release notes and uploads them as ReadMe.md to sourceforge
 #
 function pmd_ci_build_and_upload_doc() {
-    # generate the site only for snapshots from master and for release builds for case a) (everything without cli/dist)
+    # generate the site only for snapshots from main and for release builds for case a) (everything without cli/dist)
     # to avoid building it twice during a release...
-    if pmd_ci_maven_isSnapshotBuild && [ "${PMD_CI_BRANCH}" = "master" ] || [ "${BUILD_CLI_DIST_ONLY}" = "false" ]; then
+    if pmd_ci_maven_isSnapshotBuild && [ "${PMD_CI_BRANCH}" = "main" ] || [ "${BUILD_CLI_DIST_ONLY}" = "false" ]; then
         pmd_doc_generate_jekyll_site
         pmd_doc_create_archive
 
         pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "docs/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-doc.zip"
+        pmd_ci_gpg_sign_file "docs/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-doc.zip"
+        pmd_ci_sourceforge_uploadFile "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "docs/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-doc.zip.asc"
 
         if pmd_ci_maven_isReleaseBuild; then
             pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "docs/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-doc.zip"
+            pmd_ci_gh_releases_uploadAsset "$GH_RELEASE" "docs/pmd-dist-${PMD_CI_MAVEN_PROJECT_VERSION}-doc.zip.asc"
         fi
 
         # Deploy doc to https://docs.pmd-code.org/pmd-doc-${PMD_CI_MAVEN_PROJECT_VERSION}/
@@ -289,21 +315,21 @@ function pmd_ci_build_and_upload_doc() {
 
         # render release notes
         # updating github release text
-        rm -f .bundle/config
+        pushd docs || { echo "Directory 'docs' doesn't exist"; exit 1; }
         bundle config set --local path vendor/bundle
-        bundle config set --local with release_notes_preprocessing
         bundle install
         # renders, and skips the first 6 lines - the Jekyll front-matter
         local rendered_release_notes
-        rendered_release_notes=$(bundle exec docs/render_release_notes.rb docs/pages/release_notes.md | tail -n +6)
+        rendered_release_notes=$(bundle exec render_release_notes.rb pages/release_notes.md | tail -n +6)
+        popd || exit 1
         local release_name
         release_name="PMD ${PMD_CI_MAVEN_PROJECT_VERSION} ($(date -u +%d-%B-%Y))"
         # Upload to https://sourceforge.net/projects/pmd/files/pmd/${PMD_CI_MAVEN_PROJECT_VERSION}/ReadMe.md
         pmd_ci_sourceforge_uploadReleaseNotes "pmd/${PMD_CI_MAVEN_PROJECT_VERSION}" "${rendered_release_notes}"
     fi
 
-    if pmd_ci_maven_isSnapshotBuild && [ "${PMD_CI_BRANCH}" = "master" ]; then
-        # only for snapshot builds from branch master: https://docs.pmd-code.org/snapshot -> pmd-doc-${PMD_CI_MAVEN_PROJECT_VERSION}
+    if pmd_ci_maven_isSnapshotBuild && [ "${PMD_CI_BRANCH}" = "main" ]; then
+        # only for snapshot builds from branch main: https://docs.pmd-code.org/snapshot -> pmd-doc-${PMD_CI_MAVEN_PROJECT_VERSION}
         pmd_code_createSymlink "${PMD_CI_MAVEN_PROJECT_VERSION}" "snapshot"
 
         # update github pages https://pmd.github.io/pmd/
@@ -354,6 +380,12 @@ function pmd_ci_dogfood() {
         -Dcheckstyle.skip=true
     ./mvnw versions:set -DnewVersion="${PMD_CI_MAVEN_PROJECT_VERSION}" -DgenerateBackupPoms=false
     git checkout -- pom.xml
+}
+
+function pmd_ci_gpg_sign_file() {
+  local fileToSign="$1"
+  pmd_ci_log_info "Signing file ${fileToSign}..."
+  printenv MAVEN_GPG_PASSPHRASE | gpg --pinentry-mode loopback --passphrase-fd 0 --batch --no-tty --status-fd 1 --armor --detach-sign --sign "$fileToSign"
 }
 
 build

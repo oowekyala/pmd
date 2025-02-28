@@ -1,32 +1,31 @@
 # PMD - source code analyzer
 
-![PMD Logo](https://raw.githubusercontent.com/pmd/pmd/pmd/7.0.x/docs/images/logo/pmd-logo-300px.png)
+![PMD Logo](https://raw.githubusercontent.com/pmd/pmd/main/docs/images/logo/pmd-logo-300px.png)
 
 [![Join the chat](https://img.shields.io/gitter/room/pmd/pmd)](https://app.gitter.im/#/room/#pmd_pmd:gitter.im?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://github.com/pmd/pmd/workflows/build/badge.svg?branch=master)](https://github.com/pmd/pmd/actions)
+[![Build Status](https://github.com/pmd/pmd/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pmd/pmd/actions)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.sourceforge.pmd/pmd/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.sourceforge.pmd/pmd)
-[![Reproducible Builds](https://img.shields.io/badge/Reproducible_Builds-ok-green?labelColor=blue)](https://github.com/jvm-repo-rebuild/reproducible-central#net.sourceforge.pmd:pmd)
-[![Coverage Status](https://coveralls.io/repos/github/pmd/pmd/badge.svg)](https://coveralls.io/github/pmd/pmd)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ea550046a02344ec850553476c4aa2ca)](https://www.codacy.com/gh/pmd/pmd/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pmd/pmd&amp;utm_campaign=Badge_Grade)
+[![Reproducible Builds](https://img.shields.io/badge/Reproducible_Builds-ok-green?labelColor=blue)](https://github.com/jvm-repo-rebuild/reproducible-central/tree/master/content/net/sourceforge/pmd#readme)
+[![Coverage Status](https://coveralls.io/repos/github/pmd/pmd/badge.svg?branch=main&v=1)](https://coveralls.io/github/pmd/pmd?branch=main)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ea550046a02344ec850553476c4aa2ca)](https://app.codacy.com/organizations/gh/pmd/dashboard)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md) 
 [![Documentation (latest)](https://img.shields.io/badge/docs-latest-green)](https://docs.pmd-code.org/latest/)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20PMD%20Guru-006BFF)](https://gurubase.io/g/pmd)
 
-**PMD** is a source code analyzer. It finds common programming flaws like unused variables, empty catch blocks,
-unnecessary object creation, and so forth. It supports many languages. It can be extended with custom rules.
-It uses JavaCC and Antlr to parse source files into abstract syntax trees (AST) and runs rules against them to find violations.
-Rules can be written in Java or using a XPath query.
+**PMD** is an extensible multilanguage static code analyzer. It finds common programming flaws like unused variables,
+empty catch blocks, unnecessary object creation, and so forth. It's mainly concerned with **Java and
+Apex**, but **supports 16 other languages**. It comes with **400+ built-in rules**. It can be
+extended with custom rules. It uses JavaCC and Antlr to parse source files into abstract syntax trees
+(AST) and runs rules against them to find violations. Rules can be written in Java or using a XPath query.
 
-It supports Java, JavaScript, Salesforce.com Apex and Visualforce,
-Modelica, PLSQL, Apache Velocity, HTML, XML and XSL.
+Currently, PMD supports Java, JavaScript, Salesforce.com Apex and Visualforce,
+Kotlin, Swift, Modelica, PLSQL, Apache Velocity, JSP, WSDL, Maven POM, HTML, XML and XSL.
 Scala is supported, but there are currently no Scala rules available.
 
 Additionally, it includes **CPD**, the copy-paste-detector. CPD finds duplicated code in
-C/C++, C#, Dart, Fortran, Gherkin, Go, Groovy, HTML, Java, JavaScript, JSP, Kotlin, Lua, Matlab, Modelica,
-Objective-C, Perl, PHP, PLSQL, Python, Ruby, Salesforce.com Apex and Visualforce, Scala, Swift, T-SQL,
-Apache Velocity, and XML.
-
-In the future we hope to add support for data/control flow analysis and automatic (quick) fixes where
-it makes sense.
+Coco, C/C++, C#, Dart, Fortran, Gherkin, Go, Groovy, HTML, Java, JavaScript, JSP, Julia, Kotlin,
+Lua, Matlab, Modelica, Objective-C, Perl, PHP, PLSQL, Python, Ruby, Salesforce.com Apex and
+Visualforce, Scala, Swift, T-SQL, Typescript, Apache Velocity, WSDL, XML and XSL.
 
 ## 🚀 Installation and Usage
 
@@ -54,7 +53,8 @@ See [Tools / Integrations](https://docs.pmd-code.org/latest/pmd_userdocs_tools.h
     or on [discussions](https://github.com/pmd/pmd/discussions).
 *   I got this error and I'm sure it's a bug -- file an [issue](https://github.com/pmd/pmd/issues).
 *   I have an idea/request/question -- create a new [discussion](https://github.com/pmd/pmd/discussions).
-*   I have a quick question -- ask in our [Gitter room](https://app.gitter.im/#/room/#pmd_pmd:gitter.im).
+*   I have a quick question -- ask in our [Gitter room](https://app.gitter.im/#/room/#pmd_pmd:gitter.im)
+    or our [PMD Guru at Gurubase](https://gurubase.io/g/pmd).
 *   Where's your documentation? -- <https://docs.pmd-code.org/latest/>
 
 ## 🤝 Contributing
@@ -63,8 +63,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Our latest source of PMD can be found on [GitHub](https://github.com/pmd/pmd). Fork us!
 
-*   [How to build PMD](BUILDING.md)
-*   [How to contribute to PMD](CONTRIBUTING.md)
+For details, see [How to contribute to PMD](https://docs.pmd-code.org/latest/pmd_devdocs_contributing.html).
 
 The rule designer is developed over at [pmd/pmd-designer](https://github.com/pmd/pmd-designer).
 Please see [its README](https://github.com/pmd/pmd-designer#contributing) for

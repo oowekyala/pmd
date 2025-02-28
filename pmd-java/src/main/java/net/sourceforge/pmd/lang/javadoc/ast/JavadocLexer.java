@@ -156,7 +156,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw AssertionUtil.shouldNotReachHere(e, "We're reading from an in-memory char slice");
+            throw AssertionUtil.shouldNotReachHere("We're reading from an in-memory char slice", e);
         }
     }
 

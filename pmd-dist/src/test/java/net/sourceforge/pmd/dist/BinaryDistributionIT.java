@@ -33,7 +33,7 @@ class BinaryDistributionIT extends AbstractBinaryDistributionTest {
         "fortran", "gherkin", "go", "groovy", "html", "java", "jsp",
         "julia",
         "kotlin", "lua", "matlab", "modelica", "objectivec", "perl",
-        "php", "plsql", "pom", "python", "ruby", "scala", "swift",
+        "php", "plsql", "pom", "python", "ruby", "rust", "scala", "swift",
         "tsql", "typescript", "velocity", "visualforce", "wsdl", "xml", "xsl"
     );
 
@@ -51,8 +51,10 @@ class BinaryDistributionIT extends AbstractBinaryDistributionTest {
         "java-11", "java-12", "java-13", "java-14", "java-15",
         "java-16", "java-17", "java-18", "java-19",
         "java-20",
-        "java-21", "java-21-preview",
-        "java-22", "java-22-preview",
+        "java-21",
+        "java-22",
+        "java-23", "java-23-preview",
+        "java-24", "java-24-preview",
         "java-5", "java-6", "java-7",
         "java-8", "java-9", "jsp-2", "jsp-3", "kotlin-1.6",
         "kotlin-1.7", "kotlin-1.8", "modelica-3.4", "modelica-3.5",
@@ -191,7 +193,7 @@ class BinaryDistributionIT extends AbstractBinaryDistributionTest {
 
         ExecutionResult result = PMDExecutor.runPMDRules(createTemporaryReportFile(), tempDir, srcDir, "src/test/resources/rulesets/sample-ruleset.xml");
 
-        result.assertExitCode(0).assertStdErr(containsString("Run in verbose mode to see a stack-trace."));
+        result.assertExitCode(5).assertStdErr(containsString("Run in verbose mode to see a stack-trace."));
     }
 
     @Test

@@ -296,7 +296,7 @@ public interface TextDocument extends Closeable {
         try {
             return create(textFile);
         } catch (IOException e) {
-            throw AssertionUtil.shouldNotReachHere(e, "String text file should never throw IOException");
+            throw AssertionUtil.shouldNotReachHere("String text file should never throw IOException", e);
         }
     }
 }

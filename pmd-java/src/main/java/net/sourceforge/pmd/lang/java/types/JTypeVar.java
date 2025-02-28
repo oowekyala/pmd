@@ -36,7 +36,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
  * <p>Type variables do not, in general, use reference identity. Use
  * equals to compare them.
  */
-public interface JTypeVar extends JTypeMirror, SubstVar {
+public interface JTypeVar extends SubstVar {
 
 
     /**
@@ -112,12 +112,19 @@ public interface JTypeVar extends JTypeMirror, SubstVar {
 
     /**
      * @throws UnsupportedOperationException If this is not a capture var
+     *
+     * <p>Note that this is only supposed to be used internally.
      */
     JTypeVar cloneWithBounds(JTypeMirror lower, JTypeMirror upper);
 
     /**
      * Return a new type variable with the same underlying symbol or
      * capture variable, but the upper bound is now the given type.
+     *
+     * <p>Note that this is only supposed to be used internally. For
+     * now it only serves to apply type annotations to the upper bound
+     * when parsing class files. Some implementations may therefore throw
+     * {@link UnsupportedOperationException}.
      *
      * @param newUB New upper bound
      *

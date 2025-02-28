@@ -32,23 +32,29 @@ import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.AccessType;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
+import net.sourceforge.pmd.lang.java.ast.ASTBodyDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTBreakStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTCatchClause;
 import net.sourceforge.pmd.lang.java.ast.ASTClassType;
+import net.sourceforge.pmd.lang.java.ast.ASTCompactConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExplicitConstructorInvocation;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpressionStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
 import net.sourceforge.pmd.lang.java.ast.ASTFormalParameters;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTInitializer;
 import net.sourceforge.pmd.lang.java.ast.ASTLabeledStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLambdaExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTList;
 import net.sourceforge.pmd.lang.java.ast.ASTLocalVariableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTLoopStatement;
@@ -56,6 +62,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTNumericLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTSuperExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchBranch;
@@ -75,6 +82,9 @@ import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleUtil;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
@@ -780,6 +790,10 @@ public final class JavaAstUtils {
         }
     }
 
+    public static boolean isMarkdownComment(JavaccToken token) {
+        return token.kind == JavaTokenKinds.SINGLE_LINE_COMMENT && token.getText().charAt(2) == '/';
+    }
+
     /**
      * Return true if the catch clause just rethrows the caught exception
      * immediately.
@@ -795,11 +809,62 @@ public final class JavaAstUtils {
         return false;
     }
 
+    /**
+     * Return true if the node is in static context relative to the deepest enclosing class.
+     */
     public static boolean isInStaticCtx(JavaNode node) {
-        return node.ancestors()
+        return node.ancestorsOrSelf()
+                   .map(NodeStream.asInstanceOf(ASTBodyDeclaration.class, ASTExplicitConstructorInvocation.class))
+                   .take(1)
                    .any(it -> it instanceof ASTExecutableDeclaration && ((ASTExecutableDeclaration) it).isStatic()
+                       || it instanceof ASTFieldDeclaration && ((ASTFieldDeclaration) it).isStatic()
                        || it instanceof ASTInitializer && ((ASTInitializer) it).isStatic()
+                       || it instanceof ASTEnumConstant
                        || it instanceof ASTExplicitConstructorInvocation
                    );
+    }
+
+    /**
+     * Return the target of the return. May be an {@link ASTMethodDeclaration},
+     * {@link ASTLambdaExpression}, {@link ASTInitializer},
+     * {@link ASTConstructorDeclaration} or {@link ASTCompactConstructorDeclaration}.
+     *
+     */
+    public static @Nullable JavaNode getReturnTarget(ASTReturnStatement stmt) {
+        return stmt.ancestors().first(
+                it -> it instanceof ASTMethodDeclaration
+                        || it instanceof ASTLambdaExpression
+                        || it instanceof ASTConstructorDeclaration
+                        || it instanceof ASTInitializer
+                        || it instanceof ASTCompactConstructorDeclaration
+        );
+    }
+
+    /**
+     * Return true if the variable is effectively final. This means
+     * the variable is never reassigned.
+     */
+    public static boolean isEffectivelyFinal(ASTVariableId var) {
+        if (var.getInitializer() == null && var.isLocalVariable()) {
+            // blank variables may be assigned on several paths
+            DataflowResult dataflow = DataflowPass.getDataflowResult(var.getRoot());
+            for (ASTNamedReferenceExpr usage : var.getLocalUsages()) {
+                if (usage.getAccessType() == AccessType.WRITE) {
+                    ReachingDefinitionSet reaching = dataflow.getReachingDefinitions(usage);
+                    if (reaching.isNotFullyKnown() || !reaching.getReaching().isEmpty()) {
+                        // If the reaching def is not empty, then that means
+                        // the assignment is killing another one, ie it is a reassignment.
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        for (ASTNamedReferenceExpr usage : var.getLocalUsages()) {
+            if (usage.getAccessType() == AccessType.WRITE) {
+                return false;
+            }
+        }
+        return true;
     }
 }

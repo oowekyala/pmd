@@ -225,7 +225,7 @@ public final class AssertionUtil {
      * An assertion error to emit when we catch an exception that we know can
      * never occur.
      */
-    public static @NonNull AssertionError shouldNotReachHere(Throwable cause, String explanation) {
+    public static @NonNull AssertionError shouldNotReachHere(String explanation, Throwable cause) {
         return new AssertionError(makeMessage(explanation), cause);
     }
 

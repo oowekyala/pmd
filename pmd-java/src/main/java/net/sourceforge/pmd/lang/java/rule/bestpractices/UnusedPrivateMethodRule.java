@@ -4,23 +4,27 @@
 
 package net.sourceforge.pmd.lang.java.rule.bestpractices;
 
+import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 import static net.sourceforge.pmd.util.CollectionUtil.setOf;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTMemberValue;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodReference;
-import net.sourceforge.pmd.lang.java.ast.ASTModifierList;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.MethodUsage;
 import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
@@ -41,29 +45,44 @@ public class UnusedPrivateMethodRule extends AbstractIgnoredAnnotationRule {
 
     @Override
     protected Collection<String> defaultSuppressionAnnotations() {
-        return Collections.singletonList("java.lang.Deprecated");
+        return listOf(
+            "java.lang.Deprecated",
+            "jakarta.annotation.PostConstruct",
+            "jakarta.annotation.PreDestroy",
+            "lombok.EqualsAndHashCode.Include"
+        );
     }
 
     @Override
     public Object visit(ASTCompilationUnit file, Object param) {
         // We do three traversals:
-        // - one to find methods referenced by Junit5 MethodSource annotations
+        // - one to find methods:
+        // --- referenced by any attribute of any annotation
+        // --- with name same as a method annotated with Junit5 MethodSource if the annotation value is empty
         // - one to find the "interesting methods", ie those that may be violations
         // - another to find the possible usages. We only try to resolve
         //   method calls/method refs that may refer to a method in the
         //   first set, ie, not every call in the file.
-
-        Set<String> methodsUsedByAnnotations = file.descendants(ASTMethodDeclaration.class)
-            .crossFindBoundaries()
-            .children(ASTModifierList.class)
-            .children(ASTAnnotation.class)
-            .filter(t -> TypeTestUtil.isA("org.junit.jupiter.params.provider.MethodSource", t))
-            .toStream()
-            // Get the referenced method names… if none, use the test method name instead
-            .flatMap(a -> a.getFlatValue("value").isEmpty()
-                    ? Stream.of(a.ancestors(ASTMethodDeclaration.class).first().getName())
-                    : a.getFlatValue("value").toStream().map(mv -> (String) mv.getConstValue()))
-            .collect(Collectors.toSet());
+        Set<String> methodsUsedByAnnotations =
+                file.descendants(ASTAnnotation.class)
+                        .crossFindBoundaries()
+                        .toStream()
+                        .flatMap(a -> Stream.concat(
+                                        a.getFlatValues().toStream()
+                                                .map(ASTMemberValue::getConstValue)
+                                                .filter(String.class::isInstance)
+                                                .map(String.class::cast)
+                                                .filter(StringUtils::isNotEmpty),
+                                        NodeStream.of(a)
+                                                .filter(it -> TypeTestUtil.isA("org.junit.jupiter.params.provider.MethodSource", it)
+                                                        && it.getFlatValue("value").isEmpty())
+                                                .ancestors(ASTMethodDeclaration.class)
+                                                .take(1)
+                                                .toStream()
+                                                .map(ASTMethodDeclaration::getName)
+                                )
+                        )
+                        .collect(Collectors.toSet());
 
         Map<String, Set<ASTMethodDeclaration>> consideredNames =
             file.descendants(ASTMethodDeclaration.class)
@@ -96,6 +115,9 @@ public class UnusedPrivateMethodRule extends AbstractIgnoredAnnotationRule {
                 }
 
                 JavaNode reffed = sym.tryGetNode();
+                if (reffed == null) {
+                    reffed = findDeclarationInCompilationUnit(file, sym);
+                }
                 if (reffed instanceof ASTMethodDeclaration
                     && ref.ancestors(ASTMethodDeclaration.class).first() != reffed) {
                     // remove from set, but only if it is called outside of itself
@@ -120,5 +142,31 @@ public class UnusedPrivateMethodRule extends AbstractIgnoredAnnotationRule {
 
     private boolean hasExcludedName(ASTMethodDeclaration node) {
         return SERIALIZATION_METHODS.contains(node.getName());
+    }
+
+    /**
+     * Find the method in the compilation unit. Note that this is a patch to fix some
+     * incorrect behavior of the rule in two cases:
+     *
+     * <p>1. While parsing and type resolving a referenced class, that itself
+     * references the current class. In that case, we end up with the ASM symbols
+     * and symbol.tryGetNode() returns null.
+     *
+     * <p>2. When dealing with classes in the java.lang package.
+     * This is due to the fact that some
+     * java.lang types (like Object, or primitive boxes) are
+     * treated specially by the type resolution framework, and
+     * for those the preexisting ASM symbol is preferred over
+     * the AST symbol - symbol.tryGetNode() returns null in that
+     * case. This is only relevant, when PMD is used to analyze OpenJDK
+     * sources, like with the regression tester.
+     */
+    private static @Nullable ASTMethodDeclaration findDeclarationInCompilationUnit(ASTCompilationUnit acu, JExecutableSymbol symbol) {
+        return acu.descendants(ASTTypeDeclaration.class)
+                  .crossFindBoundaries()
+                  .filter(it -> it.getSymbol().equals(symbol.getEnclosingClass()))
+                  .take(1)
+                  .flatMap(it -> it.getDeclarations(ASTMethodDeclaration.class))
+                  .first(m -> m.getSymbol().equals(symbol));
     }
 }

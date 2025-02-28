@@ -2,7 +2,7 @@
 title: Java support
 permalink: pmd_languages_java.html
 author: Clément Fournier
-last_updated: December 2023 (7.0.0)
+last_updated: January 2025 (7.10.0)
 tags: [languages, PmdCapableLanguage, CpdCapableLanguage]
 summary: "Java-specific features and guidance"
 ---
@@ -15,9 +15,11 @@ Usually the latest non-preview Java Version is the default version.
 
 | Java Version | Alias | Supported by PMD since |
 |--------------|-------|------------------------|
-| 22-preview   |       | 7.0.0                  |
-| 22 (default) |       | 7.0.0                  |
-| 21-preview   |       | 7.0.0                  |
+| 24-preview   |       | 7.10.0                 |
+| 24 (default) |       | 7.10.0                 |
+| 23-preview   |       | 7.5.0                  |
+| 23           |       | 7.5.0                  |
+| 22           |       | 7.0.0                  |
 | 21           |       | 7.0.0                  |
 | 20           |       | 6.55.0                 |
 | 19           |       | 6.48.0                 |
@@ -41,10 +43,10 @@ Usually the latest non-preview Java Version is the default version.
 ## Using Java preview features
 
 In order to analyze a project with PMD that uses preview language features, you'll need to enable
-it via the environment variable `PMD_JAVA_OPTS` and select the new language version, e.g. `22-preview`:
+it via the environment variable `PMD_JAVA_OPTS` and select the new language version, e.g. `24-preview`:
 
     export PMD_JAVA_OPTS=--enable-preview
-    pmd check --use-version java-22-preview ...
+    pmd check --use-version java-24-preview ...
 
 Note: we only support preview language features for the latest two java versions.
 
@@ -198,4 +200,4 @@ You can access these via {% jdoc core::reporting.RuleViolation#getAdditionalInfo
 There is no API yet for dataflow analysis. However, some rules such as {% rule java/bestpractices/UnusedAssignment %}
 or {% rule java/design/ImmutableField %} are using an internal implementation of an additional
 AST pass that adds dataflow information. The implementation can be found in
-[net.sourceforge.pmd.lang.java.rule.internal.DataflowPass](https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/internal/DataflowPass.java).
+[net.sourceforge.pmd.lang.java.rule.internal.DataflowPass](https://github.com/pmd/pmd/blob/main/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/internal/DataflowPass.java).

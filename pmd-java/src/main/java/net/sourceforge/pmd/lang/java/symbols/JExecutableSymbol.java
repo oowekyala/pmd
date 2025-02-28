@@ -12,6 +12,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.Substitution;
 
@@ -19,7 +20,7 @@ import net.sourceforge.pmd.lang.java.types.Substitution;
  * Common supertype for {@linkplain JMethodSymbol method}
  * and {@linkplain JConstructorSymbol constructor symbols}.
  */
-public interface JExecutableSymbol extends JAccessibleElementSymbol, JTypeParameterOwnerSymbol {
+public interface JExecutableSymbol extends JTypeParameterOwnerSymbol {
 
 
     /**
@@ -110,4 +111,12 @@ public interface JExecutableSymbol extends JAccessibleElementSymbol, JTypeParame
      */
     List<JTypeMirror> getThrownExceptionTypes(Substitution subst);
 
+    /**
+     * Return a method sig corresponding to this symbol.
+     * The returned signature may contain type parameters
+     * of this method and of the enclosing classes.
+     */
+    default JMethodSig getGenericSignature() {
+        return getTypeSystem().sigOf(this);
+    }
 }

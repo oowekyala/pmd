@@ -17,24 +17,24 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeExpression;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
-import net.sourceforge.pmd.lang.java.types.TypeConversion;
 import net.sourceforge.pmd.lang.java.types.TypeOps;
 import net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror;
-import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ast.JavaExprMirrors.MirrorMaker;
 
-class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> implements InvocationMirror {
+class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> {
 
 
-    MethodInvocMirror(JavaExprMirrors mirrors, ASTMethodCall call, @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
-        super(mirrors, call, parent, subexprMaker);
+    MethodInvocMirror(JavaExprMirrors mirrors, ASTMethodCall call,
+                      boolean isStandalone,
+                      @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
+        super(mirrors, call, isStandalone, parent, subexprMaker);
     }
 
     @Override
     public @Nullable JTypeMirror getStandaloneType() {
         JMethodSig ctdecl = getStandaloneCtdecl().getMethodType();
-        return isContextDependent(ctdecl) ? null : ctdecl.getReturnType();
+        return mayBePoly && isContextDependent(ctdecl) ? null : ctdecl.getReturnType();
     }
 
     private static boolean isContextDependent(JMethodSig m) {
@@ -66,7 +66,7 @@ class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> implements Invoca
             } else {
                 lhsType = lhs.getTypeMirror(getTypingContext());
             }
-            lhsType = TypeConversion.capture(lhsType);
+            lhsType = TypeOps.getMemberSource(lhsType);
             boolean staticOnly = lhs instanceof ASTTypeExpression;
 
             return TypeOps.getMethodsOf(lhsType, getName(), staticOnly, myNode.getEnclosingType().getSymbol());
