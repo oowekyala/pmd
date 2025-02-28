@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +19,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
+import net.sourceforge.pmd.cache.internal.CacheDirectoryManager;
 import net.sourceforge.pmd.cache.internal.FileAnalysisCache;
 import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
@@ -110,6 +112,7 @@ public class PMDConfiguration extends AbstractConfiguration {
     private boolean showSuppressedViolations = false;
 
     private AnalysisCache analysisCache = new NoopAnalysisCache();
+    private CacheDirectoryManager cacheDirectory = new CacheDirectoryManager(Paths.get(".pmd"));
     private boolean ignoreIncrementalAnalysis;
 
     public PMDConfiguration() {
@@ -378,6 +381,10 @@ public class PMDConfiguration extends AbstractConfiguration {
         return analysisCache;
     }
 
+    CacheDirectoryManager getCacheDirectory() {
+        return cacheDirectory;
+    }
+
     /**
      * Sets the analysis cache to be used. Setting a
      * value of {@code null} will cause a Noop AnalysisCache to be used.
@@ -405,9 +412,12 @@ public class PMDConfiguration extends AbstractConfiguration {
      *                      to disable the cache.
      */
     public void setAnalysisCacheLocation(final String cacheLocation) {
-        setAnalysisCache(cacheLocation == null
-                         ? new NoopAnalysisCache()
-                         : new FileAnalysisCache(new File(cacheLocation)));
+        if (cacheLocation == null) {
+            setAnalysisCache(new NoopAnalysisCache());
+        } else {
+            cacheDirectory = new CacheDirectoryManager(Paths.get(cacheLocation));
+            setAnalysisCache(new FileAnalysisCache(cacheDirectory.getAnalysisCacheFile().toFile()));
+        }
     }
 
 

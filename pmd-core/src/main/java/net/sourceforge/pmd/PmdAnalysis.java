@@ -9,6 +9,7 @@ import static net.sourceforge.pmd.lang.rule.InternalApiBridge.loadRuleSetsWithou
 import static net.sourceforge.pmd.lang.rule.InternalApiBridge.ruleSetApplies;
 import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -381,6 +382,14 @@ public final class PmdAnalysis implements AutoCloseable {
     }
 
     void performAnalysisImpl(List<? extends GlobalReportBuilderListener> extraListeners, List<TextFile> textFiles) {
+
+        try {
+            configuration.getCacheDirectory().initCache();
+        } catch (IOException e) {
+            reporter.errorEx("Exception while initializing cache directory", e);
+            throw new RuntimeException(e);
+        }
+
         RuleSets rulesets = new RuleSets(this.ruleSets);
 
         GlobalAnalysisListener listener;
@@ -431,6 +440,7 @@ public final class PmdAnalysis implements AutoCloseable {
                     listener,
                     configuration.getThreads(),
                     configuration.getAnalysisCache(),
+                    configuration.getCacheDirectory(),
                     reporter,
                     lpRegistry
                 );

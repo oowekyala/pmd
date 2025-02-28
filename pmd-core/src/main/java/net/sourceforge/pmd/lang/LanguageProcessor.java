@@ -10,6 +10,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
+import net.sourceforge.pmd.cache.internal.CacheDirectoryManager;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.rule.internal.RuleSets;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
@@ -64,6 +65,7 @@ public interface LanguageProcessor extends AutoCloseable {
         private final GlobalAnalysisListener listener;
         private final int threadCount;
         private final AnalysisCache analysisCache;
+        private final CacheDirectoryManager cacheDir;
         private final PmdReporter messageReporter;
         private final LanguageProcessorRegistry lpRegistry;
 
@@ -79,6 +81,7 @@ public interface LanguageProcessor extends AutoCloseable {
                             GlobalAnalysisListener listener,
                             int threadCount,
                             AnalysisCache analysisCache,
+                            CacheDirectoryManager cacheDir,
                             PmdReporter messageReporter,
                             LanguageProcessorRegistry lpRegistry) {
             this.rulesets = rulesets;
@@ -86,6 +89,7 @@ public interface LanguageProcessor extends AutoCloseable {
             this.listener = listener;
             this.threadCount = threadCount;
             this.analysisCache = analysisCache;
+            this.cacheDir = cacheDir;
             this.messageReporter = messageReporter;
             this.lpRegistry = lpRegistry;
         }
@@ -118,6 +122,10 @@ public interface LanguageProcessor extends AutoCloseable {
             return lpRegistry;
         }
 
+        public CacheDirectoryManager getCacheDir() {
+            return cacheDir;
+        }
+
         /**
          * Produce a new analysis task with just different files.
          *
@@ -130,6 +138,7 @@ public interface LanguageProcessor extends AutoCloseable {
                 listener,
                 threadCount,
                 analysisCache,
+                cacheDir,
                 messageReporter,
                 lpRegistry
             );
