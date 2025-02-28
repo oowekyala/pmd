@@ -4,12 +4,13 @@
 
 package net.sourceforge.pmd.lang.ecmascript.ast;
 
+import java.math.BigDecimal;
+
 import org.mozilla.javascript.ast.NumberLiteral;
 
 public final class ASTNumberLiteral extends AbstractEcmascriptNode<NumberLiteral> {
     ASTNumberLiteral(NumberLiteral numberLiteral) {
         super(numberLiteral);
-        super.setImage(numberLiteral.getValue());
     }
 
     @Override
@@ -18,7 +19,7 @@ public final class ASTNumberLiteral extends AbstractEcmascriptNode<NumberLiteral
     }
 
     public String getNormalizedImage() {
-        String image = getImage();
+        String image = getValue();
         image = image.replaceAll("_", "");
         image = normalizeHexIntegerLiteral(image);
         image = normalizeBinaryLiteral(image);
@@ -53,5 +54,21 @@ public final class ASTNumberLiteral extends AbstractEcmascriptNode<NumberLiteral
 
     public double getNumber() {
         return node.getNumber();
+    }
+
+    public String getValue() {
+        return node.getValue();
+    }
+
+    /**
+     * Checks if this number literal cannot be represented exactly without loss as
+     * a JavaScript Number. The number is either too big or uses too many decimal places.
+     * @return {@code true} if the literal is inaccurate.
+     * @since 7.4.0
+     */
+    public boolean isInaccurate() {
+        BigDecimal bigDecimal = new BigDecimal(getNormalizedImage());
+        BigDecimal converted = BigDecimal.valueOf(bigDecimal.doubleValue());
+        return bigDecimal.compareTo(converted) != 0;
     }
 }

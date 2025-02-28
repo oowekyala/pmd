@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.java.ast
 
 import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.ast.TextAvailableNode
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
 
 // Use a string for comparison because CharSequence are not necessarily
@@ -14,15 +14,10 @@ import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
 private val TextAvailableNode.textStr: String get() = text.toString()
 
 class JavaTextAccessTest : ParserTestSpec({
-
-
-    parserTest("Test parens") {
-
+    parserTestContainer("Test parens") {
         inContext(StatementParsingCtx) {
-
             "int a = ((3));" should parseAs {
                 localVarDecl {
-
                     it.textStr shouldBe "int a = ((3));"
 
                     modifiers {
@@ -44,7 +39,6 @@ class JavaTextAccessTest : ParserTestSpec({
 
             "int a = ((a)).f;" should parseAs {
                 localVarDecl {
-
                     it.textStr shouldBe "int a = ((a)).f;"
 
                     modifiers {
@@ -71,7 +65,6 @@ class JavaTextAccessTest : ParserTestSpec({
             // the left parens shouldn't be flattened by AbstractLrBinaryExpr
             "int a = ((1 + 2) + f);" should parseAs {
                 localVarDecl {
-
                     it.textStr shouldBe "int a = ((1 + 2) + f);"
 
                     modifiers {

@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.apex.rule.bestpractices;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -21,6 +23,7 @@ import net.sourceforge.pmd.lang.apex.ast.ASTBlockStatement;
 import net.sourceforge.pmd.lang.apex.ast.ASTLiteralExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTReferenceExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTSoslExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
 import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
 import net.sourceforge.pmd.lang.apex.ast.ApexNode;
@@ -34,7 +37,7 @@ public class UnusedLocalVariableRule extends AbstractApexRule {
             "Database.countQuery".toLowerCase(Locale.ROOT)
     ));
 
-    private static final Pattern BINDING_VARIABLE = Pattern.compile("(?i):([a-z0-9]+)");
+    private static final Pattern BINDING_VARIABLE = Pattern.compile("(?i):\\s*+([_a-z0-9]+)");
 
     @Override
     protected @NonNull RuleTargetSelector buildTargetSelector() {
@@ -45,7 +48,7 @@ public class UnusedLocalVariableRule extends AbstractApexRule {
     public Object visit(ASTVariableDeclaration node, Object data) {
         String variableName = node.getImage();
 
-        ASTBlockStatement variableContext = node.getFirstParentOfType(ASTBlockStatement.class);
+        ASTBlockStatement variableContext = node.ancestors(ASTBlockStatement.class).first();
         if (variableContext == null) {
             // if there is no parent BlockStatement, e.g. in triggers
             return data;
@@ -53,10 +56,10 @@ public class UnusedLocalVariableRule extends AbstractApexRule {
 
         List<ApexNode<?>> potentialUsages = new ArrayList<>();
 
-        // Variable expression catch things like the `a` in `a + b`
-        potentialUsages.addAll(variableContext.findDescendantsOfType(ASTVariableExpression.class));
-        // Reference expressions catch things like the `a` in `a.foo()`
-        potentialUsages.addAll(variableContext.findDescendantsOfType(ASTReferenceExpression.class));
+        // Variable expression catch things like the `a` in `a + b` or in `:a` (BindingExpression)
+        potentialUsages.addAll(variableContext.descendants(ASTVariableExpression.class).toList());
+        // Reference expressions catch things like the `a` in `a.foo()` or in `:a.Id` (Binding Expression)
+        potentialUsages.addAll(variableContext.descendants(ASTReferenceExpression.class).toList());
 
         for (ApexNode<?> usage : potentialUsages) {
             if (usage.getParent() == node) {
@@ -68,56 +71,71 @@ public class UnusedLocalVariableRule extends AbstractApexRule {
             }
         }
 
-        List<String> soqlBindingVariables = findBindingsInSOQLStringLiterals(variableContext);
-        if (soqlBindingVariables.contains(variableName.toLowerCase(Locale.ROOT))) {
+        List<String> bindingVariables = new ArrayList<>(findBindingsInSOQLStringLiterals(variableContext));
+        bindingVariables.addAll(findBindingsInSOSLQueries(variableContext));
+        if (bindingVariables.contains(variableName.toLowerCase(Locale.ROOT))) {
             return data;
         }
 
-        addViolation(data, node, variableName);
+        asCtx(data).addViolation(node, variableName);
         return data;
     }
 
-    private List<String> findBindingsInSOQLStringLiterals(ASTBlockStatement variableContext) {
-        List<String> bindingVariables = new ArrayList<>();
+    /**
+     * Manually parses the sosl query, as not all binding vars are in the AST yet
+     * (as {@link net.sourceforge.pmd.lang.apex.ast.ASTBindExpressions}).
+     * This is not needed anymore, once summit ast is fixed.
+     */
+    private Collection<String> findBindingsInSOSLQueries(ASTBlockStatement variableContext) {
+        return variableContext.descendants(ASTSoslExpression.class)
+                .toStream()
+                .map(ASTSoslExpression::getQuery)
+                .flatMap(UnusedLocalVariableRule::extractBindindVars)
+                .collect(Collectors.toList());
+    }
 
-        List<ASTMethodCallExpression> methodCalls = variableContext.findDescendantsOfType(ASTMethodCallExpression.class)
-            .stream()
+    private List<String> findBindingsInSOQLStringLiterals(ASTBlockStatement variableContext) {
+        List<ASTMethodCallExpression> methodCalls = variableContext.descendants(ASTMethodCallExpression.class)
             .filter(m -> DATABASE_QUERY_METHODS.contains(m.getFullMethodName().toLowerCase(Locale.ROOT)))
             .collect(Collectors.toList());
 
-        methodCalls.forEach(databaseMethodCall -> {
-            List<String> stringLiterals = new ArrayList<>();
-            stringLiterals.addAll(databaseMethodCall.findDescendantsOfType(ASTLiteralExpression.class)
-                    .stream()
+        List<String> stringLiterals = new ArrayList<>();
+
+        for (ASTMethodCallExpression databaseMethodCall : methodCalls) {
+            stringLiterals.addAll(databaseMethodCall.descendants(ASTLiteralExpression.class)
                     .filter(ASTLiteralExpression::isString)
+                    .toStream()
                     .map(ASTLiteralExpression::getImage)
                     .collect(Collectors.toList()));
 
-            databaseMethodCall.findDescendantsOfType(ASTVariableExpression.class).forEach(variableUsage -> {
+            databaseMethodCall.descendants(ASTVariableExpression.class).forEach(variableUsage -> {
                 String referencedVariable = variableUsage.getImage();
 
                 // Search other usages of the same variable within this code block
-                variableContext.findDescendantsOfType(ASTVariableExpression.class)
-                        .stream()
+                variableContext.descendants(ASTVariableExpression.class)
                         .filter(usage -> referencedVariable.equalsIgnoreCase(usage.getImage()))
                         .forEach(usage -> {
                             stringLiterals.addAll(usage.getParent()
-                                    .findChildrenOfType(ASTLiteralExpression.class)
-                                    .stream()
+                                    .descendants(ASTLiteralExpression.class)
                                     .filter(ASTLiteralExpression::isString)
+                                    .toStream()
                                     .map(ASTLiteralExpression::getImage)
                                     .collect(Collectors.toList()));
                         });
             });
+        }
 
-            stringLiterals.forEach(s -> {
-                Matcher matcher = BINDING_VARIABLE.matcher(s);
-                while (matcher.find()) {
-                    bindingVariables.add(matcher.group(1).toLowerCase(Locale.ROOT));
-                }
-            });
-        });
+        return stringLiterals.stream()
+                .flatMap(UnusedLocalVariableRule::extractBindindVars)
+                .collect(Collectors.toList());
+    }
 
-        return bindingVariables;
+    private static Stream<String> extractBindindVars(String query) {
+        List<String> vars = new ArrayList<>();
+        Matcher matcher = BINDING_VARIABLE.matcher(query);
+        while (matcher.find()) {
+            vars.add(matcher.group(1).toLowerCase(Locale.ROOT));
+        }
+        return vars.stream();
     }
 }

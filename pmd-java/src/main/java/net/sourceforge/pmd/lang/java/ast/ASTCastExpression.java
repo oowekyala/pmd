@@ -14,14 +14,14 @@ package net.sourceforge.pmd.lang.java.ast;
  *
  * </pre>
  */
-public final class ASTCastExpression extends AbstractJavaExpr implements ASTExpression {
+public final class ASTCastExpression extends AbstractJavaExpr {
 
     ASTCastExpression(int id) {
         super(id);
     }
 
     public ASTType getCastType() {
-        return getFirstChildOfType(ASTType.class);
+        return firstChild(ASTType.class);
     }
 
     public ASTExpression getOperand() {

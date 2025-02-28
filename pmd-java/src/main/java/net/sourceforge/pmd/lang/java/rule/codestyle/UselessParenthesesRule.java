@@ -82,13 +82,13 @@ public final class UselessParenthesesRule extends AbstractJavaRulechainRule {
         if (necessity == NEVER
             || reportClarifying() && necessity == CLARIFYING
             || reportBalancing() && necessity == BALANCING) {
-            addViolation(data, e);
+            asCtx(data).addViolation(e);
         }
 
     }
 
 
-    static Necessity needsParentheses(ASTExpression inner, JavaNode outer) {
+    public static Necessity needsParentheses(ASTExpression inner, JavaNode outer) {
         // Note: as of jdk 15, PatternExpression cannot be parenthesized
         // TypeExpression may never be parenthesized either
         assert inner.isParenthesized() : inner + " is not parenthesized";
@@ -265,7 +265,7 @@ public final class UselessParenthesesRule extends AbstractJavaRulechainRule {
         }
     }
 
-    enum Necessity {
+    public enum Necessity {
         ALWAYS,
         NEVER,
         CLARIFYING,

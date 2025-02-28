@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.renderers;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,6 +16,7 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.jupiter.api.Test;
@@ -24,16 +26,16 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.PMDVersion;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.Report.ConfigurationError;
-import net.sourceforge.pmd.Report.ProcessingError;
-import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.internal.util.IOUtil;
+import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextRange2d;
-import net.sourceforge.pmd.lang.rule.ParametricRuleViolation;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.Report.ConfigurationError;
+import net.sourceforge.pmd.reporting.Report.ProcessingError;
+import net.sourceforge.pmd.reporting.RuleViolation;
 
 import com.github.stefanbirkner.systemlambda.SystemLambda;
 
@@ -49,41 +51,41 @@ class XMLRendererTest extends AbstractRendererTest {
 
     @Override
     String getExpected() {
-        return getHeader() + "<file name=\"" + getSourceCodeFilename() + "\">" + PMD.EOL
+        return getHeader() + "<file name=\"" + getSourceCodeFilename() + "\">" + EOL
                 + "<violation beginline=\"1\" endline=\"1\" begincolumn=\"1\" endcolumn=\"1\" rule=\"Foo\" ruleset=\"RuleSet\" priority=\"5\">"
-                + PMD.EOL + "blah" + PMD.EOL + "</violation>" + PMD.EOL + "</file>" + PMD.EOL + "</pmd>" + PMD.EOL;
+                + EOL + "blah" + EOL + "</violation>" + EOL + "</file>" + EOL + "</pmd>" + EOL;
     }
 
     @Override
     String getExpectedEmpty() {
-        return getHeader() + "</pmd>" + PMD.EOL;
+        return getHeader() + "</pmd>" + EOL;
     }
 
     @Override
     String getExpectedMultiple() {
-        return getHeader() + "<file name=\"" + getSourceCodeFilename() + "\">" + PMD.EOL
+        return getHeader() + "<file name=\"" + getSourceCodeFilename() + "\">" + EOL
                 + "<violation beginline=\"1\" endline=\"1\" begincolumn=\"1\" endcolumn=\"1\" rule=\"Foo\" ruleset=\"RuleSet\" priority=\"5\">"
-                + PMD.EOL + "blah" + PMD.EOL + "</violation>" + PMD.EOL
+                + EOL + "blah" + EOL + "</violation>" + EOL
                 + "<violation beginline=\"1\" endline=\"1\" begincolumn=\"1\" endcolumn=\"2\" rule=\"Boo\" ruleset=\"RuleSet\" priority=\"1\">"
-                + PMD.EOL + "blah" + PMD.EOL + "</violation>" + PMD.EOL + "</file>" + PMD.EOL + "</pmd>" + PMD.EOL;
+                + EOL + "blah" + EOL + "</violation>" + EOL + "</file>" + EOL + "</pmd>" + EOL;
     }
 
     @Override
     String getExpectedError(ProcessingError error) {
         return getHeader() + "<error filename=\"file\" msg=\"RuntimeException: Error\">"
-                + PMD.EOL + "<![CDATA[" + error.getDetail() + "]]>" + PMD.EOL + "</error>" + PMD.EOL + "</pmd>" + PMD.EOL;
+                + EOL + "<![CDATA[" + error.getDetail() + "]]>" + EOL + "</error>" + EOL + "</pmd>" + EOL;
     }
 
     @Override
     String getExpectedErrorWithoutMessage(ProcessingError error) {
         return getHeader() + "<error filename=\"file\" msg=\"NullPointerException: null\">"
-                + PMD.EOL + "<![CDATA[" + error.getDetail() + "]]>" + PMD.EOL + "</error>" + PMD.EOL + "</pmd>" + PMD.EOL;
+                + EOL + "<![CDATA[" + error.getDetail() + "]]>" + EOL + "</error>" + EOL + "</pmd>" + EOL;
     }
 
     @Override
     String getExpectedError(ConfigurationError error) {
         return getHeader() + "<configerror rule=\"Foo\" msg=\"a configuration error\"/>"
-                + PMD.EOL + "</pmd>" + PMD.EOL;
+                + EOL + "</pmd>" + EOL;
     }
 
     @Override
@@ -92,8 +94,9 @@ class XMLRendererTest extends AbstractRendererTest {
     }
 
     private RuleViolation createRuleViolation(String description) {
-        FileLocation loc = FileLocation.range(getSourceCodeFilename(), TextRange2d.range2d(1, 1, 1, 1));
-        return new ParametricRuleViolation(new FooRule(), loc, description);
+        FileLocation loc = FileLocation.range(FileId.fromPathLikeString(getSourceCodeFilename()),
+                                              TextRange2d.range2d(1, 1, 1, 1));
+        return newRuleViolation(new FooRule(), loc, description);
     }
 
     private void verifyXmlEscaping(Renderer renderer, String shouldContain, Charset charset) throws Exception {
@@ -129,11 +132,11 @@ class XMLRendererTest extends AbstractRendererTest {
     }
 
     String getHeader() {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + PMD.EOL
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + EOL
                 + "<pmd xmlns=\"http://pmd.sourceforge.net/report/2.0.0\""
                 + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-                + " xsi:schemaLocation=\"http://pmd.sourceforge.net/report/2.0.0 http://pmd.sourceforge.net/report_2_0_0.xsd\""
-                + " version=\"" + PMDVersion.VERSION + "\" timestamp=\"2014-10-06T19:30:51.262\">" + PMD.EOL;
+                + " xsi:schemaLocation=\"http://pmd.sourceforge.net/report/2.0.0 https://pmd.github.io/schema/report_2_0_0.xsd\""
+                + " version=\"" + PMDVersion.VERSION + "\" timestamp=\"2014-10-06T19:30:51.262\">" + EOL;
     }
 
     @Test
@@ -159,6 +162,19 @@ class XMLRendererTest extends AbstractRendererTest {
             assertEquals(1, violations.getLength());
             assertEquals(msg.replaceAll(formFeed, ""), violations.item(0).getTextContent().trim());
         });
+    }
+
+    /**
+     * @see <a href="https://github.com/pmd/pmd/issues/5059">[core] xml output doesn't escape CDATA inside its own CDATA</a>
+     */
+    @Test
+    void cdataSectionInError() throws Exception {
+        ProcessingError processingError = new ProcessingError(new ParseException("Invalid source: '<![CDATA[ ... ]]> ...'"),
+                FileId.fromPathLikeString("dummy.txt"));
+        String result = renderReport(getRenderer(), it -> it.onError(processingError), StandardCharsets.UTF_8);
+
+        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        assertDoesNotThrow(() -> documentBuilder.parse(new InputSource(new StringReader(result))));
     }
 
     private String renderTempFile(Renderer renderer, Report report, Charset expectedCharset) throws IOException {

@@ -76,6 +76,11 @@ abstract class AbstractJavaNode extends AbstractJjtreeNode<AbstractJavaNode, Jav
     }
 
     @Override
+    protected void enlargeLeft(JavaccToken child) {
+        super.enlargeLeft(child);
+    }
+
+    @Override
     protected void setChild(AbstractJavaNode child, int index) {
         super.setChild(child, index);
     }
@@ -100,11 +105,11 @@ abstract class AbstractJavaNode extends AbstractJjtreeNode<AbstractJavaNode, Jav
 
 
     @Override
-    public @NonNull ASTCompilationUnit getRoot() {
+    public final @NonNull ASTCompilationUnit getRoot() {
         // storing a reference on each node ensures that each path is roamed
         // at most once.
         if (root == null) {
-            root = getParent().getRoot();
+            setRoot(getParent().getRoot());
         }
         return root;
     }
@@ -144,5 +149,9 @@ abstract class AbstractJavaNode extends AbstractJjtreeNode<AbstractJavaNode, Jav
     @Override
     public final String getXPathNodeName() {
         return JavaParserImplTreeConstants.jjtNodeName[id];
+    }
+
+    void setRoot(ASTCompilationUnit root) {
+        this.root = root;
     }
 }

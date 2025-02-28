@@ -7,13 +7,10 @@ package net.sourceforge.pmd.lang.java.ast;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
-import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
-import net.sourceforge.pmd.lang.rule.xpath.DeprecatedAttribute;
 
 
 /**
@@ -42,7 +39,7 @@ import net.sourceforge.pmd.lang.rule.xpath.DeprecatedAttribute;
  *
  * </pre>
  */
-public final class ASTMethodDeclaration extends AbstractMethodOrConstructorDeclaration<JMethodSymbol> {
+public final class ASTMethodDeclaration extends AbstractExecutableDeclaration<JMethodSymbol> {
 
     /**
      * Populated by {@link OverrideResolutionPass}.
@@ -82,32 +79,6 @@ public final class ASTMethodDeclaration extends AbstractMethodOrConstructorDecla
         this.overriddenMethod = overriddenMethod;
     }
 
-    @Override
-    public FileLocation getReportLocation() {
-        // the method identifier
-        JavaccToken ident = TokenUtils.nthPrevious(getModifiers().getLastToken(), getFormalParameters().getFirstToken(), 1);
-        return ident.getReportLocation();
-    }
-
-    /**
-     * Returns the simple name of the method.
-     *
-     * @deprecated Use {@link #getName()}
-     */
-    @Deprecated
-    @DeprecatedAttribute(replaceWith = "@Name")
-    public String getMethodName() {
-        return getName();
-    }
-
-
-    /** Returns the simple name of the method. */
-    @Override
-    public String getName() {
-        return getImage();
-    }
-
-
     /**
      * If this method declaration is an explicit record component accessor,
      * returns the corresponding record component. Otherwise returns null.
@@ -131,7 +102,6 @@ public final class ASTMethodDeclaration extends AbstractMethodOrConstructorDecla
     public boolean isVoid() {
         return getResultTypeNode().isVoid();
     }
-
 
     /**
      * Returns the default clause, if this is an annotation method declaration
@@ -166,6 +136,20 @@ public final class ASTMethodDeclaration extends AbstractMethodOrConstructorDecla
             && "main".equals(this.getName())
             && this.isVoid()
             && this.getArity() == 1
-            && TypeTestUtil.isExactlyA(String[].class, this.getFormalParameters().get(0));
+            && TypeTestUtil.isExactlyA(String[].class, this.getFormalParameters().get(0))
+            || isLaunchableMainMethod();
+    }
+
+    /**
+     * With JEP 445/463/477/495 (Java 23/24 Preview) the main method does not need to be static anymore and
+     * does not need to be public or have a formal parameter.
+     */
+    private boolean isLaunchableMainMethod() {
+        return this.getRoot().isSimpleCompilationUnit()
+                && "main".equals(this.getName())
+                && !this.hasModifiers(JModifier.PRIVATE)
+                && this.isVoid()
+                && (this.getArity() == 0
+                    || this.getArity() == 1 && TypeTestUtil.isExactlyA(String[].class, this.getFormalParameters().get(0)));
     }
 }

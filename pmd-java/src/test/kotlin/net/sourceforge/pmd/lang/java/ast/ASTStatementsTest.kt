@@ -5,27 +5,22 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.java.types.JPrimitiveType
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.INT
 
 class ASTStatementsTest : ParserTestSpec({
-
-    parserTest("Foreach loop") {
-
+    parserTestContainer("Foreach loop") {
         inContext(StatementParsingCtx) {
             """
                  for (Integer i : new Iter<>()) 
                     loop();
             """ should parseAs {
-
                 foreachLoop {
-
-                    it::getVarId shouldBe fromChild<ASTLocalVariableDeclaration, ASTVariableDeclaratorId> {
+                    it::getVarId shouldBe fromChild<ASTLocalVariableDeclaration, ASTVariableId> {
                         it::getModifiers shouldBe modifiers {}
 
                         it::getTypeNode shouldBe classType("Integer")
-                        fromChild<ASTVariableDeclarator, ASTVariableDeclaratorId> {
+                        fromChild<ASTVariableDeclarator, ASTVariableId> {
                             variableId("i") {
                                 it::isLocalVariable shouldBe false
                                 it::isForLoopVariable shouldBe false
@@ -41,15 +36,14 @@ class ASTStatementsTest : ParserTestSpec({
                     }
                 }
             }
+
             """
                  for (@Nullable final Integer i : new Iter<>()) {
                  
                     continue;
                  }
             """ should parseAs {
-
                 foreachLoop {
-
                     val foreach = it
 
                     localVarDecl {
@@ -74,10 +68,8 @@ class ASTStatementsTest : ParserTestSpec({
         }
     }
 
-
-    parserTest("For loop") {
+    parserTestContainer("For loop") {
         inContext(StatementParsingCtx) {
-
             "for (;;) {}" should parseAs {
                 forLoop {
                     it::getInit shouldBe null
@@ -139,10 +131,8 @@ class ASTStatementsTest : ParserTestSpec({
         }
     }
 
-    parserTest("Blocks") {
-
+    parserTestContainer("Blocks") {
         inContext(StatementParsingCtx) {
-
             """
                {
                  for (;;) {}
@@ -159,10 +149,8 @@ class ASTStatementsTest : ParserTestSpec({
         }
     }
 
-    parserTest("Labeled statements") {
-
+    parserTestContainer("Labeled statements") {
         inContext(StatementParsingCtx) {
-
             """
                {
                  l: for (;;) {

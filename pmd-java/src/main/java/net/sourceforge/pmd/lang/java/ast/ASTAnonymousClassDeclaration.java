@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.ast;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
@@ -19,11 +20,11 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
  *
  * <pre class="grammar">
  *
- * AnonymousClassDeclaration ::= {@link ASTModifierList EmptyModifierList} {@link ASTClassOrInterfaceBody}
+ * AnonymousClassDeclaration ::= {@link ASTModifierList EmptyModifierList} {@link ASTClassBody}
  *
  * </pre>
  */
-public final class ASTAnonymousClassDeclaration extends AbstractAnyTypeDeclaration {
+public final class ASTAnonymousClassDeclaration extends AbstractTypeDeclaration {
 
 
     ASTAnonymousClassDeclaration(int id) {
@@ -42,7 +43,7 @@ public final class ASTAnonymousClassDeclaration extends AbstractAnyTypeDeclarati
     }
 
     @Override
-    public @NonNull NodeStream<ASTClassOrInterfaceType> getSuperInterfaceTypeNodes() {
+    public @NonNull NodeStream<ASTClassType> getSuperInterfaceTypeNodes() {
         if (getParent() instanceof ASTConstructorCall) {
             ASTConstructorCall ctor = (ASTConstructorCall) getParent();
             @NonNull JTypeMirror type = ctor.getTypeMirror();
@@ -51,6 +52,18 @@ public final class ASTAnonymousClassDeclaration extends AbstractAnyTypeDeclarati
             }
         }
         return NodeStream.empty();
+    }
+
+    @Override
+    public @Nullable ASTClassType getSuperClassTypeNode() {
+        if (getParent() instanceof ASTConstructorCall) {
+            ASTConstructorCall ctor = (ASTConstructorCall) getParent();
+            @NonNull JTypeMirror type = ctor.getTypeMirror();
+            if (!type.isInterface()) {
+                return ctor.getTypeNode();
+            }
+        }
+        return null;
     }
 
     @Override

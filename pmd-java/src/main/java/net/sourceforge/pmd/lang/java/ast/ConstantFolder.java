@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType;
@@ -42,20 +41,44 @@ final strictfp class ConstantFolder extends JavaVisitorBase<Void, Object> {
 
     @Override
     public Object visit(ASTVariableAccess node, Void data) {
-        return fetchConstFieldReference(node);
+        JVariableSymbol symbol = node.getReferencedSym();
+        if (symbol == null || !symbol.isFinal()) {
+            return null;
+        }
+        @Nullable
+        ASTVariableId declaratorId = symbol.tryGetNode();
+        if (declaratorId != null) {
+            ASTExpression initializer = declaratorId.getInitializer();
+            if (initializer != null) {
+                return initializer.getConstValue();
+            }
+        }
+
+        return null;
     }
 
     @Override
     public Object visit(ASTFieldAccess node, Void data) {
-        return fetchConstFieldReference(node);
-    }
-
-    private @Nullable Object fetchConstFieldReference(ASTNamedReferenceExpr node) {
-        JVariableSymbol symbol = node.getReferencedSym();
-        if (symbol instanceof JFieldSymbol) {
-            return ((JFieldSymbol) symbol).getConstValue();
+        JFieldSymbol symbol = node.getReferencedSym();
+        if (symbol != null) {
+            return symbol.getConstValue();
         }
         return null;
+    }
+
+    @Override
+    public Object visit(ASTArrayInitializer node, Void data) {
+        int length = node.length();
+        Object[] result = new Object[length];
+        int index = 0;
+        for (ASTExpression expr : node) {
+            if (!expr.isCompileTimeConstant()) {
+                return null;
+            }
+            result[index++] = expr.getConstValue();
+        }
+
+        return result;
     }
 
     @Override
@@ -365,7 +388,7 @@ final strictfp class ConstantFolder extends JavaVisitorBase<Void, Object> {
             return null;
         }
         default:
-            throw AssertionUtil.shouldNotReachHere("Unknown operator in " + node);
+            throw AssertionUtil.shouldNotReachHere("Unknown operator '" + node.getOperator() + "' in " + node);
         }
     }
 
@@ -502,7 +525,7 @@ final strictfp class ConstantFolder extends JavaVisitorBase<Void, Object> {
             case DOUBLE:
                 return doubleValue(v);
             default:
-                throw AssertionUtil.shouldNotReachHere("exhaustive enum");
+                throw AssertionUtil.shouldNotReachHere("exhaustive enum: " + target);
             }
         }
         return null;

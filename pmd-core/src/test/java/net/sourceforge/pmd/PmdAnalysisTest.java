@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -19,21 +20,28 @@ import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
-import net.sourceforge.pmd.RuleSetTest.MockRule;
 import net.sourceforge.pmd.lang.Dummy2LanguageModule;
+import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageProcessor;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.SimpleTestTextFile;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
-import net.sourceforge.pmd.processor.PmdRunnableTest;
+import net.sourceforge.pmd.lang.rule.MockRule;
+import net.sourceforge.pmd.lang.rule.RuleSet;
 import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.reporting.Report;
 import net.sourceforge.pmd.reporting.ReportStats;
+import net.sourceforge.pmd.reporting.RuleContext;
+import net.sourceforge.pmd.util.log.PmdReporter;
 
 /**
  * @author Clément Fournier
  */
-public class PmdAnalysisTest {
+class PmdAnalysisTest {
 
     @Test
     void testPmdAnalysisWithEmptyConfig() {
@@ -48,7 +56,7 @@ public class PmdAnalysisTest {
     @Test
     void testRendererInteractions() throws IOException {
         PMDConfiguration config = new PMDConfiguration();
-        config.setInputPaths("sample-source/dummy");
+        config.addInputPath(Paths.get("sample-source/dummy"));
         Renderer renderer = spy(Renderer.class);
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             pmd.addRenderer(renderer);
@@ -86,14 +94,41 @@ public class PmdAnalysisTest {
     void testParseException() {
         PMDConfiguration config = new PMDConfiguration();
         config.setThreads(1);
-        config.setForceLanguageVersion(PmdRunnableTest.getVersionWithParserThatThrowsSemanticError());
+        config.setForceLanguageVersion(DummyLanguageModule.getInstance().getVersionWhereParserThrows());
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             pmd.addRuleSet(RuleSet.forSingleRule(new MockRule()));
-            pmd.files().addSourceFile("file", "some source");
+            pmd.files().addSourceFile(FileId.fromPathLikeString("file"), "some source");
 
             ReportStats stats = pmd.runAndReturnStats();
             assertEquals(1, stats.getNumErrors(), "Errors");
             assertEquals(0, stats.getNumViolations(), "Violations");
+        }
+    }
+
+    @Test
+    void testRuleFailureDuringInitialization() {
+        PMDConfiguration config = new PMDConfiguration();
+        config.setThreads(1);
+        PmdReporter mockReporter = spy(PmdReporter.quiet());
+        config.setReporter(mockReporter);
+
+        try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
+            pmd.addRuleSet(RuleSet.forSingleRule(new MockRule() {
+                @Override
+                public void initialize(LanguageProcessor languageProcessor) {
+                    throw new IllegalStateException();
+                }
+            }));
+
+            pmd.files().addSourceFile(FileId.fromPathLikeString("fname1.dummy"), "some source");
+
+            ReportStats stats = pmd.runAndReturnStats();
+            // the error number here is only for FileAnalysisException, so
+            // the exception during initialization is not counted.
+            assertEquals(0, stats.getNumErrors(), "Errors");
+            assertEquals(0, stats.getNumViolations(), "Violations");
+
+            verify(mockReporter).errorEx(Mockito.contains("init"), any(IllegalStateException.class));
         }
     }
 
@@ -125,7 +160,7 @@ public class PmdAnalysisTest {
 
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             pmd.addRuleSet(ruleset);
-            pmd.files().addFile(new SimpleTestTextFile("test content foo", "foo.txt", language.getDefaultVersion()));
+            pmd.files().addFile(new SimpleTestTextFile("test content foo", FileId.fromPathLikeString("foo.txt"), language.getDefaultVersion()));
             Report report = pmd.performAnalysisAndCollectReport();
             for (Report.ProcessingError error : report.getProcessingErrors()) {
                 System.out.println("error = " + error.getMsg() + ": " + error.getDetail());
@@ -135,8 +170,8 @@ public class PmdAnalysisTest {
         }
     }
 
-    public static class TestRule extends AbstractRule {
-        public TestRule() {
+    private static class TestRule extends AbstractRule {
+        TestRule() {
             setLanguage(Dummy2LanguageModule.getInstance());
             setMessage("dummy 2 test rule");
         }

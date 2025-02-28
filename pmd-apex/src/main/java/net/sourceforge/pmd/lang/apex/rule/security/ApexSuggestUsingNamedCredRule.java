@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.apex.rule.security;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -33,8 +32,10 @@ import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 public class ApexSuggestUsingNamedCredRule extends AbstractApexRule {
     private static final String SET_HEADER = "setHeader";
     private static final String AUTHORIZATION = "Authorization";
+    private static final String CREDENTIAL_PREFIX = "{!$Credential.";
 
     private final Set<String> listOfAuthorizationVariables = new HashSet<>();
+    private final Set<String> listOfCredentialVariables = new HashSet<>();
 
     @Override
     protected @NonNull RuleTargetSelector buildTargetSelector() {
@@ -47,50 +48,30 @@ public class ApexSuggestUsingNamedCredRule extends AbstractApexRule {
             return data;
         }
 
-        List<ASTVariableDeclaration> variableDecls = node.findDescendantsOfType(ASTVariableDeclaration.class);
-        for (ASTVariableDeclaration varDecl : variableDecls) {
-            findAuthLiterals(varDecl);
+        for (ASTVariableDeclaration varDecl : node.descendants(ASTVariableDeclaration.class)) {
+            findAuthVariables(varDecl);
+            findCredentialVariables(varDecl);
         }
 
-        List<ASTField> fieldDecl = node.findDescendantsOfType(ASTField.class);
-        for (ASTField fDecl : fieldDecl) {
-            findFieldLiterals(fDecl);
+        for (ASTField fDecl : node.descendants(ASTField.class)) {
+            findAuthFields(fDecl);
+            findCredentialFields(fDecl);
         }
 
-        List<ASTMethodCallExpression> methodCalls = node.findDescendantsOfType(ASTMethodCallExpression.class);
-        for (ASTMethodCallExpression method : methodCalls) {
+        for (ASTMethodCallExpression method : node.descendants(ASTMethodCallExpression.class)) {
             flagAuthorizationHeaders(method, data);
         }
 
         listOfAuthorizationVariables.clear();
+        listOfCredentialVariables.clear();
 
         return data;
     }
 
-    private void findFieldLiterals(final ASTField fDecl) {
-        if ("String".equals(fDecl.getType()) && AUTHORIZATION.equalsIgnoreCase(fDecl.getValue())) {
-            listOfAuthorizationVariables.add(Helper.getFQVariableName(fDecl));
-        }
-    }
-
-    private void flagAuthorizationHeaders(final ASTMethodCallExpression node, Object data) {
-        if (!Helper.isMethodName(node, SET_HEADER)) {
-            return;
-        }
-
-        final ASTBinaryExpression binaryNode = node.getFirstChildOfType(ASTBinaryExpression.class);
-        if (binaryNode != null) {
-            runChecks(binaryNode, data);
-        }
-
-        runChecks(node, data);
-
-    }
-
-    private void findAuthLiterals(final ApexNode<?> node) {
-        ASTLiteralExpression literal = node.getFirstChildOfType(ASTLiteralExpression.class);
+    private void findAuthVariables(final ApexNode<?> node) {
+        ASTLiteralExpression literal = node.firstChild(ASTLiteralExpression.class);
         if (literal != null) {
-            ASTVariableExpression variable = node.getFirstChildOfType(ASTVariableExpression.class);
+            ASTVariableExpression variable = node.firstChild(ASTVariableExpression.class);
             if (variable != null) {
                 if (isAuthorizationLiteral(literal)) {
                     listOfAuthorizationVariables.add(Helper.getFQVariableName(variable));
@@ -99,30 +80,103 @@ public class ApexSuggestUsingNamedCredRule extends AbstractApexRule {
         }
     }
 
-    private void runChecks(final ApexNode<?> node, Object data) {
-        ASTLiteralExpression literalNode = node.getFirstChildOfType(ASTLiteralExpression.class);
-        if (literalNode != null) {
-            if (isAuthorizationLiteral(literalNode)) {
-                addViolation(data, literalNode);
-            }
-        }
-
-        final ASTVariableExpression varNode = node.getFirstChildOfType(ASTVariableExpression.class);
-        if (varNode != null) {
-            if (listOfAuthorizationVariables.contains(Helper.getFQVariableName(varNode))) {
-                addViolation(data, varNode);
+    private void findCredentialVariables(final ApexNode<?> node) {
+        ASTLiteralExpression literal = node.firstChild(ASTLiteralExpression.class);
+        if (literal != null) {
+            ASTVariableExpression variable = node.firstChild(ASTVariableExpression.class);
+            if (variable != null) {
+                if (isCredentialLiteral(literal)) {
+                    listOfCredentialVariables.add(Helper.getFQVariableName(variable));
+                }
             }
         }
     }
 
+    private void findAuthFields(final ASTField fDecl) {
+        if ("String".equals(fDecl.getType()) && AUTHORIZATION.equalsIgnoreCase(fDecl.getValue())) {
+            listOfAuthorizationVariables.add(Helper.getFQVariableName(fDecl));
+        }
+    }
+
+    private void findCredentialFields(final ASTField fDecl) {
+        if (!"String".equals(fDecl.getType())) {
+            return;
+        }
+
+        String value = fDecl.getValue();
+
+        if (value == null) {
+            return;
+        }
+
+        if (value.contains(CREDENTIAL_PREFIX)) {
+            listOfCredentialVariables.add(Helper.getFQVariableName(fDecl));
+        }
+    }
+
+    private void flagAuthorizationHeaders(final ASTMethodCallExpression node, Object data) {
+        if (!Helper.isMethodName(node, SET_HEADER)) {
+            return;
+        }
+
+        runChecks(node, data);
+    }
+
+    private void runChecks(final ApexNode<?> node, Object data) {
+        ApexNode<?> keyNode = node.getChild(1);
+        ApexNode<?> valueNode = node.getChild(2);
+
+        if (keyNode == null || !isAuthorizationReference(keyNode)) {
+            return;
+        }
+
+        if (valueNode == null || !isCredentialReference(valueNode)) {
+            asCtx(data).addViolation(keyNode);
+        }
+    }
+
+    private boolean isAuthorizationReference(final ApexNode<?> node) {
+        if (node instanceof ASTLiteralExpression) {
+            return isAuthorizationLiteral((ASTLiteralExpression) node);
+        }
+        if (node instanceof ASTVariableExpression) {
+            return isAuthorizationVariable((ASTVariableExpression) node);
+        }
+        return node instanceof ASTBinaryExpression && isAuthorizationReference(node.getChild(0));
+    }
+
     private boolean isAuthorizationLiteral(final ASTLiteralExpression literal) {
-        if (literal.isString()) {
-            String lit = literal.getImage();
-            if (AUTHORIZATION.equalsIgnoreCase(lit)) {
+        return literal.isString() && AUTHORIZATION.equalsIgnoreCase(literal.getImage());
+    }
+
+    private boolean isAuthorizationVariable(final ASTVariableExpression variable) {
+        return listOfAuthorizationVariables.contains(Helper.getFQVariableName(variable));
+    }
+
+    private boolean isCredentialReference(ApexNode<?> node) {
+        if (node instanceof ASTLiteralExpression) {
+            return isCredentialLiteral((ASTLiteralExpression) node);
+        }
+        if (node instanceof ASTVariableExpression) {
+            return isCredentialVariable((ASTVariableExpression) node);
+        }
+        return node instanceof ASTBinaryExpression && isCredentialBinaryExpression((ASTBinaryExpression) node);
+    }
+
+    private boolean isCredentialLiteral(final ASTLiteralExpression literal) {
+        return literal.isString() && literal.getImage().contains(CREDENTIAL_PREFIX);
+    }
+
+    private boolean isCredentialVariable(final ASTVariableExpression variable) {
+        return listOfCredentialVariables.contains(Helper.getFQVariableName(variable));
+    }
+
+    private boolean isCredentialBinaryExpression(ASTBinaryExpression binaryExpression) {
+        for (int i = 0; i < binaryExpression.getNumChildren(); i++) {
+            if (isCredentialReference(binaryExpression.getChild(i))) {
                 return true;
             }
         }
-
         return false;
     }
 }

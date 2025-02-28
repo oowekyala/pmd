@@ -25,11 +25,11 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.commons.lang3.StringUtils;
 
 import net.sourceforge.pmd.PMDVersion;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.RuleViolation;
 import net.sourceforge.pmd.util.StringUtil;
 
 /**
@@ -39,12 +39,11 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
 
     public static final String NAME = "xml";
 
-    // TODO 7.0.0 use PropertyDescriptor<String> or something more specialized
     public static final PropertyDescriptor<String> ENCODING =
         PropertyFactory.stringProperty("encoding").desc("XML encoding format").defaultValue("UTF-8").build();
 
     private static final String PMD_REPORT_NS_URI = "http://pmd.sourceforge.net/report/2.0.0";
-    private static final String PMD_REPORT_NS_LOCATION = "http://pmd.sourceforge.net/report_2_0_0.xsd";
+    private static final String PMD_REPORT_NS_LOCATION = "https://pmd.github.io/schema/report_2_0_0.xsd";
     private static final String XSI_NS_PREFIX = "xsi";
 
     private XMLStreamWriter xmlWriter;
@@ -145,7 +144,7 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
             // rule violations
             while (violations.hasNext()) {
                 RuleViolation rv = violations.next();
-                String nextFilename = determineFileName(rv.getFilename());
+                String nextFilename = determineFileName(rv.getFileId());
                 if (!nextFilename.equals(filename)) {
                     // New File
                     if (filename != null) {
@@ -194,10 +193,17 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
             for (Report.ProcessingError pe : errors) {
                 writeNewLine();
                 xmlWriter.writeStartElement("error");
-                xmlWriter.writeAttribute("filename", determineFileName(pe.getFile()));
+                xmlWriter.writeAttribute("filename", determineFileName(pe.getFileId()));
                 xmlWriter.writeAttribute("msg", pe.getMsg());
                 writeNewLine();
-                xmlWriter.writeCData(pe.getDetail());
+
+                // in case the message contains itself some CDATA sections, they need to be handled
+                // in order to not produce invalid XML...
+                String detail = pe.getDetail();
+                // split "]]>" into "]]" and ">" into two cdata sections
+                detail = detail.replace("]]>", "]]]]><![CDATA[>");
+
+                xmlWriter.writeCData(detail);
                 writeNewLine();
                 xmlWriter.writeEndElement();
             }
@@ -207,7 +213,7 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
                 for (Report.SuppressedViolation s : suppressed) {
                     writeNewLine();
                     xmlWriter.writeStartElement("suppressedviolation");
-                    xmlWriter.writeAttribute("filename", determineFileName(s.getRuleViolation().getFilename()));
+                    xmlWriter.writeAttribute("filename", determineFileName(s.getRuleViolation().getFileId()));
                     xmlWriter.writeAttribute("suppressiontype", s.getSuppressor().getId().toLowerCase(Locale.ROOT));
                     xmlWriter.writeAttribute("msg", s.getRuleViolation().getDescription());
                     xmlWriter.writeAttribute("usermsg", s.getUserMessage() == null ? "" : s.getUserMessage());
@@ -249,7 +255,7 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
             XMLOutputFactory outputFactory = XMLOutputFactory.newFactory();
             this.xmlWriter = outputFactory.createXMLStreamWriter(this.stream, encoding);
             // for backwards compatibility, also provide a writer. Note: xmlWriter won't use that.
-            this.writer = new WrappedOutputStreamWriter(xmlWriter, stream, encoding);
+            super.setWriter(new WrappedOutputStreamWriter(xmlWriter, stream, encoding));
         } catch (IOException | XMLStreamException e) {
             throw new IllegalArgumentException(e);
         }
@@ -266,7 +272,7 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
             this.xmlWriter = outputFactory.createXMLStreamWriter(this.stream, encoding);
             // for backwards compatibility, also provide a writer.
             // Note: both XMLStreamWriter and this writer will write to this.stream
-            this.writer = new WrappedOutputStreamWriter(xmlWriter, stream, encoding);
+            super.setWriter(new WrappedOutputStreamWriter(xmlWriter, stream, encoding));
         } catch (XMLStreamException | UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

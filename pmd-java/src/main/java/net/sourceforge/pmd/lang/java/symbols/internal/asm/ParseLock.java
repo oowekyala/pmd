@@ -17,35 +17,59 @@ abstract class ParseLock {
     private static final Logger LOG = LoggerFactory.getLogger(ParseLock.class);
 
     private volatile ParseStatus status = ParseStatus.NOT_PARSED;
+    private final String name;
+
+    protected ParseLock(String name) {
+        this.name = name;
+    }
 
     public void ensureParsed() {
         getFinalStatus();
     }
 
+    private void logParseLockTrace(String prefix) {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("{} {}: {}", Thread.currentThread().getName(), String.format("%-15s", prefix), this);
+        }
+    }
+
     private ParseStatus getFinalStatus() {
         ParseStatus status = this.status;
         if (!status.isFinished) {
+            logParseLockTrace("waiting on");
+
             synchronized (this) {
+                logParseLockTrace("locked");
+
                 status = this.status;
                 if (status == ParseStatus.NOT_PARSED) {
                     this.status = ParseStatus.BEING_PARSED;
                     try {
                         boolean success = doParse();
                         status = success ? ParseStatus.FULL : ParseStatus.FAILED;
-                        this.status = status;
                         finishParse(!success);
                     } catch (Throwable t) {
                         status = ParseStatus.FAILED;
-                        this.status = status;
-                        LOG.error(t.toString(), t);
+                        LOG.error("Parsing failed in ParseLock#doParse() of {}", name, t);
                         finishParse(true);
                     }
+
+                    // the status must be updated as last statement, so that
+                    // other threads see the status FULL or FAILED only after finishParse()
+                    // returns. Otherwise, some fields might not have been initialized.
+                    //
+                    // Note: the current thread might reenter the parsing logic through
+                    // finishParse() -> ... -> ensureParsed(). In that case the status is still BEING_PARSED,
+                    // and we don't call finishParse() again. See below for canReenter()
+                    this.status = status;
+
                     assert status.isFinished : "Inconsistent status " + status;
                     assert postCondition() : "Post condition not satisfied after parsing sig " + this;
                 } else if (status == ParseStatus.BEING_PARSED && !canReenter()) {
                     throw new IllegalStateException("Thread is reentering the parse lock");
                 }
             }
+            logParseLockTrace("released");
         }
         return status;
     }
@@ -56,6 +80,10 @@ abstract class ParseLock {
 
     public boolean isFailed() {
         return getFinalStatus() == ParseStatus.FAILED;
+    }
+
+    public boolean isNotParsed() {
+        return status == ParseStatus.NOT_PARSED;
     }
 
     // will be called in the critical section after parse is done
@@ -73,7 +101,7 @@ abstract class ParseLock {
 
     @Override
     public String toString() {
-        return "ParseLock{status=" + status + '}';
+        return "ParseLock{name=" + name + ",status=" + status + '}';
     }
 
     private enum ParseStatus {

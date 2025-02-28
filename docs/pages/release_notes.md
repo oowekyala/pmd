@@ -4,12 +4,7 @@ permalink: pmd_release_notes.html
 keywords: changelog, release notes
 ---
 
-<!-- NOTE: THESE RELEASE NOTES ARE THOSE FROM MASTER -->
-<!-- They were copied to avoid merge conflicts when merging back master -->
-<!-- the 7_0_0_release_notes.md is the page to be used when adding new 7.0.0 changes -->
-
-
-## {{ site.pmd.date }} - {{ site.pmd.version }}
+## {{ site.pmd.date | date: "%d-%B-%Y" }} - {{ site.pmd.version }}
 
 The PMD team is pleased to announce PMD {{ site.pmd.version }}.
 
@@ -17,13 +12,20 @@ This is a {{ site.pmd.release_type }} release.
 
 {% tocmaker is_release_notes_processor %}
 
-### New and noteworthy
+### 🚀 New and noteworthy
 
-### Fixed Issues
+### 🐛 Fixed Issues
 
-### API Changes
+### 🚨 API Changes
 
-### External Contributions
+### ✨ Merged pull requests
+<!-- content will be automatically generated, see /do-release.sh -->
+
+### 📦 Dependency updates
+<!-- content will be automatically generated, see /do-release.sh -->
+
+### 📈 Stats
+<!-- content will be automatically generated, see /do-release.sh -->
 
 {% endtocmaker %}
 

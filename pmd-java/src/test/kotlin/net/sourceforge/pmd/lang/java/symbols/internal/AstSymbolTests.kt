@@ -4,17 +4,16 @@
 
 package net.sourceforge.pmd.lang.java.symbols.internal
 
+import io.kotest.matchers.collections.haveSize
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.haveSize
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.*
-import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.symbols.*
 import net.sourceforge.pmd.lang.java.types.Substitution
+import net.sourceforge.pmd.lang.test.ast.*
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import java.lang.reflect.Modifier
 
 /**
@@ -22,11 +21,8 @@ import java.lang.reflect.Modifier
  * @since 7.0.0
  */
 class AstSymbolTests : ParserTestSpec({
-
-    parserTest("Parsed class symbols") {
-
+    parserTestContainer("Parsed class symbols") {
         val acu = parser.withProcessing().parse("""
-
             package com.foo;
 
             import java.util.ArrayList;
@@ -56,7 +52,7 @@ class AstSymbolTests : ParserTestSpec({
         """)
 
         val (fooClass, innerItf, innerEnum, innerClass, annot) = acu
-                .descendants(ASTAnyTypeDeclaration::class.java)
+                .descendants(ASTTypeDeclaration::class.java)
                 .crossFindBoundaries()
                 .toList { it.symbol }
 
@@ -147,9 +143,7 @@ class AstSymbolTests : ParserTestSpec({
         }
     }
 
-
-    parserTest("Default/implicit constructors") {
-
+    parserTestContainer("Default/implicit constructors") {
         val acu = parser.withProcessing().parse("""
 
             package com.foo;
@@ -176,7 +170,7 @@ class AstSymbolTests : ParserTestSpec({
         """)
 
         val (fooClass, innerItf, innerAnnot, e1, e2, bClass, cClass) =
-                acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.symbol }
+                acu.descendants(ASTTypeDeclaration::class.java).toList { it.symbol }
 
         doTest("Annotations/itfs should have no constructors") {
             innerItf.constructors.shouldBeEmpty()
@@ -196,7 +190,6 @@ class AstSymbolTests : ParserTestSpec({
         }
 
         doTest("Classes should have no default constructor if there are explicit ones") {
-
             bClass.constructors[0].shouldBeA<JConstructorSymbol> {
                 it.formalParameters.shouldBeEmpty()
                 it.modifiers shouldBe Modifier.PROTECTED
@@ -224,15 +217,14 @@ class AstSymbolTests : ParserTestSpec({
         }
     }
 
-    parserTest("Enum details") {
-
+    parserTestContainer("Enum details") {
         val acu = parser.withProcessing().parse("""
             enum EE { A, B }
             enum E2 { A { } /* anon */ }
         """.trimIndent())
 
         val (enum, enum2, enumAnon) =
-                acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.symbol }
+                acu.descendants(ASTTypeDeclaration::class.java).toList { it.symbol }
 
         doTest("Enums should have a values() method") {
             val values = enum.getDeclaredMethods("values")
@@ -263,11 +255,8 @@ class AstSymbolTests : ParserTestSpec({
         }
     }
 
-
-    parserTest("Local class symbols") {
-
+    parserTestContainer("Local class symbols") {
         val acu = parser.withProcessing().parse("""
-
             package com.foo;
 
             public final class Foo { // fooClass
@@ -302,12 +291,11 @@ class AstSymbolTests : ParserTestSpec({
             }
         """)
 
-        val allTypes = acu.descendants(ASTAnyTypeDeclaration::class.java).crossFindBoundaries().toList { it.symbol }
+        val allTypes = acu.descendants(ASTTypeDeclaration::class.java).crossFindBoundaries().toList { it.symbol }
         val locals = allTypes.filter { it.isLocalClass }
         val (fooClass, ctorLoc, barLoc, ohioLoc, anon, anonLoc, initLoc, staticInitLoc, locMember) = allTypes
         val (ctor) = acu.descendants(ASTConstructorDeclaration::class.java).toList { it.symbol }
         val (barM, ohioM) = acu.descendants(ASTMethodDeclaration::class.java).toList { it.symbol }
-
 
         locals shouldBe listOf(ctorLoc, barLoc, ohioLoc, anonLoc, initLoc, staticInitLoc)
 
@@ -352,13 +340,9 @@ class AstSymbolTests : ParserTestSpec({
             initLoc::getEnclosingMethod shouldBe null
             staticInitLoc::getEnclosingMethod shouldBe null
         }
-
     }
 
-
-
-    parserTest("Record symbols") {
-
+    parserTestContainer("Record symbols") {
         // TODO explicit declaration of canonical ctor (need type res)
 
         val acu = parser.withProcessing().parse("""
@@ -387,7 +371,7 @@ class AstSymbolTests : ParserTestSpec({
         val (canonCtor1, canonCtor2) = acu.descendants(ASTRecordComponentList::class.java).toList { it.symbol }
         val (auxCtor) = acu.descendants(ASTConstructorDeclaration::class.java).toList { it.symbol }
         val (xAccessor) = acu.descendants(ASTMethodDeclaration::class.java).toList { it.symbol }
-        val (xComp, yComp, x2Comp, y2Comp, x2Formal) = acu.descendants(ASTVariableDeclaratorId::class.java).toList { it.symbol }
+        val (xComp, yComp, _, y2Comp, _) = acu.descendants(ASTVariableId::class.java).toList { it.symbol }
 
 
         doTest("should reflect their modifiers") {
@@ -448,7 +432,6 @@ class AstSymbolTests : ParserTestSpec({
             }
         }
 
-
         doTest("should declare field accessors") {
             pointRecord.declaredMethods should haveSize(2)
             pointRecord.getDeclaredMethods("x") shouldBe listOf(xAccessor)
@@ -461,12 +444,8 @@ class AstSymbolTests : ParserTestSpec({
         }
     }
 
-
-
-    parserTest("Anonymous class symbols") {
-
+    parserTestContainer("Anonymous class symbols") {
         val acu = parser.withProcessing().parse("""
-
             package com.foo;
 
             public class Foo { // fooClass
@@ -504,7 +483,7 @@ class AstSymbolTests : ParserTestSpec({
             }
         """)
 
-        val allTypes = acu.descendants(ASTAnyTypeDeclaration::class.java).crossFindBoundaries().toList { it.symbol }
+        val allTypes = acu.descendants(ASTTypeDeclaration::class.java).crossFindBoundaries().toList { it.symbol }
         val allAnons = allTypes.filter { it.isAnonymousClass }
         val (fooClass, fieldAnon, staticFieldAnon, ctorAnon, barAnon, staticBarAnon, initAnon, staticInitAnon, anonAnon, anonMember) = allTypes
         val (ctor) = acu.descendants(ASTConstructorDeclaration::class.java).toList { it.symbol }
@@ -551,7 +530,7 @@ class AstSymbolTests : ParserTestSpec({
             }
 
             // all others are Runnable
-            (allAnons - anonsWithSuperClass).forEach {
+            (allAnons - anonsWithSuperClass.toSet()).forEach {
                 it::getSuperclass shouldBe it.typeSystem.OBJECT.symbol
                 it::getSuperInterfaces shouldBe listOf(it.typeSystem.getClassSymbol(Runnable::class.java))
             }

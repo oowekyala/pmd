@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
-      - pmd/7.0.x
     tags:
       - '**'
   workflow_dispatch:
@@ -18,17 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: false
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 100
     - name: Setup Environment
       shell: bash
       run: |
         echo "LANG=en_US.UTF-8" >> $GITHUB_ENV
-        echo "PMD_CI_SCRIPTS_URL=https://raw.githubusercontent.com/pmd/build-tools/20/scripts" >> $GITHUB_ENV
+        echo "PMD_CI_SCRIPTS_URL=https://raw.githubusercontent.com/pmd/build-tools/29/scripts" >> $GITHUB_ENV
     - name: Sync
       run: .ci/git-repo-sync.sh
       shell: bash
       env:
         PMD_CI_SECRET_PASSPHRASE: ${{ secrets.PMD_CI_SECRET_PASSPHRASE }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PMD_CI_GPG_PRIVATE_KEY: ${{ secrets.PMD_CI_GPG_PRIVATE_KEY }}

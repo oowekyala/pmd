@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.types.internal.infer;
 
 import static net.sourceforge.pmd.lang.java.types.TypeConversion.capture;
+import static net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf.cast;
 import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 
 import java.lang.reflect.Modifier;
@@ -38,7 +39,7 @@ import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.MethodRefMi
 import net.sourceforge.pmd.util.CollectionUtil;
 
 @SuppressWarnings("PMD.CompareObjectsWithEquals")
-final class ExprOps {
+public final class ExprOps {
 
     private final Infer infer;
     private final TypeSystem ts;
@@ -76,6 +77,11 @@ final class ExprOps {
                 //  A lambda expression or a method reference expression is potentially compatible with
                 //  a type variable if the type variable is a type parameter of the candidate method.
                 return m.getTypeParameters().contains(t);
+            }
+            if (TypeOps.isUnresolved(t)) {
+                // Then we will not find a functional interface method.
+                // Treat the argument as potentially compatible though.
+                return true;
             }
             JMethodSig fun = TypeOps.findFunctionalInterfaceMethod(t);
             if (fun == null) {
@@ -175,7 +181,7 @@ final class ExprOps {
     /**
      * Returns null if the method reference is inexact.
      */
-    static @Nullable JMethodSig getExactMethod(MethodRefMirror mref) {
+    public static @Nullable JMethodSig getExactMethod(MethodRefMirror mref) {
         JMethodSig cached = mref.getCachedExactMethod();
 
         if (cached == null) { // inexact
@@ -226,7 +232,6 @@ final class ExprOps {
             }
         } else {
             JClassType enclosing = mref.getEnclosingType();
-
             accessible = mref.getTypeToSearch()
                              .streamMethods(TypeOps.accessibleMethodFilter(mref.getMethodName(), enclosing.getSymbol()))
                              .collect(OverloadSet.collectMostSpecific(enclosing));
@@ -246,7 +251,7 @@ final class ExprOps {
                 // of the original owner, ie the erased method is the
                 // same as the generic method.
                 JClassType lhsClass = (JClassType) candidate.getDeclaringType();
-                JMethodSig unerased = candidate.internalApi().withOwner(lhsClass.getGenericTypeDeclaration()).internalApi().originalMethod();
+                JMethodSig unerased = cast(cast(candidate).withOwner(lhsClass.getGenericTypeDeclaration())).originalMethod();
                 if (TypeOps.mentionsAny(unerased, lhsClass.getFormalTypeParams())) {
                     return null;
                 }
@@ -536,7 +541,7 @@ final class ExprOps {
     static JMethodSig adaptGetClass(JMethodSig sig, Supplier<JTypeMirror> replacementReturnType) {
         TypeSystem ts = sig.getTypeSystem();
         if ("getClass".equals(sig.getName()) && sig.getDeclaringType().equals(ts.OBJECT)) {
-            return sig.internalApi().withReturnType(getClassReturn(replacementReturnType.get(), ts)).internalApi().markAsAdapted();
+            return cast(cast(sig).withReturnType(getClassReturn(replacementReturnType.get(), ts))).markAsAdapted();
         }
         return sig;
     }
@@ -546,7 +551,7 @@ final class ExprOps {
     }
 
     static boolean isContextDependent(JMethodSig m) {
-        m = m.internalApi().adaptedMethod();
+        m = cast(m).adaptedMethod();
         return m.isGeneric() && TypeOps.mentionsAny(m.getReturnType(), m.getTypeParameters());
     }
 }

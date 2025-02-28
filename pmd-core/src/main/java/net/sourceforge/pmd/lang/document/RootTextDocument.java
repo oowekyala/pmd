@@ -27,19 +27,16 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
 
     private final LanguageVersion langVersion;
 
-    private final String fileName;
-    private final String pathId;
+    private final FileId fileId;
 
     RootTextDocument(TextFile backend) throws IOException {
         this.backend = backend;
         this.content = backend.readContents();
         this.langVersion = backend.getLanguageVersion();
-        this.fileName = backend.getDisplayName();
-        this.pathId = backend.getPathId();
+        this.fileId = backend.getFileId();
 
         Objects.requireNonNull(langVersion, "Null language version for file " + backend);
-        Objects.requireNonNull(fileName, "Null display name for file " + backend);
-        Objects.requireNonNull(pathId, "Null path id for file " + backend);
+        Objects.requireNonNull(fileId, "Null path id for file " + backend);
     }
 
     @Override
@@ -48,13 +45,8 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
     }
 
     @Override
-    public String getDisplayName() {
-        return fileName;
-    }
-
-    @Override
-    public String getPathId() {
-        return pathId;
+    public FileId getFileId() {
+        return fileId;
     }
 
     @Override
@@ -69,13 +61,33 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
 
     @Override
     public FileLocation toLocation(TextRegion region) {
-        return content.getPositioner().toLocation(region, fileName);
-    }
+        checkInRange(region, this.getLength());
+        SourceCodePositioner positioner = content.getPositioner();
 
+        // We use longs to return both numbers at the same time
+        // This limits us to 2 billion lines or columns, which is FINE
+        TextPos2d bpos = positioner.lineColFromOffset(region.getStartOffset(), true);
+        TextPos2d epos = region.isEmpty() ? bpos
+                                          : positioner.lineColFromOffset(region.getEndOffset(), false);
+
+        return new FileLocation(
+            fileId,
+            bpos.getLine(),
+            bpos.getColumn(),
+            epos.getLine(),
+            epos.getColumn(),
+            region
+        );
+    }
 
     @Override
     public TextPos2d lineColumnAtOffset(int offset, boolean inclusive) {
         return content.getPositioner().lineColFromOffset(offset, inclusive);
+    }
+
+    @Override
+    public int offsetAtLineColumn(TextPos2d position) {
+        return content.getPositioner().offsetFromLineColumn(position.getLine(), position.getColumn());
     }
 
     @Override
@@ -107,11 +119,6 @@ final class RootTextDocument extends BaseCloseable implements TextDocument {
     @Override
     public Chars sliceOriginalText(TextRegion region) {
         return getText().subSequence(region.getStartOffset(), region.getEndOffset());
-    }
-
-    @Override
-    public Locator detachLocator() {
-        return new MiniLocator(backend, content.getPositioner());
     }
 
     private static final String NOT_IN_RANGE = "Region [start=%d, end=%d[ is not in range of this document (length %d)";

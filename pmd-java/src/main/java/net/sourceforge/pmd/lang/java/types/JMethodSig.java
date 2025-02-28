@@ -10,11 +10,9 @@ import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
-import net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf;
 
 /**
  * Represents the signature of methods and constructors. An instance of
@@ -164,6 +162,34 @@ public interface JMethodSig extends JTypeVisitable {
     }
 
 
+    /**
+     * Returns the type of the i-th formal parameter of the method.
+     * This is relevant when the call is varargs: {@code i} can in
+     * that case be greater that the number of formal parameters.
+     *
+     * @param i Index for a formal
+     * @param varargs Whether this is a varags call
+     *
+     * @throws AssertionError If the parameter is negative, or
+     *                        greater than the number of argument
+     *                        expressions to the method
+     */
+    default JTypeMirror ithFormalParam(int i, boolean varargs) {
+        assert !varargs || isVarargs() : "Method is not varargs " + this;
+        List<JTypeMirror> formals = getFormalParameters();
+        if (varargs) {
+            assert i >= 0 : "Argument index out of range: " + i;
+            if (i >= formals.size() - 1) {
+                JTypeMirror lastFormal = formals.get(formals.size() - 1);
+                return ((JArrayType) lastFormal).getComponentType();
+            }
+        } else {
+            assert i >= 0 && i < formals.size() : "Argument index out of range: " + i;
+        }
+        return formals.get(i);
+    }
+
+
     @Override
     JMethodSig subst(Function<? super SubstVar, ? extends @NonNull JTypeMirror> subst);
 
@@ -172,13 +198,4 @@ public interface JMethodSig extends JTypeVisitable {
     default <T, P> T acceptVisitor(JTypeVisitor<T, P> visitor, P p) {
         return visitor.visitMethodType(this, p);
     }
-
-
-    /**
-     * Internal API, should not be used outside of the type inference
-     * implementation.
-     */
-    @InternalApi
-    InternalMethodTypeItf internalApi();
-
 }

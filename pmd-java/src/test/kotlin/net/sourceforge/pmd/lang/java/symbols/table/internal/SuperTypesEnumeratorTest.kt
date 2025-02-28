@@ -11,12 +11,9 @@ import net.sourceforge.pmd.lang.java.types.JClassType
 import net.sourceforge.pmd.lang.java.types.typeDsl
 
 class SuperTypesEnumeratorTest : ParserTestSpec({
-
-
     fun SuperTypesEnumerator.list(t: JClassType) = iterable(t).toList()
 
-    parserTest("All supertypes test") {
-
+    parserTestContainer("All supertypes test") {
         val acu = parser.withProcessing().parse("""
             package test;
 
@@ -33,7 +30,7 @@ class SuperTypesEnumeratorTest : ParserTestSpec({
         """)
 
         val (i1, i2, sup, sub) =
-                acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+                acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
 
         doTest("ALL_SUPERTYPES_INCLUDING_SELF") {
             with(acu.typeDsl) {
@@ -73,7 +70,5 @@ class SuperTypesEnumeratorTest : ParserTestSpec({
             SUPERCLASSES_AND_SELF.list(sup) should containExactly(sup, sup.typeSystem.OBJECT)
             SUPERCLASSES_AND_SELF.list(sub) should containExactly(sub, sup, sup.typeSystem.OBJECT)
         }
-
     }
-
 })

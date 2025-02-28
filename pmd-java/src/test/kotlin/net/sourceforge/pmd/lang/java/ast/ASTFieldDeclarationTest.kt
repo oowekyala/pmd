@@ -6,16 +6,13 @@
 package net.sourceforge.pmd.lang.java.ast
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.textOfReportLocation
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.textOfReportLocation
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
 
 class ASTFieldDeclarationTest : ParserTestSpec({
-
-    parserTest("Extra dimensions") {
-
+    parserTestContainer("Extra dimensions") {
         inContext(TypeBodyParsingCtx) {
-
             // int x[][] = null;
             // int[] x[][] = null;
 
@@ -24,9 +21,9 @@ class ASTFieldDeclarationTest : ParserTestSpec({
 
                     it::getModifiers shouldBe modifiers { }
 
-                    it::isPublic shouldBe false
-                    it::isSyntacticallyPublic shouldBe false
-                    it::isPackagePrivate shouldBe true
+                    it.hasVisibility(ModifierOwner.Visibility.V_PUBLIC) shouldBe false
+                    it.hasExplicitModifiers(JModifier.PUBLIC) shouldBe false
+                    it.hasVisibility(ModifierOwner.Visibility.V_PACKAGE) shouldBe true
 
                     primitiveType(INT)
 
@@ -48,12 +45,10 @@ class ASTFieldDeclarationTest : ParserTestSpec({
         }
     }
 
-    parserTest("In annotation") {
-
+    parserTestContainer("In annotation") {
         genClassHeader = "@interface A"
 
         inContext(TypeBodyParsingCtx) {
-
             // int x[][] = null;
             // int[] x[][] = null;
 
@@ -88,5 +83,4 @@ class ASTFieldDeclarationTest : ParserTestSpec({
             }
         }
     }
-
 })

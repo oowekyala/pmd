@@ -1,15 +1,16 @@
 repository: pmd/pmd
 
 pmd:
-    version: 7.0.0-SNAPSHOT
-    previous_version: 6.54.0
-    date: ??-?????-2023
-    release_type: major
-
-# release types: major, minor, bugfix
+    version: 7.12.0-SNAPSHOT
+    previous_version: 7.11.0
+    date: 2025-03-28
+    # release types: major, minor, bugfix
+    release_type: minor
 
 output: web
 # this property is useful for conditional filtering of content that is separate from the PDF.
+
+sidebar_title: PMD
 
 topnav_title: PMD Source Code Analyzer Project
 # this appears on the top navigation bar next to the home button
@@ -20,7 +21,7 @@ site_title: PMD Source Code Analyzer
 company_name: PMD Open Source Project
 # this appears in the footer
 
-github_editme_path: pmd/pmd/blob/master/docs/
+github_editme_path: pmd/pmd/blob/main/docs/
 # if you're using Github, provide the basepath to the branch you've created for reviews, following the sample here. if not, leave this value blank.
 
 host: 127.0.0.1
@@ -44,7 +45,6 @@ exclude:
   - pdf-*.sh
   - pdfconfigs/
   - pdf/
-  - sitemap_generator.sh
   - render_release_notes.rb
 
 feedback_subject_line: PMD Source Code Analyzer
@@ -62,6 +62,7 @@ feedback_disable: true
 # if you uncomment the previous line, it changes where the feedback link points to
 
 
+# filter used to process markdown. note that kramdown differs from github-flavored markdown in some subtle ways
 markdown: kramdown
 highlighter: rouge
 kramdown:
@@ -71,7 +72,10 @@ kramdown:
   syntax_highlighter: rouge
   syntax_highlighter_opts:
       css_class: 'highlight'
-# filter used to process markdown. note that kramdown differs from github-flavored markdown in some subtle ways
+  parse_block_html: false
+  # selectively enable kramdown parsing for block html elements with attribute 'markdown="block"'
+  # see https://kramdown.gettalong.org/syntax.html
+
 
 collections:
   tooltips:
@@ -117,7 +121,7 @@ description: "Intended as a documentation theme based on Jekyll for technical wr
 # the description is used in the feed.xml file
 
 # needed for sitemap.xml file only
-url: https://pmd.github.io/pmd
+url: https://docs.pmd-code.org/latest
 baseurl: ""
 
 # used by javadoc_tag.rb

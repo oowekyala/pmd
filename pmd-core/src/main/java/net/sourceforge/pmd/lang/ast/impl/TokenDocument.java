@@ -4,16 +4,19 @@
 
 package net.sourceforge.pmd.lang.ast.impl;
 
-import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.TextDocument;
 
 /**
  * Token layer of a parsed file.
+ * This object is used to store state global to all tokens of a single file,
+ * e.g. the text document. Not all languages currently have an implementation
+ * of a token document.
+ *
+ * @see net.sourceforge.pmd.lang.ast.impl.javacc.JavaccTokenDocument
  */
-@Experimental
-public abstract class TokenDocument<T extends GenericToken> {
+public abstract class TokenDocument<T extends GenericToken<T>> {
 
     private final TextDocument textDocument;
 

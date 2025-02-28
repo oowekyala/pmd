@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.event.Level;
 
 import net.sourceforge.pmd.util.StringUtil;
-import net.sourceforge.pmd.util.log.MessageReporter;
+import net.sourceforge.pmd.util.log.PmdReporter;
 
 /**
  * Reports errors that occur after parsing. This may be used to implement
@@ -44,6 +44,17 @@ public interface SemanticErrorReporter {
      */
     SemanticException error(Node location, String message, Object... formatArgs);
 
+    /**
+     * If the given error has not been reported yet ({@link SemanticException#wasReported()}),
+     * report it using this logger. This is used to report semantic exceptions that were produced
+     * outside this logger, but have been caught.
+     *
+     * @param e a semantic exception
+     */
+    default void acceptError(SemanticException e) {
+        e.setReported();
+    }
+
 
     /**
      * If {@link #error(Node, String, Object...)} has been called, return
@@ -66,6 +77,7 @@ public interface SemanticErrorReporter {
             @Override
             public SemanticException error(Node location, String message, Object... formatArgs) {
                 SemanticException ex = new SemanticException(MessageFormat.format(message, formatArgs));
+                ex.setReported();
                 if (this.exception == null) {
                     this.exception = ex;
                 } else {
@@ -83,16 +95,16 @@ public interface SemanticErrorReporter {
 
 
     /**
-     * Forwards to a {@link MessageReporter}, except trace and debug
+     * Forwards to a {@link PmdReporter}, except trace and debug
      * messages which are reported on a logger.
      */
-    static SemanticErrorReporter reportToLogger(MessageReporter reporter) {
+    static SemanticErrorReporter reportToLogger(PmdReporter reporter) {
         return new SemanticErrorReporter() {
 
             private SemanticException exception = null;
 
             private String locPrefix(Node loc) {
-                return "at " + loc.getReportLocation()
+                return "at " + loc.getReportLocation().startPosToStringWithFile()
                     + ": ";
             }
 
@@ -108,19 +120,33 @@ public interface SemanticErrorReporter {
 
             @Override
             public void warning(Node location, String message, Object... args) {
-                logMessage(Level.WARN, location, message, args);
+                logMessage(Level.DEBUG, location, message, args);
             }
 
             @Override
             public SemanticException error(Node location, String message, Object... args) {
                 String fullMessage = logMessage(Level.ERROR, location, message, args);
                 SemanticException ex = new SemanticException(fullMessage);
+                ex.setReported();
+                updateException(ex);
+                return ex;
+            }
+
+            private void updateException(SemanticException ex) {
                 if (this.exception == null) {
                     this.exception = ex;
                 } else {
                     this.exception.addSuppressed(ex);
                 }
-                return ex;
+            }
+
+            @Override
+            public void acceptError(SemanticException e) {
+                if (!e.wasReported()) {
+                    e.setReported();
+                    reporter.log(Level.ERROR, StringUtil.quoteMessageFormat(e.getMessage()));
+                    updateException(e);
+                }
             }
 
             @Override

@@ -29,6 +29,7 @@ import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
@@ -398,6 +399,13 @@ public final class TypeSystem {
     }
 
     /**
+     * @since 7.5.0
+     */
+    public @Nullable JModuleSymbol getModuleSymbol(String moduleName) {
+        return resolver.resolveModule(moduleName);
+    }
+
+    /**
      * Returns a type mirror for the given symbol. If the symbol declares
      * type parameters, then the resulting type is raw (differs from the
      * behaviour of {@link #declaration(JClassSymbol)}), meaning all its
@@ -697,12 +705,20 @@ public final class TypeSystem {
      * <li>The intersection has a single component that is a
      * class, array, or type variable. If all components are interfaces,
      * then that component is {@link #OBJECT}.
+     * <li>If several components are arrays, then their components
+     * are intersected: {@code A[] & B[] = (A & B)[]}
      * </ul>
      *
      * <p>If after these transformations, only a single component remains,
      * then that is the returned type. Otherwise a {@link JIntersectionType}
      * is created. Note that the intersection may be unsatisfiable (eg {@code A[] & Runnable}),
-     * but we don't attempt to minimize this to {@link #NULL_TYPE}.
+     * but we don't attempt to minimize this to {@link #NULL_TYPE}. Similarly,
+     * we do not attempt to minimize valid intersections. For instance {@code List<?> & Collection<Number>}
+     * can technically be minimized to {@code List<Number>}, but doing this
+     * requires inference of a fitting parameterization in general, which is
+     * complex, and not necessary in the internal tasks where intersection types are
+     * useful. In fact intersection types are precisely useful because they are
+     * simple to build.
      *
      * <p>See also JLS§4.9 (Intersection types).
      *
@@ -735,6 +751,13 @@ public final class TypeSystem {
         // the symbol as they can be visually noisy since they would be
         // repeated at each use-site
         return new TypeVarImpl.RegularTypeVar(this, symbol, HashTreePSet.empty());
+    }
+
+    /**
+     * Called at the end of the analysis to log statistics about the loaded types.
+     */
+    public void logStats() {
+        resolver.logStats();
     }
 
     private static final class NullType implements JTypeMirror {
@@ -773,6 +796,11 @@ public final class TypeSystem {
         @Override
         public @Nullable JClassSymbol getSymbol() {
             return null;
+        }
+
+        @Override
+        public @Nullable JTypeMirror getAsSuper(@NonNull JClassSymbol symbol) {
+            throw new UnsupportedOperationException("Null type cannot call asSuper, will return null always");
         }
 
         @Override

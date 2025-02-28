@@ -13,11 +13,18 @@ import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassType;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTInitializer;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeBody;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
@@ -47,27 +54,27 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
             .build();
 
     public UnnecessaryFullyQualifiedNameRule() {
-        super(ASTClassOrInterfaceType.class);
+        super(ASTClassType.class);
         definePropertyDescriptor(REPORT_METHODS);
         definePropertyDescriptor(REPORT_FIELDS);
     }
 
     @Override
-    public Object visit(final ASTClassOrInterfaceType deepest, Object data) {
+    public Object visit(final ASTClassType deepest, Object data) {
         if (deepest.getQualifier() != null) {
             // the child will be visited instead
             return data;
         }
 
-        ASTClassOrInterfaceType next = deepest;
+        ASTClassType next = deepest;
         ScopeInfo bestReason = null;
         if (next.isFullyQualified()) {
             bestReason = typeMeansSame(next);
         }
 
         // try to find the longest prefix that can be removed
-        while (bestReason != null && segmentIsIrrelevant(next) && next.getParent() instanceof ASTClassOrInterfaceType) {
-            ASTClassOrInterfaceType nextParent = (ASTClassOrInterfaceType) next.getParent();
+        while (bestReason != null && segmentIsIrrelevant(next) && next.getParent() instanceof ASTClassType) {
+            ASTClassType nextParent = (ASTClassType) next.getParent();
             ScopeInfo newBestReason = typeMeansSame(nextParent);
             if (newBestReason == null) {
                 break;
@@ -88,17 +95,17 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
                     // we don't actually know where the method came from
                     String simpleName = formatMemberName(next, methodCall.getMethodType().getSymbol());
                     String unnecessary = produceQualifier(deepest, next, true);
-                    addViolation(data, next, new Object[] {unnecessary, simpleName, ""});
+                    asCtx(data).addViolation(next, unnecessary, simpleName, "");
                     return null;
                 }
             } else if (getProperty(REPORT_FIELDS) && opa instanceof ASTFieldAccess) {
                 ASTFieldAccess fieldAccess = (ASTFieldAccess) opa;
                 ScopeInfo reasonForFieldInScope = fieldMeansSame(fieldAccess);
-                if (reasonForFieldInScope != null) {
+                if (reasonForFieldInScope != null && !isForwardReference(fieldAccess)) {
                     String simpleName = formatMemberName(next, fieldAccess.getReferencedSym());
                     String reasonToString = unnecessaryReasonWrapper(reasonForFieldInScope);
                     String unnecessary = produceQualifier(deepest, next, true);
-                    addViolation(data, next, new Object[] {unnecessary, simpleName, reasonToString});
+                    asCtx(data).addViolation(next, unnecessary, simpleName, reasonToString);
                     return null;
                 }
             }
@@ -108,21 +115,21 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
             String simpleName = next.getSimpleName();
             String reasonToString = unnecessaryReasonWrapper(bestReason);
             String unnecessary = produceQualifier(deepest, next, false);
-            addViolation(data, next, new Object[] {unnecessary, simpleName, reasonToString});
+            asCtx(data).addViolation(next, unnecessary, simpleName, reasonToString);
         }
         return null;
     }
 
 
-    private String produceQualifier(ASTClassOrInterfaceType startIncluded, ASTClassOrInterfaceType stopExcluded, boolean includeLast) {
+    private String produceQualifier(ASTClassType startIncluded, ASTClassType stopExcluded, boolean includeLast) {
         StringBuilder sb = new StringBuilder();
         if (startIncluded.isFullyQualified()) {
             sb.append(startIncluded.getTypeMirror().getSymbol().getPackageName());
         }
-        ASTClassOrInterfaceType nextSimpleName = startIncluded;
+        ASTClassType nextSimpleName = startIncluded;
         while (nextSimpleName != stopExcluded) { // NOPMD we want identity comparison
             sb.append('.').append(nextSimpleName.getSimpleName());
-            nextSimpleName = (ASTClassOrInterfaceType) nextSimpleName.getParent();
+            nextSimpleName = (ASTClassType) nextSimpleName.getParent();
         }
         if (includeLast) {
             if (sb.length() == 0) {
@@ -133,7 +140,7 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
         return sb.toString();
     }
 
-    private boolean segmentIsIrrelevant(ASTClassOrInterfaceType type) {
+    private boolean segmentIsIrrelevant(ASTClassType type) {
         return type.getTypeArguments() == null && type.getDeclaredAnnotations().isEmpty();
     }
 
@@ -145,7 +152,7 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
      *
      * @return The reason why the type is in scope. Null if it's not in scope.
      */
-    private static @Nullable ScopeInfo typeMeansSame(@NonNull ASTClassOrInterfaceType typeNode) {
+    private static @Nullable ScopeInfo typeMeansSame(@NonNull ASTClassType typeNode) {
         JTypeDeclSymbol sym = typeNode.getTypeMirror().getSymbol();
         if (sym == null || sym.isUnresolved()) {
             return null;
@@ -221,7 +228,7 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
         return null;
     }
 
-    private static String formatMemberName(ASTClassOrInterfaceType qualifier, JAccessibleElementSymbol call) {
+    private static String formatMemberName(ASTClassType qualifier, JAccessibleElementSymbol call) {
         JClassSymbol methodOwner = call.getEnclosingClass();
         if (methodOwner != null && !methodOwner.equals(qualifier.getTypeMirror().getSymbol())) {
             return methodOwner.getSimpleName() + "::" + call.getSimpleName();
@@ -249,7 +256,53 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRulechainRule
         case ENCLOSING_TYPE:
             return "declared in an enclosing type";
         default:
-            throw AssertionUtil.shouldNotReachHere("unknown constant" + scopeInfo);
+            throw AssertionUtil.shouldNotReachHere("unknown constant ScopeInfo: " + scopeInfo);
         }
+    }
+
+    private static boolean isPartOfStaticInitialization(ASTBodyDeclaration decl) {
+        return decl instanceof ASTFieldDeclaration && ((ASTFieldDeclaration) decl).isStatic()
+            || decl instanceof ASTInitializer && ((ASTInitializer) decl).isStatic()
+            || decl instanceof ASTEnumConstant;
+    }
+
+    /**
+     * Return true if removing the qualification from this field access
+     * would produce an "Illegal forward reference" compiler error. This
+     * would happen if the referenced field is defined after the reference,
+     * in the same class. Note that the java compiler uses definite assignment
+     * to find forward references. Here we over-approximate this, to avoid
+     * depending on the dataflow pass. We could fix this later though.
+     *
+     * @param fieldAccess A field access
+     */
+    private static boolean isForwardReference(ASTFieldAccess fieldAccess) {
+        JFieldSymbol referencedSym = fieldAccess.getReferencedSym();
+        if (referencedSym == null || referencedSym.isUnresolved()) {
+            return false;
+        }
+        // The field must be declared in the same compilation unit
+        // to be a forward reference.
+        ASTVariableId fieldDecl = referencedSym.tryGetNode();
+        if (fieldDecl == null || !fieldDecl.isStatic()) {
+            return false;
+        }
+        ASTBodyDeclaration enclosing = fieldAccess.ancestors(ASTBodyDeclaration.class)
+                                                  .first();
+        if (isPartOfStaticInitialization(enclosing)
+            && enclosing.getParent().getParent() == fieldDecl.getEnclosingType()) {
+            // the access is made in the same class
+
+            if (JavaAstUtils.isInStaticCtx(fieldDecl)
+                && !JavaAstUtils.isInStaticCtx(fieldAccess)) {
+                // field is static but access is non-static: no problem
+                return false;
+            }
+            // else compare position: if access is before definition, we have a problem
+            int declIndex = fieldDecl.ancestors().filter(it -> it.getParent() instanceof ASTTypeBody).firstOrThrow().getIndexInParent();
+            int accessIndex = enclosing.getIndexInParent();
+            return accessIndex <= declIndex;
+        }
+        return false;
     }
 }

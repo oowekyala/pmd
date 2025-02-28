@@ -12,14 +12,21 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
 /**
  * Represents either a {@code case} or {@code default} label inside
  * a {@linkplain ASTSwitchStatement switch statement} or {@linkplain ASTSwitchExpression expression}.
- * Since Java 12, labels may have several expressions.
+ * Since Java 14, labels may have several expressions.
  *
  * <pre class="grammar">
  *
  * SwitchLabel ::=  "case" {@linkplain ASTExpression Expression} ("," {@linkplain ASTExpression Expression} )*
+ *                | "case" "null [ "," "default" ]
+ *                | "case" ( {@linkplain ASTTypePattern TypePattern} | {@linkplain ASTRecordPattern RecordPattern} )
  *                | "default"
  *
  * </pre>
+ *
+ * <p>Note: case null and the case patterns are a Java 21 language feature</p>
+ *
+ * @see <a href="https://openjdk.org/jeps/441">JEP 441: Pattern Matching for switch</a>
+ * @see <a href="https://openjdk.org/jeps/432">JEP 432: Record Patterns (Second Preview)</a>
  */
 public final class ASTSwitchLabel extends AbstractJavaNode implements Iterable<ASTExpression> {
 
@@ -43,8 +50,9 @@ public final class ASTSwitchLabel extends AbstractJavaNode implements Iterable<A
 
     /**
      * Returns the expressions of this label, or an empty list if this
-     * is the default label. This may contain {@linkplain  ASTPatternExpression pattern expressions}
-     * to represent patterns.
+     * is the default label. This does neither contain {@linkplain  ASTTypePattern TypePatterns}
+     * nor {@linkplain ASTRecordPattern RecordPatterns}. To check for this,
+     * use {@link #isPatternLabel()}.
      */
     public NodeStream<ASTExpression> getExprList() {
         return children(ASTExpression.class);
@@ -58,5 +66,13 @@ public final class ASTSwitchLabel extends AbstractJavaNode implements Iterable<A
     @Override
     public Iterator<ASTExpression> iterator() {
         return children(ASTExpression.class).iterator();
+    }
+
+    /**
+     * Checks whether this label tests a {@link ASTTypePattern} or a {@link ASTRecordPattern}.
+     * @since 7.7.0
+     */
+    public boolean isPatternLabel() {
+        return children(ASTPattern.class).nonEmpty();
     }
 }

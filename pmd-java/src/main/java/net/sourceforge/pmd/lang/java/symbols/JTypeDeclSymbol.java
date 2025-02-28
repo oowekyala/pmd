@@ -12,7 +12,7 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 /**
  * A symbol that declares a type. These include
  * <ul>
- *     <li>{@linkplain JClassSymbol class, interface, array & primitive symbols}</li>
+ *     <li>{@linkplain JClassSymbol class, interface, array &amp; primitive symbols}</li>
  *     <li>{@linkplain JTypeParameterSymbol type parameters symbols}</li>
  * </ul>
  *
@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
  *
  * @since 7.0.0
  */
-public interface JTypeDeclSymbol extends JElementSymbol, JAccessibleElementSymbol {
+public interface JTypeDeclSymbol extends JAccessibleElementSymbol {
 
     /**
      * Returns true if this class is a symbolic reference to an unresolved

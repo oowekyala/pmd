@@ -4,18 +4,21 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.RootNode;
-import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
-import net.sourceforge.pmd.lang.java.types.ast.LazyTypeResolver;
+import net.sourceforge.pmd.lang.java.types.ast.internal.LazyTypeResolver;
+import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
 
 
 /**
@@ -23,13 +26,18 @@ import net.sourceforge.pmd.lang.java.types.ast.LazyTypeResolver;
  *
  * <pre class="grammar">
  *
- * CompilationUnit ::= RegularCompilationUnit
+ * CompilationUnit ::= OrdinaryCompilationUnit
+ *                   | SimpleCompilationUnit
  *                   | ModularCompilationUnit
  *
- * RegularCompilationUnit ::=
+ * OrdinaryCompilationUnit ::=
  *   {@linkplain ASTPackageDeclaration PackageDeclaration}?
  *   {@linkplain ASTImportDeclaration ImportDeclaration}*
- *   {@linkplain ASTAnyTypeDeclaration TypeDeclaration}*
+ *   {@linkplain ASTTypeDeclaration TypeDeclaration}*
+ *
+ * SimpleCompilationUnit ::=
+ *   {@linkplain ASTImportDeclaration ImportDeclaration}*
+ *   {@linkplain ASTImplicitClassDeclaration ImplicitClassDeclaration}
  *
  * ModularCompilationUnit ::=
  *   {@linkplain ASTImportDeclaration ImportDeclaration}*
@@ -37,7 +45,7 @@ import net.sourceforge.pmd.lang.java.types.ast.LazyTypeResolver;
  *
  * </pre>
  */
-public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNode, GenericNode<JavaNode>, RootNode {
+public final class ASTCompilationUnit extends AbstractJavaNode implements RootNode {
 
     private LazyTypeResolver lazyTypeResolver;
     private List<JavaComment> comments;
@@ -45,6 +53,7 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNo
 
     ASTCompilationUnit(int id) {
         super(id);
+        setRoot(this);
     }
 
     public List<JavaComment> getComments() {
@@ -61,7 +70,37 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNo
     }
 
     void setComments(List<JavaComment> comments) {
-        this.comments = comments;
+        List<JavaComment> result = new ArrayList<>();
+
+        // collapses single line markdown comments into consecutive JavadocComments
+        List<JavaComment> currentMarkdownBlock = null;
+
+        for (JavaComment comment : comments) {
+            if (JavaAstUtils.isMarkdownComment(comment.getToken())) {
+                if (currentMarkdownBlock == null) {
+                    currentMarkdownBlock = new ArrayList<>();
+                } else {
+                    JavaComment lastComment = currentMarkdownBlock.get(currentMarkdownBlock.size() - 1);
+                    int lastCommentLine = lastComment.getReportLocation().getStartLine();
+                    if (comment.getReportLocation().getStartLine() - lastCommentLine > 1) {
+                        result.add(new JavadocComment(currentMarkdownBlock));
+                        currentMarkdownBlock = new ArrayList<>();
+                    }
+                }
+                currentMarkdownBlock.add(comment);
+            } else {
+                if (currentMarkdownBlock != null) {
+                    result.add(new JavadocComment(currentMarkdownBlock));
+                    currentMarkdownBlock = null;
+                }
+                result.add(comment);
+            }
+        }
+        if (currentMarkdownBlock != null) {
+            result.add(new JavadocComment(currentMarkdownBlock));
+        }
+
+        this.comments = result;
     }
 
 
@@ -77,10 +116,6 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNo
         return AstImplUtil.getChildAs(this, 0, ASTPackageDeclaration.class);
     }
 
-    @Override
-    public @NonNull ASTCompilationUnit getRoot() {
-        return this;
-    }
 
     /**
      * Returns the package name of this compilation unit. If there is no
@@ -96,8 +131,8 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNo
      * unit. This may be empty, eg if this a package-info.java, or a modular
      * compilation unit (but ordinary compilation units may also be empty).
      */
-    public NodeStream<ASTAnyTypeDeclaration> getTypeDeclarations() {
-        return children(ASTAnyTypeDeclaration.class);
+    public NodeStream<ASTTypeDeclaration> getTypeDeclarations() {
+        return children(ASTTypeDeclaration.class);
     }
 
     /**
@@ -129,4 +164,9 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements JavaNo
         return lazyTypeResolver;
     }
 
+    @Experimental("Implicitly Declared Classes and Instance Main Methods is a Java 22 / Java 23 Preview feature")
+    @NoAttribute
+    public boolean isSimpleCompilationUnit() {
+        return children(ASTImplicitClassDeclaration.class).nonEmpty();
+    }
 }

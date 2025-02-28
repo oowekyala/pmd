@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java.ast;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext;
 
 /**
@@ -40,11 +39,7 @@ import net.sourceforge.pmd.lang.java.types.ast.ExprContext;
  *
  * </pre>
  */
-public interface ASTExpression
-    extends JavaNode,
-            TypeNode,
-            ASTMemberValue,
-            ASTSwitchArrowRHS {
+public interface ASTExpression extends TypeNode, ASTMemberValue, ASTSwitchArrowRHS {
 
     /**
      * Always returns true. This is to allow XPath queries
@@ -124,7 +119,6 @@ public interface ASTExpression
      * <p>Not all contexts allow all kinds of conversions. See
      * {@link ExprContext}.
      */
-    @Experimental
     default @NonNull ExprContext getConversionContext() {
         return getRoot().getLazyTypeResolver().getConversionContextForExternalUse(this);
     }

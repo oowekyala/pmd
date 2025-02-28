@@ -2,12 +2,12 @@
 title: Maven PMD Plugin
 tags: [userdocs, tools]
 permalink: pmd_userdocs_tools_maven.html
-last_updated: March 2020
-mpmd_version: 3.13.0
+last_updated: June 2024 (7.3.0)
+mpmd_version: 3.23.0
 author: >
     Miguel Griffa <mikkey@users.sourceforge.net>,
     Romain PELISSE <belaran@gmail.com>,
-    Andreas Dangel <andreas.dangel@adangel.org>
+    Andreas Dangel <andreas.dangel@pmd-code.org>
 ---
 
 ## Maven 2 and 3
@@ -72,7 +72,7 @@ This will add an entry to the 'project reports' section with the PMD report when
 
 To run PMD on a Maven project without adding it as a report, simply run
 
-    mvn pmd:pmd
+    mvn compile pmd:pmd
 
 The PMD plugin writes the report in XML which will then be formatted into more readable HTML.
 
@@ -239,56 +239,29 @@ Maven plugin will use and benefit from the latest bugfixes and enhancements:
 </project>
 ```
 
+#### Using PMD 7 with maven-pmd-plugin
+
+Since version 3.22.0 ([MPMD-379](https://issues.apache.org/jira/browse/MPMD-379)), maven-pmd-plugin uses
+by default now PMD 7.0.0 and no extra configuration is required.
+
+The specific PMD version used by maven-pmd-plugin might change. The exact version is documented on the
+[plugin project page](https://maven.apache.org/plugins/maven-pmd-plugin/index.html).
+
+In order to use newer versions of PMD 7, you can simply follow the guide
+[Upgrading PMD at Runtime](https://maven.apache.org/plugins/maven-pmd-plugin/examples/upgrading-PMD-at-runtime.html).
+
+Note: If you upgrade from Maven PMD Plugin before 3.22.0 you are most likely updating from PMD 6 to PMD 7.
+This upgrade is a major version change. If you use the default ruleset from Maven PMD Plugin, then everything should
+just work. But if you use a custom ruleset, you most likely need to review your ruleset and migrate it to PMD 7.
+Rules might have been renamed or replaced. See [Detailed Release Notes for PMD 7](pmd_release_notes_pmd7.html)
+and [Migration Guide for PMD 7](pmd_userdocs_migrating_to_pmd7.html).
+
+As PMD 7 revamped the Java module, if you have custom rules, you need to migrate these rules.
+See the use case [I'm using custom rules](pmd_userdocs_migrating_to_pmd7.html#im-using-custom-rules)
+in the Migration Guide.
+
 ### Reference
 
 For more information, please see the well documented PMD plugin project page here:
 <http://maven.apache.org/plugins/maven-pmd-plugin/index.html>.
-Also, the bug tracker for this plugin is [here](https://issues.apache.org/jira/browse/MPMD).
-
-
-## Maven 1
-
-{% include warning.html content="Apache Maven 1.x has reached its end of life, and is no longer supported. For more information, see the [announcement](http://maven.apache.org/maven-1.x-eol.html). Users are encouraged to migrate to the current version of Apache Maven." %}
-
-This section is about the maven 1 PMD plugin.
-
-### Running the pmd plugin
-
-#### Generating a project report
-
-To include the PMD report in the project reports section add the following line under
-the reports element in your project.xml:
-
-    <report>maven-pmd-plugin</report>
-
-This will add an entry to the 'project reports' section with the PMD report.
-
-#### Executing PMD manually
-
-To run PMD on a Maven project without adding it as a report, simply run
-
-    maven pmd xdoc
-
-The PMD plugin writes the report in XML which will then be formatted into more readable HTML.
-
-### Customization
-
-#### Changing rulesets
-
-To specify a set of official, built-in rulesets to be used set them in the property
-<em>maven.pmd.rulesets</em>.  You can include this setting in your project.properties file.
-
-A clean strategy for customizing which rules to use for a project is to write a ruleset file.
-In this file you can define which rules to use, add custom rules, and
-customizing which rules to include/exclude from official rulesets. More information on
-writing a ruleset can be found [here](pmd_userdocs_making_rulesets.html).
-
-Add to the root of your Maven project a pmd.xml file which contains the ruleset mentioned in
-the previous paragraph. Add the following property to your project now:
-
-    maven.pmd.rulesetfiles = ${basedir}/pmd.xml
-
-### Reference
-
-See the PMD plugin project page here:
-<http://maven.apache.org/maven-1.x/plugins/pmd/>
+Also, the bug tracker for this plugin is [MPMD](https://issues.apache.org/jira/browse/MPMD).

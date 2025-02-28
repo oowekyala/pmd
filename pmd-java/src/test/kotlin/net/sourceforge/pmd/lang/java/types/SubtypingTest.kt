@@ -13,21 +13,21 @@ import io.kotest.property.Exhaustive
 import io.kotest.property.checkAll
 import io.kotest.property.exhaustive.ints
 import io.kotest.property.forAll
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestCtx
-import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.createUnresolvedAsmSymbol
-import net.sourceforge.pmd.lang.java.types.TypeConversion.*
-import net.sourceforge.pmd.lang.java.types.TypeOps.Convertibility.*
+import net.sourceforge.pmd.lang.java.types.TypeConversion.capture
+import net.sourceforge.pmd.lang.java.types.TypeOps.Convertibility.UNCHECKED_NO_WARNING
 import net.sourceforge.pmd.lang.java.types.testdata.ComparableList
 import net.sourceforge.pmd.lang.java.types.testdata.SomeEnum
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import kotlin.test.assertTrue
 
 /**
  * @author Clément Fournier
  */
-class SubtypingTest : FunSpec({
+class SubtypingTest : IntelliMarker, FunSpec({
 
     val ts = testTypeSystem
     with(TypeDslOf(ts)) {
@@ -157,10 +157,10 @@ class SubtypingTest : FunSpec({
 
             test("Test raw type is convertible to wildcard parameterized type without unchecked conversion") {
                 val `Class{String}` = Class::class[ts.STRING]
-                val `Class{?}` = Class::class[`?`]
+                val `Class{Wildcard}` = Class::class[`?`]
                 val Class = Class::class.raw
 
-                val `Comparable{?}` = java.lang.Comparable::class[`?`]
+                val `Comparable{Wildcard}` = java.lang.Comparable::class[`?`]
 
                 /*
                     Class raw = String.class;
@@ -179,15 +179,18 @@ class SubtypingTest : FunSpec({
 
 
                 `Class{String}` shouldBeSubtypeOf Class
-                `Class{?}` shouldBeSubtypeOf Class
+                `Class{Wildcard}` shouldBeSubtypeOf Class
 
-                `Class{String}` shouldBeSubtypeOf `Class{?}`
-                `Class{?}` shouldNotBeSubtypeOf `Class{String}`
+                `Class{String}` shouldBeSubtypeOf `Class{Wildcard}`
+                `Class{Wildcard}` shouldNotBeSubtypeOf `Class{String}`
 
-                assertSubtype(Class, `Class{?}`) { this == UNCHECKED_NO_WARNING }
+                assertSubtype(Class, `Class{Wildcard}`) { this == UNCHECKED_NO_WARNING }
                 Class shouldBeUncheckedSubtypeOf `Class{String}`
 
-                ts.STRING shouldBeSubtypeOf `Comparable{?}`
+                ts.STRING shouldBeSubtypeOf `Comparable{Wildcard}`
+
+                val unresolvedT = ts.createUnresolvedAsmSymbol("foo")
+                unresolvedT[`?`] shouldBeSubtypeOf ts.rawType(unresolvedT)
             }
 
             test("Test wildcard subtyping") {
@@ -319,12 +322,36 @@ class SubtypingTest : FunSpec({
             }
 
             test("Test non well-formed types") {
-                val sym = ts.createUnresolvedAsmSymbol("does.not.Exist") as JClassSymbol
+                val sym = ts.createUnresolvedAsmSymbol("does.not.Exist")
                 sym[t_String, t_String] shouldBeUnrelatedTo sym[t_String]
                 sym[t_String] shouldBeSubtypeOf sym[t_String]
                 sym[t_String] shouldBeSubtypeOf sym[`?` extends t_String] // containment
             }
         }
+    }
+
+    test("Capture of recursive types #5505 stackoverflow") {
+        javaParser.parse(
+            """
+                package org.example;
+
+                import java.util.Collection;
+                import java.util.Collections;
+                import java.util.Optional;
+
+                public class Main {
+
+                    public static <T extends Comparable<? super T>> Optional<T> getMaxElementCausesStackoverflow(Collection<? extends T> collection) {
+                        return collection == null || collection.isEmpty() ? Optional.empty() : Optional.of(Collections.max(collection));
+                    }
+
+                    public static <T extends Comparable<? super T>> Optional<T> getMaxElementIsFine(Collection<? extends T> collection) {
+                        return Optional.ofNullable(collection).filter(c -> !c.isEmpty()).map(Collections::max);
+                    }
+                }
+            """.trimIndent()
+        )
+
     }
 
 

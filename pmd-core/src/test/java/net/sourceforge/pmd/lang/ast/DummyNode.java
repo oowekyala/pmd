@@ -5,19 +5,24 @@
 package net.sourceforge.pmd.lang.ast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import net.sourceforge.pmd.lang.DummyLanguageModule;
+import net.sourceforge.pmd.lang.LanguageProcessor;
+import net.sourceforge.pmd.lang.LanguageProcessorRegistry;
 import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextDocument;
-import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
+import net.sourceforge.pmd.lang.rule.xpath.CommentNode;
+import net.sourceforge.pmd.lang.rule.xpath.TextNode;
 
 public class DummyNode extends AbstractNode<DummyNode, DummyNode> {
 
@@ -121,21 +126,29 @@ public class DummyNode extends AbstractNode<DummyNode, DummyNode> {
         return attributes.iterator();
     }
 
+    // phony attribute that repeats the image 3 times
+    public List<String> getLines() {
+        return Arrays.asList(getImage(), getImage(), getImage());
+    }
+
     public static class DummyRootNode extends DummyNode implements RootNode, GenericNode<DummyNode> {
 
+        // FIXME remove this
+        private static final LanguageProcessor STATIC_PROCESSOR =
+            DummyLanguageModule.getInstance().createProcessor(DummyLanguageModule.getInstance().newPropertyBundle());
         private AstInfo<DummyRootNode> astInfo;
 
         public DummyRootNode() {
             TextDocument document = TextDocument.readOnlyString(
                 "dummy text",
-                TextFile.UNKNOWN_FILENAME,
+                FileId.UNKNOWN,
                 DummyLanguageModule.getInstance().getDefaultVersion()
             );
             astInfo = new AstInfo<>(
                 new ParserTask(
                     document,
-                    SemanticErrorReporter.noop()
-                ),
+                    SemanticErrorReporter.noop(),
+                    LanguageProcessorRegistry.singleton(STATIC_PROCESSOR)),
                 this);
         }
 
@@ -145,11 +158,7 @@ public class DummyNode extends AbstractNode<DummyNode, DummyNode> {
         }
 
         public DummyRootNode withNoPmdComments(Map<Integer, String> suppressMap) {
-            this.astInfo = new AstInfo<>(
-                astInfo.getTextDocument(),
-                this,
-                suppressMap
-            );
+            this.astInfo = astInfo.withSuppressMap(suppressMap);
             return this;
         }
 
@@ -168,6 +177,30 @@ public class DummyNode extends AbstractNode<DummyNode, DummyNode> {
 
         public DummyNodeTypeB() {
             super("dummyNodeB");
+        }
+    }
+
+    public static class DummyTextNode extends DummyNode implements TextNode {
+        @Override
+        public String getText() {
+            return getImage();
+        }
+
+        @Override
+        public String getXPathNodeName() {
+            return TextNode.super.getXPathNodeName();
+        }
+    }
+
+    public static class DummyCommentNode extends DummyNode implements CommentNode {
+        @Override
+        public String getData() {
+            return getImage();
+        }
+
+        @Override
+        public String getXPathNodeName() {
+            return CommentNode.super.getXPathNodeName();
         }
     }
 }

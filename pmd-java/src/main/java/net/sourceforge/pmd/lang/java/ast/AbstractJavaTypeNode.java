@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.TypingContext;
-import net.sourceforge.pmd.lang.java.types.ast.LazyTypeResolver;
+import net.sourceforge.pmd.lang.java.types.ast.internal.LazyTypeResolver;
 import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
@@ -46,19 +46,24 @@ abstract class AbstractJavaTypeNode extends AbstractJavaNode implements TypeNode
         }
 
         LazyTypeResolver resolver = getRoot().getLazyTypeResolver();
-        JTypeMirror result;
+        JTypeMirror result = resolver.getTypeSystem().ERROR;
         try {
             result = this.acceptVisitor(resolver, context);
             assert result != null : "LazyTypeResolver returned null";
         } catch (RuntimeException e) {
-            throw AssertionUtil.contexted(e).addContextValue("Resolving type of", this);
+            throw AssertionUtil.contexted(e)
+                               .addContextValue("Resolving type of", this)
+                               .addContextValue("Location", this.getReportLocation());
         } catch (AssertionError e) {
-            throw AssertionUtil.contexted(e).addContextValue("Resolving type of", this);
+            throw AssertionUtil.contexted(e)
+                               .addContextValue("Resolving type of", this)
+                               .addContextValue("Location", this.getReportLocation());
+        } finally {
+            if (context.isEmpty() && typeMirror == null) {
+                typeMirror = result; // cache it
+            }
         }
 
-        if (context.isEmpty() && typeMirror == null) {
-            typeMirror = result; // cache it
-        }
         return result;
     }
 

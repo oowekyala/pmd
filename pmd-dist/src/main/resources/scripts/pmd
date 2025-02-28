@@ -52,7 +52,7 @@ set_lib_dir() {
     if [ -L "$0" ]; then
       local script_real_loc=$(readlink "$0")
     else
-      local script_real_loc=$0
+      local script_real_loc=${BASH_SOURCE[0]:-${(%):-%x}}
     fi
     local script_dir=$(dirname "${script_real_loc}")
 
@@ -74,7 +74,7 @@ set_conf_dir() {
     if [ -L $0 ]; then
       local script_real_loc=$(readlink "$0")
     else
-      local script_real_loc=$0
+      local script_real_loc=${BASH_SOURCE[0]:-${(%):-%x}}
     fi
     local script_dir=$(dirname "${script_real_loc}")
 
@@ -93,6 +93,13 @@ check_conf_dir() {
 function script_exit() {
     echo "$1" >&2
     exit 1
+}
+
+function check_java() {
+  java -version >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    script_exit "No java executable found in PATH"
+  fi
 }
 
 determine_java_version() {
@@ -182,6 +189,8 @@ function add_openjfx_classpath() {
 readonly APPNAME="${1}"
 
 is_cygwin
+
+check_java
 
 set_lib_dir
 check_lib_dir

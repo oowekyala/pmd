@@ -26,13 +26,8 @@ abstract class BaseMappedDocument implements TextDocument {
     }
 
     @Override
-    public String getPathId() {
-        return base.getPathId();
-    }
-
-    @Override
-    public String getDisplayName() {
-        return base.getDisplayName();
+    public FileId getFileId() {
+        return base.getFileId();
     }
 
     @Override
@@ -56,6 +51,11 @@ abstract class BaseMappedDocument implements TextDocument {
         return base.lineColumnAtOffset(inputOffset(offset, inclusive));
     }
 
+    @Override
+    public int offsetAtLineColumn(TextPos2d position) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Translate a region given in the coordinate system of this
      * document, to the coordinate system of the base document.
@@ -68,6 +68,9 @@ abstract class BaseMappedDocument implements TextDocument {
      * @return Input region
      */
     protected @NonNull TextRegion inputRegion(TextRegion outputRegion) {
+        if (outputRegion.isEmpty()) {
+            return TextRegion.caretAt(inputOffset(outputRegion.getStartOffset(), true));
+        }
         return TextRegion.fromBothOffsets(inputOffset(outputRegion.getStartOffset(), true),
                                           inputOffset(outputRegion.getEndOffset(), false));
     }

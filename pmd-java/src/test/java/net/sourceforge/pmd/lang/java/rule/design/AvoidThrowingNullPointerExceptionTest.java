@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.design;
 
-import net.sourceforge.pmd.testframework.PmdRuleTst;
+import net.sourceforge.pmd.test.PmdRuleTst;
 
-class AvoidThrowingNullPointerExceptionTest extends PmdRuleTst {
+public class AvoidThrowingNullPointerExceptionTest extends PmdRuleTst {
     // no additional unit tests
 }

@@ -5,9 +5,6 @@
 package net.sourceforge.pmd.lang.java.ast
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
-import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.*
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Earliest
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Latest
@@ -15,27 +12,29 @@ import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.since
 import net.sourceforge.pmd.lang.java.ast.UnaryOp.UNARY_MINUS
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
+import net.sourceforge.pmd.lang.test.ast.NodeSpec
+import net.sourceforge.pmd.lang.test.ast.ValuedNodeSpec
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldHaveText
 
 /**
  * @author Clément Fournier
  * @since 7.0.0
  */
 class ASTLiteralTest : ParserTestSpec({
-
-    parserTest("String literal") {
-
+    parserTestContainer("String literal") {
         inContext(ExpressionParsingCtx) {
-
             "\"\"" should parseAs {
                 stringLit("\"\"") {
-                    it::isStringLiteral shouldBe true
                     it::getConstValue shouldBe ""
+                    it shouldHaveText "\"\""
                 }
             }
 
             "\"foo\"" should parseAs {
                 stringLit("\"foo\"") {
                     it::getConstValue shouldBe "foo"
+                    it shouldHaveText "\"foo\""
                 }
             }
 
@@ -44,22 +43,25 @@ class ASTLiteralTest : ParserTestSpec({
                     it::getConstValue shouldBe "foo\t"
                 }
             }
+
+            "(\"foo\\t\")" should parseAs {
+                stringLit("\"foo\\t\"") {
+                    it::getConstValue shouldBe "foo\t"
+                    it shouldHaveText "(\"foo\\t\")"
+                    it::getParenthesisDepth shouldBe 1
+                }
+            }
         }
     }
 
-    parserTest("Text block literal", javaVersions = since(J15)) {
-
+    parserTestContainer("Text block literal", javaVersions = since(J15)) {
         val delim = "\"\"\""
 
         inContext(ExpressionParsingCtx) {
-
-
             suspend fun String.testTextBlock(contents: NodeSpec<ASTStringLiteral> = EmptyAssertions) {
-
                 this should parseAs {
-
                     textBlock {
-                        it::getImage shouldBe this@testTextBlock.trim()
+                        it.literalText.toString() shouldBe this@testTextBlock.trim()
                         contents()
                     }
                 }
@@ -93,7 +95,7 @@ $delim
 
             """
    $delim
-            Hi, "Bob"
+            Hi, "Alice"
        $delim
             """.testTextBlock()
 
@@ -125,17 +127,20 @@ $delim
     $delim
             """.testTextBlock()
 
+
+            """
+    $delim
+    x$delim
+            """.testTextBlock()
+
         }
 
     }
 
-
-    parserTest("Text block literal on non-JDK13 preview", javaVersions = Earliest.rangeTo(J14)) {
-
+    parserTestContainer("Text block literal on non-JDK13 preview", javaVersions = Earliest.rangeTo(J14)) {
         val delim = "\"\"\""
 
         inContext(ExpressionParsingCtx) {
-
             """
 $delim
 <html>
@@ -153,14 +158,10 @@ $delim
             """ shouldNot parse()
 
         }
-
     }
 
-
-
-    parserTest("String literal escapes") {
+    parserTestContainer("String literal escapes") {
         inContext(ExpressionParsingCtx) {
-
             "\"abc\u1234abc\"" should parseAs {
                 stringLit("\"abc\u1234abc\"") {
                     it::getConstValue shouldBe "abc\u1234abc"
@@ -182,7 +183,7 @@ $delim
         }
     }
 
-    parserTest("String literal octal escapes") {
+    parserTestContainer("String literal octal escapes") {
         inContext(ExpressionParsingCtx) {
             // (kotlin doesn't have octal escapes)
             val char = "123".toInt(radix = 8).toChar()
@@ -203,18 +204,19 @@ $delim
                     it::getConstValue shouldBe char.toString() + "\n"
                 }
             }
-
         }
     }
 
-
-
-    parserTest("Char literal") {
+    parserTestContainer("Char literal") {
         inContext(ExpressionParsingCtx) {
-
             "'c'" should parseAs {
                 charLit("'c'") {
-                    it::isCharLiteral shouldBe true
+                    it::getConstValue shouldBe 'c'
+                }
+            }
+
+            "('c')" should parseAs {
+                charLit("'c'") {
                     it::getConstValue shouldBe 'c'
                 }
             }
@@ -233,9 +235,8 @@ $delim
         }
     }
 
-    parserTest("Boolean literals") {
+    parserTestContainer("Boolean literals") {
         inContext(ExpressionParsingCtx) {
-
             "true" should parseAs {
                 boolean(true)
             }
@@ -246,7 +247,7 @@ $delim
         }
     }
 
-    parserTest("Null literal") {
+    parserTestContainer("Null literal") {
         inContext(ExpressionParsingCtx) {
             "null" should parseAs {
                 nullLit()
@@ -254,38 +255,42 @@ $delim
         }
     }
 
-    parserTest("Numeric literals") {
+    parserTestContainer("Numeric literals") {
         inContext(ExpressionParsingCtx) {
-
             "12" should parseAs {
                 number(INT) {
                     it::getValueAsInt shouldBe 12
                     it::getValueAsLong shouldBe 12L
                     it::getValueAsFloat shouldBe 12.0f
                     it::getValueAsDouble shouldBe 12.0
-                    it::getImage shouldBe "12"
+                    it.literalText.toString() shouldBe "12"
                 }
             }
 
             "1___234" should parseAs {
                 number(INT) {
                     it::getValueAsInt shouldBe 1234
-                    it::getImage shouldBe "1___234"
+                    it.literalText.toString() shouldBe "1___234"
                 }
             }
 
             "0b0000_0010" should parseAs {
                 number(INT) {
                     it::getValueAsInt shouldBe 2
-                    it::getImage shouldBe "0b0000_0010"
+                    it.literalText.toString() shouldBe "0b0000_0010"
+                }
+            }
 
+            "1234_5678_9012_3456L" should parseAs {
+                number(LONG) {
+                    it::getValueAsLong shouldBe 1234_5678_9012_3456L
                 }
             }
 
             "-0X0000_000f" should parseAs { // this is not a float, it's hex
                 unaryExpr(UNARY_MINUS) {
                     number(INT) {
-                        it::getImage shouldBe "0X0000_000f"
+                        it.literalText.toString() shouldBe "0X0000_000f"
                         it::getValueAsInt shouldBe 15
                         it::getValueAsFloat shouldBe 15f
                         it::getValueAsDouble shouldBe 15.0
@@ -299,7 +304,7 @@ $delim
                     it::getValueAsLong shouldBe 12L
                     it::getValueAsFloat shouldBe 12.0f
                     it::getValueAsDouble shouldBe 12.0
-                    it::getImage shouldBe "12l"
+                    it.literalText.toString() shouldBe "12l"
                 }
             }
 
@@ -307,8 +312,7 @@ $delim
                 number(LONG) {
                     it::getValueAsInt shouldBe 12
                     it::getValueAsLong shouldBe 12L
-                    it::getImage shouldBe "12L"
-
+                    it.literalText.toString() shouldBe "12L"
                 }
             }
 
@@ -317,7 +321,7 @@ $delim
                     it::getValueAsInt shouldBe 12
                     it::getValueAsFloat shouldBe 12.0f
                     it::getValueAsDouble shouldBe 12.0
-                    it::getImage shouldBe "12d"
+                    it.literalText.toString() shouldBe "12d"
                 }
             }
 
@@ -326,18 +330,17 @@ $delim
                     it::getValueAsInt shouldBe 12
                     it::getValueAsFloat shouldBe 12.0f
                     it::getValueAsDouble shouldBe 12.0
-                    it::getImage shouldBe "12f"
-
+                    it.literalText.toString() shouldBe "12f"
                 }
             }
 
-            "-3_456.123_456" should parseAs {
+            "-3_456.12_3" should parseAs {
                 unaryExpr(UNARY_MINUS) {
                     number(DOUBLE) {
                         it::getValueAsInt shouldBe 3456
-                        it::getValueAsFloat shouldBe 3456.123456f
-                        it::getValueAsDouble shouldBe 3456.123456
-                        it::getImage shouldBe "3_456.123_456"
+                        it::getValueAsFloat shouldBe 3456.123f
+                        it::getValueAsDouble shouldBe 3456.123
+                        it.literalText.toString() shouldBe "3_456.12_3"
                     }
                 }
             }
@@ -384,25 +387,40 @@ $delim
                     it::getBase shouldBe 10
                 }
             }
+
+            "0." should parseAs {
+                number(DOUBLE) {
+                    it::getBase shouldBe 10
+                }
+            }
+            val doubleOrFloatInBase10: NodeSpec<*> = {
+                number {
+                    it::getBase shouldBe 10
+                }
+            }
+            "05e10" should parseAs(doubleOrFloatInBase10)
+            "05e10f" should parseAs(doubleOrFloatInBase10)
+            "00f" should parseAs(doubleOrFloatInBase10)
+            "00d" should parseAs(doubleOrFloatInBase10)
+            "00D" should parseAs(doubleOrFloatInBase10)
+            "050.0" should parseAs(doubleOrFloatInBase10)
         }
     }
 
-    parserTest("Hex floating point literals") {
-
+    parserTestContainer("Hex floating point literals") {
         // the exponent is binary:
         // p1  multiplies by 2
         // p-1 divides by 2
 
         inContext(ExpressionParsingCtx) {
-
             val exp30f: NodeSpec<*> = {
                 number(FLOAT) {
                     it::getValueAsDouble shouldBe 30.0
                     it::getValueAsFloat shouldBe 30f
                     it::getValueAsInt shouldBe 30
+                    it::getBase shouldBe 16
                 }
             }
-
 
             "0x0fp1f" should parseAs(exp30f)
 
@@ -412,6 +430,7 @@ $delim
                     it::getValueAsDouble shouldBe 7.5
                     it::getValueAsFloat shouldBe 7.5f
                     it::getValueAsInt shouldBe 7
+                    it::getBase shouldBe 16
                 }
             }
 
@@ -423,17 +442,15 @@ $delim
         }
     }
 
-    parserTest("Hex integral literals") {
-
-
+    parserTestContainer("Hex integral literals") {
         inContext(ExpressionParsingCtx) {
-
             fun hex15(type: PrimitiveTypeKind): ValuedNodeSpec<*, ASTNumericLiteral> = {
                 number(type) {
                     it::getValueAsDouble shouldBe 15.0
                     it::getValueAsFloat shouldBe 15f
                     it::getValueAsInt shouldBe 15
                     it::getValueAsLong shouldBe 15L
+                    it::getBase shouldBe 16
                 }
             }
 
@@ -460,46 +477,41 @@ $delim
         }
     }
 
-    parserTestGroup("Binary numeric literals") {
+    parserTestContainer("Binary numeric literals - pre java1.7", javaVersions = Earliest..J1_6) {
+        // binary literals were introduced in 1.7
 
-        onVersions(Earliest..J1_6) {
-            // binary literals were introduced in 1.7
+        inContext(ExpressionParsingCtx) {
+            "0b011" shouldNot parse()
+            "0B011" shouldNot parse()
+            "0B0_1__1" shouldNot parse()
 
-            inContext(ExpressionParsingCtx) {
-
-                "0b011" shouldNot parse()
-                "0B011" shouldNot parse()
-                "0B0_1__1" shouldNot parse()
-
-                "0B0_1__1l" shouldNot parse()
-                "0b0_11L" shouldNot parse()
-
-            }
-        }
-
-        onVersions(J1_7..Latest) {
-            fun binaryThree(type: PrimitiveTypeKind): NodeSpec<*> = {
-                number(type) {
-                    it::getValueAsDouble shouldBe 3.0
-                    it::getValueAsFloat shouldBe 3f
-                    it::getValueAsInt shouldBe 3
-                    it::getValueAsLong shouldBe 3L
-                }
-            }
-
-            inContext(ExpressionParsingCtx) {
-                "0b011" should parseAs(binaryThree(INT))
-                "0B011" should parseAs(binaryThree(INT))
-                "0B0_1__1" should parseAs(binaryThree(INT))
-
-                "0B0_1__1l" should parseAs(binaryThree(LONG))
-                "0b0_11L" should parseAs(binaryThree(LONG))
-
-                "0b05" shouldNot parse()
-                "0b_1" shouldNot parse()
-                "0b1_" shouldNot parse()
-            }
+            "0B0_1__1l" shouldNot parse()
+            "0b0_11L" shouldNot parse()
         }
     }
 
+    parserTestContainer("Binary numeric literals - java1.7+", javaVersions = J1_7..Latest) {
+        fun binaryThree(type: PrimitiveTypeKind): NodeSpec<*> = {
+            number(type) {
+                it::getValueAsDouble shouldBe 3.0
+                it::getValueAsFloat shouldBe 3f
+                it::getValueAsInt shouldBe 3
+                it::getValueAsLong shouldBe 3L
+                it::getBase shouldBe 2
+            }
+        }
+
+        inContext(ExpressionParsingCtx) {
+            "0b011" should parseAs(binaryThree(INT))
+            "0B011" should parseAs(binaryThree(INT))
+            "0B0_1__1" should parseAs(binaryThree(INT))
+
+            "0B0_1__1l" should parseAs(binaryThree(LONG))
+            "0b0_11L" should parseAs(binaryThree(LONG))
+
+            "0b05" shouldNot parse()
+            "0b_1" shouldNot parse()
+            "0b1_" shouldNot parse()
+        }
+    }
 })

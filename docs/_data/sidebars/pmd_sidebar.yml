@@ -1,7 +1,5 @@
 entries:
 - title: sidebar
-  product: PMD
-  version: '!PMD_VERSION!'
   folders:
   - title: null
     output: pdf
@@ -23,17 +21,29 @@ entries:
       output: web, pdf
       type: homepage
     - title: Release notes
-      url: /pmd_release_notes7.html
+      url: /pmd_release_notes.html
       output: web, pdf
-    - title: PMD 7.0.0 development
-      url: /pmd_next_major_development.html
+    - title: Release notes (PMD 7)
+      url: /pmd_release_notes_pmd7.html
       output: web, pdf
     - title: Getting help
       url: /pmd_about_help.html
       output: web, pdf
+    - title: Release policies
+      url: /pmd_about_release_policies.html
+      output: web, pdf
+    - title: Support lifecycle
+      url: /pmd_about_support_lifecycle.html
+      output: web, pdf
+    - title: Security
+      url: /pmd_about_security.html
+      output: web, pdf
   - title: User Documentation
     output: web, pdf
     folderitems:
+    - title: Migration Guide for PMD 7
+      url: /pmd_userdocs_migrating_to_pmd7.html
+      output: web, pdf
     - title: Installation and basic CLI usage
       url: /pmd_userdocs_installation.html
       output: web, pdf
@@ -61,6 +71,9 @@ entries:
     - title: 3rd party rulesets
       output: web, pdf
       url: /pmd_userdocs_3rdpartyrulesets.html
+    - title: Signed Releases
+      output: web, pdf
+      url: /pmd_userdocs_signed_releases.html
     - title: null
       output: web, pdf
       subfolders:
@@ -103,6 +116,9 @@ entries:
         - title: Testing your rules
           url: /pmd_userdocs_extending_testing.html
           output: web, pdf
+        - title: Creating (XML) dump of the AST
+          url: /pmd_userdocs_extending_ast_dump.html
+          output: web, pdf
     - title: null
       output: web, pdf
       subfolders:
@@ -121,9 +137,15 @@ entries:
         - title: PMD Java API
           output: web, pdf
           url: /pmd_userdocs_tools_java_api.html
+        - title: bld PMD Extension
+          output: web, pdf
+          url: /pmd_userdocs_tools_bld.html
         - title: CI integrations
           output: web, pdf
           url: /pmd_userdocs_tools_ci.html
+        - title: IDE Plugins
+          output: web, pdf
+          url: /pmd_userdocs_tools_ide_plugins.html
         - title: Other Tools / Integrations
           output: web, pdf
           url: /pmd_userdocs_tools.html
@@ -160,24 +182,6 @@ entries:
         - title: Security
           output: web, pdf
           url: /pmd_rules_apex_security.html
-    - title: null
-      output: web, pdf
-      subfolders:
-      - title: Ecmascript Rules
-        output: web, pdf
-        subfolderitems:
-        - title: Index
-          output: web, pdf
-          url: /pmd_rules_ecmascript.html
-        - title: Best Practices
-          output: web, pdf
-          url: /pmd_rules_ecmascript_bestpractices.html
-        - title: Code Style
-          output: web, pdf
-          url: /pmd_rules_ecmascript_codestyle.html
-        - title: Error Prone
-          output: web, pdf
-          url: /pmd_rules_ecmascript_errorprone.html
     - title: null
       output: web, pdf
       subfolders:
@@ -250,6 +254,27 @@ entries:
     - title: null
       output: web, pdf
       subfolders:
+      - title: JavaScript Rules
+        output: web, pdf
+        subfolderitems:
+        - title: Index
+          output: web, pdf
+          url: /pmd_rules_ecmascript.html
+        - title: Best Practices
+          output: web, pdf
+          url: /pmd_rules_ecmascript_bestpractices.html
+        - title: Code Style
+          output: web, pdf
+          url: /pmd_rules_ecmascript_codestyle.html
+        - title: Error Prone
+          output: web, pdf
+          url: /pmd_rules_ecmascript_errorprone.html
+        - title: Performance
+          output: web, pdf
+          url: /pmd_rules_ecmascript_performance.html
+    - title: null
+      output: web, pdf
+      subfolders:
       - title: Kotlin Rules
         output: web, pdf
         subfolderitems:
@@ -310,15 +335,15 @@ entries:
     - title: null
       output: web, pdf
       subfolders:
-      - title: Salesforce VisualForce Rules
+      - title: Salesforce Visualforce Rules
         output: web, pdf
         subfolderitems:
         - title: Index
           output: web, pdf
-          url: /pmd_rules_vf.html
+          url: /pmd_rules_visualforce.html
         - title: Security
           output: web, pdf
-          url: /pmd_rules_vf_security.html
+          url: /pmd_rules_visualforce_security.html
     - title: null
       output: web, pdf
       subfolders:
@@ -346,21 +371,21 @@ entries:
     - title: null
       output: web, pdf
       subfolders:
-      - title: VM Rules
+      - title: Velocity Template Language (VTL) Rules
         output: web, pdf
         subfolderitems:
         - title: Index
           output: web, pdf
-          url: /pmd_rules_vm.html
+          url: /pmd_rules_velocity.html
         - title: Best Practices
           output: web, pdf
-          url: /pmd_rules_vm_bestpractices.html
+          url: /pmd_rules_velocity_bestpractices.html
         - title: Design
           output: web, pdf
-          url: /pmd_rules_vm_design.html
+          url: /pmd_rules_velocity_design.html
         - title: Error Prone
           output: web, pdf
-          url: /pmd_rules_vm_errorprone.html
+          url: /pmd_rules_velocity_errorprone.html
     - title: null
       output: web, pdf
       subfolders:
@@ -379,6 +404,9 @@ entries:
         - title: Index
           output: web, pdf
           url: /pmd_rules_xml.html
+        - title: Best Practices
+          output: web, pdf
+          url: /pmd_rules_xml_bestpractices.html
         - title: Error Prone
           output: web, pdf
           url: /pmd_rules_xml_errorprone.html
@@ -400,50 +428,154 @@ entries:
   - title: Language-Specific Documentation
     output: web, pdf
     folderitems:
+    - title: Overview
+      url: /pmd_languages_index.html
+      output: web, pdf
+    - title: Language configuration
+      url: /pmd_languages_configuration.html
+      output: web, pdf
     - title: Apex
       url: /pmd_languages_apex.html
       output: web, pdf
-    - title: Java
-      url: /pmd_languages_java.html
+    - title: C/C++
+      url: /pmd_languages_cpp.html
       output: web, pdf
-    - title: JSP
-      url: /pmd_languages_jsp.html
+    - title: C#
+      url: /pmd_languages_cs.html
       output: web, pdf
-    - title: Kotlin
-      url: /pmd_languages_kotlin.html
+    - title: Coco
+      url: /pmd_languages_coco.html
       output: web, pdf
-    - title: PLSQL
-      url: /pmd_languages_plsql.html
+    - title: Dart
+      url: /pmd_languages_dart.html
       output: web, pdf
-    - title: Visualforce
-      url: /pmd_languages_visualforce.html
-      output: web, pdf
-    - title: XML and XML dialects
-      url: /pmd_languages_xml.html
-      output: web, pdf
-    - title: HTML
-      url: /pmd_languages_html.html
+    - title: Fortran
+      url: /pmd_languages_fortran.html
       output: web, pdf
     - title: Gherkin
       url: /pmd_languages_gherkin.html
       output: web, pdf
+    - title: Go
+      url: /pmd_languages_go.html
+      output: web, pdf
+    - title: Groovy
+      url: /pmd_languages_groovy.html
+    - title: HTML
+      url: /pmd_languages_html.html
+      output: web, pdf
+    - title: Java
+      url: /pmd_languages_java.html
+      output: web, pdf
+    - title: JavaScript / TypeScript
+      url: /pmd_languages_js_ts.html
+      output: web, pdf
+    - title: JSP
+      url: /pmd_languages_jsp.html
+      output: web, pdf
+    - title: Julia
+      url: /pmd_languages_julia.html
+      output: web, pdf
+    - title: Kotlin
+      url: /pmd_languages_kotlin.html
+      output: web, pdf
+    - title: Lua
+      url: /pmd_languages_lua.html
+      output: web, pdf
+    - title: Matlab
+      url: /pmd_languages_matlab.html
+      output: web, pdf
+    - title: Modelica
+      url: /pmd_languages_modelica.html
+      output: web, pdf
+    - title: Objective-C
+      url: /pmd_languages_objectivec.html
+      output: web, pdf
+    - title: Perl
+      url: /pmd_languages_perl.html
+      output: web, pdf
+    - title: PHP
+      url: /pmd_languages_php.html
+      output: web, pdf
+    - title: PLSQL
+      url: /pmd_languages_plsql.html
+      output: web, pdf
+    - title: Python
+      url: /pmd_languages_python.html
+      output: web, pdf
+    - title: Ruby
+      url: /pmd_languages_ruby.html
+      output: web, pdf
+    - title: Rust
+      url: /pmd_languages_rust.html
+      output: web, pdf
+    - title: Scala
+      url: /pmd_languages_scala.html
+      output: web, pdf
+    - title: Swift
+      url: /pmd_languages_swift.html
+      output: web, pdf
+    - title: T-SQL
+      url: /pmd_languages_tsql.html
+      output: web, pdf
+    - title: Visualforce
+      url: /pmd_languages_visualforce.html
+      output: web, pdf
+    - title: Velocity Template Language (VTL)
+      url: /pmd_languages_velocity.html
+      output: web, pdf
+    - title: XML and XML dialects
+      url: /pmd_languages_xml.html
+      output: web, pdf
   - title: Developer Documentation
     output: web, pdf
     folderitems:
-    - title: Developer resources
-      url: /pmd_devdocs_development.html
+    - title: null
       output: web, pdf
-    - title: Building PMD from source
-      url: /pmd_devdocs_building.html
+      subfolders:
+      - title: Contributing
+        output: web, pdf
+        subfolderitems:
+        - title: Contributing
+          url: /pmd_devdocs_contributing.html
+          output: web, pdf
+        - title: Developer resources
+          url: /pmd_devdocs_development.html
+          output: web, pdf
+        - title: Newcomers' Guide
+          url: /pmd_devdocs_contributing_newcomers_guide.html
+          output: web, pdf
+        - title: Writing documentation
+          url: /pmd_devdocs_writing_documentation.html
+          output: web, pdf
+    - title: null
       output: web, pdf
-    - title: Contributing
-      external_url: https://github.com/pmd/pmd/blob/master/CONTRIBUTING.md
-      output: web, pdf
-    - title: Writing documentation
-      url: /pmd_devdocs_writing_documentation.html
-      output: web, pdf
+      subfolders:
+      - title: Building PMD
+        output: web, pdf
+        subfolderitems:
+        - title: General Info
+          url: /pmd_devdocs_building_general.html
+          output: web, pdf
+        - title: Building PMD from source
+          url: /pmd_devdocs_building.html
+          output: web, pdf
+        - title: Building PMD with IntelliJ IDEA
+          url: /pmd_devdocs_building_intellij.html
+          output: web, pdf
+        - title: Building PMD with Eclipse IDE
+          url: /pmd_devdocs_building_eclipse.html
+          output: web, pdf
+        - title: Building PMD with VS Code IDE
+          url: /pmd_devdocs_building_vscode.html
+          output: web, pdf
+        - title: Building PMD with Netbeans IDE
+          url: /pmd_devdocs_building_netbeans.html
+          output: web, pdf
     - title: Roadmap
       url: /pmd_devdocs_roadmap.html
+      output: web, pdf
+    - title: GitHub Actions Workflows
+      url: /pmd_devdocs_github_actions_workflows.html
       output: web, pdf
     - title: How PMD works
       url: /pmd_devdocs_how_pmd_works.html
@@ -466,7 +598,7 @@ entries:
         - title: Adding a new language (JavaCC)
           url: /pmd_devdocs_major_adding_new_language_javacc.html
           output: web, pdf
-        - title: Adding a new language (Antlr)
+        - title: Adding a new language (ANTLR)
           url: /pmd_devdocs_major_adding_new_language_antlr.html
           output: web, pdf
         - title: Adding a new CPD language
@@ -475,8 +607,8 @@ entries:
       - title: Experimental features
         output: web, pdf
         subfolderitems:
-        - title: Creating (XML) dump of the AST
-          url: /pmd_devdocs_experimental_ast_dump.html
+        - title: List of experimental Features
+          url: /tag_experimental.html
           output: web, pdf
   - title: Project documentation
     output: web, pdf

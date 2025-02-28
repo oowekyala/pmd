@@ -19,11 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * </pre>
  */
-public final class ASTMethodCall extends AbstractInvocationExpr
-    implements ASTPrimaryExpression,
-               QualifiableExpression,
-               InvocationNode,
-               MethodUsage {
+public final class ASTMethodCall extends AbstractInvocationExpr implements QualifiableExpression {
 
     ASTMethodCall(int id) {
         super(id);
@@ -67,7 +63,7 @@ public final class ASTMethodCall extends AbstractInvocationExpr
     @Override
     @Nullable
     public ASTTypeArguments getExplicitTypeArguments() {
-        return getFirstChildOfType(ASTTypeArguments.class);
+        return firstChild(ASTTypeArguments.class);
     }
 
     @Override

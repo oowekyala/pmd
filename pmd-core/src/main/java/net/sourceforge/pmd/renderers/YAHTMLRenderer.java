@@ -16,11 +16,10 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.sourceforge.pmd.PMD;
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.Report;
+import net.sourceforge.pmd.reporting.RuleViolation;
 import net.sourceforge.pmd.util.StringUtil;
 
 /**
@@ -29,7 +28,6 @@ import net.sourceforge.pmd.util.StringUtil;
 public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
 
     public static final String NAME = "yahtml";
-    // TODO 7.0.0 use PropertyDescriptor<Optional<File>> with a constraint that the file is an existing directory
     public static final PropertyDescriptor<String> OUTPUT_DIR =
         PropertyFactory.stringProperty("outputDir")
                        .desc("Output directory.")
@@ -101,8 +99,8 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
         renderIndex(outputDir);
         renderClasses(outputDir);
 
-        writer.write("<h3 align=\"center\">The HTML files are located "
-                + (outputDir == null ? "above the project directory" : "in '" + outputDir + '\'') + ".</h3>" + PMD.EOL);
+        writer.println("<h3 align=\"center\">The HTML files are located "
+                + (outputDir == null ? "above the project directory" : "in '" + outputDir + '\'') + ".</h3>");
     }
 
     private void renderIndex(String outputDir) throws IOException {
@@ -196,14 +194,12 @@ public class YAHTMLRenderer extends AbstractAccumulatingRenderer {
     }
 
     private String renderViolationRow(String name, String value) {
-        StringBuilder row = new StringBuilder(40 + name.length() + value.length());
-        row.append("<tr><td><b>")
-            .append(name)
-            .append("</b></td>")
-            .append("<td>")
-            .append(value)
-            .append("</td></tr>");
-        return row.toString();
+        return "<tr><td><b>"
+            + name
+            + "</b></td>"
+            + "<td>"
+            + value
+            + "</td></tr>";
     }
 
     private static class ReportNode {

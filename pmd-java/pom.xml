@@ -7,12 +7,12 @@
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
         <artifactId>pmd</artifactId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.12.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <properties>
-        <log4j.version>2.17.1</log4j.version>
+        <log4j.version>2.24.3</log4j.version>
     </properties>
 
     <build>
@@ -55,6 +55,24 @@
             </plugin>
 
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-javacc-generated-sources</id>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/javacc</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
             </plugin>
@@ -87,40 +105,11 @@
                         <configuration>
                             <target>
                                 <ant antfile="${javacc.ant.wrapper}" target="alljavacc">
-                                    <property name="javacc.jar" value="${javacc.jar}" />
+                                    <property name="plugin-classpath" refid="maven.plugin.classpath"/>
                                     <property name="lang-name" value="Java" />
-                                    <property name="lang-terse-name" value="java" />
+                                    <property name="lang-id" value="java" />
                                 </ant>
                             </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-javacc-generated-sources</id>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/javacc</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-kotlin-test-sources</id>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.basedir}/src/test/kotlin</source>
-                            </sources>
                         </configuration>
                     </execution>
                 </executions>
@@ -131,6 +120,33 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
                     <suppressionsLocation>pmd-java-checkstyle-suppressions.xml</suppressionsLocation>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.siom79.japicmp</groupId>
+                <artifactId>japicmp-maven-plugin</artifactId>
+                <configuration>
+                    <parameter>
+                        <excludes combine.children="append">
+                            <exclude>net.sourceforge.pmd.lang.java.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.ast.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.metrics.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.rule.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.rule.xpath.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.symbols.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.symbols.table.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.types.internal</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.types.ast.internal</exclude>
+                            <!-- Template, TemplateExpression, TemplateFragment have been Experimental and
+                                 now removed with 7.10.0. These were part of String Templates, introduced with Java 21/22 Preview
+                                 but removed with Java 23.
+                             -->
+                            <exclude>net.sourceforge.pmd.lang.java.ast.JavaVisitor#visit(net.sourceforge.pmd.lang.java.ast.ASTTemplate,java.lang.Object)</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.ast.JavaVisitor#visit(net.sourceforge.pmd.lang.java.ast.ASTTemplateExpression,java.lang.Object)</exclude>
+                            <exclude>net.sourceforge.pmd.lang.java.ast.JavaVisitor#visit(net.sourceforge.pmd.lang.java.ast.ASTTemplateFragment,java.lang.Object)</exclude>
+                        </excludes>
+                    </parameter>
                 </configuration>
             </plugin>
         </plugins>
@@ -178,11 +194,7 @@
             <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -196,17 +208,7 @@
 
         <dependency>
             <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-rules</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
             <artifactId>system-lambda</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-testutil</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -278,14 +280,26 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.11.0</version>
+            <version>3.27.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-            <version>1.2</version>
+            <version>1.3.5</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

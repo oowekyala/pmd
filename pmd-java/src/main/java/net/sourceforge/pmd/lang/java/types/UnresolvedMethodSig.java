@@ -109,11 +109,6 @@ final class UnresolvedMethodSig implements JMethodSig, InternalMethodTypeItf {
     }
 
     @Override
-    public InternalMethodTypeItf internalApi() {
-        return this;
-    }
-
-    @Override
     public String toString() {
         return getName();
     }
@@ -199,6 +194,11 @@ final class UnresolvedMethodSig implements JMethodSig, InternalMethodTypeItf {
         @Override
         public String toString() {
             return getSimpleName();
+        }
+
+        @Override
+        public JMethodSig getGenericSignature() {
+            return getTypeSystem().UNRESOLVED_METHOD;
         }
     }
 }

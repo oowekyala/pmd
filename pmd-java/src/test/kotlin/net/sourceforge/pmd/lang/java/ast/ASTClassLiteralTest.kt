@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
 
 /**
@@ -12,16 +12,11 @@ import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
  * @since 7.0.0
  */
 class ASTClassLiteralTest : ParserTestSpec({
-
-    parserTest("Class literals") {
-
+    parserTestContainer("Class literals") {
         inContext(ExpressionParsingCtx) {
-
-
             "void.class" should parseAs {
                 classLiteral { voidType() }
             }
-
 
             "int.class" should parseAs {
                 classLiteral {
@@ -35,7 +30,6 @@ class ASTClassLiteralTest : ParserTestSpec({
                 }
             }
 
-
             "int[].class" should parseAs {
                 classLiteral {
                     arrayType {
@@ -47,15 +41,10 @@ class ASTClassLiteralTest : ParserTestSpec({
                 }
             }
 
-
             "List<?>.class" shouldNot parse()
             "Map<String, String>.class" shouldNot parse()
             "java.util.List.class" should parse()
             "java.util.@F List.class" shouldNot parse()
-
         }
-
-
     }
-
 })

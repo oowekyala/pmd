@@ -6,20 +6,15 @@ package net.sourceforge.pmd.lang.java.symbols.table.internal
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.*
-import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
-import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol
 import net.sourceforge.pmd.lang.java.types.JClassType
 import net.sourceforge.pmd.lang.java.types.JTypeVar
 
 class TypeParamScopingTest : ParserTestSpec({
-
-    parserTest("Scoping of type parameters") {
-
+    parserTestContainer("Scoping of type parameters") {
         val acu = parser.withProcessing().parse("""
-
             package myTest;
 
             import somewhere.T;
@@ -51,36 +46,28 @@ class TypeParamScopingTest : ParserTestSpec({
                    .crossFindBoundaries().toList()
 
         doTest("Inside Foo: T is Foo#T") {
-
             insideFoo.symbolTable.shouldResolveTypeTo("T", fooT.typeMirror)
         }
 
         doTest("Inside Inner: T is Foo#T") {
-
             insideInner.symbolTable.shouldResolveTypeTo("T", fooT.typeMirror)
         }
 
         doTest("Inside Inner2: T is Inner2#T, shadowed") {
-
             insideInner2.symbolTable.shouldResolveTypeTo("T", inner2T.typeMirror)
         }
 
         doTest("Inside Other: T is imported, type params are not in scope") {
-
             insideOther.symbolTable.shouldResolveTypeTo<JClassType>("T").let {
                 it.symbol::getCanonicalName shouldBe "somewhere.T"
                 it.symbol::isUnresolved shouldBe true
             }
         }
-
     }
 
-    parserTest("Scoping inside a type param section") {
-
+    parserTestContainer("Scoping inside a type param section") {
         doTest("Bounded by a param to the right") {
-
             val acu = parser.withProcessing().parse("""
-
             package myTest;
 
             class Foo<T extends X, X> {}
@@ -89,15 +76,13 @@ class TypeParamScopingTest : ParserTestSpec({
 
             val (t, x) = acu.descendants(ASTTypeParameter::class.java).toList()
 
-            t.typeBoundNode.shouldBeA<ASTClassOrInterfaceType> {
+            t.typeBoundNode.shouldBeA<ASTClassType> {
                 it.symbolTable.shouldResolveTypeTo<JTypeVar>("X", x.typeMirror)
             }
         }
 
         doTest("Bounded by a param to the left") {
-
             val acu = parser.withProcessing().parse("""
-
             package myTest;
 
             class Foo<X, T extends X> {}
@@ -106,15 +91,13 @@ class TypeParamScopingTest : ParserTestSpec({
 
             val (x, t) = acu.descendants(ASTTypeParameter::class.java).toList()
 
-            t.typeBoundNode.shouldBeA<ASTClassOrInterfaceType> {
+            t.typeBoundNode.shouldBeA<ASTClassType> {
                 it.symbolTable.shouldResolveTypeTo("X", x.typeMirror)
             }
         }
 
         doTest("Bounded by itself") {
-
             val acu = parser.withProcessing().parse("""
-
             package myTest;
 
             class Foo<T extends Foo<T>> {}
@@ -123,16 +106,13 @@ class TypeParamScopingTest : ParserTestSpec({
 
             val (t) = acu.descendants(ASTTypeParameter::class.java).toList()
 
-            t.typeBoundNode.shouldBeA<ASTClassOrInterfaceType> {
+            t.typeBoundNode.shouldBeA<ASTClassType> {
                 it.symbolTable.shouldResolveTypeTo("T", t.typeMirror)
             }
         }
-
-
     }
 
-    parserTest("Type params of methods") {
-
+    parserTestContainer("Type params of methods") {
         val acu = parser.withProcessing().parse("""
 
             package myTest;
@@ -166,26 +146,22 @@ class TypeParamScopingTest : ParserTestSpec({
         val (vt, vx, vx2) = acu.descendants(ASTLocalVariableDeclaration::class.java).map { it.typeNode }.toList()
 
         // classes
-        val (_, localX, annotY) = acu.descendants(ASTAnyTypeDeclaration::class.java).crossFindBoundaries().toList()
+        val (_, localX, annotY) = acu.descendants(ASTTypeDeclaration::class.java).crossFindBoundaries().toList()
 
         doTest("TParams of class are in scope inside method tparam declaration") {
-
-            t2.typeBoundNode.shouldBeA<ASTClassOrInterfaceType> {
+            t2.typeBoundNode.shouldBeA<ASTClassType> {
                 it.symbolTable.shouldResolveTypeTo("X", x.typeMirror)
             }
 
         }
 
         doTest("TParams of method are in scope in formal parameter section") {
-
             pt.symbolTable shouldBe px.symbolTable
-
             pt.symbolTable.shouldResolveTypeTo("T", t2.typeMirror)
             px.symbolTable.shouldResolveTypeTo("X", x.typeMirror)
         }
 
         doTest("TParams of method are in scope in method body") {
-
             for (node in listOf(vt, vx)) {
                 node.symbolTable.shouldResolveTypeTo("T", t2.typeMirror)
                 node.symbolTable.shouldResolveTypeTo("X", x.typeMirror)
@@ -193,9 +169,7 @@ class TypeParamScopingTest : ParserTestSpec({
         }
 
         doTest("TParams of method are *not* in scope in modifier list") {
-
             val annot = acu.descendants(ASTAnnotation::class.java).first()!!
-
             annot.symbolTable.shouldResolveTypeTo("Y", annotY.typeMirror) // not the Y of the method
             annot.typeMirror.symbol.shouldBeSameInstanceAs(annotY.symbol)
         }
@@ -203,12 +177,10 @@ class TypeParamScopingTest : ParserTestSpec({
         doTest("Local class shadows type param") {
             vx2.symbolTable.shouldResolveTypeTo("X", localX.typeMirror)
         }
-
     }
 
 
-    parserTest("Type parameters shadow member types") {
-
+    parserTestContainer("Type parameters shadow member types") {
         val acu = parser.withProcessing().parse("""
 
             package myTest;
@@ -222,7 +194,7 @@ class TypeParamScopingTest : ParserTestSpec({
         """)
 
         val (fooClass, innerTClass) =
-                acu.descendants(ASTClassOrInterfaceDeclaration::class.java).toList()
+                acu.descendants(ASTClassDeclaration::class.java).toList()
 
         val (tparam) = fooClass.symbol.typeParameters
 
@@ -238,6 +210,4 @@ class TypeParamScopingTest : ParserTestSpec({
             insideT.symbolTable.shouldResolveTypeTo("T", innerTClass.typeMirror)
         }
     }
-
-
 })

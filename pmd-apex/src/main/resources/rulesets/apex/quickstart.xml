@@ -69,6 +69,9 @@
    <rule ref="category/apex/performance.xml/OperationWithLimitsInLoop" message="Avoid operations in loops that may hit governor limits">
       <priority>3</priority>
    </rule>
+   <rule ref="category/apex/performance.xml/OperationWithHighCostInLoop" message="Avoid operations in loops that can impact performances">
+      <priority>3</priority>
+   </rule>
    <rule ref="category/apex/errorprone.xml/AvoidDirectAccessTriggerMap" message="Avoid directly accessing Trigger.old and Trigger.new">
       <priority>3</priority>
    </rule>
@@ -84,6 +87,7 @@
       <priority>3</priority>
    </rule>
 <!--    <rule ref="category/apex/performance.xml/AvoidDebugStatements" /> -->
+<!--    <rule ref="category/apex/performance.xml/AvoidNonRestrictiveQueries"/> -->
 <!--    <rule ref="category/apex/performance.xml/EagerlyLoadedDescribeSObjectResult" /> -->
 
    <!-- NAMING -->
@@ -205,7 +209,9 @@
       <priority>3</priority>
    </rule>
    <!-- <rule ref="category/apex/bestpractices.xml/UnusedLocalVariable"/> -->
+   <!-- <rule ref="category/apex/bestpractices.xml/QueueableWithoutFinalizer"/> -->
    <!-- <rule ref="category/apex/errorprone.xml/OverrideBothEqualsAndHashcode" /> -->
    <!-- <rule ref="category/apex/errorprone.xml/InaccessibleAuraEnabledGetter" /> -->
+   <!-- <rule ref="category/apex/errorprone.xml/AvoidStatefulDatabaseResult" /> -->
 
 </ruleset>

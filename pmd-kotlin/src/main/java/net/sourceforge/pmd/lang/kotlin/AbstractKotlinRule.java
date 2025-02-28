@@ -4,11 +4,11 @@
 
 package net.sourceforge.pmd.lang.kotlin;
 
-import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.lang.ast.impl.antlr4.AntlrBaseRule;
 import net.sourceforge.pmd.lang.kotlin.ast.KotlinVisitor;
+import net.sourceforge.pmd.lang.rule.AbstractVisitorRule;
+import net.sourceforge.pmd.reporting.RuleContext;
 
-public abstract class AbstractKotlinRule extends AntlrBaseRule {
+public abstract class AbstractKotlinRule extends AbstractVisitorRule {
 
     protected AbstractKotlinRule() {
         // inheritance constructor

@@ -7,7 +7,7 @@
     <parent>
         <groupId>net.sourceforge.pmd</groupId>
         <artifactId>pmd</artifactId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.12.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -24,29 +24,39 @@
         </resources>
         <plugins>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <useDefaultDelimiters>false</useDefaultDelimiters>
-                    <delimiters>
-                        <delimiter>${*}</delimiter>
-                    </delimiters>
-                </configuration>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>antlr-cleanup</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <ant antfile="${antlr4.ant.wrapper}" target="cpd-language">
+                                    <property name="lang-name" value="TypeScript" />
+                                    <property name="lang-id" value="typescript" />
+                                </ant>
+                            </target>
+                        </configuration>
+                    </execution>
+
                     <execution>
                         <id>generate-sources</id>
                         <phase>generate-sources</phase>
                         <configuration>
                             <target>
                                 <ant antfile="${javacc.ant.wrapper}" target="alljavacc">
-                                    <property name="no-jjtree" value="true"/> <!-- This is a CPD module -->
+                                    <property name="plugin-classpath" refid="maven.plugin.classpath"/>
+                                    <property name="no-jjtree" value="true" /> <!-- This is a CPD module -->
                                     <property name="lang-name" value="Ecmascript5" />
-                                    <property name="lang-terse-name" value="ecmascript5" />
-                                    <property name="javacc.jar" value="${javacc.jar}" />
+                                    <property name="lang-id" value="ecmascript5" />
                                 </ant>
                             </target>
                         </configuration>
@@ -55,6 +65,15 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <useDefaultDelimiters>false</useDefaultDelimiters>
+                    <delimiters>
+                        <delimiter>${*}</delimiter>
+                    </delimiters>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -74,6 +93,14 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <suppressionsLocation>pmd-javascript-checkstyle-suppressions.xml</suppressionsLocation>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -82,9 +109,13 @@
             <artifactId>pmd-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.mozilla</groupId>
             <artifactId>rhino</artifactId>
-            <version>1.7.14</version>
+            <version>1.7.15</version>
         </dependency>
 
         <dependency>

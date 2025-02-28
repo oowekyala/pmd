@@ -4,8 +4,9 @@
 
 package net.sourceforge.pmd.lang.plsql.ast;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ class StringLiteralsTest extends AbstractPLSQLParserTst {
     @Test
     void parseStringLiterals() throws Exception {
         ASTInput input = plsql.parseResource("StringLiterals.pls");
-        List<ASTStringLiteral> strings = input.findDescendantsOfType(ASTStringLiteral.class);
+        List<ASTStringLiteral> strings = input.descendants(ASTStringLiteral.class).toList();
         assertEquals(20, strings.size());
 
         assertString("'Hello'", "Hello", 0, strings);
@@ -34,9 +35,9 @@ class StringLiteralsTest extends AbstractPLSQLParserTst {
     @Test
     void parseMultilineVarchar() throws Exception {
         ASTInput input = plsql.parseResource("MultilineVarchar.pls");
-        List<ASTStringLiteral> strings = input.findDescendantsOfType(ASTStringLiteral.class);
+        List<ASTStringLiteral> strings = input.descendants(ASTStringLiteral.class).toList();
         assertEquals(1, strings.size());
-        assertTrue(normalizeEol(strings.get(0).getString()).startsWith("\ncreate or replace and"));
+        assertThat(normalizeEol(strings.get(0).getString()), startsWith("\ncreate or replace and"));
     }
 
     private static void assertString(String quoted, String plain, int index, List<ASTStringLiteral> strings) {

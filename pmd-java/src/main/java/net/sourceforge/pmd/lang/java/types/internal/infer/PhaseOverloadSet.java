@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.java.types.internal.infer;
 
 import static net.sourceforge.pmd.lang.java.types.TypeOps.areOverrideEquivalent;
+import static net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf.cast;
 import static net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.TypeSpecies.getSpecies;
 import static net.sourceforge.pmd.util.OptionalBool.NO;
 import static net.sourceforge.pmd.util.OptionalBool.UNKNOWN;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import net.sourceforge.pmd.lang.java.types.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
@@ -90,8 +92,8 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
 
     @Override
     protected OptionalBool shouldTakePrecedence(MethodCtDecl m1, MethodCtDecl m2) {
-        return isMoreSpecific(m1.getMethodType().internalApi().adaptedMethod(),
-                              m2.getMethodType().internalApi().adaptedMethod());
+        return isMoreSpecific(cast(m1.getMethodType()).adaptedMethod(),
+                              cast(m2.getMethodType()).adaptedMethod());
     }
 
 
@@ -139,14 +141,12 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
         JMethodSig m2p = ctx.mapToIVars(m2);
 
         List<ExprMirror> es = site.getExpr().getArgumentExpressions();
-        List<JTypeMirror> m1Formals = m1.getFormalParameters();
-        List<JTypeMirror> m2Formals = m2p.getFormalParameters();
 
         int k = es.size();
 
         for (int i = 0; i < k; i++) {
-            JTypeMirror ti = phase.ithFormal(m2Formals, i);
-            JTypeMirror si = phase.ithFormal(m1Formals, i);
+            JTypeMirror ti = m2p.ithFormalParam(i, phase.requiresVarargs());
+            JTypeMirror si = m1.ithFormalParam(i, phase.requiresVarargs());
             ExprMirror ei = es.get(i);
 
             if (si.equals(ti)) {
@@ -167,6 +167,23 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
             JMethodSig sfun = TypeOps.findFunctionalInterfaceMethod(si);
             JMethodSig tfun = TypeOps.findFunctionalInterfaceMethod(ti);
             if (sfun == null || tfun == null) {
+                if (phase.canBox()) {
+                    JTypeMirror stdExprTy = ei.getStandaloneType();
+                    if (stdExprTy != null
+                        // there is a boxing or unboxing conversion happening
+                        && stdExprTy.isPrimitive() != si.isPrimitive()
+                        && stdExprTy.isPrimitive() != ti.isPrimitive()) {
+                        // si or ti is more specific if it only involves
+                        // the boxing/unboxing conversion, without widening
+                        // afterwards.
+                        if (stdExprTy.box().equals(si.box())) {
+                            return true;
+                        } else if (stdExprTy.box().equals(ti.box())) {
+                            return false;
+                        }
+                    }
+                }
+
                 infer.checkConvertibleOrDefer(ctx, si, ti, ei, phase, site);
                 continue;
             }
@@ -177,9 +194,13 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
             }
         }
 
-        if (phase.requiresVarargs() && m2Formals.size() == k + 1) {
+        if (phase.requiresVarargs() && m2p.getArity() == k + 1) {
             // that is, the invocation has no arguments for the varargs, eg Stream.of()
-            infer.checkConvertibleOrDefer(ctx, phase.ithFormal(m1Formals, k), m2Formals.get(k), site.getExpr(), phase, site);
+            infer.checkConvertibleOrDefer(ctx,
+                                          m1.ithFormalParam(k, true),
+                                          m2p.ithFormalParam(k, true),
+                                          // m2Formals.get(k),
+                                          site.getExpr(), phase, site);
         }
 
         ctx.solve();
@@ -191,7 +212,7 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
 
     private @NonNull OptionalBool unresolvedTypeFallback(JTypeMirror si, JTypeMirror ti, ExprMirror argExpr) {
         JTypeMirror standalone = argExpr.getStandaloneType();
-        if (standalone != null && TypeOps.isUnresolved(standalone)) {
+        if (TypeOps.hasUnresolvedSymbolOrArray(standalone)) {
             if (standalone.equals(si)) {
                 return YES;
             } else if (standalone.equals(ti)) {
@@ -235,7 +256,7 @@ final class PhaseOverloadSet extends OverloadSet<MethodCtDecl> {
             if (TypeOps.mentionsAny(x, sfun.getTypeParameters()) && !ctx.isGround(y)) {
                 return false;
             } else {
-                TypeOps.isSameTypeInInference(x, y.subst(tToS)); // adds an equality constraint
+                InternalApiBridge.isSameTypeInInference(x, y.subst(tToS)); // adds an equality constraint
             }
         }
 

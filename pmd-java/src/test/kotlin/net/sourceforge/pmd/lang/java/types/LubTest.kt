@@ -140,6 +140,37 @@ class LubTest : FunSpec({
                 lub(t_List[Sub1::class.decl], t_List[Sub2::class.decl]) shouldBe result
 
             }
+
+            test("Test lub of related arrays") {
+
+                // the component type
+                lub(
+                    Enum1::class.decl,
+                    Enum2::class.decl,
+                ) shouldBe t_Enum[`?` extends t_Enum[`?`] * EnumSuperItf::class.decl] * EnumSuperItf::class.decl
+
+                // let's try arrays
+                lub(
+                    Enum1::class.decl.toArray(),
+                    Enum2::class.decl.toArray(),
+                ) shouldBe (t_Enum * EnumSuperItf::class.decl).toArray()
+
+            }
+
+            test("Test lub of related raw types") {
+                val ast = javaParser.parse("""
+                    class Super<T> {}
+                    class Derived<T> extends Super<T> {}
+                """.trimIndent())
+
+                val (supert, derivedt) = ast.declaredTypeSignatures()
+
+                lub(
+                    supert.erasure,
+                    derivedt.erasure,
+                ) shouldBe supert.erasure
+
+            }
         }
     }
 

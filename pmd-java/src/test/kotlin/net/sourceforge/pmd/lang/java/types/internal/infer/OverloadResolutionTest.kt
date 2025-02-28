@@ -5,9 +5,10 @@
 
 package net.sourceforge.pmd.lang.java.types.internal.infer
 
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldMatchN
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldMatchN
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.types.*
 import net.sourceforge.pmd.lang.java.types.testdata.Overloads
@@ -77,12 +78,10 @@ class OverloadResolutionTest : ProcessorTestSpec({
         }
     }
 
-    parserTest("Test strict overload") {
-
+    parserTestContainer("Test strict overload") {
         asIfIn(Overloads::class.java)
 
         inContext(ExpressionParsingCtx) {
-
             "of($t_SomeEnum_name.FOO)" should parseAs {
                 methodCall("of") {
                     with (it.typeDsl) {
@@ -104,11 +103,10 @@ class OverloadResolutionTest : ProcessorTestSpec({
         }
     }
 
-    parserTest("Test partially unresolved") {
-
+    parserTestContainer("Test partially unresolved") {
         asIfIn(Overloads::class.java)
-        inContext(ExpressionParsingCtx) {
 
+        inContext(ExpressionParsingCtx) {
             "of(DoesntExist.FOO)" should parseAs {
                 methodCall("of") {
                     with (it.typeDsl) {
@@ -131,8 +129,7 @@ class OverloadResolutionTest : ProcessorTestSpec({
         }
     }
 
-    parserTest("Test strict overload 2 args") {
-
+    parserTestContainer("Test strict overload 2 args") {
         asIfIn(Overloads::class.java)
 
         inContext(ExpressionParsingCtx) {
@@ -157,8 +154,8 @@ class OverloadResolutionTest : ProcessorTestSpec({
             }
         }
     }
-    parserTest("Test varargs overload") {
 
+    parserTestContainer("Test varargs overload") {
         asIfIn(Overloads::class.java)
 
         inContext(ExpressionParsingCtx) {
@@ -188,12 +185,10 @@ class OverloadResolutionTest : ProcessorTestSpec({
         }
     }
 
-    parserTest("Test varargs overload with array") {
-
+    parserTestContainer("Test varargs overload with array") {
         asIfIn(Overloads::class.java)
 
         inContext(ExpressionParsingCtx) {
-
             "of($t_SomeEnum_name.FOO, new $t_SomeEnum_name[]{$t_SomeEnum_name.BAR,  $t_SomeEnum_name.BAR})" should parseAs {
                 methodCall("of") {
                     // SomeEnum
@@ -242,9 +237,8 @@ class OverloadResolutionTest : ProcessorTestSpec({
     }
 
     parserTest("Test overload resolution with unchecked conversion") {
-
-
-        val acu = parser.parse("""
+        val acu = parser.parse(
+           """
            class Scratch {
                 int foo(Class<?> k) {} // this is selected
                 void foo(Object o) {}
@@ -254,7 +248,8 @@ class OverloadResolutionTest : ProcessorTestSpec({
                 }
            }
 
-        """.trimIndent())
+           """.trimIndent()
+        )
 
         val (fooClass) = acu.descendants(ASTMethodDeclaration::class.java).toList()
 
@@ -267,7 +262,7 @@ class OverloadResolutionTest : ProcessorTestSpec({
 
                 argList {
                     variableAccess("k") {
-                        it shouldHaveType with (it.typeDsl) { Class::class.raw }
+                        it shouldHaveType with(it.typeDsl) { Class::class.raw }
                     }
                 }
             }
@@ -276,17 +271,17 @@ class OverloadResolutionTest : ProcessorTestSpec({
 
     parserTest("Test primitive conversion in loose phase") {
         inContext(ExpressionParsingCtx) {
-
             val acu = parser.parse(
-            """
+                """
                 class Foo {
                     void foo(long i) {
                         foo('c');
                     }
-                    
+
                     void foo(String other) {}
                 }
-            """)
+                """
+            )
 
             val fooM = acu.descendants(ASTMethodDeclaration::class.java).firstOrThrow()
 
@@ -303,14 +298,77 @@ class OverloadResolutionTest : ProcessorTestSpec({
                     }
                 }
             }
-
         }
     }
 
+    parserTest("#4557 two overloads with boxed types") {
+        val acu = parser.parse(
+            """
+            package p;
+
+            import static p.Static.assertThat;
+
+            class Klass {
+                static {
+                    // This is assertThat(Integer)
+                    // Integer is more specific than Long because int -> Integer
+                    // only involves boxing, while int -> Long needs widening and
+                    // then boxing.
+                    assertThat(1);
+                }
+            }
+            class Static {
+
+                public static Object assertThat(Integer actual) {
+                    return null;
+                }
+
+                public static Object assertThat(Long actual) {
+                    return null;
+                }
+
+            }
+            """.trimIndent()
+        )
+
+        val fooM = acu.methodDeclarations().firstOrThrow()
+        val call = acu.firstMethodCall()
+
+        call.overloadSelectionInfo.should {
+            it.isFailed shouldBe false
+            it.methodType.symbol shouldBe fooM.symbol
+        }
+    }
+
+    parserTest("Two overloads with boxed types, widening required, ambiguous") {
+        val (acu, spy) = parser.parseWithTypeInferenceSpy(
+            """
+            class Static {
+                static {
+                    // ambiguous: 1 is int, and neither Double nor Long is more
+                    // specific because they both involve boxing + widening
+                    assertThat(1);
+                }
+
+                public static Object assertThat(Double actual) {
+                    return null;
+                }
+
+                public static Object assertThat(Long actual) {
+                    return null;
+                }
+
+            }
+            """.trimIndent()
+        )
+
+        val call = acu.firstMethodCall()
+        spy.shouldBeAmbiguous(call)
+    }
 
     parserTest("Overload selection must identify fallbacks if any") {
-
-        val acu = parser.parse("""
+        val acu = parser.parse(
+            """
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.lang.reflect.Type;
@@ -331,7 +389,8 @@ class Scratch {
                   .collect(Collectors.joining(", ")));
     }
 }
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         val fooCall = acu.descendants(ASTMethodCall::class.java).firstOrThrow()
 
@@ -356,7 +415,6 @@ class Scratch {
                                 }
                             }
 
-
                             argList {
                                 methodRef("getTypeName") {
                                     with(it.typeDsl) {
@@ -368,13 +426,10 @@ class Scratch {
                             }
                         }
 
-
                         argList(1)
                     }
                 }
             }
         }
     }
-
-
 })

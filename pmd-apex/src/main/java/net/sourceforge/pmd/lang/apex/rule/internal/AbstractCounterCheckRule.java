@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.apex.rule.internal;
 
-import static net.sourceforge.pmd.properties.constraints.NumericConstraints.positive;
+import static net.sourceforge.pmd.properties.NumericConstraints.positive;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -48,9 +48,8 @@ public abstract class AbstractCounterCheckRule<T extends ApexNode<?>> extends Ab
 
     protected abstract int defaultReportLevel();
 
-
-    protected Object[] getViolationParameters(T node, int metric) {
-        return new Object[] {metric};
+    protected Object[] getViolationParameters(T node, int metric, int limit) {
+        return new Object[] {metric, limit};
     }
 
 
@@ -63,15 +62,16 @@ public abstract class AbstractCounterCheckRule<T extends ApexNode<?>> extends Ab
 
 
     @Override
-    public Object visit(ApexNode<?> node, Object data) {
+    public Object visitApexNode(ApexNode<?> node, Object data) {
         @SuppressWarnings("unchecked")
         T t = (T) node;
         // since we only visit this node, it's ok
 
         if (!isIgnored(t)) {
             int metric = getMetric(t);
-            if (metric >= getProperty(reportLevel)) {
-                addViolation(data, node, getViolationParameters(t, metric));
+            int limit = getProperty(reportLevel);
+            if (metric >= limit) {
+                asCtx(data).addViolation(node, getViolationParameters(t, metric, limit));
             }
         }
 

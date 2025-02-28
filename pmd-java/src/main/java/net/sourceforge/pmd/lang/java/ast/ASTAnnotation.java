@@ -9,7 +9,6 @@ import java.util.Iterator;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.annotation.DeprecatedUntil700;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 
@@ -18,11 +17,11 @@ import net.sourceforge.pmd.lang.java.types.JClassType;
  *
  * <pre class="grammar">
  *
- * Annotation ::= "@" {@link ASTClassOrInterfaceType ClassName} {@link ASTAnnotationMemberList AnnotationMemberList}?
+ * Annotation ::= "@" {@link ASTClassType ClassName} {@link ASTAnnotationMemberList AnnotationMemberList}?
  *
  * </pre>
  */
-public final class ASTAnnotation extends AbstractJavaTypeNode implements TypeNode, ASTMemberValue, Iterable<ASTMemberValuePair> {
+public final class ASTAnnotation extends AbstractJavaTypeNode implements ASTMemberValue, Iterable<ASTMemberValuePair> {
 
     ASTAnnotation(int id) {
         super(id);
@@ -32,25 +31,13 @@ public final class ASTAnnotation extends AbstractJavaTypeNode implements TypeNod
     /**
      * Returns the node that represents the name of the annotation.
      */
-    public ASTClassOrInterfaceType getTypeNode() {
-        return (ASTClassOrInterfaceType) getChild(0);
+    public ASTClassType getTypeNode() {
+        return (ASTClassType) getChild(0);
     }
 
     @Override
     public @NonNull JClassType getTypeMirror() {
         return (JClassType) super.getTypeMirror();
-    }
-
-    /**
-     * Returns the name of the annotation as it is used,
-     * eg {@code java.lang.Override} or {@code Override}.
-     *
-     * @deprecated Use {@link #getTypeMirror()} instead
-     */
-    @Deprecated
-    @DeprecatedUntil700
-    public String getAnnotationName() {
-        return getTypeNode().getText().toString();
     }
 
     /**
@@ -94,8 +81,29 @@ public final class ASTAnnotation extends AbstractJavaTypeNode implements TypeNod
      */
     public NodeStream<ASTMemberValue> getFlatValue(String attrName) {
         return NodeStream.of(getAttribute(attrName))
-                         .flatMap(v -> v instanceof ASTMemberValueArrayInitializer ? v.children(ASTMemberValue.class)
-                                                                                   : NodeStream.of(v));
+                         .flatMap(ASTAnnotation::flatValue);
+    }
+
+    /**
+     * Return expression values for all attributes.
+     * This may flatten an array initializer. For example, for the attribute
+     * named "value":
+     * <pre>{@code
+     * - @SuppressWarnings -> returns empty node stream
+     * - @SuppressWarning("fallthrough") -> returns ["fallthrough"]
+     * - @SuppressWarning(value={"fallthrough"}) -> returns ["fallthrough"]
+     * - @SuppressWarning({"fallthrough", "rawtypes"}) -> returns ["fallthrough", "rawtypes"]
+     * }</pre>
+     */
+    public NodeStream<ASTMemberValue> getFlatValues() {
+        return getMembers().map(ASTMemberValuePair::getValue)
+                           .flatMap(ASTAnnotation::flatValue);
+    }
+
+    private static NodeStream<ASTMemberValue> flatValue(ASTMemberValue value) {
+        return value instanceof ASTMemberValueArrayInitializer
+            ? value.children(ASTMemberValue.class)
+            : NodeStream.of(value);
     }
 
     /**

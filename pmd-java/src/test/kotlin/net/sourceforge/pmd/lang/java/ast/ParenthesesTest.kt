@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.java.ast
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.INT
 
 /**
@@ -13,12 +13,8 @@ import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.INT
  * @since 7.0.0
  */
 class ParenthesesTest : ParserTestSpec({
-
-
-    parserTest("Test parens") {
-
+    parserTestContainer("Test parens") {
         inContext(StatementParsingCtx) {
-
             "int a = 3;" should parseAs {
                 localVarDecl {
                     localVarModifiers { }
@@ -73,7 +69,7 @@ class ParenthesesTest : ParserTestSpec({
                                 it::getParenthesisDepth shouldBe 2
                                 it::isParenthesized shouldBe true
 
-                                it.tokenList().map { it.image } shouldBe listOf("(", "(", "a", ")", ")")
+                                it.tokenList().map { token -> token.image } shouldBe listOf("(", "(", "a", ")", ")")
                             }
                         }
                     }
@@ -95,7 +91,7 @@ class ParenthesesTest : ParserTestSpec({
                                 it::getParenthesisDepth shouldBe 1
                                 it::isParenthesized shouldBe true
 
-                                it.tokenList().map { it.image } shouldBe listOf("(", "a", ")")
+                                it.tokenList().map { token -> token.image } shouldBe listOf("(", "a", ")")
                             }
                         }
                     }
@@ -161,15 +157,12 @@ class ParenthesesTest : ParserTestSpec({
         }
     }
 
-
-    parserTest("Test expressions with complicated LHS") {
-
+    parserTestContainer("Test expressions with complicated LHS") {
         // the qualifier here is not an ASTPrimaryExpression,
         // since parentheses are flattened.
         // The API should reflect that
 
         inContext(ExpressionParsingCtx) {
-
             "((String) obj).length()" should parseAs {
                 methodCall("length") {
 
@@ -204,7 +197,6 @@ class ParenthesesTest : ParserTestSpec({
 
             "(switch (obj) { case a -> 1; default -> 2; }).length()" should parseAs {
                 methodCall("length") {
-
                     it::getQualifier shouldBe parenthesized {
                         switchExpr()
                     }
@@ -214,6 +206,4 @@ class ParenthesesTest : ParserTestSpec({
             }
         }
     }
-
-
 })

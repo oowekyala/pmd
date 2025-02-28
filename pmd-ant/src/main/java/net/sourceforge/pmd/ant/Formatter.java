@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,22 +22,34 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Parameter;
 
-import net.sourceforge.pmd.Report;
-import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.renderers.RendererFactory;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
+import net.sourceforge.pmd.reporting.FileNameRenderer;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
+import net.sourceforge.pmd.reporting.ListenerInitializer;
 
-@InternalApi
+/**
+ * Part of PMD Ant task configuration. Setters of this class are interpreted by Ant as properties
+ * settable in the XML. This is therefore published API.
+ *
+ * <p>This class is used to configure a specific {@link Renderer} for outputting the violations. This is called
+ * a formatter in PMD Ant task configuration and might look like this:
+ *
+ * <pre>{@code
+ * <pmd>
+ *   <formatter type="html" toFile="${build}/pmd_report.html"/>
+ * </pmd>
+ * }</pre>
+ *
+ * @see PMDTask#addFormatter(Formatter)
+ */
 public class Formatter {
 
     private File toFile;
@@ -65,15 +80,7 @@ public class Formatter {
         this.parameters.add(parameter);
     }
 
-    @Deprecated
-    @InternalApi
-    public Renderer getRenderer() {
-        return renderer;
-    }
-
-    @Deprecated
-    @InternalApi
-    public void start(String baseDir) {
+    private void start(String baseDir) {
 
         Properties properties = createProperties();
 
@@ -119,25 +126,7 @@ public class Formatter {
         }
     }
 
-    @Deprecated
-    @InternalApi
-    public void end(Report errorReport) {
-        try {
-            renderer.renderFileReport(errorReport);
-            renderer.end();
-            if (toConsole) {
-                writer.flush();
-            } else {
-                writer.close();
-            }
-        } catch (IOException ioe) {
-            throw new BuildException(ioe.getMessage(), ioe);
-        }
-    }
-
-    @Deprecated
-    @InternalApi
-    public boolean isNoOutputSupplied() {
+    boolean isNoOutputSupplied() {
         return toFile == null && !toConsole;
     }
 
@@ -161,7 +150,6 @@ public class Formatter {
         return sb.toString();
     }
 
-    // FIXME - hm, what about this consoleRenderer thing... need a test for this
     Renderer createRenderer() {
         if (StringUtils.isBlank(type)) {
             throw new BuildException(unknownRendererMessage("<unspecified>"));
@@ -207,51 +195,92 @@ public class Formatter {
 
     private static String getConsoleEncoding() {
         Console console = System.console();
-        // in case of pipe or redirect, no interactive console.
+        // in case of pipe or redirect, no interactive console, we get null
         if (console != null) {
+            // Since Java 22, this returns a console even for redirected streams.
+            // In that case, we need to check Console.isTerminal()
+            // https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/io/Console.html#isTerminal()
+            // See: JLine As The Default Console Provider (JDK-8308591)
             try {
-                Object res = FieldUtils.readDeclaredField(console, "cs", true);
-                if (res instanceof Charset) {
-                    return ((Charset) res).name();
+                Method method = Console.class.getMethod("isTerminal");
+                Object isTerminal = method.invoke(console);
+                if (isTerminal instanceof Boolean && !(Boolean) isTerminal) {
+                    // stop here, we don't have an interactive console.
+                    return null;
+                }
+            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException ignored) {
+                // fall-through - we use a Java Runtime < 22.
+            }
+
+            // Maybe this is Java17+? Then there will be a public method charset()
+            // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Console.html#charset()
+            try {
+                Method method = Console.class.getMethod("charset");
+                Object charset = method.invoke(console);
+                if (charset instanceof Charset) {
+                    return ((Charset) charset).name();
+                }
+            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException ignored) {
+                // fall-through
+            }
+
+            {
+                // try to use the system property "sun.jnu.encoding", which is the platform encoding.
+                // this property is not specified and might not always be available, but it is for
+                // openjdk 11: https://github.com/openjdk/jdk11u/blob/cee8535a9d3de8558b4b5028d68e397e508bef71/src/java.base/share/native/libjava/System.c#L384
+                // if it exists, we use it - this avoids illegal reflective access below.
+                String jnuEncoding = System.getProperty("sun.jnu.encoding");
+                if (jnuEncoding != null) {
+                    return jnuEncoding;
+                }
+            }
+
+            // the following parts are accessing private/protected fields via reflection
+            // this should work with Java 8 and 11. With Java 11, you'll see warnings abouts
+            // illegal reflective access, see #1860. However, the access still works.
+
+            // Fall-Back 1: private field "cs" in java.io.Console
+            try {
+                Field field = Console.class.getDeclaredField("cs");
+                field.setAccessible(true);
+                Object csField = field.get(console);
+                if (csField instanceof Charset) {
+                    return ((Charset) csField).name();
                 }
             } catch (IllegalArgumentException | ReflectiveOperationException ignored) {
                 // fall-through
             }
 
-            // Maybe this is Java17? Then there will be
-            // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Console.html#charset()
-            // instead of the field "cs".
+            // Fall-Back 2: private native method "encoding()" in java.io.Console
             try {
-                Charset charset = (Charset) MethodUtils.invokeMethod(console, "charset");
-                return charset.name();
-            } catch (IllegalArgumentException | ReflectiveOperationException ignored) {
+                Method method = Console.class.getDeclaredMethod("encoding");
+                method.setAccessible(true);
+                Object encoding = method.invoke(console);
+                if (encoding instanceof String) {
+                    return (String) encoding;
+                }
+            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException ignored) {
                 // fall-through
             }
-            return getNativeConsoleEncoding();
         }
+        // we couldn't determine the correct platform console encoding
         return null;
     }
 
-    private static String getNativeConsoleEncoding() {
-        try {
-            Object res = MethodUtils.invokeStaticMethod(Console.class, "encoding");
-            if (res instanceof String) {
-                return (String) res;
-            }
-        } catch (IllegalArgumentException | ReflectiveOperationException ignored) {
-            // fall-through
-        }
-        return null;
-    }
-
-    @Deprecated
-    @InternalApi
-    public GlobalAnalysisListener newListener(Project project) throws IOException {
+    GlobalAnalysisListener newListener(Project project) throws IOException {
         start(project.getBaseDir().toString());
-        Renderer renderer = getRenderer();
-
         return new GlobalAnalysisListener() {
             final GlobalAnalysisListener listener = renderer.newListener();
+
+            @Override
+            public ListenerInitializer initializer() {
+                return new ListenerInitializer() {
+                    @Override
+                    public void setFileNameRenderer(FileNameRenderer fileNameRenderer) {
+                        renderer.setFileNameRenderer(fileNameRenderer);
+                    }
+                };
+            }
 
             @Override
             public FileAnalysisListener startFileAnalysis(TextFile file) {

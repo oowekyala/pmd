@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.java.types.TypeVarImpl.CapturedTypeVar;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar;
 import net.sourceforge.pmd.util.CollectionUtil;
 
@@ -147,6 +148,7 @@ public final class TypeConversion {
         return t instanceof JClassType ? capture((JClassType) t) : t;
     }
 
+
     /**
      * Perform capture conversion on the type t. This replaces wildcards
      * with fresh type variables. Capture conversion is not applied recursively.
@@ -200,7 +202,7 @@ public final class TypeConversion {
 
             if (arg instanceof JWildcardType) {
                 JWildcardType w = (JWildcardType) arg;        // Ti alias
-                TypeVarImpl.CapturedTypeVar freshVar = (TypeVarImpl.CapturedTypeVar) fresh; // Si alias
+                CapturedTypeVar freshVar = (CapturedTypeVar) fresh; // Si alias
 
                 JTypeMirror prevUpper = wellFormed ? typeParams.get(i).getUpperBound() : ts.OBJECT; // Ui
                 JTypeMirror substituted = TypeOps.subst(prevUpper, subst);

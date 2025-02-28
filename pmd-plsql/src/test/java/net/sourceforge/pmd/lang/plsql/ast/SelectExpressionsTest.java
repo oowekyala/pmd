@@ -16,16 +16,11 @@ import net.sourceforge.pmd.lang.plsql.AbstractPLSQLParserTst;
 class SelectExpressionsTest extends AbstractPLSQLParserTst {
 
     @Test
-    void parseSelectExpression() {
-        plsql.parseResource("SelectExpressions.pls");
-    }
-
-    @Test
     void parseSelectSimpleExpression() {
         ASTInput input = plsql.parseResource("SelectSimpleExpression.pls");
         assertNotNull(input);
 
-        List<ASTSimpleExpression> simpleExpressions = input.findDescendantsOfType(ASTSimpleExpression.class);
+        List<ASTSimpleExpression> simpleExpressions = input.descendants(ASTSimpleExpression.class).toList();
         assertEquals(1, simpleExpressions.size());
         ASTSimpleExpression exp = simpleExpressions.get(0);
         assertEquals("e.first_name", exp.getImage());

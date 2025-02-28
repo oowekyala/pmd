@@ -176,7 +176,7 @@ class A extends B {
     </test-code>
 
     <test-code>
-        <description>False positive with correct double checked pattern</description>
+        <description>False positive with correct double-checked pattern #4483</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
 public class Foo {
@@ -193,5 +193,23 @@ public class Foo {
     }
 }
         ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] A false positive about the rule NonThreadSafeSingleton #4043</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+class Tester {
+    private static List buz;
+    public static List bar() {
+        if (true) { // the first warning (wrong)
+            if (buz == null) // the second warning (correct)
+                buz = new ArrayList();
+        }
+        return buz;
+    }
+}
+]]></code>
     </test-code>
 </test-data>

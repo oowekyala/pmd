@@ -6,6 +6,9 @@ package net.sourceforge.pmd.lang.java.rule.errorprone;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Period;
+import java.time.temporal.Temporal;
 
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpressionStatement;
@@ -27,17 +30,22 @@ public class UselessOperationOnImmutableRule extends AbstractJavaRulechainRule {
     @Override
     public Object visit(ASTMethodCall node, Object data) {
         ASTExpression qualifier = node.getQualifier();
-        if (node.getParent() instanceof ASTExpressionStatement && qualifier != null) {
+        boolean returnsVoid = node.getTypeMirror().isVoid();
+        if (node.getParent() instanceof ASTExpressionStatement && qualifier != null && !returnsVoid) {
 
             // these types are immutable, so any method of those whose
             // result is ignored is a violation
             if (TypeTestUtil.isA(String.class, qualifier)) {
                 if (!"getChars".equals(node.getMethodName())) {
-                    addViolation(data, node);
+                    asCtx(data).addViolation(node);
                 }
             } else if (TypeTestUtil.isA(BigDecimal.class, qualifier)
                 || TypeTestUtil.isA(BigInteger.class, qualifier)) {
-                addViolation(data, node);
+                asCtx(data).addViolation(node);
+            } else if (TypeTestUtil.isA(Temporal.class, qualifier)
+                || TypeTestUtil.isA(Duration.class, qualifier)
+                || TypeTestUtil.isA(Period.class, qualifier)) {
+                asCtx(data).addViolation(node);
             }
         }
         return null;

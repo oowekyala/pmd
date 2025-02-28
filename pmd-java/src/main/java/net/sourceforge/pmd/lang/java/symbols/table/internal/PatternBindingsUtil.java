@@ -8,14 +8,14 @@ import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTGuardedPattern;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTPattern;
 import net.sourceforge.pmd.lang.java.ast.ASTPatternExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTRecordPattern;
 import net.sourceforge.pmd.lang.java.ast.ASTTypePattern;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTUnnamedPattern;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.BinaryOp;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
 import net.sourceforge.pmd.util.AssertionUtil;
@@ -90,18 +90,16 @@ final class PatternBindingsUtil {
 
     static BindSet bindersOfPattern(ASTPattern pattern) {
         if (pattern instanceof ASTTypePattern) {
-            return BindSet.whenTrue(HashTreePSet.singleton(((ASTTypePattern) pattern).getVarId()));
-        } else if (pattern instanceof ASTRecordPattern) {
-            // record pattern might not bind a variable for the whole record...
-            ASTVariableDeclaratorId varId = ((ASTRecordPattern) pattern).getVarId();
-            if (varId == null) {
-                return BindSet.whenTrue(BindSet.noBindings());
+            if (!((ASTTypePattern) pattern).getVarId().isUnnamed()) {
+                return BindSet.whenTrue(HashTreePSet.singleton(((ASTTypePattern) pattern).getVarId()));
             }
-            return BindSet.whenTrue(HashTreePSet.singleton(varId));
-        } else if (pattern instanceof ASTGuardedPattern) {
-            BindSet patternBindings = bindersOfPattern(((ASTGuardedPattern) pattern).getPattern());
-            BindSet guardBindings = bindersOfExpr(((ASTGuardedPattern) pattern).getGuard());
-            return patternBindings.union(guardBindings);
+            return BindSet.EMPTY;
+        } else if (pattern instanceof ASTRecordPattern) {
+            return ((ASTRecordPattern) pattern)
+                .getComponentPatterns().toStream()
+                .reduce(BindSet.EMPTY, (bs, pat) -> bs.union(bindersOfPattern(pat)));
+        } else if (pattern instanceof ASTUnnamedPattern) {
+            return BindSet.EMPTY;
         } else {
             throw AssertionUtil.shouldNotReachHere("no other instances of pattern should exist: " + pattern);
         }
@@ -117,8 +115,8 @@ final class PatternBindingsUtil {
         static final BindSet EMPTY = new BindSet(HashTreePSet.empty(),
                                                  HashTreePSet.empty());
 
-        private final PSet<ASTVariableDeclaratorId> trueBindings;
-        private final PSet<ASTVariableDeclaratorId> falseBindings;
+        private final PSet<ASTVariableId> trueBindings;
+        private final PSet<ASTVariableId> falseBindings;
 
         public BindSet union(BindSet bindSet) {
             if (this.isEmpty()) {
@@ -132,21 +130,21 @@ final class PatternBindingsUtil {
             );
         }
 
-        static PSet<ASTVariableDeclaratorId> noBindings() {
+        static PSet<ASTVariableId> noBindings() {
             return HashTreePSet.empty();
         }
 
-        BindSet(PSet<ASTVariableDeclaratorId> trueBindings,
-                PSet<ASTVariableDeclaratorId> falseBindings) {
+        BindSet(PSet<ASTVariableId> trueBindings,
+                PSet<ASTVariableId> falseBindings) {
             this.trueBindings = trueBindings;
             this.falseBindings = falseBindings;
         }
 
-        public PSet<ASTVariableDeclaratorId> getTrueBindings() {
+        public PSet<ASTVariableId> getTrueBindings() {
             return trueBindings;
         }
 
-        public PSet<ASTVariableDeclaratorId> getFalseBindings() {
+        public PSet<ASTVariableId> getFalseBindings() {
             return falseBindings;
         }
 
@@ -158,15 +156,15 @@ final class PatternBindingsUtil {
             return this == EMPTY;
         }
 
-        BindSet addBinding(ASTVariableDeclaratorId e) {
+        BindSet addBinding(ASTVariableId e) {
             return new BindSet(trueBindings.plus(e), falseBindings);
         }
 
-        static BindSet whenTrue(PSet<ASTVariableDeclaratorId> bindings) {
+        static BindSet whenTrue(PSet<ASTVariableId> bindings) {
             return new BindSet(bindings, HashTreePSet.empty());
         }
 
-        static BindSet whenFalse(PSet<ASTVariableDeclaratorId> bindings) {
+        static BindSet whenFalse(PSet<ASTVariableId> bindings) {
             return new BindSet(HashTreePSet.empty(), bindings);
         }
 

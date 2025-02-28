@@ -5,6 +5,7 @@ keywords: [formats, renderers]
 summary: "Overview of the built-in report formats for CPD"
 permalink: pmd_userdocs_cpd_report_formats.html
 author: Andreas Dangel <andreas.dangel@pmd-code.org>
+last_updated: June 2024 (7.3.0)
 ---
 
 ## Overview
@@ -95,12 +96,21 @@ Starting at line 110 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/
 ## xml
 
 This format uses XML to output the duplications in a more structured format.
+The XML format can then further be processed using XSLT transformations. See [section xslt](#xslt) for examples.
+
+Since PMD 7.3.0 any recoverable errors are also reported as additional elements `error` to help investigate
+any errors occurred during analysis.
 
 Example:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<pmd-cpd>
+<pmd-cpd xmlns="https://pmd-code.org/schema/cpd-report"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         pmdVersion="7.3.0"
+         timestamp="2024-06-23T09:00:00+02:00"
+         version="1.0.0"
+         xsi:schemaLocation="https://pmd-code.org/schema/cpd-report https://pmd.github.io/schema/cpd-report_1_0_0.xsd">
    <file path="/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java" totalNumberOfTokens="523"/>
    <file path="/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java" totalNumberOfTokens="120"/>
    <duplication lines="33" tokens="239">
@@ -166,6 +176,32 @@ Example:
         Assert.assertEquals(2, query.nodeNameToXPaths.size());
         Assert.assertEquals("self::node()[(attribute::Test1 = \"false\")][(attribute::Test2 = \"true\")]", query.nodeNameToXPaths.get("dummyNode").get(0).toString());]]></codefragment>
    </duplication>
+   <error filename="/home/pmd/source/pmd-cli/src/test/resources/net/sourceforge/pmd/cli/cpd/badandgood/BadFile.java"
+          msg="LexException: Lexical error in file '/home/pmd/source/pmd-cli/src/test/resources/net/sourceforge/pmd/cli/cpd/badandgood/BadFile.java' at line 4, column 14: &#34;\ufffd&#34; (65533), after : &#34;&#34; (in lexical state DEFAULT)">net.sourceforge.pmd.lang.ast.LexException: Lexical error in file '/home/pmd/source/pmd-cli/src/test/resources/net/sourceforge/pmd/cli/cpd/badandgood/BadFile.java' at line 4, column 14: "\ufffd" (65533), after : "" (in lexical state DEFAULT)
+        at net.sourceforge.pmd.lang.ast.InternalApiBridge.newLexException(InternalApiBridge.java:25)
+        at net.sourceforge.pmd.lang.java.ast.JavaParserImplTokenManager.getNextToken(JavaParserImplTokenManager.java:2698)
+        at net.sourceforge.pmd.lang.java.ast.JavaParserImplTokenManager.getNextToken(JavaParserImplTokenManager.java:18)
+        at net.sourceforge.pmd.cpd.impl.BaseTokenFilter.getNextToken(BaseTokenFilter.java:44)
+        at net.sourceforge.pmd.cpd.impl.CpdLexerBase.tokenize(CpdLexerBase.java:40)
+        at net.sourceforge.pmd.cpd.CpdLexer.tokenize(CpdLexer.java:29)
+        at net.sourceforge.pmd.cpd.CpdAnalysis.doTokenize(CpdAnalysis.java:146)
+        at net.sourceforge.pmd.cpd.CpdAnalysis.performAnalysis(CpdAnalysis.java:173)
+        at net.sourceforge.pmd.cli.commands.internal.CpdCommand.doExecute(CpdCommand.java:134)
+        at net.sourceforge.pmd.cli.commands.internal.CpdCommand.doExecute(CpdCommand.java:29)
+        at net.sourceforge.pmd.cli.internal.PmdRootLogger.executeInLoggingContext(PmdRootLogger.java:55)
+        at net.sourceforge.pmd.cli.commands.internal.AbstractAnalysisPmdSubcommand.execute(AbstractAnalysisPmdSubcommand.java:111)
+        at net.sourceforge.pmd.cli.commands.internal.AbstractPmdSubcommand.call(AbstractPmdSubcommand.java:30)
+        at net.sourceforge.pmd.cli.commands.internal.AbstractPmdSubcommand.call(AbstractPmdSubcommand.java:16)
+        at picocli.CommandLine.executeUserObject(CommandLine.java:2041)
+        at picocli.CommandLine.access$1500(CommandLine.java:148)
+        at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2461)
+        at picocli.CommandLine$RunLast.handle(CommandLine.java:2453)
+        at picocli.CommandLine$RunLast.handle(CommandLine.java:2415)
+        at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2273)
+        at picocli.CommandLine$RunLast.execute(CommandLine.java:2417)
+        at picocli.CommandLine.execute(CommandLine.java:2170)
+        at net.sourceforge.pmd.cli.PmdCli.main(PmdCli.java:24)
+   </error>
 </pmd-cpd>
 ```
 
@@ -220,3 +256,41 @@ Example:
 /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java(88): Between lines 88 and 104
 /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java(110): Between lines 110 and 126
 ```
+
+## xslt
+
+This is not a direct report format. But you can use `xml` to generate an XML report and then use one of the following
+XSLT stylesheets to convert the report into html. Or you can write your own stylesheet.
+
+You can either use [Ant's XSLT task](https://ant.apache.org/manual/Tasks/style.html) or use any other (CLI) xslt processor,
+e.g. `xalan` (see <https://xalan.apache.org/>).
+
+### cpdhtml.xslt
+
+This stylesheet is available in the sources or from GitHub at: <https://raw.githubusercontent.com/pmd/pmd/main/pmd-core/etc/xslt/cpdhtml.xslt>.
+
+```shell
+xalan -in cpd-report-sample.xml -xsl cpdhtml.xslt -out cpd-report-sample-cpdhtml.html
+```
+
+[Example](report-examples/cpdhtml.html)
+
+This stylesheet by default only consideres duplications longer than 30 lines. You can change the default value with
+the param `lines`:
+
+```shell
+xalan -in cpd-report-sample.xml -xsl cpdhtml.xslt -out cpd-report-sample-cpdhtml.html -param lines 10
+```
+
+### cpdhtml-v2.xslt
+
+This stylesheet is available in the sources or from GitHub at: <https://raw.githubusercontent.com/pmd/pmd/main/pmd-core/etc/xslt/cpdhtml-v2.xslt>.
+
+```shell
+xalan -in pmd-core-cpd-report.xml -xsl etc/xslt/cpdhtml-v2.xslt -out pmd-core-cpd-report-v2.html
+```
+
+[Example](report-examples/cpdhtml-v2.html)
+
+It requires javascript enabled and uses [Bootstrap](https://getbootstrap.com/),
+[jQuery](https://jquery.com/), and [DataTables](https://datatables.net/). 

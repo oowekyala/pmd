@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
@@ -36,6 +35,7 @@ import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 public class SimplifyBooleanReturnsRule extends AbstractJavaRulechainRule {
 
@@ -139,9 +139,9 @@ public class SimplifyBooleanReturnsRule extends AbstractJavaRulechainRule {
             if (thenTrue) {
                 return "return {condition} || {elseBranch};";
             } else if (thenFalse) {
-                return "return !{condition} || {elseBranch};";
+                return "return !{condition} && {elseBranch};";
             } else if (elseTrue) {
-                return "return !{condition} && {thenBranch};";
+                return "return !{condition} || {thenBranch};";
             } else {
                 return "return {condition} && {thenBranch};";
             }

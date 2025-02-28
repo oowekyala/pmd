@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTList;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.InvocationNode;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
@@ -31,9 +31,17 @@ abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<
 
     private MethodCtDecl ctDecl;
     private List<ExprMirror> args;
+    /**
+     * Some method invocations may appear to be poly expressions,
+     * but they have no context type (for instance because they
+     * are in the initializer of a local with inferred type).
+     * These must be treated as standalone expressions.
+     */
+    protected final boolean mayBePoly;
 
-    BaseInvocMirror(JavaExprMirrors mirrors, T call, @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
+    BaseInvocMirror(JavaExprMirrors mirrors, T call, boolean mustBeStandalone, @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
         super(mirrors, call, parent, subexprMaker);
+        mayBePoly = !mustBeStandalone;
     }
 
     @Override
@@ -50,7 +58,7 @@ abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<
             // check anon class has same type args
             return false;
         } else if (myNode.getParent() instanceof ASTVariableDeclarator) {
-            ASTVariableDeclaratorId varId = ((ASTVariableDeclarator) myNode.getParent()).getVarId();
+            ASTVariableId varId = ((ASTVariableDeclarator) myNode.getParent()).getVarId();
             if (varId.isTypeInferred() && !getInferredType().equals(varId.getTypeMirror())) {
                 return false;
             }
@@ -61,8 +69,13 @@ abstract class BaseInvocMirror<T extends InvocationNode> extends BasePolyMirror<
 
     protected MethodCtDecl getStandaloneCtdecl() {
         MethodCallSite site = factory.infer.newCallSite(this, null);
-        // this is cached for later anyway
-        return factory.infer.getCompileTimeDecl(site);
+        if (mayBePoly) {
+            // this is cached for later anyway
+            return factory.infer.getCompileTimeDecl(site);
+        } else {
+            factory.infer.inferInvocationRecursively(site);
+            return site.getExpr().getCtDecl();
+        }
     }
 
     @Override

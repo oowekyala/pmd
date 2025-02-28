@@ -15,13 +15,14 @@ import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JMethodSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JRecordComponentSymbol;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.JTypeVar;
 import net.sourceforge.pmd.lang.java.types.Substitution;
@@ -105,7 +106,7 @@ public final class ImplicitMemberSymbols {
 
     /** Symbol for the canonical record constructor. */
     public static JConstructorSymbol recordConstructor(JClassSymbol recordSym,
-                                                       List<JFieldSymbol> recordComponents,
+                                                       List<JRecordComponentSymbol> recordComponents,
                                                        boolean isVarargs) {
         assert recordSym.isRecord() : "Not a record symbol " + recordSym;
 
@@ -117,7 +118,7 @@ public final class ImplicitMemberSymbols {
             modifiers,
             CollectionUtil.map(
                 recordComponents,
-                f -> c -> new FakeFormalParamSym(c, f.getSimpleName(), f.tryGetNode(), (ts, sym) -> f.getTypeMirror(Substitution.EMPTY))
+                f -> c -> new FakeFormalParamSym(c, f.getSimpleName(), f.tryGetNode().getVarId(), (ts, sym) -> f.getTypeMirror(Substitution.EMPTY))
             )
         );
     }
@@ -126,7 +127,7 @@ public final class ImplicitMemberSymbols {
      * Symbol for a record component accessor.
      * Only synthesized if it is not explicitly declared.
      */
-    public static JMethodSymbol recordAccessor(JClassSymbol recordSym, JFieldSymbol recordComponent) {
+    public static JMethodSymbol recordAccessor(JClassSymbol recordSym, JRecordComponentSymbol recordComponent) {
         // See https://cr.openjdk.java.net/~gbierman/jep359/jep359-20200115/specs/records-jls.html#jls-8.10.3
 
         assert recordSym.isRecord() : "Not a record symbol " + recordSym;
@@ -290,14 +291,14 @@ public final class ImplicitMemberSymbols {
 
         private final JExecutableSymbol owner;
         private final String name;
-        private final ASTVariableDeclaratorId node;
+        private final ASTVariableId node;
         private final BiFunction<? super TypeSystem, ? super JFormalParamSymbol, ? extends JTypeMirror> type;
 
         private FakeFormalParamSym(JExecutableSymbol owner, String name, BiFunction<? super TypeSystem, ? super JFormalParamSymbol, ? extends JTypeMirror> type) {
             this(owner, name, null, type);
         }
 
-        private FakeFormalParamSym(JExecutableSymbol owner, String name, @Nullable ASTVariableDeclaratorId node, BiFunction<? super TypeSystem, ? super JFormalParamSymbol, ? extends JTypeMirror> type) {
+        private FakeFormalParamSym(JExecutableSymbol owner, String name, @Nullable ASTVariableId node, BiFunction<? super TypeSystem, ? super JFormalParamSymbol, ? extends JTypeMirror> type) {
             this.owner = owner;
             this.name = name;
             this.node = node;
@@ -305,7 +306,7 @@ public final class ImplicitMemberSymbols {
         }
 
         @Override
-        public @Nullable ASTVariableDeclaratorId tryGetNode() {
+        public @Nullable ASTVariableId tryGetNode() {
             return node;
         }
 

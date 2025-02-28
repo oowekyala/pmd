@@ -4,18 +4,14 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Earliest
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Latest
-import net.sourceforge.pmd.lang.java.ast.ExpressionParsingCtx
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind.*
 
 class ASTCastExpressionTest : ParserTestSpec({
-
-    parserTest("Simple cast") {
-
+    parserTestContainer("Simple cast") {
         inContext(ExpressionParsingCtx) {
-
             "(Foo) obj" should parseAs {
                 castExpr {
                     it::getCastType shouldBe classType("Foo")
@@ -34,8 +30,7 @@ class ASTCastExpressionTest : ParserTestSpec({
         }
     }
 
-    parserTest("Nested casts") {
-
+    parserTestContainer("Nested casts") {
         inContext(ExpressionParsingCtx) {
             "(Foo) (int) obj" should parseAs {
                 castExpr {
@@ -49,8 +44,7 @@ class ASTCastExpressionTest : ParserTestSpec({
         }
     }
 
-    parserTest("Test intersection in cast", javaVersions = JavaVersion.J1_8..Latest) {
-
+    parserTestContainer("Test intersection in cast", javaVersions = JavaVersion.J1_8..Latest) {
         inContext(ExpressionParsingCtx) {
             "(@F Foo & Bar) obj" should parseAs {
 
@@ -73,7 +67,6 @@ class ASTCastExpressionTest : ParserTestSpec({
             }
 
             "(@F Foo & @B@C Bar) obj" should parseAs {
-
                 castExpr {
                     it::getCastType shouldBe child<ASTIntersectionType> {
 
@@ -95,10 +88,8 @@ class ASTCastExpressionTest : ParserTestSpec({
         }
     }
 
-    parserTest("Test intersection ambiguity", javaVersions = Earliest..Latest) {
+    parserTestContainer("Test intersection ambiguity", javaVersions = Earliest..Latest) {
         inContext(ExpressionParsingCtx) {
-
-
             "(modifiers & InputEvent.Foo) != 0" should parseAs {
                 infixExpr(BinaryOp.NE) {
                     parenthesized {
@@ -114,7 +105,6 @@ class ASTCastExpressionTest : ParserTestSpec({
                 }
             }
 
-
             "(modifiers) != 0" should parseAs {
                 infixExpr(BinaryOp.NE) {
                     parenthesized {
@@ -124,7 +114,6 @@ class ASTCastExpressionTest : ParserTestSpec({
                     number()
                 }
             }
-
 
             "(modifiers) * 0" should parseAs {
                 infixExpr(BinaryOp.MUL) {
@@ -138,8 +127,6 @@ class ASTCastExpressionTest : ParserTestSpec({
 
         }
     }
-
-
 })
 
 val Annotatable.declaredAnnotationsList: List<ASTAnnotation>

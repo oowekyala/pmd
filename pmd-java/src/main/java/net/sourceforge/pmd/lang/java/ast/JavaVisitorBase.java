@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.AstVisitorBase;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 
@@ -16,11 +17,11 @@ import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr
  * means you can't just return the parameter, unless your visitor has equal
  * parameter and return type. This type signature subsumes many possible
  * signatures. The old one is {@code <Object, Object>}, still implemented
- * by {@link JavaParserVisitor} for backwards compatibility. If you don't
+ * by {@link JavaVisitor} when using raw types for backwards compatibility. If you don't
  * want to return a value, or don't want a parameter, use {@link Void}.
  *
  * <p>Since 7.0.0 we use default methods on the interface, which removes
- * code duplication. However it's still recommended to extend a base class,
+ * code duplication. However, it's still recommended to extend a base class,
  * for forward compatibility.
  */
 public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaVisitor<P, R> {
@@ -29,7 +30,7 @@ public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaV
     // <editor-fold defaultstate="collapsed" desc="Methods/constructors">
 
 
-    public R visitMethodOrCtor(ASTMethodOrConstructorDeclaration node, P data) {
+    public R visitMethodOrCtor(ASTExecutableDeclaration node, P data) {
         return visitJavaNode(node, data);
     }
 
@@ -47,12 +48,12 @@ public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaV
 
     // <editor-fold defaultstate="collapsed" desc="Type declarations">
 
-    public R visitTypeDecl(ASTAnyTypeDeclaration node, P data) {
+    public R visitTypeDecl(ASTTypeDeclaration node, P data) {
         return visitJavaNode(node, data);
     }
 
     @Override
-    public R visit(ASTClassOrInterfaceDeclaration node, P data) {
+    public R visit(ASTClassDeclaration node, P data) {
         return visitTypeDecl(node, data);
     }
 
@@ -73,6 +74,12 @@ public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaV
 
     @Override
     public R visit(ASTAnnotationTypeDeclaration node, P data) {
+        return visitTypeDecl(node, data);
+    }
+
+    @Override
+    @Experimental
+    public R visit(ASTImplicitClassDeclaration node, P data) {
         return visitTypeDecl(node, data);
     }
 
@@ -119,7 +126,7 @@ public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaV
     }
 
     @Override
-    public R visit(ASTClassOrInterfaceType node, P data) {
+    public R visit(ASTClassType node, P data) {
         return visitReferenceType(node, data);
     }
 

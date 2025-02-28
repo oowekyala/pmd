@@ -10,6 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,14 +22,14 @@ import net.sourceforge.pmd.lang.java.BaseParserTest;
 /**
  * @author Clément Fournier
  */
-public class JavaCommentTest extends BaseParserTest {
+class JavaCommentTest extends BaseParserTest {
 
     @Test
-    public void testFilteredLines() {
+    void testFilteredLines() {
         JavaComment comment = parseComment(
             "/**\n"
                 + " * @author Clément Fournier\n"
-                + " *"
+                + " *\n"
                 + " */\n"
         );
 
@@ -37,16 +38,28 @@ public class JavaCommentTest extends BaseParserTest {
     }
 
     @Test
-    public void testFilteredLinesKeepBlankLines() {
+    void testFilteredLinesMarkdown() {
+        JavadocComment comment = new JavadocComment(Arrays.asList(
+                parseComment("///\n"),
+                parseComment("/// @author Clément Fournier\n"),
+                parseComment("///\n")
+        ));
+
+        assertThat(comment.getFilteredLines(),
+                   contains(Chars.wrap("@author Clément Fournier")));
+    }
+
+    @Test
+    void testFilteredLinesKeepBlankLines() {
         JavaComment comment = parseComment(
             "/**\n"
                 + " * @author Clément Fournier\n"
-                + " *"
+                + " *\n"
                 + " */\n"
         );
 
         assertThat(comment.getFilteredLines(true),
-                   contains(Chars.wrap(""), Chars.wrap("@author Clément Fournier"), Chars.wrap("")));
+                   contains(Chars.wrap(""), Chars.wrap("@author Clément Fournier"), Chars.wrap(""), Chars.wrap("")));
     }
 
     JavaComment parseComment(String text) {
@@ -56,7 +69,7 @@ public class JavaCommentTest extends BaseParserTest {
 
 
     @Test
-    public void getLeadingComments() {
+    void getLeadingComments() {
         ASTCompilationUnit parsed = java.parse("/** a */ class Fooo { /** b */ int field; }");
         List<JavadocCommentOwner> docCommentOwners = parsed.descendants(JavadocCommentOwner.class).toList();
 

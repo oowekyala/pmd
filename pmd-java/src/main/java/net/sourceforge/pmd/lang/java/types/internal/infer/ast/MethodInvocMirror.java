@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.types.internal.infer.ast;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -16,27 +17,28 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeExpression;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
-import net.sourceforge.pmd.lang.java.types.TypeConversion;
 import net.sourceforge.pmd.lang.java.types.TypeOps;
+import net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror;
-import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ast.JavaExprMirrors.MirrorMaker;
 
-class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> implements InvocationMirror {
+class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> {
 
 
-    MethodInvocMirror(JavaExprMirrors mirrors, ASTMethodCall call, @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
-        super(mirrors, call, parent, subexprMaker);
+    MethodInvocMirror(JavaExprMirrors mirrors, ASTMethodCall call,
+                      boolean isStandalone,
+                      @Nullable ExprMirror parent, MirrorMaker subexprMaker) {
+        super(mirrors, call, isStandalone, parent, subexprMaker);
     }
 
     @Override
     public @Nullable JTypeMirror getStandaloneType() {
         JMethodSig ctdecl = getStandaloneCtdecl().getMethodType();
-        return isContextDependent(ctdecl) ? null : ctdecl.getReturnType();
+        return mayBePoly && isContextDependent(ctdecl) ? null : ctdecl.getReturnType();
     }
 
     private static boolean isContextDependent(JMethodSig m) {
-        m = m.internalApi().adaptedMethod();
+        m = InternalMethodTypeItf.cast(m).adaptedMethod();
         return m.isGeneric() && TypeOps.mentionsAny(m.getReturnType(), m.getTypeParameters());
     }
 
@@ -51,6 +53,8 @@ class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> implements Invoca
         if (lhs == null) {
             // already filters accessibility
             return myNode.getSymbolTable().methods().resolve(getName());
+        } else if (myNode.getEnclosingType() == null) {
+            return Collections.emptyList();
         } else {
             JTypeMirror lhsType;
             if (lhs instanceof ASTConstructorCall) {
@@ -62,7 +66,7 @@ class MethodInvocMirror extends BaseInvocMirror<ASTMethodCall> implements Invoca
             } else {
                 lhsType = lhs.getTypeMirror(getTypingContext());
             }
-            lhsType = TypeConversion.capture(lhsType);
+            lhsType = TypeOps.getMemberSource(lhsType);
             boolean staticOnly = lhs instanceof ASTTypeExpression;
 
             return TypeOps.getMethodsOf(lhsType, getName(), staticOnly, myNode.getEnclosingType().getSymbol());

@@ -14,12 +14,9 @@ import net.sourceforge.pmd.lang.java.types.*
  * @author Clément Fournier
  */
 class CtorInferenceTest : ProcessorTestSpec({
-
-
     parserTest("Results of diamond invoc and parameterized invoc are identical (normal classes)") {
-
         val acu = parser.parse(
-                """
+            """
             class Gen<T> {
 
                 static {
@@ -28,21 +25,21 @@ class CtorInferenceTest : ProcessorTestSpec({
                     g = new Gen<>(); 
                 }
             }
-            """)
+            """
+        )
 
-        val (t_Gen) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+        val (t_Gen) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
 
         val (paramCall, genCall) = acu.descendants(ASTConstructorCall::class.java).toList()
 
         with(acu.typeDsl) {
-
             listOf(paramCall, genCall).forAll { call ->
 
                 call.methodType.shouldMatchMethod(
-                        named = JConstructorSymbol.CTOR_NAME,
-                        declaredIn = t_Gen[gen.t_String],
-                        withFormals = emptyList(),
-                        returning = t_Gen[gen.t_String]
+                    named = JConstructorSymbol.CTOR_NAME,
+                    declaredIn = t_Gen[gen.t_String],
+                    withFormals = emptyList(),
+                    returning = t_Gen[gen.t_String]
                 ).also {
                     it.typeParameters shouldBe emptyList()
                     it.isGeneric shouldBe false
@@ -52,9 +49,8 @@ class CtorInferenceTest : ProcessorTestSpec({
     }
 
     parserTest("Enum constant ctors") {
-
         val acu = parser.parse(
-                """
+            """
 
             import java.util.function.Function;
             enum E {
@@ -68,10 +64,12 @@ class CtorInferenceTest : ProcessorTestSpec({
                 E(double c) {}
                 E() {}
             }
-            """)
+            """
+        )
 
-        val (t_E) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
-        val (intCtor, doubleCtor, defaultCtor) = acu.descendants(ASTConstructorDeclaration::class.java).toList { it.symbol }
+        val (t_E) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
+        val (intCtor, doubleCtor, defaultCtor) = acu.descendants(ASTConstructorDeclaration::class.java)
+            .toList { it.symbol }
 
         val (a, b, c, d) = acu.descendants(ASTEnumConstant::class.java).toList()
 
@@ -82,27 +80,24 @@ class CtorInferenceTest : ProcessorTestSpec({
             }
 
             c.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_E,
-                    withFormals = listOf(int),
-                    returning = t_E
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_E,
+                withFormals = listOf(int),
+                returning = t_E
             ).also { it.symbol shouldBe intCtor }
 
             d.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_E,
-                    withFormals = listOf(double),
-                    returning = t_E
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_E,
+                withFormals = listOf(double),
+                returning = t_E
             ).also { it.symbol shouldBe doubleCtor }
-
         }
     }
 
-
     parserTest("Generic enum constant ctors") {
-
         val (acu, spy) = parser.parseWithTypeInferenceSpy(
-                """
+            """
 
             import java.util.function.Function;
             enum E {
@@ -113,9 +108,10 @@ class CtorInferenceTest : ProcessorTestSpec({
                 E(double c, double k) {}
                 <T> E(T c, Function<? super T, ? extends T> fun) {}
             }
-            """)
+            """
+        )
 
-        val (t_E) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+        val (t_E) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
         val (_, _, genericCtor) = acu.descendants(ASTConstructorDeclaration::class.java).toList { it.symbol }
 
         val (a) = acu.descendants(ASTEnumConstant::class.java).toList()
@@ -123,43 +119,44 @@ class CtorInferenceTest : ProcessorTestSpec({
         spy.shouldBeOk {
 
             a.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_E,
-                    withFormals = listOf(double.box(), gen.t_Function[`?` `super` double.box(), `?` extends double.box()]),
-                    returning = t_E
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_E,
+                withFormals = listOf(
+                    double.box(),
+                    gen.t_Function[`?` `super` double.box(), `?` extends double.box()]
+                ),
+                returning = t_E
             ).also { it.symbol shouldBe genericCtor }
         }
-
     }
 
     parserTest("Anonymous enum ctor") {
-
         val acu = parser.parse(
-                """
+            """
 
             import java.util.function.Function;
             enum E {
                 A { }
             }
-            """)
+            """
+        )
 
-        val (t_E) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+        val (t_E) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
 
         val (a) = acu.descendants(ASTEnumConstant::class.java).toList()
 
 
         a.methodType.shouldMatchMethod(
-                named = JConstructorSymbol.CTOR_NAME,
-                declaredIn = t_E,
-                withFormals = emptyList(),
-                returning = t_E // not the anonymous type
+            named = JConstructorSymbol.CTOR_NAME,
+            declaredIn = t_E,
+            withFormals = emptyList(),
+            returning = t_E // not the anonymous type
         )
-
     }
-    parserTest("Generic superclass ctor") {
 
+    parserTest("Generic superclass ctor") {
         val acu = parser.parse(
-                """
+            """
 
             class Sup<T> {
                 public Sup(T referent, String cleaner) { }
@@ -171,32 +168,31 @@ class CtorInferenceTest : ProcessorTestSpec({
                 }
             }
 
-            """)
+            """
+        )
 
-        val (t_Sup) = acu.descendants(ASTAnyTypeDeclaration::class.java).toList { it.typeMirror }
+        val (t_Sup) = acu.descendants(ASTTypeDeclaration::class.java).toList { it.typeMirror }
 
         val (supCtor) = acu.descendants(ASTConstructorDeclaration::class.java).toList()
         val (ctor) = acu.descendants(ASTExplicitConstructorInvocation::class.java).toList()
 
 
-        with (ctor.typeDsl) {
+        with(ctor.typeDsl) {
             ctor.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_Sup[ts.STRING],
-                    withFormals = listOf(ts.STRING, ts.STRING),
-                    returning = t_Sup[ts.STRING] // the superclass type
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_Sup[ts.STRING],
+                withFormals = listOf(ts.STRING, ts.STRING),
+                returning = t_Sup[ts.STRING] // the superclass type
             ).also {
                 it.symbol shouldBe supCtor.symbol
                 it.symbol.tryGetNode() shouldBe supCtor
             }
         }
-
     }
 
     parserTest("Qualified superclass ctor") {
-
         val (acu, spy) = parser.parseWithTypeInferenceSpy(
-                """
+            """
 
 
             class Outer {
@@ -213,19 +209,20 @@ class CtorInferenceTest : ProcessorTestSpec({
                 }
             }
 
-            """)
+            """
+        )
 
-        val (t_Outer, t_Inner, t_Scratch) = acu.declaredTypeSignatures()
+        val (t_Outer, t_Inner, _) = acu.declaredTypeSignatures()
 
         val (innerCtor) = acu.ctorDeclarations().toList()
         val (ctor) = acu.descendants(ASTExplicitConstructorInvocation::class.java).toList()
 
         spy.shouldBeOk {
             ctor.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_Outer select t_Inner[ts.STRING],
-                    withFormals = listOf(ts.STRING),
-                    returning = t_Outer select t_Inner[ts.STRING]
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_Outer select t_Inner[ts.STRING],
+                withFormals = listOf(ts.STRING),
+                returning = t_Outer select t_Inner[ts.STRING]
             )
 
             ctor.methodType.let {
@@ -236,9 +233,8 @@ class CtorInferenceTest : ProcessorTestSpec({
     }
 
     parserTest("Qualified generic superclass ctor") {
-
         val (acu, spy) = parser.parseWithTypeInferenceSpy(
-                """
+            """
 
 
             class Outer<O> {
@@ -257,20 +253,21 @@ class CtorInferenceTest : ProcessorTestSpec({
                 }
             }
 
-            """)
+            """
+        )
 
 
-        val (t_Outer, t_Inner, t_Scratch) = acu.declaredTypeSignatures()
+        val (t_Outer, t_Inner, _) = acu.declaredTypeSignatures()
 
         val (innerCtor) = acu.ctorDeclarations().toList()
         val (ctor) = acu.descendants(ASTExplicitConstructorInvocation::class.java).toList()
 
         spy.shouldBeOk {
             ctor.methodType.shouldMatchMethod(
-                    named = JConstructorSymbol.CTOR_NAME,
-                    declaredIn = t_Outer[ts.INT.box()] select t_Inner,
-                    withFormals = listOf(ts.INT.box()),
-                    returning = t_Outer[ts.INT.box()] select t_Inner
+                named = JConstructorSymbol.CTOR_NAME,
+                declaredIn = t_Outer[ts.INT.box()] select t_Inner,
+                withFormals = listOf(ts.INT.box()),
+                returning = t_Outer[ts.INT.box()] select t_Inner
             )
 
             ctor.methodType.let {
@@ -281,13 +278,13 @@ class CtorInferenceTest : ProcessorTestSpec({
     }
 
     parserTest("Unresolved enclosing type for inner class ctor") {
-
         val (acu, spy) = parser.parseWithTypeInferenceSpy(
-                """
+            """
             class Scratch  {{
                     someUnresolvedQualifier().new Inner();
             }}
-            """)
+            """
+        )
 
         val (ctor) = acu.ctorCalls().toList()
 
@@ -307,7 +304,6 @@ class CtorInferenceTest : ProcessorTestSpec({
     }
 
     parserTest("Failed overload resolution of context doesn't let types dangle") {
-
         val (acu, spy) = parser.parseWithTypeInferenceSpy(
             """
 
@@ -334,8 +330,7 @@ class CtorInferenceTest : ProcessorTestSpec({
     }
 
     parserTest("Mapping of type params doesn't fail") {
-
-        val (acu, spy) = parser.parseWithTypeInferenceSpy(
+        val (acu, _) = parser.parseWithTypeInferenceSpy(
             """
 
     class Gen<A,B> {
@@ -358,5 +353,4 @@ class CtorInferenceTest : ProcessorTestSpec({
             ctorCall.methodType.symbol shouldBe ctorSymbol
         }
     }
-
 })

@@ -4,13 +4,18 @@
 
 package net.sourceforge.pmd.lang.apex.ast;
 
-import apex.jorje.semantic.ast.modifier.AnnotationParameter;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-public final class ASTAnnotationParameter extends AbstractApexNode<AnnotationParameter> {
+import com.google.summit.ast.expression.Expression;
+import com.google.summit.ast.expression.LiteralExpression;
+import com.google.summit.ast.modifier.ElementArgument;
+import com.google.summit.ast.modifier.ElementValue;
+
+public final class ASTAnnotationParameter extends AbstractApexNode.Single<ElementArgument> {
     public static final String SEE_ALL_DATA = "seeAllData";
 
-    ASTAnnotationParameter(AnnotationParameter annotationParameter) {
-        super(annotationParameter);
+    ASTAnnotationParameter(ElementArgument elementArgument) {
+        super(elementArgument);
     }
 
 
@@ -20,26 +25,44 @@ public final class ASTAnnotationParameter extends AbstractApexNode<AnnotationPar
     }
 
     public String getName() {
-        if (node.getProperty() != null) {
-            return node.getProperty().getName();
-        }
-        return null;
+        return node.getName().getString();
     }
 
     public String getValue() {
-        if (node.getValue() != null) {
-            return node.getValueAsString();
+        if (node.getValue() instanceof ElementValue.ExpressionValue) {
+            Expression value = ((ElementValue.ExpressionValue) node.getValue()).getValue();
+            if (value instanceof LiteralExpression) {
+                return literalToString((LiteralExpression) value);
+            }
         }
         return null;
     }
 
     public Boolean getBooleanValue() {
-        return node.getBooleanValue();
+        if (node.getValue() instanceof ElementValue.ExpressionValue) {
+            Expression value = ((ElementValue.ExpressionValue) node.getValue()).getValue();
+            if (value instanceof LiteralExpression.BooleanVal) {
+                return ((LiteralExpression.BooleanVal) value).getValue();
+            }
+        }
+        return false;
     }
 
     @Override
-    @Deprecated
     public String getImage() {
         return getValue();
+    }
+
+    /**
+     * Checks whether this annotation parameter has the given name.
+     * The check is done case-insensitive.
+     *
+     * @param name the expected annotation parameter name
+     * @return {@code true} if this parameter has the expected name.
+     * @see #SEE_ALL_DATA
+     * @since 7.4.0
+     */
+    public boolean hasName(@NonNull String name) {
+        return name.equalsIgnoreCase(getName());
     }
 }

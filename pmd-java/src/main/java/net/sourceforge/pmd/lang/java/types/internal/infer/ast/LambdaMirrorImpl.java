@@ -19,8 +19,8 @@ import net.sourceforge.pmd.lang.java.ast.ASTLambdaParameterList;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTThrowStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTType;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
-import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -74,14 +74,23 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
     @Override
     public @Nullable List<JTypeMirror> getExplicitParameterTypes() {
         ASTLambdaParameterList parameters = myNode.getParameters();
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<JTypeMirror> types = parameters.toStream()
-                                            .map(ASTLambdaParameter::getTypeNode)
-                                            .toList(TypeNode::getTypeMirror);
-        return types.isEmpty() ? null : types;
+        if (parameters.toStream().all(ASTLambdaParameter::isTypeInferred)) {
+            return null; // NOPMD ReturnEmptyCollectionRatherThanNull
+        }
+
+        return parameters.toStream()
+                         .toList(e -> {
+                             ASTType typeNode = e.getTypeNode();
+                             if (typeNode == null) {
+                                 // var type
+                                 return factory.ts.UNKNOWN;
+                             }
+                             return typeNode.getTypeMirror();
+                         });
     }
 
     @Override
@@ -91,9 +100,9 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
 
     @Override
     public List<ExprMirror> getResultExpressions() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         if (block == null) {
-            return Collections.singletonList(createSubexpression(myNode.getExpression()));
+            return Collections.singletonList(createSubexpression(myNode.getExpressionBody()));
         } else {
             return block.descendants(ASTReturnStatement.class)
                         .map(ASTReturnStatement::getExpr)
@@ -102,24 +111,24 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
     }
 
     @Override
-    public void updateTypingContext(JMethodSig groundFun) {
+    public void updateTypingContext(List<? extends JTypeMirror> formalTypes) {
         if (!isExplicitlyTyped()) {
             // update bindings
-            setTypingContext(getTypingContext().andThenZip(formalSymbols, groundFun.getFormalParameters()));
+            setTypingContext(getTypingContext().andThenZip(formalSymbols, formalTypes));
         }
     }
 
     @Override
     public boolean isValueCompatible() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         return block == null || isLambdaBodyCompatible(block, false);
     }
 
     @Override
     public boolean isVoidCompatible() {
-        ASTBlock block = myNode.getBlock();
+        ASTBlock block = myNode.getBlockBody();
         if (block == null) {
-            return isExpressionStatement(myNode.getExpression());
+            return isExpressionStatement(myNode.getExpressionBody());
         } else {
             return isLambdaBodyCompatible(block, true);
         }
@@ -149,4 +158,5 @@ class LambdaMirrorImpl extends BaseFunctionalMirror<ASTLambdaExpression> impleme
             || body instanceof ASTUnaryExpression && !((ASTUnaryExpression) body).getOperator().isPure();
 
     }
+
 }

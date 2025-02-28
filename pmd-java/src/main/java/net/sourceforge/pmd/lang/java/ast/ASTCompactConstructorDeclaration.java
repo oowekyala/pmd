@@ -5,6 +5,8 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
+import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
+import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 
 /**
@@ -14,8 +16,6 @@ import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
  *
  * <p>Compact record constructors must be declared "public".
  *
- * TODO make implicit formal parameter node and implement ASTMethodOrConstructorDeclaration.
- *
  * <pre class="grammar">
  *
  * CompactConstructorDeclaration ::=  {@link ASTModifierList Modifiers}
@@ -24,10 +24,29 @@ import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
  *
  * </pre>
  */
-public final class ASTCompactConstructorDeclaration extends AbstractJavaNode implements ASTBodyDeclaration, SymbolDeclaratorNode, AccessNode {
+// TODO make implicit formal parameter node and implement ASTExecutableDeclaration.
+// This might help UnusedAssignmentRule / DataflowPass.ReachingDefsVisitor, see also #4603
+public final class ASTCompactConstructorDeclaration extends AbstractJavaNode implements ASTBodyDeclaration, SymbolDeclaratorNode, ModifierOwner, JavadocCommentOwner {
+
+    private JavaccToken identToken;
 
     ASTCompactConstructorDeclaration(int id) {
         super(id);
+    }
+
+
+    @Override
+    public FileLocation getReportLocation() {
+        return identToken.getReportLocation();
+    }
+
+    void setIdentToken(JavaccToken identToken) {
+        this.identToken = identToken;
+    }
+
+    @Override
+    public String getImage() {
+        return identToken.getImage();
     }
 
     @Override
@@ -36,7 +55,7 @@ public final class ASTCompactConstructorDeclaration extends AbstractJavaNode imp
     }
 
     public ASTBlock getBody() {
-        return getFirstChildOfType(ASTBlock.class);
+        return firstChild(ASTBlock.class);
     }
 
     public ASTCompactConstructorDeclaration getDeclarationNode() {

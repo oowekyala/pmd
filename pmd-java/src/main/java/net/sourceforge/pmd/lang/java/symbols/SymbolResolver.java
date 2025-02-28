@@ -30,6 +30,11 @@ public interface SymbolResolver {
     @Nullable
     JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName);
 
+    /**
+     * @since 7.5.0
+     */
+    @Nullable
+    JModuleSymbol resolveModule(@NonNull String moduleName);
 
     /**
      * Resolves a class symbol from its canonical name. Periods ('.') may
@@ -81,7 +86,27 @@ public interface SymbolResolver {
                 }
                 return null;
             }
+
+            @Override
+            public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+                for (SymbolResolver resolver : stack) {
+                    JModuleSymbol symbol = resolver.resolveModule(moduleName);
+                    if (symbol != null) {
+                        return symbol;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void logStats() {
+                stack.forEach(SymbolResolver::logStats);
+            }
         };
     }
 
+    /**
+     * Called at the end of the analysis in order to log out statistics of the resolved symbols.
+     */
+    void logStats();
 }

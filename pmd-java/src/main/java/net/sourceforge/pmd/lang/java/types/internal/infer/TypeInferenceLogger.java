@@ -5,11 +5,14 @@
 
 package net.sourceforge.pmd.lang.java.types.internal.infer;
 
+import static net.sourceforge.pmd.lang.java.types.internal.InternalMethodTypeItf.cast;
+
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,18 +22,26 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.internal.JavaLanguageProperties;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.TypePrettyPrint;
 import net.sourceforge.pmd.lang.java.types.TypePrettyPrint.TypePrettyPrinter;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.CtorInvocationMirror;
+import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.FunctionalExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror.MethodCtDecl;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
 import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * A strategy to log the execution traces of {@link Infer}.
+ * The default does nothing, so the logger calls can be optimized out
+ * at runtime, while not having to check that logging is enabled at the
+ * call sites.
+ *
+ * <p>To enable logging for the CLI, use the language property ({@link JavaLanguageProperties})
+ * {@code xTypeInferenceLogging}. From tests, see {@code JavaParsingHelper#logTypeInferenceVerbose()}.
  */
 @SuppressWarnings("PMD.UncommentedEmptyMethodBody")
 public interface TypeInferenceLogger {
@@ -59,6 +70,10 @@ public interface TypeInferenceLogger {
 
     default void ctxInitialization(InferenceContext ctx, JMethodSig sig) { }
 
+    default void applicabilityTest(InferenceContext ctx) { }
+
+    default void finishApplicabilityTest() { }
+
     default void startArgsChecks() { }
 
     default void startArg(int i, ExprMirror expr, JTypeMirror formal) { }
@@ -66,6 +81,8 @@ public interface TypeInferenceLogger {
     default void skipArgAsNonPertinent(int i, ExprMirror expr) { }
 
     default void functionalExprNeedsInvocationCtx(JTypeMirror targetT, ExprMirror expr) { }
+
+    default void functionalExprHasUnresolvedTargetType(JTypeMirror targetT, FunctionalExprMirror expr) { }
 
     default void endArg() { }
 
@@ -77,6 +94,8 @@ public interface TypeInferenceLogger {
 
     default void propagateAndAbort(InferenceContext context, InferenceContext parent) { }
 
+    default void contextDependenciesChanged(InferenceContext ctx) { }
+
     // ivar events
 
 
@@ -85,6 +104,8 @@ public interface TypeInferenceLogger {
     default void ivarMerged(InferenceContext ctx, InferenceVar var, InferenceVar delegate) { }
 
     default void ivarInstantiated(InferenceContext ctx, InferenceVar var, JTypeMirror inst) { }
+
+    default void ivarDependencyRegistered(InferenceContext ctx, InferenceVar var, Set<InferenceVar> deps) { }
 
 
     /**
@@ -104,6 +125,13 @@ public interface TypeInferenceLogger {
         return false;
     }
 
+    /**
+     * Return an instance for concurrent use in another thread.
+     * If this is Noop, then return the same instance because it's
+     * thread-safe.
+     */
+    TypeInferenceLogger newInstance();
+
     static TypeInferenceLogger noop() {
         return SimpleLogger.NOOP;
     }
@@ -116,13 +144,20 @@ public interface TypeInferenceLogger {
             public boolean isNoop() {
                 return true;
             }
+
+            @Override
+            public TypeInferenceLogger newInstance() {
+                return this;
+            }
         };
 
 
-        private final PrintStream out;
-        protected static final int LEVEL_INCREMENT = 4;
-        private int level;
+        protected final PrintStream out;
         private String indent;
+        /**
+         * Four spaces.
+         */
+        protected static final String BASE_INDENT = "    ";
 
         protected static final String ANSI_RESET = "\u001B[0m";
         protected static final String ANSI_BLUE = "\u001B[34m";
@@ -161,16 +196,24 @@ public interface TypeInferenceLogger {
 
         public SimpleLogger(PrintStream out) {
             this.out = out;
-            updateLevel(0);
+            this.indent = "";
         }
 
-        protected int getLevel() {
-            return level;
+        protected void addIndentSegment(String segment) {
+            indent += segment;
         }
 
-        protected void updateLevel(int increment) {
-            level += increment;
-            indent = StringUtils.repeat(' ', level);
+        protected void removeIndentSegment(String segment) {
+            assert indent.endsWith(segment) : "mismatched end section!";
+            indent = StringUtils.removeEnd(indent, segment);
+        }
+
+        protected void setIndent(String indent) {
+            this.indent = indent;
+        }
+
+        protected String getIndent() {
+            return indent;
         }
 
         protected void println(String str) {
@@ -180,13 +223,13 @@ public interface TypeInferenceLogger {
 
 
         protected void endSection(String footer) {
-            updateLevel(-LEVEL_INCREMENT);
+            removeIndentSegment(BASE_INDENT);
             println(footer);
         }
 
         protected void startSection(String header) {
             println(header);
-            updateLevel(+LEVEL_INCREMENT);
+            addIndentSegment(BASE_INDENT);
         }
 
         @Override
@@ -264,16 +307,22 @@ public interface TypeInferenceLogger {
         }
 
         @Override
+        public void functionalExprHasUnresolvedTargetType(JTypeMirror targetT, FunctionalExprMirror expr) {
+            println("[WARNING] Target type for functional expression is unresolved: " + targetT);
+            println("Will treat the expression as matching (this may cause future mistakes)");
+        }
+
+        @Override
         public void ambiguityError(MethodCallSite site, @Nullable MethodCtDecl selected, List<MethodCtDecl> methods) {
             println("");
             printExpr(site.getExpr());
             startSection("[WARNING] Ambiguity error: all methods are maximally specific");
             for (MethodCtDecl m : methods) {
-                println(color(m.getMethodType().internalApi().originalMethod(), ANSI_RED));
+                println(color(cast(m.getMethodType()).originalMethod(), ANSI_RED));
             }
 
             if (selected != null) {
-                endSection("Will select " + color(selected.getMethodType().internalApi().originalMethod(), ANSI_BLUE));
+                endSection("Will select " + color(cast(selected.getMethodType()).originalMethod(), ANSI_BLUE));
             } else {
                 endSection(""); // no fallback?
             }
@@ -307,6 +356,10 @@ public interface TypeInferenceLogger {
             return ivar + kind.getSym() + colorIvars(colorPunct(bound));
         }
 
+        @Override
+        public TypeInferenceLogger newInstance() {
+            return new SimpleLogger(out);
+        }
     }
 
     /**
@@ -315,7 +368,7 @@ public interface TypeInferenceLogger {
     class VerboseLogger extends SimpleLogger {
 
 
-        private final Deque<Integer> marks = new ArrayDeque<>();
+        private final Deque<String> marks = new ArrayDeque<>();
 
         public VerboseLogger(PrintStream out) {
             super(out);
@@ -323,16 +376,16 @@ public interface TypeInferenceLogger {
         }
 
         void mark() {
-            marks.push(getLevel());
+            marks.push(getIndent());
         }
 
         void rollback(String lastWords) {
-            int pop = marks.pop();
-            updateLevel(pop - getLevel()); // back to normal
+            final String savedIndent = marks.pop();
+            setIndent(savedIndent); // back to normal
             if (!lastWords.isEmpty()) {
-                updateLevel(+LEVEL_INCREMENT);
+                addIndentSegment(BASE_INDENT);
                 println(lastWords);
-                updateLevel(-LEVEL_INCREMENT);
+                setIndent(savedIndent);
             }
         }
 
@@ -346,6 +399,17 @@ public interface TypeInferenceLogger {
         @Override
         public void ctxInitialization(InferenceContext ctx, JMethodSig sig) {
             println(String.format("Context %-11d%s", ctx.getId(), ppHighlight(ctx.mapToIVars(sig))));
+        }
+
+        @Override
+        public void applicabilityTest(InferenceContext ctx) {
+            println(String.format("Solving with context %d for applicability testing", ctx.getId()));
+            addIndentSegment("|   ");
+        }
+
+        @Override
+        public void finishApplicabilityTest() {
+            removeIndentSegment("|   ");
         }
 
         @Override
@@ -379,7 +443,7 @@ public interface TypeInferenceLogger {
 
         @Override
         public void startArg(int i, ExprMirror expr, JTypeMirror formalType) {
-            startSection("Checking arg " + i + " against " + formalType);
+            startSection("Checking arg " + i + " against " + colorIvars(formalType));
             printExpr(expr);
         }
 
@@ -395,6 +459,7 @@ public interface TypeInferenceLogger {
             println("Target type is not a functional interface yet: " + targetT);
             println("Will wait for invocation phase before discarding.");
         }
+
 
         @Override
         public void endArgsChecks() {
@@ -427,6 +492,16 @@ public interface TypeInferenceLogger {
             println(addCtxInfo(ctx, "Ivar instantiated") + color(var + " := ", ANSI_BLUE) + colorIvars(inst));
         }
 
+        @Override
+        public void ivarDependencyRegistered(InferenceContext ctx, InferenceVar var, Set<InferenceVar> deps) {
+            println(addCtxInfo(ctx, "Ivar dependency registered: ") + color(var + " -> ", ANSI_BLUE) + colorIvars(deps));
+        }
+
+        @Override
+        public void contextDependenciesChanged(InferenceContext ctx) {
+            println("Recomputing dependency graph (ctx " + ctx.getId() + ")");
+        }
+
         private @NonNull String addCtxInfo(InferenceContext ctx, String event) {
             return String.format("%-20s(ctx %d):   ", event, ctx.getId());
         }
@@ -435,6 +510,11 @@ public interface TypeInferenceLogger {
         public void logResolutionFail(ResolutionFailure exception) {
             super.logResolutionFail(exception);
             println("Failed: " + exception.getReason());
+        }
+
+        @Override
+        public TypeInferenceLogger newInstance() {
+            return new VerboseLogger(out);
         }
 
     }

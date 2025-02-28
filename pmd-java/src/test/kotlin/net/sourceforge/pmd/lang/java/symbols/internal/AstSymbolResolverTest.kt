@@ -6,20 +6,17 @@ package net.sourceforge.pmd.lang.java.symbols.internal
 
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge
 import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
-import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass
-import net.sourceforge.pmd.lang.java.symbols.table.internal.testProcessor
 
 /**
  * @author Clément Fournier
  */
 class AstSymbolResolverTest : ProcessorTestSpec({
-
-    parserTest("Simple test") {
-
-        val resolver = parser.withProcessing(false).parse("""
+    parserTestContainer("Simple test") {
+        val resolver = parser.parse("""
             package com.foo.bar;
             
             public class Foo {
@@ -28,10 +25,8 @@ class AstSymbolResolverTest : ProcessorTestSpec({
             
             class Other {}
         """.trimIndent()).let {
-            SymbolResolutionPass.traverse(testProcessor(), it)
+            InternalApiBridge.getProcessor(it).symResolver
         }
-
-
 
         doTest("Test outer class") {
             resolver.resolveClassFromBinaryName("com.foo.bar") shouldBe null

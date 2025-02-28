@@ -4,7 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import io.kotest.matchers.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Earliest
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Latest
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.J1_3
@@ -16,19 +17,15 @@ import net.sourceforge.pmd.lang.java.ast.JavaVersion.J1_5
  */
 class ASTAnnotationTest : ParserTestSpec({
 
-
-    parserTest("Test annot fails before JDK 1.4", javaVersions = Earliest..J1_3) {
-
+    parserTestContainer("Test annot fails before JDK 1.4", javaVersions = Earliest..J1_3) {
         inContext(AnnotationParsingCtx) {
             "@F" shouldNot parse()
             "@F(a=1)" shouldNot parse()
         }
     }
 
-    parserTest("Marker annotations", javaVersions = J1_5..Latest) {
-
+    parserTestContainer("Marker annotations", javaVersions = J1_5..Latest) {
         inContext(AnnotationParsingCtx) {
-
             "@F" should parseAs {
                 child<ASTAnnotation> {
                     it::getSimpleName shouldBe "F"
@@ -37,7 +34,7 @@ class ASTAnnotationTest : ParserTestSpec({
 
                     it::getMemberList shouldBe null
 
-                    it::getAnnotationName shouldBe "F"
+                    it.typeNode.text.toString() shouldBe "F"
                 }
             }
 
@@ -49,7 +46,7 @@ class ASTAnnotationTest : ParserTestSpec({
 
                     it::getMemberList shouldBe null
 
-                    it::getAnnotationName shouldBe "java.lang.Override"
+                    it.typeNode.text.toString() shouldBe "java.lang.Override"
                 }
             }
 
@@ -61,17 +58,14 @@ class ASTAnnotationTest : ParserTestSpec({
 
                     it::getMemberList shouldBe null
 
-                    it::getAnnotationName shouldBe "Override"
+                    it.typeNode.text.toString() shouldBe "Override"
                 }
             }
         }
-
     }
 
-    parserTest("Single-value shorthand", javaVersions = J1_5..Latest) {
-
+    parserTestContainer("Single-value shorthand", javaVersions = J1_5..Latest) {
         inContext(AnnotationParsingCtx) {
-
             "@F(\"ohio\")" should parseAs {
                 child<ASTAnnotation> {
                     it::getSimpleName shouldBe "F"
@@ -121,6 +115,7 @@ class ASTAnnotationTest : ParserTestSpec({
                     }
                 }
             }
+
             "@org.F(@Oh)" should parseAs {
                 child<ASTAnnotation> {
                     it::getSimpleName shouldBe "F"
@@ -135,13 +130,10 @@ class ASTAnnotationTest : ParserTestSpec({
                 }
             }
         }
-
     }
 
-    parserTest("Normal annotation", javaVersions = J1_5..Latest) {
-
+    parserTestContainer("Normal annotation", javaVersions = J1_5..Latest) {
         inContext(AnnotationParsingCtx) {
-
             "@F(a=\"ohio\")" should parseAs {
                 child<ASTAnnotation> {
                     it::getSimpleName shouldBe "F"
@@ -177,7 +169,6 @@ class ASTAnnotationTest : ParserTestSpec({
                     }
                 }
             }
-
 
             """
     @TestAnnotation({@SuppressWarnings({}),

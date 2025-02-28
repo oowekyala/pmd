@@ -23,14 +23,15 @@ import net.sourceforge.pmd.lang.java.types.TypeSystem;
  * </pre>
  */
 public final class ASTMethodReference extends AbstractJavaExpr
-    implements ASTPrimaryExpression,
-               QualifiableExpression,
+    implements QualifiableExpression,
                LeftRecursiveNode,
                MethodUsage,
                FunctionalExpression {
 
     private JMethodSig functionalMethod;
     private JMethodSig compileTimeDecl;
+
+    private String methodName;
 
     ASTMethodReference(int id) {
         super(id);
@@ -87,7 +88,7 @@ public final class ASTMethodReference extends AbstractJavaExpr
      * the {@linkplain #getQualifier() lhs type}.
      */
     public @Nullable ASTTypeArguments getExplicitTypeArguments() {
-        return getFirstChildOfType(ASTTypeArguments.class);
+        return firstChild(ASTTypeArguments.class);
     }
 
 
@@ -97,13 +98,12 @@ public final class ASTMethodReference extends AbstractJavaExpr
      */
     @Override
     public @NonNull String getMethodName() {
-        return super.getImage();
+        assert methodName != null : "method name was null";
+        return methodName;
     }
 
-    @Deprecated
-    @Override
-    public @Nullable String getImage() {
-        return null;
+    void setMethodName(String methodName) {
+        this.methodName = methodName;
     }
 
     @Override

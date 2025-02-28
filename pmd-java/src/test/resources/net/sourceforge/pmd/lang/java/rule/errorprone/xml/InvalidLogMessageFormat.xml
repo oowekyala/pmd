@@ -94,7 +94,7 @@ public class MethodCallClassCastExceptionProblem {
     </test-code>
 
     <test-code>
-        <description>Null pointer with VariableNameDeclaration / VariableDeclaratorId</description>
+        <description>Null pointer with VariableNameDeclaration / VariableId</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
 public class NullPointerTypeProblem {
@@ -498,7 +498,7 @@ public class MethodCallClassCastExceptionProblem {
     </test-code>
 
     <test-code>
-        <description>log4j2: Null pointer with VariableNameDeclaration / VariableDeclaratorId</description>
+        <description>log4j2: Null pointer with VariableNameDeclaration / VariableId</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
 public class NullPointerTypeProblem {
@@ -885,13 +885,14 @@ class InvalidLogMessageFormatTest {
         ]]></code>
     </test-code>
 
-    <test-code disabled="true">
+    <test-code>
         <description>[java] InvalidLogMessageFormat false-negative for a lambda argument #2255</description>
         <expected-problems>3</expected-problems>
-        <expected-linenumbers>11,13,16</expected-linenumbers>
+        <expected-linenumbers>12,14,17</expected-linenumbers>
         <code><![CDATA[
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.function.Consumer;
 
 class InvalidLogMessageFormatTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(InvalidLogMessageFormatTest.class);
@@ -1161,6 +1162,157 @@ public class Foo {
         LOGGER.info(msg);
         return msg;
     }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#935 FP when exception is obtained from a method call</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+public class Foo {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Foo.class);
+    public static IllegalStateException exception() { return new IllegalStateException();}
+
+	public static void log() {
+        // violation raised below, but code is fine
+		LOGGER.warn("Exception {}", IllegalStateException.class.getName(), exception());
+	}
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>slf4j: [java] InvalidLogMessageFormat doesn't handle formats assembled via multi-stage concatenation #253</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Slf4JMessageFormatConcatenation {
+    private static final Logger LOG = LoggerFactory.getLogger(Slf4JMessageFormatConcatenation.class);
+
+    public void run() {
+        String message = "Field: {}";
+        // some code
+        String error = message + ", error: {}";
+
+        LOG.error(error, "fieldValue", "errorMessage"); // two placeholders, two args
+
+        // string concat with 7 params
+        int a, b, c, d, e, f, g;
+        LOGGER.warn("blah blah a={}, b={}, c={}, " +
+                            "d={}, e={}, f={}, g={}",
+                    a, b, c, d, e, f, g);
+    }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>slf4j: [java] InvalidLogMessageFormat false positive with Throwable #939</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class MessageFormatWithThrowable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFormatWithThrowable.class);
+
+    public void run() {
+        Throwable t = new Throwable();
+        LOGGER.error("some text {}", 1, t);
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, exception) ->
+            LOGGER.error("Uncaught exception - {}", thread.getName(), exception));
+    }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] InvalidLogMessageFormat rule : False positive for lambda parameter #2718</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Foo {
+  private static final Logger LOG = LoggerFactory.getLogger(Foo.class);
+
+  public static class Event {
+    private Throwable lastThrowable;
+    public Throwable getLastThrowable() {
+      return lastThrowable;
+    }
+  }
+
+  public void bar(Event event) {
+    Optional.of(event).ifPresent(e -> LOG.warn(
+        "Failed on {}",
+        1,
+        e.getLastThrowable()));
+  }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#3250 [java] InvalidLogMessageFormat detection failing when another %-parameter is used</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import static java.lang.String.format;
+
+class TestInvalidLogMessageFormat {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestInvalidLogMessageFormat.class);
+    public void testPMD() {
+        LOGGER.info(SomeOtherClass.someOtherMethod("Here we have a few %s!"));
+        LOGGER.info(format("Skipping file %s", getName()));
+    }
+
+    private String getName() { return "the-name"; }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#3250 [java] InvalidLogMessageFormat detection failing when another %-parameter is used in a variable</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import static java.lang.String.format;
+
+class TestInvalidLogMessageFormat {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestInvalidLogMessageFormat.class);
+    public void testPMD() {
+        String message = SomeOtherClass.someOtherMethod("Here we have a few %s!");
+        LOGGER.info(message);
+    }
+
+    private String getName() { return "the-name"; }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] False Positives in InvalidLogMessageFormat rule #3433</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class InvalidLogMessageFormat{
+        private static final Logger log = LoggerFactory.getLogger(InvalidLogMessageFormat.class);
+        public void test(){
+                //detected
+                log.error("Error starting " + app + ": "+ Exceptions.collapseText(e),Exceptions.getFirstInteresting(e));
+        }
 }
 ]]></code>
     </test-code>

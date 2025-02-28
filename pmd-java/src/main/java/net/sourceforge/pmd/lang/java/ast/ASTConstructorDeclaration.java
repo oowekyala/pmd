@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.java.ast;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 
 /**
@@ -24,25 +23,21 @@ import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
  *
  * </pre>
  */
-public final class ASTConstructorDeclaration extends AbstractMethodOrConstructorDeclaration<JConstructorSymbol> {
+public final class ASTConstructorDeclaration extends AbstractExecutableDeclaration<JConstructorSymbol> {
 
     ASTConstructorDeclaration(int id) {
         super(id);
     }
 
     @Override
-    public String getName() {
-        return getImage();
-    }
-
-    @Override
-    public FileLocation getReportLocation() {
-        return getModifiers().getLastToken().getNext().getReportLocation();
-    }
-
-    @Override
     protected <P, R> R acceptVisitor(JavaVisitor<? super P, ? extends R> visitor, P data) {
         return visitor.visit(this, data);
+    }
+
+
+    @Override
+    public String getImage() {
+        return getName();
     }
 
 
