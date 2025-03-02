@@ -43,7 +43,7 @@ public interface SymbolResolver {
      */
     @Deprecated
     default @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
-        return resolveClassFromBinaryName(binaryName, ClasspathRequest.noOrigin());
+        return resolveClassFromBinaryName(binaryName, ClasspathRequest.unknownOrigin());
     }
 
     /**
@@ -59,7 +59,7 @@ public interface SymbolResolver {
      */
     @Deprecated
     default @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName) {
-        return resolveClassFromCanonicalName(canonicalName, ClasspathRequest.noOrigin());
+        return resolveClassFromCanonicalName(canonicalName, ClasspathRequest.unknownOrigin());
     }
 
     /**

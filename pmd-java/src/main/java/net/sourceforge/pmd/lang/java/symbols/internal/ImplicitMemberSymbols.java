@@ -55,7 +55,7 @@ public final class ImplicitMemberSymbols {
             singletonList(
                 t -> new FakeFormalParamSym(
                     t, "name",
-                    (ts, s) -> ts.declaration(ts.getClassSymbol(String.class, ClasspathRequest.noOrigin())))
+                    (ts, s) -> ts.declaration(ts.getClassSymbol(String.class, ClasspathRequest.unknownOrigin())))
             )
         );
     }

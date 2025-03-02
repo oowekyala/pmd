@@ -333,7 +333,7 @@ public final class TypeSystem {
      */
     @Deprecated
     public @Nullable JClassSymbol getClassSymbol(@Nullable Class<?> clazz) {
-        return getClassSymbol(clazz, ClasspathRequest.noOrigin());
+        return getClassSymbol(clazz, ClasspathRequest.unknownOrigin());
     }
 
     /**

@@ -114,7 +114,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
         this.ts = processor.getTypeSystem();
         this.infer = new Infer(ts, processor.getJdkVersion(), logger);
         this.polyResolution = new PolyResolution(infer);
-        this.stringType = (JClassType) ts.rawType(ts.getClassSymbol(String.class, ClasspathRequest.noOrigin()));
+        this.stringType = (JClassType) ts.rawType(ts.getClassSymbol(String.class, ClasspathRequest.unknownOrigin()));
         this.processor = processor;
         this.err = processor.getLogger();
     }
@@ -247,7 +247,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
             if (iterableType instanceof JArrayType) {
                 return ((JArrayType) iterableType).getComponentType(); // component type is necessarily a type
             } else {
-                JTypeMirror asSuper = iterableType.getAsSuper(ts.getClassSymbol(Iterable.class, ClasspathRequest.noOrigin()));
+                JTypeMirror asSuper = iterableType.getAsSuper(ts.getClassSymbol(Iterable.class, ClasspathRequest.unknownOrigin()));
                 if (asSuper instanceof JClassType) {
                     if (asSuper.isRaw()) {
                         return ts.OBJECT;
@@ -541,7 +541,7 @@ public final class LazyTypeResolver extends JavaVisitorBase<TypingContext, @NonN
 
     @Override
     public JTypeMirror visit(ASTClassLiteral node, TypingContext ctx) {
-        JClassSymbol klassSym = ts.getClassSymbol(Class.class, ClasspathRequest.noOrigin());
+        JClassSymbol klassSym = ts.getClassSymbol(Class.class, ClasspathRequest.unknownOrigin());
         assert klassSym != null : Class.class + " is missing from the classpath?";
         if (node.getTypeNode() instanceof ASTVoidType) {
             // void.class : Class<Void>

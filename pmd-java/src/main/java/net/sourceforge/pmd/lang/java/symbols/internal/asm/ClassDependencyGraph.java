@@ -1,6 +1,7 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,8 +62,15 @@ import net.sourceforge.pmd.lang.rule.Rule;
  *
  */
 public class ClassDependencyGraph {
+    // todo maybe we need to coalesce dependencies by JAR. Initially I will build this at the file granularity.
+    //  Coarser (JAR) granularity might result in less memory usage and less bookkeeping, but has less precise dependency information.
+    //  Strongly connected components can be merged too to reduce size of data structure without losing information.
+    //  Whether this is beneficial depends on the topology of the graph, so let's see how it looks like before we optimize.
+    //  Maybe we can also special-case java.lang as all classes will need it.
 
-    private final Map<FileId, FileRequests> classpathRequests = new ConcurrentHashMap<>();
+    private final Map<FileId, SourceRequests> sourceDeps = new ConcurrentHashMap<>();
+    private final Map<String, ClassRequests> binaryDeps = new ConcurrentHashMap<>();
+    private final Map<String, Long> hashesByBinaryName = new ConcurrentHashMap<>();
 
     /**
      * Record that the given origin made a classpath request for the given binary name.
@@ -72,24 +80,39 @@ public class ClassDependencyGraph {
      * @param found The result of the request
      */
     void recordClasspathRequest(ClasspathRequest request, @NonNull String binaryName, @Nullable ClassStub found) {
-        if (request.origin == null || request.type == DependencyType.NO_DEP) {
-            return;
+        if (request instanceof SourceFileRequest) {
+            SourceFileRequest sourceRequest = (SourceFileRequest) request;
+            if (sourceRequest.type == DependencyType.NO_DEP) {
+                // todo this likely can be handled better. Maybe another subclass of SourceFileRequest can be used in this case.
+                return;
+            }
+
+            sourceDeps.compute(sourceRequest.origin, (fid, entries) -> {
+                if (entries == null) {
+                    entries = new SourceRequests();
+                }
+                entries.record(binaryName, sourceRequest.type == DependencyType.SIGNATURE);
+                return entries;
+            });
+        } else if (request instanceof ClassFileRequest) {
+            ClassFileRequest classRequest = (ClassFileRequest) request;
+            binaryDeps.compute(classRequest.binaryName, (k, entries) -> {
+                if (entries == null) {
+                    entries = new ClassRequests();
+                }
+                entries.record(binaryName);
+                return entries;
+            });
         }
 
-        classpathRequests.compute(request.origin, (fid, entries) -> {
-            if (entries == null) {
-                entries = new FileRequests();
-            }
-            long hash = found == null ? 0 : found.abiFingerprint;
-            entries.record(binaryName, request.type == DependencyType.SIGNATURE, hash);
-            return entries;
-        });
-
-        // What should this do?
-        //  map the origin file name to the binary name + type of dependency
-
-
+        // finally record the hash of the found file.
+        long hash = found == null ? 0 : found.abiFingerprint;
+        hashesByBinaryName.putIfAbsent(binaryName, hash);
     }
+
+    // TODO a way to serialize this data structure and write it to disk
+    // TODO a way to inspect the graph (dump to dot)
+    // TODO a way to query the graph
 
     public enum DependencyType {
         /** The request only needs access to the signatures of the file. */
@@ -100,40 +123,30 @@ public class ClassDependencyGraph {
         NO_DEP
     }
 
-    public static final class ClasspathRequest {
-        /** The file making the request. */
-        final @Nullable FileId origin;
-        final DependencyType type;
+    /**
+     * Metadata about the origin of a request to the classpath. This allows
+     * tracking dependencies between source files and classpath entries.
+     */
+    public abstract static class ClasspathRequest {
 
-        public ClasspathRequest(@Nullable FileId origin, DependencyType type) {
-            this.origin = origin;
-            this.type = type;
-        }
-
-        /**
-         * No origin creates no dependency. Maybe it would be better to treat it as
-         * unknown origin, ie, all files have a dependency on this one.
-         */
-        public static ClasspathRequest noOrigin() {
-            return new ClasspathRequest(null, DependencyType.NO_DEP);
+        private ClasspathRequest() {
+            // internal extension only
         }
 
         public static ClasspathRequest unknownOrigin() {
-            return new ClasspathRequest(null, DependencyType.SIGNATURE);
+            return new SourceFileRequest(FileId.UNKNOWN, DependencyType.SIGNATURE);
         }
 
-        public static ClasspathRequest signatureDep(FileId origin) {
-            assert origin != null : "Null file id";
-            return new ClasspathRequest(origin, DependencyType.SIGNATURE);
+        public static ClasspathRequest signatureDep(@NonNull FileId origin) {
+            return new SourceFileRequest(origin, DependencyType.SIGNATURE);
         }
 
         public static ClasspathRequest signatureDep(Node origin) {
-            assert origin != null : "Null file id";
-            return new ClasspathRequest(origin.getTextDocument().getFileId(), DependencyType.SIGNATURE);
+            return signatureDep(origin.getTextDocument().getFileId());
         }
 
-        public static ClasspathRequest fromRule(FileId origin, Rule rule) {
-            return new ClasspathRequest(origin, DependencyType.SIGNATURE);
+        public static ClasspathRequest fromRule(FileId origin, Rule unused) {
+            return signatureDep(origin);
         }
 
         public static ClasspathRequest fromRule(Node origin, Rule rule) {
@@ -141,33 +154,66 @@ public class ClassDependencyGraph {
         }
     }
 
+    /**
+     * The request is made from a source file analysed by PMD.
+     */
+    static final class SourceFileRequest extends ClasspathRequest {
+        /** The file making the request. */
+        final @NonNull FileId origin;
+        /** The kind of data requested. */
+        final DependencyType type;
 
-    static final class FileRequests {
+        public SourceFileRequest(@NonNull FileId origin, DependencyType type) {
+            this.origin = Objects.requireNonNull(origin);
+            this.type = type;
+        }
+
+    }
+
+    /**
+     * The request is made from a class file found on the classpath.
+     * This should only be created internally.
+     */
+    static final class ClassFileRequest extends ClasspathRequest {
+        final String binaryName;
+
+        ClassFileRequest(String binaryName) {
+            this.binaryName = binaryName;
+        }
+    }
+
+
+    private static final class SourceRequests {
         private final HashMap<String, RequestData> byBinaryName = new HashMap<>();
 
-        void record(String name, boolean isSigOnly, long resultHash) {
-            byBinaryName.compute(name, (name2, data) -> {
+        void record(String binaryName, boolean isSigOnly) {
+            byBinaryName.compute(binaryName, (name2, data) -> {
                 if (data == null) {
-                    return new RequestData(name, isSigOnly, resultHash);
+                    return new RequestData(binaryName, isSigOnly);
                 } else {
                     data.isSigOnly = isSigOnly;
-                    // note: maybe the hash for a source file will be different from the binary file.
-                    assert data.resultHash == resultHash;
                     return data;
                 }
             });
         }
     }
 
-    static final class RequestData {
+    private static final class ClassRequests {
+        private final HashSet<String> dependenciesBinaryNames = new HashSet<>();
+
+        void record(String binaryName) {
+            dependenciesBinaryNames.add(binaryName);
+        }
+    }
+
+
+    private static final class RequestData {
         private final String binName;
         private boolean isSigOnly;
-        private final long resultHash;
 
-        RequestData(String binName, boolean isSigOnly, long resultHash) {
+        RequestData(String binName, boolean isSigOnly) {
             this.binName = binName;
             this.isSigOnly = isSigOnly;
-            this.resultHash = resultHash;
         }
 
         @Override

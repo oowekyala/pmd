@@ -728,7 +728,7 @@ public final class PolyResolution {
     }
 
     static ExprContext newStringCtx(TypeSystem ts) {
-        JClassType stringType = (JClassType) ts.rawType(ts.getClassSymbol(String.class, ClasspathRequest.noOrigin()));
+        JClassType stringType = (JClassType) ts.rawType(ts.getClassSymbol(String.class, ClasspathRequest.unknownOrigin()));
         return newOtherContext(stringType, ExprContextKind.STRING);
     }
 
