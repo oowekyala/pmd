@@ -83,7 +83,7 @@ public class ClassDependencyGraph {
         if (request instanceof SourceFileRequest) {
             SourceFileRequest sourceRequest = (SourceFileRequest) request;
             if (sourceRequest.type == DependencyType.NO_DEP) {
-                // todo this likely can be handled better. Maybe another subclass of SourceFileRequest can be used in this case.
+                // todo this likely can be handled better. Maybe another subclass of ClasspathRequest can be used in this case.
                 return;
             }
 
@@ -179,6 +179,14 @@ public class ClassDependencyGraph {
 
         ClassFileRequest(String binaryName) {
             this.binaryName = binaryName;
+        }
+    }
+
+    static final class ModuleFileRequest extends ClasspathRequest {
+        final String moduleName;
+
+        ModuleFileRequest(String moduleName) {
+            this.moduleName = moduleName;
         }
     }
 

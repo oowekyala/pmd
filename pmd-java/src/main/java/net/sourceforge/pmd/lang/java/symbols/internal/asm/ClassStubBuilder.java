@@ -74,7 +74,7 @@ class ClassStubBuilder extends ClassVisitor {
     public void visitOuterClass(String ownerInternalName, @Nullable String methodName, @Nullable String methodDescriptor) {
         isInnerNonStaticClass = true;
         // only for enclosing method
-        ClassStub outer = resolver.resolveFromInternalNameCannotFail(ownerInternalName);
+        ClassStub outer = myStub.resolveFromInternalNameCannotFail(ownerInternalName);
         myStub.setOuterClass(outer, methodName, methodDescriptor);
     }
 
@@ -98,7 +98,7 @@ class ClassStubBuilder extends ClassVisitor {
 
     @Override
     public void visitPermittedSubclass(String permittedSubclass) {
-        ClassStub permitted = resolver.resolveFromInternalNameCannotFail(permittedSubclass);
+        ClassStub permitted = myStub.resolveFromInternalNameCannotFail(permittedSubclass);
         myStub.addPermittedSubclass(permitted);
     }
 
@@ -119,14 +119,14 @@ class ClassStubBuilder extends ClassVisitor {
     @Override
     public void visitInnerClass(String innerInternalName, @Nullable String outerName, @Nullable String innerSimpleName, int access) {
         if (myInternalName.equals(outerName) && innerSimpleName != null) { // not anonymous
-            ClassStub member = resolver.resolveFromInternalNameCannotFail(innerInternalName, ClassStub.UNKNOWN_ARITY);
+            ClassStub member = resolver.resolveFromInternalNameCannotFail(innerInternalName, myStub.getClasspathRequest());
             member.setSimpleName(innerSimpleName);
             member.setModifiers(access, false);
             myStub.addMemberClass(member);
         } else if (myInternalName.equals(innerInternalName) && outerName != null) {
             // then it's specifying the enclosing class
             // (myStub is the inner class)
-            ClassStub outer = resolver.resolveFromInternalNameCannotFail(outerName);
+            ClassStub outer = myStub.resolveFromInternalNameCannotFail(outerName);
             myStub.setSimpleName(innerSimpleName);
             myStub.setModifiers(access, false);
             myStub.setOuterClass(outer, null, null);

@@ -10,6 +10,7 @@ import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 abstract class MemberStubBase implements JAccessibleElementSymbol, AsmStub, AnnotationOwner {
@@ -25,6 +26,11 @@ abstract class MemberStubBase implements JAccessibleElementSymbol, AsmStub, Anno
         this.classStub = classStub;
         this.simpleName = simpleName;
         this.accessFlags = accessFlags;
+    }
+
+    @Override
+    public ClasspathRequest getClasspathRequest() {
+        return classStub.getClasspathRequest();
     }
 
     @Override

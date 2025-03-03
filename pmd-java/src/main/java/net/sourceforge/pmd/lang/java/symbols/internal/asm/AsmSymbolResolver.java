@@ -34,7 +34,6 @@ public class AsmSymbolResolver implements SymbolResolver {
 
     private final TypeSystem ts;
     private final Classpath classLoader;
-    private final SignatureParser typeLoader;
 
     private final ConcurrentMap<String, ClassStub> knownStubs = new ConcurrentHashMap<>();
 
@@ -48,7 +47,6 @@ public class AsmSymbolResolver implements SymbolResolver {
     public AsmSymbolResolver(TypeSystem ts, Classpath classLoader) {
         this.ts = ts;
         this.classLoader = classLoader;
-        this.typeLoader = new SignatureParser(this);
         this.failed = new ClassStub(this, "/*failed-lookup*/", FailedLoader.INSTANCE, 0);
         this.dependencyGraph = new ClassDependencyGraph();
     }
@@ -94,10 +92,6 @@ public class AsmSymbolResolver implements SymbolResolver {
         return null;
     }
 
-    SignatureParser getSigParser() {
-        return typeLoader;
-    }
-
     TypeSystem getTypeSystem() {
         return ts;
     }
@@ -115,15 +109,15 @@ public class AsmSymbolResolver implements SymbolResolver {
        These methods return an unresolved symbol if the url is not found.
      */
 
-    @Nullable ClassStub resolveFromInternalNameCannotFail(@Nullable String internalName) {
+    @Nullable ClassStub resolveFromInternalNameCannotFail(@Nullable String internalName, ClasspathRequest request) {
         if (internalName == null) {
             return null;
         }
-        return resolveFromInternalNameCannotFail(internalName, ClassStub.UNKNOWN_ARITY);
+        return resolveFromInternalNameCannotFail(internalName, request, ClassStub.UNKNOWN_ARITY);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals") // ClassStub
-    @NonNull ClassStub resolveFromInternalNameCannotFail(@NonNull String internalName, int observedArity) {
+    @NonNull ClassStub resolveFromInternalNameCannotFail(@NonNull String internalName, ClasspathRequest request, int observedArity) {
         return knownStubs.compute(internalName, (iname, prev) -> {
             if (prev != failed && prev != null) {
                 return prev;

@@ -16,7 +16,7 @@ class AnnotationBuilderVisitor extends SymbolicValueBuilder {
 
     AnnotationBuilderVisitor(AnnotationOwner owner, AsmSymbolResolver resolver, boolean visible, String descriptor) {
         super(resolver);
-        this.annot = new SymbolicAnnotationImpl(resolver, visible, descriptor);
+        this.annot = new SymbolicAnnotationImpl(resolver, owner.getClasspathRequest(), visible, descriptor);
         this.owner = owner;
     }
 
@@ -47,7 +47,7 @@ class AnnotationBuilderVisitor extends SymbolicValueBuilder {
             this.owner = owner;
             this.typeRef = typeRef;
             this.path = path;
-            this.annot = new SymbolicAnnotationImpl(resolver, visible, descriptor);
+            this.annot = new SymbolicAnnotationImpl(resolver, owner.getClasspathRequest(), visible, descriptor);
         }
 
         @Override

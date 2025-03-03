@@ -22,6 +22,7 @@ import org.objectweb.asm.TypeReference;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterOwnerSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.TypeAnnotationHelper.TypeAnnotationSet;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.TypeAnnotationHelper.TypeAnnotationSetWithReferences;
 import net.sourceforge.pmd.lang.java.types.JClassType;
@@ -136,8 +137,8 @@ abstract class GenericSigBase<T extends JTypeParameterOwnerSymbol & AsmStub> {
             this.signature = signature;
             this.typeParameterCount = GenericTypeParameterCounter.determineTypeParameterCount(this.signature);
 
-            this.rawItfs = CollectionUtil.map(interfaces, ctx.getResolver()::resolveFromInternalNameCannotFail);
-            this.rawSuper = ctx.getResolver().resolveFromInternalNameCannotFail(superInternalName);
+            this.rawItfs = CollectionUtil.map(interfaces, ctx::resolveFromInternalNameCannotFail);
+            this.rawSuper = ctx.resolveFromInternalNameCannotFail(superInternalName);
         }
 
         static LazyClassSignature defaultWhenUnresolved(ClassStub ctx, int observedArity) {
@@ -261,12 +262,22 @@ abstract class GenericSigBase<T extends JTypeParameterOwnerSymbol & AsmStub> {
         }
 
         @Override
+        public ClasspathRequest getClasspathRequest() {
+            return ctx.getClasspathRequest();
+        }
+
+        @Override
+        public AsmSymbolResolver getResolver() {
+            return ctx.getResolver();
+        }
+
+        @Override
         protected void doParse() {
             ctx.sigParser().parseMethodType(this, signature);
             if (rawExceptions != null && this.exceptionTypes.isEmpty()) {
                 // the descriptor did not contain exceptions. They're in this string array.
                 this.exceptionTypes = Arrays.stream(rawExceptions)
-                                            .map(ctx.getResolver()::resolveFromInternalNameCannotFail)
+                                            .map(ctx::resolveFromInternalNameCannotFail)
                                             .map(ctx.getTypeSystem()::rawType)
                                             .collect(CollectionUtil.toUnmodifiableList());
             }

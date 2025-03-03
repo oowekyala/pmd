@@ -17,6 +17,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.SymbolEquality;
 import net.sourceforge.pmd.lang.java.symbols.internal.SymbolToStrings;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 
 /**
  * An annotation parsed from a class file.
@@ -28,9 +29,9 @@ final class SymbolicAnnotationImpl implements SymAnnot {
     private @NonNull Map<String, SymbolicValue> explicitAttrs = Collections.emptyMap();
     private final boolean runtimeVisible;
 
-    SymbolicAnnotationImpl(AsmSymbolResolver resolver, boolean runtimeVisible, String descriptor) {
+    SymbolicAnnotationImpl(AsmSymbolResolver resolver, ClasspathRequest origin, boolean runtimeVisible, String descriptor) {
         this.runtimeVisible = runtimeVisible;
-        this.typeStub = resolver.resolveFromInternalNameCannotFail(ClassNamesUtil.classDescriptorToInternalName(descriptor));
+        this.typeStub = resolver.resolveFromInternalNameCannotFail(ClassNamesUtil.classDescriptorToInternalName(descriptor), origin);
     }
 
     void addAttribute(String name, SymbolicValue value) {

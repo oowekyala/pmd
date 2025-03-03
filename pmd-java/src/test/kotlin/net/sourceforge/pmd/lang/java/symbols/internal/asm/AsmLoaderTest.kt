@@ -20,6 +20,7 @@ import javasymbols.testdata.deep.AClassWithLocals
 import javasymbols.testdata.deep.`Another$ClassWith$Dollar`
 import javasymbols.testdata.deep.OuterWithoutDollar
 import javasymbols.testdata.impls.GenericClass
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
 import net.sourceforge.pmd.lang.java.types.testTypeSystem
 import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import net.sourceforge.pmd.lang.test.ast.shouldBe
@@ -213,8 +214,8 @@ class AsmLoaderTest : IntelliMarker, FunSpec({
     test("Unresolved class should have object as superclass") {
 
         val symLoader = symLoader()
-        val inner = symLoader.resolveFromInternalNameCannotFail("does/not/exist")!!
-        val second = symLoader.resolveFromInternalNameCannotFail("does/not/exist")!!
+        val inner = symLoader.resolveFromInternalNameCannotFail("does/not/exist", ClasspathRequest.unknownOrigin())!!
+        val second = symLoader.resolveFromInternalNameCannotFail("does/not/exist", ClasspathRequest.unknownOrigin())!!
 
         assertSame(inner, second)
 

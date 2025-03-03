@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.zip.Adler32;
+import java.util.zip.CheckedInputStream;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,6 +33,8 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeParameterOwnerSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.SymbolEquality;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassFileRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.CtorStub;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.MethodStub;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyClassSignature;
@@ -52,6 +56,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
     // Fingerprint of all members. TODO for now this is simply hash of classfile
     long abiFingerprint;
+    private final ClasspathRequest classpathRequest;
 
     // all the following are lazy and depend on the parse lock
 
@@ -87,15 +92,19 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
         this.resolver = resolver;
         this.names = new Names(internalName);
+        this.classpathRequest = new ClassFileRequest(names.binaryName);
 
         this.parseLock = new ParseLock("ClassStub:" + internalName) {
             @Override
             protected boolean doParse() throws IOException {
                 try (InputStream instream = loader.getInputStream()) {
                     if (instream != null) {
-                        ClassReader classReader = new ClassReader(instream);
+                        Adler32 checksum = new Adler32();
+                        CheckedInputStream cis = new CheckedInputStream(instream, checksum);
+                        ClassReader classReader = new ClassReader(cis);
                         ClassStubBuilder builder = new ClassStubBuilder(ClassStub.this, resolver);
                         classReader.accept(builder, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+                        abiFingerprint = checksum.getValue();
                         return true;
                     } else {
                         return false;
@@ -162,6 +171,11 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
     @Override
     public AsmSymbolResolver getResolver() {
         return resolver;
+    }
+
+    @Override
+    public ClasspathRequest getClasspathRequest() {
+        return classpathRequest;
     }
 
     // <editor-fold  defaultstate="collapsed" desc="Setters used during loading">

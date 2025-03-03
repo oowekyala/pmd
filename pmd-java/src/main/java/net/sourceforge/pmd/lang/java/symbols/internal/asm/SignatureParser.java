@@ -10,6 +10,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyClassSignature;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyMethodType;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.TypeParamsParser.TypeParametersBuilder;
@@ -30,9 +31,11 @@ import net.sourceforge.pmd.util.CollectionUtil;
 class SignatureParser {
 
     private final AsmSymbolResolver loader;
+    private final ClasspathRequest request;
 
-    SignatureParser(AsmSymbolResolver loader) {
+    SignatureParser(AsmSymbolResolver loader, ClasspathRequest request) {
         this.loader = loader;
+        this.request = request;
     }
 
     TypeSystem getTypeSystem() {
@@ -113,7 +116,7 @@ class SignatureParser {
 
         @Override
         public @NonNull JClassSymbol makeClassSymbol(String internalName, int observedArity) {
-            return loader.resolveFromInternalNameCannotFail(internalName, observedArity);
+            return loader.resolveFromInternalNameCannotFail(internalName, request, observedArity);
         }
     }
 }

@@ -34,7 +34,7 @@ class MethodInfoVisitor extends MethodVisitor {
     @Override
     public AnnotationVisitor visitParameterAnnotation(int parameter, String descriptor, boolean visible) {
         return new SymbolicValueBuilder(execStub.getResolver()) {
-            private final SymbolicAnnotationImpl annot = new SymbolicAnnotationImpl(getResolver(), visible, descriptor);
+            private final SymbolicAnnotationImpl annot = new SymbolicAnnotationImpl(getResolver(), execStub.getClasspathRequest(), visible, descriptor);
 
             @Override
             protected void acceptValue(String name, SymbolicValue v) {

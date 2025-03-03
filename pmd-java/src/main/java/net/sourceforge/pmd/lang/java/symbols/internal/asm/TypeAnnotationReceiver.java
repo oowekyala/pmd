@@ -9,7 +9,7 @@ import org.objectweb.asm.TypePath;
 
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 
-interface TypeAnnotationReceiver {
+interface TypeAnnotationReceiver extends AsmStub {
 
     void acceptTypeAnnotation(int typeRef, @Nullable TypePath path, SymAnnot annot);
 

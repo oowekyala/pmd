@@ -48,7 +48,7 @@ abstract class AbstractPMDProcessorTest {
     }
 
     private LanguageProcessor.AnalysisTask createTask(int threads) {
-        return InternalApiBridge.createAnalysisTask(null, null, null, threads, null, null, null);
+        return InternalApiBridge.createAnalysisTask(null, null, null, threads, null, null, null, null);
     }
 
     @Test

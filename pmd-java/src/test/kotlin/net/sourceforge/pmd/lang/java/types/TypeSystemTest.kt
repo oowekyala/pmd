@@ -13,13 +13,14 @@ import io.kotest.matchers.shouldNot
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import net.sourceforge.pmd.lang.test.ast.IntelliMarker
-import net.sourceforge.pmd.lang.test.ast.shouldBe
-import net.sourceforge.pmd.lang.test.ast.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestCtx
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
 import net.sourceforge.pmd.lang.java.symbols.internal.FakeSymAnnot
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
 import net.sourceforge.pmd.lang.java.symbols.testdata.ClassWithTypeAnnotationsInside
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 
 /**
  */
@@ -47,9 +48,10 @@ class TypeSystemTest : IntelliMarker, FunSpec({
     }
 
     test("Test getClassSymbol null -> null") {
+
         ts.getClassSymbol(null as Class<*>?) shouldBe null
         ts.getClassSymbol(null as String?) shouldBe null
-        ts.getClassSymbolFromCanonicalName(null) shouldBe null
+        ts.getClassSymbolFromCanonicalName(null, ClasspathRequest.unknownOrigin()) shouldBe null
     }
 
     test("Test typeOf null -> null") {

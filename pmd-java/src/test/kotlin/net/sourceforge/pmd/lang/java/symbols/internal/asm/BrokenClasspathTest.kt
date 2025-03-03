@@ -9,12 +9,13 @@ import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
 import net.sourceforge.pmd.lang.java.types.JClassType
 import net.sourceforge.pmd.lang.java.types.TypeOps
 import net.sourceforge.pmd.lang.java.types.TypeSystem
 import net.sourceforge.pmd.lang.java.types.testTypeSystem
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 
 class BrokenClasspathTest : FunSpec({
 
@@ -76,4 +77,4 @@ class BrokenClasspathTest : FunSpec({
 
 fun TypeSystem.createUnresolvedAsmSymbol(binaryName: String): JClassSymbol =
     AsmSymbolResolver(this, Classpath.contextClasspath())
-        .resolveFromInternalNameCannotFail(binaryName.replace('.', '/'))!!
+        .resolveFromInternalNameCannotFail(binaryName.replace('.', '/'), ClasspathRequest.unknownOrigin())!!

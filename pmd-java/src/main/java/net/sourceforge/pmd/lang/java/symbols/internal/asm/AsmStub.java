@@ -5,6 +5,10 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
+
 /**
  * Common interface for symbols wrapping a class file "stub".
  * The class is parsed with ASM, only the signature information
@@ -19,7 +23,12 @@ interface AsmStub {
 
     /** Object that can parse type signatures (necessary for eg field types). */
     default SignatureParser sigParser() {
-        return getResolver().getSigParser();
+        return new SignatureParser(getResolver(), getClasspathRequest());
     }
 
+    ClasspathRequest getClasspathRequest();
+
+    default @Nullable ClassStub resolveFromInternalNameCannotFail(@Nullable String internalName) {
+        return getResolver().resolveFromInternalNameCannotFail(internalName, getClasspathRequest());
+    }
 }

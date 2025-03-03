@@ -6,7 +6,7 @@ package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 
-interface AnnotationOwner {
+interface AnnotationOwner extends AsmStub {
 
     void addAnnotation(SymAnnot annot);
 

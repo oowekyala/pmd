@@ -8,11 +8,12 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import org.apache.commons.lang3.reflect.TypeLiteral
 import org.junit.jupiter.api.Assertions.*
-import java.lang.NullPointerException
 
-class TypesFromReflectionTest : FunSpec({
+class TypesFromReflectionTest : IntelliMarker, FunSpec({
 
 
     test("Test reflect parsing") {
@@ -36,7 +37,7 @@ class TypesFromReflectionTest : FunSpec({
     }
 
     test("testNestedClassArray") {
-        val c = TypesFromReflection.loadSymbol(LOADER, "java.util.Map.Entry[ ]")
+        val c = fromReflect.loadSymbol("java.util.Map.Entry[ ]")
         // since java 12: Class#arrayType
         val klass = java.lang.reflect.Array.newInstance(MutableMap.MutableEntry::class.java, 0)::class.java
         assertReflects(klass, c)
@@ -44,28 +45,29 @@ class TypesFromReflectionTest : FunSpec({
 
     test("testInvalidName") {
         shouldThrow<java.lang.IllegalArgumentException> {
-            TypesFromReflection.loadSymbol(LOADER, "java.util.Map ]")
+            fromReflect.loadSymbol("java.util.Map ]")
         }
     }
 
     test("testInvalidName2") {
         shouldThrow<java.lang.IllegalArgumentException> {
-            TypesFromReflection.loadSymbol(LOADER, "[]")
+            fromReflect.loadSymbol("[]")
         }
     }
 
     test("testNullName") {
         shouldThrow<NullPointerException> {
-            TypesFromReflection.loadSymbol(LOADER, null)
+            fromReflect.loadSymbol(null)
         }
     }
 }) {
 
     companion object {
         private val LOADER = JavaParsingHelper.TEST_TYPE_SYSTEM
+        val fromReflect = TypesFromReflection(LOADER, ClasspathRequest.unknownOrigin())
 
         fun assertReflects(expected: Class<*>?, request: String?) {
-            val c = TypesFromReflection.loadSymbol(LOADER, request)
+            val c = fromReflect.loadSymbol(request)
             assertReflects(expected, c)
         }
 
@@ -97,8 +99,7 @@ class TypesFromReflectionTest : FunSpec({
          * Note: [T] must not contain type variables.
          */
         private inline fun <reified T> mirrorOf(): JTypeMirror =
-            TypesFromReflection.fromReflect(
-                testTypeSystem,
+            fromReflect.fromReflect(
                 object : TypeLiteral<T>() {}.type,
                 LexicalScope.EMPTY,
                 Substitution.EMPTY

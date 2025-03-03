@@ -11,14 +11,15 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import javasymbols.testdata.impls.SomeInnerClasses
-import net.sourceforge.pmd.lang.test.ast.IntelliMarker
-import net.sourceforge.pmd.lang.test.ast.shouldBe
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyMethodType
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.TypeParamsParser.BaseTypeParamsBuilder
 import net.sourceforge.pmd.lang.java.types.*
-import org.mockito.Mockito.`when`
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
+import net.sourceforge.pmd.lang.test.ast.shouldBe
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 
 fun TypeSystem.mockTypeVar(name: String): JTypeVar {
@@ -43,14 +44,14 @@ operator fun LexicalScope.get(name: String): SubstVar = apply(name)!!
 
 fun LexicalScope.shouldParseType(sig: String, test: TypeDslOf.() -> JTypeMirror) {
     val ts = testTypeSystem
-    val parsed = ts.asmLoader.sigParser.parseFieldType(this, sig)
+    val parsed = SignatureParser(ts.asmLoader, ClasspathRequest.unknownOrigin()).parseFieldType(this, sig)
 
     parsed shouldBe TypeDslOf(ts).test()
 }
 private fun LexicalScope.shouldThrowWhenParsingType(sig: String, matcher: (InvalidTypeSignatureException)->Unit={}) {
     val ex = shouldThrow<InvalidTypeSignatureException> {
         val ts = testTypeSystem
-        ts.asmLoader.sigParser.parseFieldType(this, sig)
+        SignatureParser(ts.asmLoader, ClasspathRequest.unknownOrigin()).parseFieldType(this, sig)
     }
     matcher(ex)
 }
@@ -64,7 +65,7 @@ private fun LexicalScope.shouldParseMethod(
 ) {
     val ts = testTypeSystem
     val mockStub = mock(ExecutableStub::class.java)
-    `when`(mockStub.sigParser()).thenReturn(ts.asmLoader.sigParser)
+    `when`(mockStub.sigParser()).thenReturn(SignatureParser(ts.asmLoader, ClasspathRequest.unknownOrigin()))
     `when`(mockStub.enclosingTypeParameterOwner).thenReturn(null)
     `when`(mockStub.typeSystem).thenReturn(ts)
 
