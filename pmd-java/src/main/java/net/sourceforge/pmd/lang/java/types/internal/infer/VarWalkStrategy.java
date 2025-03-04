@@ -8,8 +8,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.sourceforge.pmd.lang.java.types.internal.infer.Graph.UniqueGraph;
-import net.sourceforge.pmd.lang.java.types.internal.infer.Graph.Vertex;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
 import net.sourceforge.pmd.util.IteratorUtil;
 
@@ -76,7 +76,7 @@ interface VarWalkStrategy extends Iterator<Set<InferenceVar>> {
             // Builds a graph representing the dependencies
             // between free ivars in the context.
 
-            Graph<InferenceVar> graph = new UniqueGraph<>();
+            TarjanGraph<InferenceVar> graph = new TarjanGraph.UniqueGraph<>();
 
             for (InferenceVar ivar : freeVars) {
                 if (onlyBoundedVars && ivar.hasOnlyPrimaryBound()) {

@@ -13,6 +13,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
@@ -115,12 +118,28 @@ public class ClassDependencyGraph {
         hashesByBinaryName.putIfAbsent(binaryName, hash);
     }
 
+    TarjanGraph<String> classGraph() {
+        TarjanGraph<String> graph = new UniqueGraph<>();
+        for (String binaryName : hashesByBinaryName.keySet()) {
+            Vertex<String> vertex = graph.addLeaf(binaryName);
+            ClassRequests req = binaryDeps.get(binaryName);
+            if (req == null) continue;
+            for (String dep : req.dependenciesBinaryNames) {
+                Vertex<String> toVertex = graph.addLeaf(dep);
+                graph.addEdge(vertex, toVertex);
+            }
+        }
+
+        graph.mergeCycles();
+        return graph;
+    }
+
     String toDot() {
         return GraphUtil.toDot(getGraphView());
     }
 
     void toDot(Appendable a) throws IOException {
-        GraphUtil.toDot(a, getGraphView());
+        GraphUtil.toDot(a, classGraph().getAsDotGraph());
     }
 
     private DotGraphDescription<String> getGraphView() {

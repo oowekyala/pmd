@@ -2,7 +2,7 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang.java.types.internal.infer;
+package net.sourceforge.pmd.lang.java.internal;
 
 import static java.lang.Math.min;
 import static net.sourceforge.pmd.util.CollectionUtil.union;
@@ -28,7 +28,7 @@ import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
  * of the vertices whatsoever, meaning each algo ({@link #mergeCycles()}
  * and {@link #topologicalSort()}) can only be done once reliably.
  */
-class Graph<T> {
+public class TarjanGraph<T> {
 
     /** Undefined index for Tarjan's algo. */
     private static final int UNDEFINED = -1;
@@ -37,7 +37,7 @@ class Graph<T> {
     // direct successors
     private final Map<Vertex<T>, Set<Vertex<T>>> successors = new HashMap<>();
 
-    Vertex<T> addLeaf(T data) {
+    public Vertex<T> addLeaf(T data) {
         Vertex<T> v = new Vertex<>(this, Collections.singleton(data));
         vertices.add(v);
         return v;
@@ -47,7 +47,7 @@ class Graph<T> {
      * Implicitly add both nodes to the graph and record a directed
      * edge between the first and the second.
      */
-    void addEdge(Vertex<T> start, Vertex<T> end) {
+    public void addEdge(Vertex<T> start, Vertex<T> end) {
         Objects.requireNonNull(end);
         Objects.requireNonNull(start);
 
@@ -66,7 +66,7 @@ class Graph<T> {
         return successors.getOrDefault(node, Collections.emptySet());
     }
 
-    Set<Vertex<T>> getVertices() {
+    public Set<Vertex<T>> getVertices() {
         return vertices;
     }
 
@@ -76,7 +76,7 @@ class Graph<T> {
      *
      * if there exists an edge u -> v, then u comes AFTER v in the list.
      */
-    List<Set<T>> topologicalSort() {
+    public List<Set<T>> topologicalSort() {
         List<Set<T>> sorted = new ArrayList<>(vertices.size());
         for (Vertex<T> n : vertices) {
             toposort(n, sorted);
@@ -102,7 +102,7 @@ class Graph<T> {
      * This turns the graph into a DAG. This modifies the graph in
      * place, no cleanup of the vertices is performed.
      */
-    void mergeCycles() {
+    public void mergeCycles() {
         // https://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm
 
         TarjanState<T> state = new TarjanState<>();
@@ -146,7 +146,7 @@ class Graph<T> {
         }
     }
 
-    void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
+    protected void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
         Set<Vertex<T>> succ = union(successorsOf(vertex), successorsOf(toMerge));
         succ.remove(toMerge);
         succ.remove(vertex);
@@ -158,15 +158,19 @@ class Graph<T> {
 
     @Override
     public String toString() {
-        return GraphUtil.toDot(
-            new DotGraphDescription<>(
-                vertices,
-                this::successorsOf,
-                v -> DotColor.BLACK,
-                v -> v.data.toString()
-            )
+        return GraphUtil.toDot(getAsDotGraph());
+    }
+
+    public DotGraphDescription<Vertex<T>> getAsDotGraph() {
+        return new DotGraphDescription<>(
+            vertices,
+            this::successorsOf,
+            v -> DotColor.BLACK,
+            v -> v.data.toString()
         );
     }
+
+
 
     private static final class TarjanState<T> {
 
@@ -175,9 +179,9 @@ class Graph<T> {
 
     }
 
-    static final class Vertex<T> {
+    public static final class Vertex<T> {
 
-        private final Graph<T> owner;
+        private final TarjanGraph<T> owner;
         private final Set<T> data;
         // Tarjan state
         private int index = UNDEFINED;
@@ -186,7 +190,7 @@ class Graph<T> {
         // Toposort state
         private boolean mark;
 
-        private Vertex(Graph<T> owner, Set<T> data) {
+        private Vertex(TarjanGraph<T> owner, Set<T> data) {
             this.owner = owner;
             this.data = new LinkedHashSet<>(data);
         }
@@ -212,12 +216,12 @@ class Graph<T> {
 
 
     /** Maintains uniqueness of nodes wrt data. */
-    static class UniqueGraph<T> extends Graph<T> {
+    public static class UniqueGraph<T> extends TarjanGraph<T> {
 
         private final Map<T, Vertex<T>> vertexMap = new HashMap<>();
 
         @Override
-        Vertex<T> addLeaf(T data) {
+        public Vertex<T> addLeaf(T data) {
             if (vertexMap.containsKey(data)) {
                 return vertexMap.get(data);
             }
@@ -227,7 +231,7 @@ class Graph<T> {
         }
 
         @Override
-        void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
+        protected void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
             super.onAbsorb(vertex, toMerge);
             for (T ivar : toMerge.getData()) {
                 vertexMap.put(ivar, vertex);
