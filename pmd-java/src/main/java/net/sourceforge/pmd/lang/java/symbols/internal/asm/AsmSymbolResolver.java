@@ -5,7 +5,11 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -119,12 +123,15 @@ public class AsmSymbolResolver implements SymbolResolver {
     @SuppressWarnings("PMD.CompareObjectsWithEquals") // ClassStub
     @NonNull ClassStub resolveFromInternalNameCannotFail(@NonNull String internalName, ClasspathRequest request, int observedArity) {
         return knownStubs.compute(internalName, (iname, prev) -> {
-            if (prev != failed && prev != null) {
+            if (prev != null) {
+                dependencyGraph.recordClasspathRequest(request, prev.getBinaryName(), prev);
                 return prev;
             }
             @Nullable InputStream inputStream = getStreamOfInternalName(iname);
             Loader loader = inputStream == null ? FailedLoader.INSTANCE : new StreamLoader(internalName, inputStream);
-            return new ClassStub(this, iname, loader, observedArity);
+            ClassStub result = new ClassStub(this, iname, loader, observedArity);
+            dependencyGraph.recordClasspathRequest(request, result.getBinaryName(), result);
+            return result;
         });
     }
 
@@ -155,5 +162,15 @@ public class AsmSymbolResolver implements SymbolResolver {
                         + "{} were found but failed parsing (!), "
                         + "{} were found but never parsed.",
                 knownStubs.size(), numFailedQueries, numParsed, numFailed, numNotParsed);
+
+        try {
+            Path tmp = Files.createTempFile("pmd", "depgraph.dot");
+            try (BufferedWriter writer= Files.newBufferedWriter(tmp)) {
+                dependencyGraph.toDot(writer);
+            }
+            LOG.debug("Wrote dependency graph to {}", tmp);
+        } catch (IOException e) {
+            LOG.debug("Failed to write dependency graph to temporary file", e);
+        }
     }
 }

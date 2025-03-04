@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.util.AssertionUtil;
 import net.sourceforge.pmd.util.GraphUtil;
+import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
 /**
  * Indexes data of type {@code <V>} with keys of type {@code <K>}, where
@@ -219,10 +220,12 @@ class LatticeRelation<K, @NonNull V, C> {
         // generates a DOT representation of the lattice
         // Visualize eg at http://webgraphviz.com/
         return GraphUtil.toDot(
-            nodes.values(),
-            n -> n.transitiveSuccs,
-            n -> n.getClass() == QueryNode.class ? DotColor.GREEN : DotColor.BLACK,
-            n -> keyToString.apply(n.key)
+            new DotGraphDescription<>(
+                nodes.values(),
+                n -> n.transitiveSuccs,
+                n -> n.getClass() == QueryNode.class ? DotColor.GREEN : DotColor.BLACK,
+                n -> keyToString.apply(n.key)
+            )
         );
     }
 

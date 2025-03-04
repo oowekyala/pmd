@@ -1,5 +1,7 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +14,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.rule.Rule;
+import net.sourceforge.pmd.util.GraphUtil;
+import net.sourceforge.pmd.util.GraphUtil.DotColor;
+import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
 /**
  * A fine-grained dependency graph that stores the dependencies between analyzed files.
@@ -110,8 +115,31 @@ public class ClassDependencyGraph {
         hashesByBinaryName.putIfAbsent(binaryName, hash);
     }
 
+    String toDot() {
+        return GraphUtil.toDot(getGraphView());
+    }
+
+    void toDot(Appendable a) throws IOException {
+        GraphUtil.toDot(a, getGraphView());
+    }
+
+    private DotGraphDescription<String> getGraphView() {
+        return new DotGraphDescription<>(
+            hashesByBinaryName.keySet(),
+            v -> {
+                ClassRequests cr = binaryDeps.get(v);
+                if (cr == null) {
+                    return Collections.emptySet();
+                } else {
+                    return cr.dependenciesBinaryNames;
+                }
+            },
+            v -> DotColor.BLACK,
+            v -> v
+        );
+    }
+
     // TODO a way to serialize this data structure and write it to disk
-    // TODO a way to inspect the graph (dump to dot)
     // TODO a way to query the graph
 
     public enum DependencyType {

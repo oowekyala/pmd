@@ -20,6 +20,7 @@ import java.util.Set;
 
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
+import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
 /**
  * A graph to walk over ivar dependencies in an efficient way.
@@ -158,10 +159,12 @@ class Graph<T> {
     @Override
     public String toString() {
         return GraphUtil.toDot(
-            vertices,
-            this::successorsOf,
-            v -> DotColor.BLACK,
-            v -> v.data.toString()
+            new DotGraphDescription<>(
+                vertices,
+                this::successorsOf,
+                v -> DotColor.BLACK,
+                v -> v.data.toString()
+            )
         );
     }
 
