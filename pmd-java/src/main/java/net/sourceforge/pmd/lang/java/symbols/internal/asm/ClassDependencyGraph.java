@@ -1,12 +1,21 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -76,9 +85,21 @@ public class ClassDependencyGraph {
     //  Whether this is beneficial depends on the topology of the graph, so let's see how it looks like before we optimize.
     //  Maybe we can also special-case java.lang as all classes will need it.
 
-    private final Map<FileId, SourceRequests> sourceDeps = new ConcurrentHashMap<>();
-    private final Map<String, ClassRequests> binaryDeps = new ConcurrentHashMap<>();
-    private final Map<String, Long> hashesByBinaryName = new ConcurrentHashMap<>();
+    private final Map<FileId, SourceRequests> sourceDeps;
+    private final Map<String, ClassRequests> binaryDeps;
+    private final Map<String, Long> hashesByBinaryName;
+
+    public ClassDependencyGraph() {
+        sourceDeps = new ConcurrentHashMap<>();
+        binaryDeps = new ConcurrentHashMap<>();
+        hashesByBinaryName = new ConcurrentHashMap<>();
+    }
+
+    private ClassDependencyGraph(Map<FileId, SourceRequests> sourceDeps, Map<String, ClassRequests> binaryDeps, Map<String, Long> hashesByBinaryName) {
+        this.sourceDeps = new ConcurrentHashMap<>(sourceDeps);
+        this.binaryDeps = new ConcurrentHashMap<>(binaryDeps);
+        this.hashesByBinaryName = new ConcurrentHashMap<>(hashesByBinaryName);
+    }
 
     /**
      * Record that the given origin made a classpath request for the given binary name.
@@ -134,6 +155,118 @@ public class ClassDependencyGraph {
         return graph;
     }
 
+    private static final int MAGIC_NUMBER = 0x5B75FFF;
+
+    public void serialize(OutputStream out) throws IOException {
+        try (GZIPOutputStream gzip = new GZIPOutputStream(out);
+             ObjectOutputStream objOut = new ObjectOutputStream(gzip)) {
+            serialize(objOut);
+        }
+    }
+
+    public static ClassDependencyGraph deserialize(InputStream in) throws IOException {
+        try (GZIPInputStream gzip = new GZIPInputStream(in);
+             ObjectInputStream objIn = new ObjectInputStream(gzip)) {
+            return deserialize(objIn);
+        }
+    }
+
+    void serialize(ObjectOutputStream out) throws IOException {
+        out.writeInt(MAGIC_NUMBER);
+        out.writeInt(hashesByBinaryName.size());
+        Map<String, Integer> classToId = new HashMap<>();
+        int nextId = 0;
+        for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
+            out.writeUTF(entry.getKey());
+            out.writeLong(entry.getValue());
+            classToId.put(entry.getKey(), nextId);
+            nextId++;
+        }
+        // edges
+        // for each source file, write out its name, and its dependencies.
+        // todo write out hash of source file
+        out.writeInt(sourceDeps.size());
+        for (Entry<FileId, SourceRequests> entry : sourceDeps.entrySet()) {
+            FileId fileId = entry.getKey();
+            SourceRequests sourceRequests = entry.getValue();
+            // todo use relative path
+            out.writeUTF(fileId.getAbsolutePath());
+            out.writeInt(sourceRequests.byBinaryName.size());
+            for (Entry<String, RequestData> request : sourceRequests.byBinaryName.entrySet()) {
+                // must be non-null
+                int id = classToId.get(request.getKey());
+                out.writeInt(id);
+            }
+        }
+
+        out.writeInt(binaryDeps.size());
+        for (Entry<String, ClassRequests> entry : binaryDeps.entrySet()) {
+            int fromId = classToId.get(entry.getKey());
+            out.writeInt(fromId);
+            HashSet<String> deps = entry.getValue().dependenciesBinaryNames;
+            out.writeInt(deps.size());
+            for (String dep : deps) {
+                int toId = classToId.get(dep);
+                out.writeInt(toId);
+            }
+        }
+    }
+
+    static ClassDependencyGraph deserialize(ObjectInputStream in) throws IOException {
+        if (in.readInt() != MAGIC_NUMBER) {
+            throw new IOException("Invalid file format");
+        }
+
+        int numClasses = in.readInt();
+        List<String> idToClass = new ArrayList<>(numClasses);
+        Map<String, Long> hashesByBinaryName = new HashMap<>(numClasses);
+        for (int i = 0; i < numClasses; i++) {
+            String className = in.readUTF();
+            long hash = in.readLong();
+            idToClass.add(className);
+            hashesByBinaryName.put(className, hash);
+        }
+
+        int sourceDepsSize = in.readInt();
+        Map<FileId, SourceRequests> sourceDeps = new HashMap<>(sourceDepsSize);
+        for (int i = 0; i < sourceDepsSize; i++) {
+            String absPath = in.readUTF();
+            int requestSize = in.readInt();
+            SourceRequests requests = new SourceRequests();
+            for (int j = 0; j < requestSize; j++) {
+                int requestId = in.readInt();
+                String request = idToClass.get(requestId);
+                requests.record(request, true);
+            }
+            sourceDeps.put(
+                // todo this is most likely wrong
+                FileId.fromAbsolutePath(absPath, null),
+                requests
+            );
+        }
+
+        int binDepsSize = in.readInt();
+        Map<String, ClassRequests> binaryDeps = new HashMap<>(binDepsSize);
+        for (int i = 0; i < binDepsSize; i++) {
+            int fromId = in.readInt();
+            String fromName = idToClass.get(fromId);
+            int numEdges = in.readInt();
+            ClassRequests requests = new ClassRequests();
+            for (int j = 0; j < numEdges; j++) {
+                int toId = in.readInt();
+                String toName = idToClass.get(toId);
+                requests.record(toName);
+            }
+            binaryDeps.put(fromName, requests);
+        }
+
+        return new ClassDependencyGraph(
+            sourceDeps,
+            binaryDeps,
+            hashesByBinaryName
+        );
+    }
+
     String toDot() {
         return GraphUtil.toDot(getGraphView());
     }
@@ -156,6 +289,19 @@ public class ClassDependencyGraph {
             v -> DotColor.BLACK,
             v -> v
         );
+    }
+
+    static class SummaryDependencyGraph {
+
+
+
+    }
+
+    public void computeChangedClasses(AsmSymbolResolver symbolResolver) {
+        // todo replay queries and check the found hash is the same as the recorded hash
+        //  if not, mark the nodes as out-of-date. Then, collect all the files that have an out-of-date dependency.
+        //  I think it would be easier if we didn't serialize this data structure but another, where the graph is
+        //  already inverted and reduced. Inverted because dependencies flow backwards.
     }
 
     // TODO a way to serialize this data structure and write it to disk

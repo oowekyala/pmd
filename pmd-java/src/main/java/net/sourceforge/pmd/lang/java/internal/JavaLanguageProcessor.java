@@ -4,6 +4,11 @@
 
 package net.sourceforge.pmd.lang.java.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,8 +16,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.ast.Parser;
+import net.sourceforge.pmd.lang.document.TextFile;
+import net.sourceforge.pmd.lang.impl.AbstractPMDProcessor;
 import net.sourceforge.pmd.lang.impl.BatchLanguageProcessor;
 import net.sourceforge.pmd.lang.java.ast.JavaParser;
 import net.sourceforge.pmd.lang.java.internal.JavaLanguageProperties.InferenceLoggingVerbosity;
@@ -22,6 +30,7 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetModifiersFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -57,6 +66,42 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     public JavaLanguageProcessor(JavaLanguageProperties properties) {
         this(properties, TypeSystem.usingClassLoaderClasspath(properties.getAnalysisClassLoader()));
         LOG.debug("Using analysis classloader: {}", properties.getAnalysisClassLoader());
+    }
+
+    @Override
+    public @NonNull AutoCloseable launchAnalysis(@NonNull AnalysisTask task) {
+        // The given analysis task has all files to analyse, not only the ones for this language.
+        List<TextFile> files = new ArrayList<>(task.getFiles());
+        files.removeIf(it -> !it.getLanguageVersion().getLanguage().equals(getLanguage()));
+        AnalysisTask newTask = InternalApiBridge.taskWithFiles(task, files);
+
+        task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
+
+        Path javaCache = task.getCacheDir().getLanguageCache(getLanguage());
+        Path classGraphCache = javaCache.resolve("class-dependency-graph.bin.gz");
+        try {
+            Files.createDirectories(javaCache);
+            if (Files.exists(classGraphCache)) {
+                try(InputStream in = Files.newInputStream(classGraphCache)) {
+                    ClassDependencyGraph prevCache = ClassDependencyGraph.deserialize(in);
+                    // Here we should replay all queries on the classloader and compare the
+                    // recorded hashes with the new hashes.
+                    // TODO there is a problem: the classpath check is also there to guard against PMD version change.
+                    // TODO the TypeSystem should be created here
+                    prevCache.computeChangedClasses(typeSystem.bootstrapResolver());
+                }
+            }
+        } catch (IOException ioe) {
+
+        }
+
+
+        // launch processing.
+        AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(newTask);
+        // If this is a multi-threaded processor, this call is non-blocking,
+        // the call to close on the returned instance blocks instead.
+        processor.processFiles();
+        return processor;
     }
 
     @Override

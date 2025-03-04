@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.impl;
 
+import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.LanguageProcessor.AnalysisTask;
 import net.sourceforge.pmd.lang.document.TextFile;
 
@@ -12,7 +13,8 @@ import net.sourceforge.pmd.lang.document.TextFile;
  *
  * @author Romain Pelisse &lt;belaran@gmail.com&gt;
  */
-abstract class AbstractPMDProcessor implements AutoCloseable {
+@InternalApi
+public abstract class AbstractPMDProcessor implements AutoCloseable {
 
     protected final AnalysisTask task;
 

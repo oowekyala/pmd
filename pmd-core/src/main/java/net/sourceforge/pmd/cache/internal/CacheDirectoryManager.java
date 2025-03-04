@@ -33,10 +33,8 @@ public class CacheDirectoryManager {
         return root.resolve("analysis-cache");
     }
 
-    public Path getLanguageCache(Language language) throws IOException {
-        Path dir = root.resolve(language.getId() + "-cache");
-        Files.createDirectories(dir);
-        return dir;
+    public Path getLanguageCache(Language language) {
+        return root.resolve(language.getId() + "-cache");
     }
 
 }
