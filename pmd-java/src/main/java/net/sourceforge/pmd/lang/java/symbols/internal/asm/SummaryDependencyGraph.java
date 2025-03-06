@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,14 +16,16 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.TransitiveReduction;
+import org.jgrapht.alg.connectivity.KosarajuStrongConnectivityInspector;
+import org.jgrapht.alg.interfaces.StrongConnectivityAlgorithm;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 import net.sourceforge.pmd.lang.document.FileId;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.BinaryInfo;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.NodeIdSet;
-import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
 /**
  * This is the data structure that is written to disk. It has info about the
@@ -31,21 +34,25 @@ import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 public final class SummaryDependencyGraph {
 
     // This graph is inverted. There is an edge U -> V if V depends on U.
-    private final TarjanGraph<DependencyNode> graph;
+    private final Graph<DependencyNode, DefaultEdge> graph;
 
     SummaryDependencyGraph() {
-        graph = new UniqueGraph<>();
+        graph = new DefaultDirectedGraph<>(DefaultEdge.class);
     }
 
-    Vertex<DependencyNode> addSourceLeaf(FileId fileId) {
-        return graph.addLeaf(new SourceDependencyNode(fileId));
+    DependencyNode addSourceLeaf(FileId fileId) {
+        SourceDependencyNode res = new SourceDependencyNode(fileId);
+        graph.addVertex(res);
+        return res;
     }
 
-    Vertex<DependencyNode> addClassLeaf(String binaryName, long hash) {
-        return graph.addLeaf(new ClassDependencyNode(binaryName, hash));
+    DependencyNode addClassLeaf(String binaryName, long hash) {
+        ClassDependencyNode res = new ClassDependencyNode(binaryName, hash);
+        graph.addVertex(res);
+        return res;
     }
 
-    void recordDependency(Vertex<DependencyNode> from, Vertex<DependencyNode> to) {
+    void recordDependency(DependencyNode from, DependencyNode to) {
         // note the inversion
         graph.addEdge(to, from);
     }
@@ -65,23 +72,28 @@ public final class SummaryDependencyGraph {
     }
 
     private void serialize(ObjectOutputStream out) throws IOException {
-        Map<Vertex<DependencyNode>, Integer> vertexToId = new HashMap<>();
-        List<Vertex<DependencyNode>> vertices = graph.toposortVertices();
+        StrongConnectivityAlgorithm<DependencyNode, DefaultEdge> strongConnect = new KosarajuStrongConnectivityInspector<>(graph);
+        Graph<Graph<DependencyNode, DefaultEdge>, DefaultEdge> condensation = strongConnect.getCondensation();
+        TransitiveReduction.INSTANCE.reduce(condensation);
+        Map<Graph<DependencyNode, DefaultEdge>, Integer> vertexToId = new IdentityHashMap<>();
+
         // write out all nodes
-        out.writeInt(vertices.size());
-        for (int i = 0; i < vertices.size(); i++) {
-            Vertex<DependencyNode> vertex = vertices.get(i);
-            vertexToId.put(vertex, i);
-            out.writeInt(vertex.getData().size());
-            for (DependencyNode node : vertex.getData()) {
+        out.writeInt(condensation.vertexSet().size());
+        int vertexId = 0;
+        for (Graph<DependencyNode, DefaultEdge> subg : condensation.vertexSet()) {
+            out.writeInt(subg.vertexSet().size());
+            for (DependencyNode node : subg.vertexSet()) {
                 boolean isClassNode = node instanceof ClassDependencyNode;
                 out.writeBoolean(isClassNode);
                 node.serialize(out);
             }
+            vertexToId.put(subg, vertexId);
+            vertexId++;
         }
         List<Integer> successors = new ArrayList<>();
-        for (Vertex<DependencyNode> vertex : vertices) {
-            for (Vertex<DependencyNode> succ : graph.successorsOf(vertex)) {
+        for (Graph<DependencyNode, DefaultEdge> subg : condensation.vertexSet()) {
+            for (DefaultEdge edge : condensation.outgoingEdgesOf(subg)) {
+                Graph<DependencyNode, DefaultEdge> succ = condensation.getEdgeTarget(edge);
                 Integer id = vertexToId.get(succ);
                 Objects.requireNonNull(id, "id should not be null");
                 successors.add(id);
@@ -193,16 +205,15 @@ public final class SummaryDependencyGraph {
             }
         }
     }
-
-    public DotGraphDescription<?> asDotGraph() {
-        return graph.asDotGraph();
-    }
+//
+//    public DotGraphDescription<?> asDotGraph() {
+//        return graph.asDotGraph();
+//    }
 
     public void reduce() {
         // note: these algorithms are not optimized enough for the size of graphs we may encounter.
         // It is likely that the transitive reduction especially is unnecessary.
         // We should use a proper graph library for this.
-        graph.mergeCycles();
 //        graph.transitiveReductionOnDag();
     }
 
