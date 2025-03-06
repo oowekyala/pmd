@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.java.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,7 +31,9 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.GetModifiersFun;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -53,6 +56,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     private final JavaParser parser;
     private final JavaParser parserWithoutProcessing;
     private TypeSystem typeSystem;
+    private Path classGraphCache;
 
     public JavaLanguageProcessor(JavaLanguageProperties properties, TypeSystem typeSystem) {
         super(properties);
@@ -78,12 +82,12 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
 
         Path javaCache = task.getCacheDir().getLanguageCache(getLanguage());
-        Path classGraphCache = javaCache.resolve("class-dependency-graph.bin.gz");
+        classGraphCache = javaCache.resolve("class-dependency-graph.bin.gz");
         try {
             Files.createDirectories(javaCache);
             if (Files.exists(classGraphCache)) {
                 try(InputStream in = Files.newInputStream(classGraphCache)) {
-                    ClassDependencyGraph prevCache = ClassDependencyGraph.deserialize(in);
+                    ClassQueryGraph cachedDepGraph = SummaryDependencyGraph.deserialize(in);
                     // Here we should replay all queries on the classloader and compare the
                     // recorded hashes with the new hashes.
                     // TODO there is a problem: the classpath check is also there to guard against PMD version change.
@@ -178,6 +182,13 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     @Override
     public void close() throws Exception {
         this.typeSystem.logStats();
+        if (classGraphCache != null) {
+            AsmSymbolResolver resolver = (AsmSymbolResolver) this.typeSystem.bootstrapResolver();
+            try (OutputStream out = Files.newOutputStream(classGraphCache)) {
+                resolver.writeReducedGraph(out);
+                LOG.trace("Wrote binary dependency graph to {}", classGraphCache);
+            }
+        }
         super.close();
     }
 }

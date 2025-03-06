@@ -47,6 +47,12 @@ public class TarjanGraph<T> {
         return v;
     }
 
+    public Vertex<T> addLeaf(Set<T> data) {
+        Vertex<T> v = new Vertex<>(this, data);
+        vertices.add(v);
+        return v;
+    }
+
     /**
      * Implicitly add both nodes to the graph and record a directed
      * edge between the first and the second.
@@ -66,7 +72,7 @@ public class TarjanGraph<T> {
     }
 
     // test only
-    Set<Vertex<T>> successorsOf(Vertex<T> node) {
+    public Set<Vertex<T>> successorsOf(Vertex<T> node) {
         return successors.getOrDefault(node, Collections.emptySet());
     }
 
@@ -231,7 +237,9 @@ public class TarjanGraph<T> {
         );
     }
 
-
+    public void setEdges(Vertex<T> fromNode, Set<Vertex<T>> successors) {
+        this.successors.put(fromNode, successors);
+    }
 
     private static final class TarjanState<T> {
 

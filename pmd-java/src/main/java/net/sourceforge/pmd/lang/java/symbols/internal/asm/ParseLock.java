@@ -29,7 +29,7 @@ abstract class ParseLock {
 
     private void logParseLockTrace(String prefix) {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("{} {}: {}", Thread.currentThread().getName(), String.format("%-15s", prefix), this);
+//            LOG.trace("{} {}: {}", Thread.currentThread().getName(), String.format("%-15s", prefix), this);
         }
     }
 

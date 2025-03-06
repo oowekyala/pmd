@@ -5,11 +5,9 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.OutputStream;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -27,7 +25,6 @@ import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.FailedLoader;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.StreamLoader;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.util.AssertionUtil;
-import net.sourceforge.pmd.util.GraphUtil;
 
 /**
  * A {@link SymbolResolver} that reads class files to produce symbols.
@@ -166,20 +163,24 @@ public class AsmSymbolResolver implements SymbolResolver {
 
         // todo do that asynchronously during reporting (it takes a second to reduce the graph. Probably better
         //  algorithms could be used)
-        try {
-            Path tmp = Files.createTempFile("pmd", "depgraph-full.dot");
-            try (BufferedWriter writer = Files.newBufferedWriter(tmp)) {
-                GraphUtil.toDot(writer, dependencyGraph.asDotGraph());
-            }
-            LOG.debug("Wrote class dependency graph to {}", tmp);
-            tmp = Files.createTempFile("pmd", "depgraph-reduced.dot");
-            try (BufferedWriter writer = Files.newBufferedWriter(tmp)) {
-                GraphUtil.toDot(writer, dependencyGraph.makeSummaryGraph().asDotGraph());
-            }
-            LOG.debug("Wrote reduced dependency graph to {}", tmp);
-        } catch (IOException e) {
-            LOG.debug("Failed to write dependency graph to temporary file", e);
-        }
+//        try {
+//            Path tmp = Files.createTempFile("pmd", "depgraph-full.dot");
+//            try (BufferedWriter writer = Files.newBufferedWriter(tmp)) {
+//                GraphUtil.toDot(writer, dependencyGraph.asDotGraph());
+//            }
+//            LOG.debug("Wrote class dependency graph to {}", tmp);
+//            tmp = Files.createTempFile("pmd", "depgraph-reduced.dot");
+//            try (BufferedWriter writer = Files.newBufferedWriter(tmp)) {
+//                GraphUtil.toDot(writer, dependencyGraph.makeSummaryGraph().asDotGraph());
+//            }
+//            LOG.debug("Wrote reduced dependency graph to {}", tmp);
+//        } catch (IOException e) {
+//            LOG.debug("Failed to write dependency graph to temporary file", e);
+//        }
+    }
+
+    public void writeReducedGraph(OutputStream outputStream) throws IOException {
+        dependencyGraph.makeSummaryGraph().serialize(outputStream);
     }
 
     void recordOuterClass(ClassStub classStub, @Nullable ClassStub outerClass) {
