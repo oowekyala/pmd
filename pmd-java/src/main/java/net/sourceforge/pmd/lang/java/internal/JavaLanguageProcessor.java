@@ -88,7 +88,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
                     // recorded hashes with the new hashes.
                     // TODO there is a problem: the classpath check is also there to guard against PMD version change.
                     // TODO the TypeSystem should be created here
-                    prevCache.computeChangedClasses(typeSystem.bootstrapResolver());
+//                    prevCache.computeChangedClasses(typeSystem.bootstrapResolver());
                 }
             }
         } catch (IOException ioe) {

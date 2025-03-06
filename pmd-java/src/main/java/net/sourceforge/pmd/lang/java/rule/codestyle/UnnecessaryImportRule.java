@@ -26,6 +26,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchLabel;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchLike;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
+import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.JavaComment;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.JavadocComment;
@@ -380,8 +381,7 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
                         if (!(symbol instanceof JTypeDeclSymbol)) {
                             return false;
                         }
-                        ClasspathRequest requestOrigin = ClasspathRequest.fromRule(it.node.getAstInfo().getTextDocument().getFileId(), this);
-                        NameResolver<JTypeMirror> resolver = JavaResolvers.moduleImport(setOf(it.node.getImportedName()), symbol.getTypeSystem().bootstrapResolver(), it.node.getRoot().getPackageName(), requestOrigin);
+                        NameResolver<JTypeMirror> resolver = JavaResolvers.moduleImport(setOf(it.node.getImportedName()), InternalApiBridge.getProcessor(it.node), it.node.getRoot().getPackageName());
                         JTypeMirror foundWithThisImport = resolver.resolveFirst(symbol.getSimpleName());
                         return foundWithThisImport != null && Objects.equals(symbol, foundWithThisImport.getSymbol());
                     });

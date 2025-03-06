@@ -37,26 +37,21 @@ public interface SymbolResolver {
     JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin);
 
     /**
-     * Resolves a class symbol from its binary name. This does not record dependencies.
-     *
-     * @see #resolveClassFromBinaryName(String, ClasspathRequest)
+     * @since 7.5.0
      */
+    @Nullable
+    JModuleSymbol resolveModule(@NonNull String moduleName, ClasspathRequest origin);
+
     @Deprecated
     default @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName) {
         return resolveClassFromBinaryName(binaryName, ClasspathRequest.unknownOrigin());
     }
 
-    /**
-     * @since 7.5.0
-     */
-    @Nullable
-    JModuleSymbol resolveModule(@NonNull String moduleName);
+    @Deprecated
+    default @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+        return resolveModule(moduleName, ClasspathRequest.unknownOrigin());
+    }
 
-    /**
-     * Resolves a class symbol from its canonical name. This does not record dependencies.
-     *
-     * @see #resolveClassFromCanonicalName(String, ClasspathRequest)
-     */
     @Deprecated
     default @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName) {
         return resolveClassFromCanonicalName(canonicalName, ClasspathRequest.unknownOrigin());
@@ -90,6 +85,7 @@ public interface SymbolResolver {
     }
 
 
+
     /**
      * Produce a symbol resolver that asks the given resolvers in order.
      *
@@ -116,9 +112,9 @@ public interface SymbolResolver {
             }
 
             @Override
-            public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+            public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName, ClasspathRequest origin) {
                 for (SymbolResolver resolver : stack) {
-                    JModuleSymbol symbol = resolver.resolveModule(moduleName);
+                    JModuleSymbol symbol = resolver.resolveModule(moduleName, origin);
                     if (symbol != null) {
                         return symbol;
                     }

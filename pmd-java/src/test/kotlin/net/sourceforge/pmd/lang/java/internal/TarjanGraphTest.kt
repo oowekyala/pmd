@@ -7,6 +7,7 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import net.sourceforge.pmd.lang.test.ast.IntelliMarker
+import net.sourceforge.pmd.util.IteratorUtil
 
 /**
  * @author Clément Fournier
@@ -90,7 +91,7 @@ class TarjanGraphTest : IntelliMarker, FunSpec({
 
         graph.vertices should haveSize(2)
 
-        graph.topologicalSort() shouldBe listOf(setOf("a", "b", "c"), setOf("d"))
+        IteratorUtil.toList(graph.topologicalSort()) shouldBe listOf(setOf("a", "b", "c"), setOf("d"))
 
     }
 })

@@ -313,7 +313,7 @@ public final class TypeSystem {
 
     private JClassSymbol getBootStrapSymbol(Class<?> clazz) {
         AssertionUtil.requireParamNotNull("clazz", clazz);
-        JClassSymbol sym = resolver.resolveClassFromBinaryName(clazz.getName());
+        JClassSymbol sym = resolver.resolveClassFromBinaryName(clazz.getName(), ClasspathRequest.unknownOrigin());
         return Objects.requireNonNull(sym, "sym");
     }
 
@@ -431,8 +431,8 @@ public final class TypeSystem {
     /**
      * @since 7.5.0
      */
-    public @Nullable JModuleSymbol getModuleSymbol(String moduleName) {
-        return resolver.resolveModule(moduleName);
+    public @Nullable JModuleSymbol getModuleSymbol(String moduleName, ClasspathRequest origin) {
+        return resolver.resolveModule(moduleName, origin);
     }
 
     /**

@@ -17,6 +17,7 @@ import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 class ModuleStubTest {
@@ -40,7 +41,7 @@ class ModuleStubTest {
 
             return classLoader.getResourceAsStream(name);
         });
-        JModuleSymbol moduleSymbol = ts.getModuleSymbol("test.net.sourceforge.pmd");
+        JModuleSymbol moduleSymbol = ts.getModuleSymbol("test.net.sourceforge.pmd", ClasspathRequest.unknownOrigin());
         assertThat(moduleSymbol.getExportedPackages(), hasSize(3));
         assertThat(moduleSymbol.getExportedPackages(), hasItems("net.sourceforge.pmd", "net.sourceforge.pmd.annotation", "net.sourceforge.pmd.lang"));
 

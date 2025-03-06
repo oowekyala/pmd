@@ -113,8 +113,7 @@ public final class ReferenceCtx {
 
     public JClassSymbol resolveClassFromBinaryName(String binary) {
         // we may report inaccessible members too
-        return processor.getSymResolver().resolveClassFromBinaryName(binary);
-
+        return processor.resolveClassFromBinaryName(binary);
     }
 
     public static ReferenceCtx ctxOf(ASTTypeDeclaration node, JavaAstProcessor processor, boolean outsideContext) {

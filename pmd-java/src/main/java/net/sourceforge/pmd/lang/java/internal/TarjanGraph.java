@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +24,7 @@ import java.util.Set;
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
+import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
  * A graph to walk over ivar dependencies in an efficient way.
@@ -35,7 +39,7 @@ public class TarjanGraph<T> {
 
     private final Set<Vertex<T>> vertices = new LinkedHashSet<>();
     // direct successors
-    private final Map<Vertex<T>, Set<Vertex<T>>> successors = new HashMap<>();
+    private Map<Vertex<T>, Set<Vertex<T>>> successors = new HashMap<>();
 
     public Vertex<T> addLeaf(T data) {
         Vertex<T> v = new Vertex<>(this, Collections.singleton(data));
@@ -70,21 +74,28 @@ public class TarjanGraph<T> {
         return vertices;
     }
 
+    public Iterator<Set<T>> topologicalSort() {
+        return IteratorUtil.map(toposortVertices().iterator(), Vertex::getData);
+    }
+
     /**
      * Returns a list in which the vertices of this graph are sorted
      * in the following way:
      *
      * if there exists an edge u -> v, then u comes AFTER v in the list.
+     *
+     * <p>Note that this assumes that the graph is acyclic and will
+     * not terminate if it is.
      */
-    public List<Set<T>> topologicalSort() {
-        List<Set<T>> sorted = new ArrayList<>(vertices.size());
+    public List<Vertex<T>> toposortVertices() {
+        List<Vertex<T>> sorted = new ArrayList<>(vertices.size());
         for (Vertex<T> n : vertices) {
             toposort(n, sorted);
         }
         return sorted;
     }
 
-    private void toposort(Vertex<T> v, List<Set<T>> sorted) {
+    private void toposort(Vertex<T> v, List<Vertex<T>> sorted) {
         if (v.mark) {
             return;
         }
@@ -94,7 +105,7 @@ public class TarjanGraph<T> {
         }
 
         v.mark = true;
-        sorted.add(v.getData());
+        sorted.add(v);
     }
 
     /**
@@ -146,6 +157,56 @@ public class TarjanGraph<T> {
         }
     }
 
+    /**
+     * Compute transitive reduction of this graph. This MUST be run
+     * after {@link #mergeCycles()} has been run, as it requires an
+     * acyclic graph.
+     */
+    public void transitiveReductionOnDag() {
+        List<Vertex<T>> toposort = toposortVertices();
+        Collections.reverse(toposort);
+        Map<Vertex<T>, Set<Vertex<T>>> newSuccessors = new LinkedHashMap<>();
+
+        // See algorithm from https://github.com/jafingerhut/cljol/blob/master/doc/transitive-reduction-notes.md
+        for (int i = 0; i < toposort.size(); i++) {
+            Vertex<T> vi = toposort.get(i);
+
+            for (int j = 0; j < i; j++) {
+                toposort.get(j).mark = false;
+            }
+
+            for (int j = i - 1; j >= 0; j--) {
+                Vertex<T> vj = toposort.get(j);
+
+                if (successorsOf(vj).contains(vi)) {
+                    if (!vj.mark) {
+                        vj.mark = true;
+                        newSuccessors.compute(vj, (vj2, vjSuccs) -> {
+                            if (vjSuccs == null) {
+                                vjSuccs = new HashSet<>();
+                            }
+                            vjSuccs.add(vi);
+                            return vjSuccs;
+                        });
+                    }
+                }
+                // If T[j] can reach T[i], then any node with an edge into
+                // T[j] can also reach T[i], so mark them, too.
+                if (vj.mark) {
+
+                    for (int k = 0; k < j; k++) {
+                        Vertex<T> vk = toposort.get(k);
+                        if (newSuccessors.computeIfAbsent(vk, ignored -> new LinkedHashSet<>()).contains(vj)) {
+                            vk.mark = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        this.successors = newSuccessors;
+    }
+
     protected void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
         Set<Vertex<T>> succ = union(successorsOf(vertex), successorsOf(toMerge));
         succ.remove(toMerge);
@@ -158,10 +219,10 @@ public class TarjanGraph<T> {
 
     @Override
     public String toString() {
-        return GraphUtil.toDot(getAsDotGraph());
+        return GraphUtil.toDot(asDotGraph());
     }
 
-    public DotGraphDescription<Vertex<T>> getAsDotGraph() {
+    public DotGraphDescription<?> asDotGraph() {
         return new DotGraphDescription<>(
             vertices,
             this::successorsOf,
@@ -220,14 +281,13 @@ public class TarjanGraph<T> {
 
         private final Map<T, Vertex<T>> vertexMap = new HashMap<>();
 
+        public UniqueGraph() {
+        }
+
+
         @Override
         public Vertex<T> addLeaf(T data) {
-            if (vertexMap.containsKey(data)) {
-                return vertexMap.get(data);
-            }
-            Vertex<T> v = super.addLeaf(data);
-            vertexMap.put(data, v);
-            return v;
+            return vertexMap.computeIfAbsent(data, super::addLeaf);
         }
 
         @Override

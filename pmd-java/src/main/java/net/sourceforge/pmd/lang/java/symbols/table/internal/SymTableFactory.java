@@ -42,7 +42,6 @@ import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
-import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
@@ -115,18 +114,12 @@ final class SymTableFactory {
     }
 
     JClassSymbol loadClassReportFailure(JavaNode location, String fqcn) {
-        JClassSymbol loaded = loadClassOrFail(fqcn);
+        JClassSymbol loaded = processor.resolveClassFromCanonicalName(fqcn);
         if (loaded == null) {
             getLogger().warning(location, JavaSemanticErrors.CANNOT_RESOLVE_SYMBOL, fqcn);
         }
 
         return loaded;
-    }
-
-    /** @see SymbolResolver#resolveClassFromCanonicalName(String, ClasspathRequest) */
-    @Nullable
-    JClassSymbol loadClassOrFail(String fqcn) {
-        return processor.getSymResolver().resolveClassFromCanonicalName(fqcn, classpathRequest());
     }
 
     // </editor-fold>
@@ -181,7 +174,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.IMPORT_ON_DEMAND,
                 importedTypes.getMutableMap(),
-                JavaResolvers.importedOnDemand(lazyImportedPackagesAndTypes, processor.getSymResolver(), thisPackage, classpathRequest)
+                JavaResolvers.importedOnDemand(lazyImportedPackagesAndTypes, processor, thisPackage)
             );
         }
 
@@ -220,7 +213,7 @@ final class SymTableFactory {
         if (reportLocation.isPresent()) {
             containerClass = loadClassReportFailure(reportLocation.get(), importedName);
         } else {
-            containerClass = loadClassOrFail(importedName);
+            containerClass = processor.resolveClassFromCanonicalName(importedName);
         }
         if (containerClass != null) {
             // populate the inherited state
@@ -256,7 +249,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.MODULE_IMPORT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(lazyImportedModules, processor.getSymResolver(), thisPackage, classpathRequest())
+                JavaResolvers.moduleImport(lazyImportedModules, processor, thisPackage)
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -359,7 +352,7 @@ final class SymTableFactory {
                 typeNode(parent),
                 ScopeInfo.SIMPLE_COMPILATION_UNIT,
                 importedTypes.getMutableMap(),
-                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor.getSymResolver(), thisPackage, classpathRequest())
+                JavaResolvers.moduleImport(Collections.singleton("java.base"), processor, thisPackage)
         );
 
         return SymbolTableImpl.withTypes(parent, types);
@@ -393,7 +386,7 @@ final class SymTableFactory {
 
         return SymbolTableImpl.withTypes(
             parent,
-            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor.getSymResolver(), packageName, classpathRequest()))
+            TYPES.augmentWithCache(typeNode(parent), true, scopeTag, JavaResolvers.packageResolver(processor, packageName))
         );
     }
 

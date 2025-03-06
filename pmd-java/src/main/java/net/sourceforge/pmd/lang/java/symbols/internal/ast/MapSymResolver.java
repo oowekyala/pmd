@@ -38,12 +38,12 @@ final class MapSymResolver implements SymbolResolver {
     }
 
     @Override
-    public @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName) {
+    public @Nullable JClassSymbol resolveClassFromCanonicalName(@NonNull String canonicalName, ClasspathRequest origin) {
         return byCanonicalName.get(canonicalName);
     }
 
     @Override
-    public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+    public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName, ClasspathRequest origin) {
         return null;
     }
 

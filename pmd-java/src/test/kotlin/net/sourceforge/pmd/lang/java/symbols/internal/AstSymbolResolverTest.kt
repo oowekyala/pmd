@@ -4,12 +4,12 @@
 
 package net.sourceforge.pmd.lang.java.symbols.internal
 
-import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.test.ast.shouldBeA
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge
 import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 
 /**
  * @author Clément Fournier

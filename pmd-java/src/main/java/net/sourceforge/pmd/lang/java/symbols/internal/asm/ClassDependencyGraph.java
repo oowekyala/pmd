@@ -22,9 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.DependencyNode;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
@@ -137,22 +136,6 @@ public class ClassDependencyGraph {
         // finally record the hash of the found file.
         long hash = found == null ? 0 : found.abiFingerprint;
         hashesByBinaryName.putIfAbsent(binaryName, hash);
-    }
-
-    TarjanGraph<String> classGraph() {
-        TarjanGraph<String> graph = new UniqueGraph<>();
-        for (String binaryName : hashesByBinaryName.keySet()) {
-            Vertex<String> vertex = graph.addLeaf(binaryName);
-            ClassRequests req = binaryDeps.get(binaryName);
-            if (req == null) continue;
-            for (String dep : req.dependenciesBinaryNames) {
-                Vertex<String> toVertex = graph.addLeaf(dep);
-                graph.addEdge(vertex, toVertex);
-            }
-        }
-
-        graph.mergeCycles();
-        return graph;
     }
 
     private static final int MAGIC_NUMBER = 0x5B75FFF;
@@ -268,14 +251,14 @@ public class ClassDependencyGraph {
     }
 
     String toDot() {
-        return GraphUtil.toDot(getGraphView());
+        return GraphUtil.toDot(asDotGraph());
     }
 
     void toDot(Appendable a) throws IOException {
-        GraphUtil.toDot(a, classGraph().getAsDotGraph());
+        GraphUtil.toDot(a, makeSummaryGraph().asDotGraph());
     }
 
-    private DotGraphDescription<String> getGraphView() {
+    private DotGraphDescription<?> asDotGraph() {
         return new DotGraphDescription<>(
             hashesByBinaryName.keySet(),
             v -> {
@@ -291,10 +274,33 @@ public class ClassDependencyGraph {
         );
     }
 
-    static class SummaryDependencyGraph {
+    SummaryDependencyGraph makeSummaryGraph() {
+        SummaryDependencyGraph graph = new SummaryDependencyGraph();
+        for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
+            Vertex<DependencyNode> fromClass = graph.addClassLeaf(entry.getKey(), entry.getValue());
+            ClassRequests req = binaryDeps.get(entry.getKey());
+            if (req == null) {
+                continue;
+            }
+            for (String dep : req.dependenciesBinaryNames) {
+                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, hashesByBinaryName.get(dep));
+                graph.recordDependency(fromClass, toClass);
+            }
+        }
 
+        sourceDeps.forEach(
+            (fileId, requests) -> {
+                Vertex<DependencyNode> fromSource = graph.addSourceLeaf(fileId);
+                for (String req : requests.byBinaryName.keySet()) {
+                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, hashesByBinaryName.get(req));
+                    graph.recordDependency(fromSource, toClass);
+                }
+            }
+        );
 
+        graph.reduce();
 
+        return graph;
     }
 
     public void computeChangedClasses(AsmSymbolResolver symbolResolver) {

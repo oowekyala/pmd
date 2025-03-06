@@ -119,7 +119,7 @@ interface VarWalkStrategy extends Iterator<Set<InferenceVar>> {
 
             // meaning we'll solve variables in the correct order,
             // which also respects the JLS
-            return graph.topologicalSort().iterator();
+            return graph.topologicalSort();
         }
     }
 

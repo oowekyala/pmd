@@ -85,7 +85,7 @@ public class AsmSymbolResolver implements SymbolResolver {
     }
 
     @Override
-    public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName) {
+    public @Nullable JModuleSymbol resolveModule(@NonNull String moduleName, ClasspathRequest origin) {
         // by convention try to load module-info via "moduleName/module-info.class". The used
         // classloader will need to handle this case to return the correct module-info.class for the
         // requested module. See impl of ClasspathClassLoader in pmd-core.

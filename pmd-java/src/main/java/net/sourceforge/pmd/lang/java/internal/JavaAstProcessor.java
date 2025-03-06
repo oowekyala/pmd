@@ -17,9 +17,11 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.InternalApiBridge;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
+import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.SymbolTableResolver;
@@ -46,6 +48,7 @@ public final class JavaAstProcessor {
 
     private final UnresolvedClassStore unresolvedTypes;
     private final ASTCompilationUnit acu;
+    private final ClasspathRequest classpathRequest;
 
 
     private JavaAstProcessor(JavaLanguageProcessor globalProc,
@@ -59,6 +62,7 @@ public final class JavaAstProcessor {
         this.typeInferenceLogger = typeInfLogger;
         this.unresolvedTypes = new UnresolvedClassStore(globalProc.getTypeSystem());
         this.acu = acu;
+        this.classpathRequest = ClasspathRequest.signatureDep(acu);
     }
 
     public UnresolvedClassStore getUnresolvedStore() {
@@ -79,7 +83,7 @@ public final class JavaAstProcessor {
      * an unresolved symbol, and may report the failure if the location is non-null.
      */
     public @NonNull JClassSymbol findSymbolCannotFail(@Nullable JavaNode location, String canoName) {
-        JClassSymbol found = getSymResolver().resolveClassFromCanonicalName(canoName);
+        JClassSymbol found = getSymResolver().resolveClassFromCanonicalName(canoName, classpathRequest);
         if (found == null) {
             if (location != null) {
                 reportCannotResolveSymbol(location, canoName);
@@ -87,6 +91,18 @@ public final class JavaAstProcessor {
             return makeUnresolvedReference(canoName, 0);
         }
         return found;
+    }
+
+    public @Nullable JClassSymbol resolveClassFromBinaryName(String binaryName) {
+        return getSymResolver().resolveClassFromBinaryName(binaryName, classpathRequest);
+    }
+
+    public @Nullable JClassSymbol resolveClassFromCanonicalName(String canonicalName) {
+        return getSymResolver().resolveClassFromCanonicalName(canonicalName, classpathRequest);
+    }
+
+    public @Nullable JModuleSymbol resolveModule(String canonicalName) {
+        return getSymResolver().resolveModule(canonicalName, classpathRequest);
     }
 
     public void reportCannotResolveSymbol(@NonNull JavaNode location, String canoName) {
@@ -170,4 +186,5 @@ public final class JavaAstProcessor {
     public FileId getFileId() {
         return acu.getTextDocument().getFileId();
     }
+
 }
