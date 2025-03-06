@@ -22,6 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
+import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.DependencyNode;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.util.GraphUtil;
@@ -250,7 +251,7 @@ public class ClassDependencyGraph {
     }
 
     void toDot(Appendable a) throws IOException {
-        GraphUtil.toDot(a, asDotGraph());
+        GraphUtil.toDot(a, makeSummaryGraph().asDotGraph());
     }
 
     public DotGraphDescription<?> asDotGraph() {
@@ -272,26 +273,28 @@ public class ClassDependencyGraph {
     public SummaryDependencyGraph makeSummaryGraph() {
         SummaryDependencyGraph graph = new SummaryDependencyGraph();
         for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
-            DependencyNode fromNode = graph.addClassLeaf(entry.getKey(), entry.getValue());
+            Vertex<DependencyNode> fromClass = graph.addClassLeaf(entry.getKey(), entry.getValue());
             ClassRequests req = binaryDeps.get(entry.getKey());
             if (req == null) {
                 continue;
             }
             for (String dep : req.dependenciesBinaryNames) {
-                DependencyNode toNode = graph.addClassLeaf(dep, hashesByBinaryName.get(dep));
-                graph.recordDependency(fromNode, toNode);
+                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, hashesByBinaryName.get(dep));
+                graph.recordDependency(fromClass, toClass);
             }
         }
 
         sourceDeps.forEach(
             (fileId, requests) -> {
-                DependencyNode fromSource = graph.addSourceLeaf(fileId);
+                Vertex<DependencyNode> fromSource = graph.addSourceLeaf(fileId);
                 for (String req : requests.byBinaryName.keySet()) {
-                    DependencyNode toClass = graph.addClassLeaf(req, hashesByBinaryName.get(req));
+                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, hashesByBinaryName.get(req));
                     graph.recordDependency(fromSource, toClass);
                 }
             }
         );
+
+        graph.reduce();
 
         return graph;
     }
