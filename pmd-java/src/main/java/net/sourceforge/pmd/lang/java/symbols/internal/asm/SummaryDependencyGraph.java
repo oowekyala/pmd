@@ -17,12 +17,12 @@ import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
  * This is the data structure that is written to disk. It has info about the
  * classes and source files of the analysis.
  */
-final class SummaryDependencyGraph {
+public final class SummaryDependencyGraph {
 
     // This graph is inverted. There is an edge U -> V if V depends on U.
     private final TarjanGraph<DependencyNode> graph;
 
-    public SummaryDependencyGraph() {
+    SummaryDependencyGraph() {
         graph = new UniqueGraph<>();
     }
 

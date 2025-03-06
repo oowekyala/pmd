@@ -150,6 +150,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
                                                         .map(JElementSymbol::getSimpleName)
                                                         .collect(CollectionUtil.toPersistentSet())
                                   : HashTreePSet.empty();
+
             }
 
             @Override
@@ -260,6 +261,8 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
                 this.enclosingInfo = EnclosingInfo.NO_ENCLOSING;
             } else {
                 this.enclosingInfo = new EnclosingInfo(outer, methodName, methodDescriptor);
+                // add a dependency from the inner class to the inner class in the dependency graph.
+                resolver.recordOuterClass(this, outer);
             }
         }
     }
@@ -666,11 +669,11 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
         static final EnclosingInfo NO_ENCLOSING = new EnclosingInfo(null, null, null);
 
-        private final @Nullable JClassSymbol stub;
+        private final @Nullable ClassStub stub;
         private final @Nullable String methodName;
         private final @Nullable String methodDescriptor;
 
-        EnclosingInfo(@Nullable JClassSymbol stub, @Nullable String methodName, @Nullable String methodDescriptor) {
+        EnclosingInfo(@Nullable ClassStub stub, @Nullable String methodName, @Nullable String methodDescriptor) {
             this.stub = stub;
             this.methodName = methodName;
             this.methodDescriptor = methodDescriptor;
@@ -685,10 +688,9 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
         }
 
         public @Nullable MethodStub getEnclosingMethod() {
-            if (stub instanceof ClassStub && methodName != null) {
-                ClassStub stub1 = (ClassStub) stub;
-                stub1.parseLock.ensureParsed();
-                for (JMethodSymbol m : stub1.methods) {
+            if (stub != null && methodName != null) {
+                stub.parseLock.ensureParsed();
+                for (JMethodSymbol m : stub.methods) {
                     MethodStub ms = (MethodStub) m;
                     if (ms.matches(methodName, methodDescriptor)) {
                         return ms;

@@ -250,15 +250,11 @@ public class ClassDependencyGraph {
         );
     }
 
-    String toDot() {
-        return GraphUtil.toDot(asDotGraph());
-    }
-
     void toDot(Appendable a) throws IOException {
         GraphUtil.toDot(a, makeSummaryGraph().asDotGraph());
     }
 
-    private DotGraphDescription<?> asDotGraph() {
+    public DotGraphDescription<?> asDotGraph() {
         return new DotGraphDescription<>(
             hashesByBinaryName.keySet(),
             v -> {
@@ -274,7 +270,7 @@ public class ClassDependencyGraph {
         );
     }
 
-    SummaryDependencyGraph makeSummaryGraph() {
+    public SummaryDependencyGraph makeSummaryGraph() {
         SummaryDependencyGraph graph = new SummaryDependencyGraph();
         for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
             Vertex<DependencyNode> fromClass = graph.addClassLeaf(entry.getKey(), entry.getValue());
