@@ -259,7 +259,10 @@ public final class SummaryDependencyGraph {
         private void markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
             visited.set(id);
             changed.set(id);
-            files.addAll(filesByVxId.get(id));
+            Set<FileId> filesInThisVertex = filesByVxId.get(id);
+            if (filesInThisVertex != null) {
+                files.addAll(filesInThisVertex);
+            }
             NodeIdSet successors = this.successors.get(id);
             if (successors != null) {
                 for (int succ : successors.data) {
