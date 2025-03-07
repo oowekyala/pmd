@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.FailedLoader;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.StreamLoader;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
@@ -196,7 +195,7 @@ public class AsmSymbolResolver implements SymbolResolver {
     public void writeReducedGraph(Path toPath) throws IOException {
         // todo do that asynchronously during reporting (it takes a second to reduce the graph. Probably better
         //  algorithms could be used)
-        ClassDependencyGraph summaryGraph = dependencyTracker.makeSummaryGraph();
+        ClassDependencyGraph summaryGraph = dependencyTracker.makeDepGraph();
         try (OutputStream out = Files.newOutputStream(toPath)) {
             summaryGraph.serialize(out);
         }
@@ -209,9 +208,10 @@ public class AsmSymbolResolver implements SymbolResolver {
             }
             LOG.debug("Wrote class dependency graph to {}", toPath);
 
+            summaryGraph.compressGraphForQueryPhase();
             toPath = toPath.getParent().resolve("depgraph-reduced.gexf");
             try (BufferedWriter writer = Files.newBufferedWriter(toPath)) {
-                GraphUtil.toGexf(writer, summaryGraph.asWriteableGraph());
+                GraphUtil.toGexf(writer, summaryGraph.debugGraph());
             }
             LOG.debug("Wrote reduced dependency graph to {}", toPath);
         }
@@ -225,14 +225,17 @@ public class AsmSymbolResolver implements SymbolResolver {
 
     public ClasspathCheckResult readClasspathDependencyCache(Path classGraphCache) throws IOException {
         if (!Files.exists(classGraphCache)) {
-            return ClasspathCheckResult.noCacheFile();
+            return ClassDependencyGraph.ClasspathCheckResult.noCacheFile();
         }
-        ClassQueryGraph cachedDepGraph;
+        ClassDependencyGraph cachedDepGraph;
         try(InputStream in = Files.newInputStream(classGraphCache)) {
             cachedDepGraph = ClassDependencyGraph.deserialize(in);
         }
         // compute out-of-date files
-        ClasspathCheckResult result = cachedDepGraph.checkClasspathIsUpToDate(this);
+        ClassDependencyGraph graphCopy = new ClassDependencyGraph(cachedDepGraph);
+        graphCopy.compressGraphForQueryPhase();
+
+        ClasspathCheckResult result = graphCopy.checkClasspathIsUpToDate(this);
         // restore cached dependencies into the tracker
         dependencyTracker.restoreCachedGraph(result);
         return result;

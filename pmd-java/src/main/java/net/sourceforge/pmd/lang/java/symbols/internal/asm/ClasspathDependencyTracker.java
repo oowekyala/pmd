@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.DependencyItem;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.ClassFileRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.DependencyType;
@@ -117,7 +117,7 @@ public class ClasspathDependencyTracker {
      * and source file dependencies into a single graph. This structure can then
      * be persisted between runs.
      */
-    public ClassDependencyGraph makeSummaryGraph() {
+    public ClassDependencyGraph makeDepGraph() {
         ClassDependencyGraph graph = new ClassDependencyGraph();
         for (String internalName : resolver.getQueriedInternalNames()) {
 
@@ -141,8 +141,6 @@ public class ClasspathDependencyTracker {
                 }
             }
         );
-
-        graph.finalizeGraph();
 
         return graph;
     }

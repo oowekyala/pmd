@@ -31,7 +31,7 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunctio
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -103,7 +103,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
                 if (result.allFilesNeedToBeProcessedAgain()) {
                     LOG.debug("All files will need to be processed again");
                 } else {
-                    LOG.debug("Dependency analysis found {} changed files", result.getChangedFiles());
+                    LOG.debug("Dependency analysis found {} changed files", result.getChangedFiles().size());
                 }
                 return result;
             } else {

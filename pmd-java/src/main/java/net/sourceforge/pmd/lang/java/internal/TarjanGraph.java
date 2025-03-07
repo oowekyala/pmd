@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,6 +50,12 @@ public class TarjanGraph<T> {
         return v;
     }
 
+    protected Vertex<T> addLeaf(Set<T> data) {
+        Vertex<T> v = makeVertex(data);
+        vertices.add(v);
+        return v;
+    }
+
     protected Vertex<T> makeVertex(Set<T> data) {
         return new Vertex<>(this, data);
     }
@@ -57,7 +64,7 @@ public class TarjanGraph<T> {
      * Implicitly add both nodes to the graph and record a directed
      * edge between the first and the second.
      */
-    public void addEdge(Vertex<T> start, Vertex<T> end) {
+    public final void addEdge(Vertex<T> start, Vertex<T> end) {
         Objects.requireNonNull(end);
         Objects.requireNonNull(start);
 
@@ -69,6 +76,24 @@ public class TarjanGraph<T> {
             return;
         }
         successors.computeIfAbsent(start, k -> new LinkedHashSet<>()).add(end);
+    }
+
+
+    protected void cloneInto(TarjanGraph<T> graph) {
+        Map<Vertex<T>, Vertex<T>> newVertices = new HashMap<>();
+        for (Vertex<T> v : vertices) {
+            Vertex<T> vertex = graph.addLeaf(v.getData());
+            newVertices.put(v, vertex);
+        }
+
+        for (Entry<Vertex<T>, Set<Vertex<T>>> entry : successors.entrySet()) {
+            Vertex<T> vertex = newVertices.get(entry.getKey());
+            Set<Vertex<T>> succs = new HashSet<>(entry.getValue().size());
+            for (Vertex<T> succ : entry.getValue()) {
+                succs.add(newVertices.get(succ));
+            }
+            graph.successors.put(vertex, succs);
+        }
     }
 
     // test only
@@ -336,13 +361,26 @@ public class TarjanGraph<T> {
         public UniqueGraph() {
         }
 
-        public Map<T, Vertex<T>> getVertexMap() {
-            return Collections.unmodifiableMap(vertexMap);
-        }
-
         @Override
         public Vertex<T> addLeaf(T data) {
             return vertexMap.computeIfAbsent(data, super::addLeaf);
+        }
+
+        @Override
+        protected Vertex<T> addLeaf(Set<T> data) {
+            // Note that this version will not fetch an existing leaf.
+            // This is because the items within data may disagree about
+            // what vertex is associated to the data. For this reason this
+            // routine requires that none of the data items be associated
+            // yet.
+            assert data.stream().noneMatch(vertexMap::containsKey)
+                : "Duplicate node added " + data;
+
+            Vertex<T> vertex = super.addLeaf(data);
+            for (T v : data) {
+                vertexMap.put(v, vertex);
+            }
+            return vertex;
         }
 
         @Override

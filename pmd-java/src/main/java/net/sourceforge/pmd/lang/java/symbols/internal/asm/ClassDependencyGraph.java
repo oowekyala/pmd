@@ -6,21 +6,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 import org.slf4j.Logger;
@@ -30,8 +27,6 @@ import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.BinaryInfo;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.NodeIdSet;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 import net.sourceforge.pmd.util.GraphUtil.GexfGraphDescription;
@@ -41,6 +36,12 @@ import net.sourceforge.pmd.util.GraphUtil.GexfGraphDescription;
  * classes and source files of the analysis.
  */
 public final class ClassDependencyGraph {
+    // todo some things are missing:
+    //  - initializing the ClasspathDependencyTracker
+    //  - taking care of self classpath (maybe AnalysisCache can keep doing this)
+    //  - taking care of newly added files (maybe AnalysisCache can keep doing this too)
+    // todo test
+    //  - consider the unknown file
 
     private static final Logger LOG = LoggerFactory.getLogger(ClassDependencyGraph.class);
 
@@ -49,6 +50,11 @@ public final class ClassDependencyGraph {
 
     ClassDependencyGraph() {
         graph = new CompressibleGraph();
+    }
+
+    ClassDependencyGraph(ClassDependencyGraph toCopy) {
+        graph = new CompressibleGraph();
+        toCopy.graph.cloneInto(graph);
     }
 
     Vertex<DependencyItem> addSourceLeaf(FileId fileId) {
@@ -70,6 +76,10 @@ public final class ClassDependencyGraph {
      */
     private static class CompressibleGraph extends UniqueGraph<DependencyItem> {
 
+        protected void cloneInto(CompressibleGraph graph) {
+            super.cloneInto(graph);
+        }
+
         @Override
         protected Vertex<DependencyItem> makeVertex(Set<DependencyItem> data) {
             return new DependencyVertex(this, data);
@@ -79,6 +89,16 @@ public final class ClassDependencyGraph {
         private Set<DependencyVertex> castVertices(Set<Vertex<DependencyItem>> vertices) {
             return (Set) vertices;
         }
+
+
+        public GexfGraphDescription<Vertex<DependencyItem>> asGexfGraph() {
+            GexfGraphDescription<Vertex<DependencyItem>> gexf = super.asGexfGraph();
+            gexf.setLabelFun(v -> v.getData().stream().map(it -> it.toString().replace('/', '.')).collect(Collectors.joining(", ")));
+            gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceItem)));
+            gexf.recordAttribute("nodeSize", "int", v -> Integer.toString(v.getData().size()));
+            return gexf;
+        }
+
 
         void compressGraphHeuristically() {
             Set<DependencyVertex> vertices = castVertices(getVertices());
@@ -95,13 +115,88 @@ public final class ClassDependencyGraph {
                                                 .filter(it -> it.size() >= 2)
                                                 .mapToInt(it -> it.size() - 1)
                                                 .sum();
-                int numVertices = vertices.size();
+                int numVertices = vertices.size() + 1;
                 int percentPruned = 100 * numPruned / numVertices;
                 LOG.trace("Pruned {} vertices from dependency graph ({}%)", numPruned, percentPruned);
             }
 
             batchMerge(state.toBeMerged.values());
 
+        }
+
+        /**
+         * Replay all queries to the classloader from the previous run
+         * with the current classpath. The hash of each result is compared
+         * with the cached hash. If the hash is different, all vertices
+         * reachable from the vertex of the query are marked as out-of-date,
+         * and their queries are not replayed.
+         *
+         * @param resolver Resolver with the current classpath
+         */
+        ClasspathCheckResult checkClasspathIsUpToDate(AsmSymbolResolver resolver) {
+            // Could we do some of this in parallel?
+
+            for (DependencyVertex vertex : castVertices(getVertices())) {
+                vertex.reset();
+            }
+
+            Set<FileId> files = new HashSet<>();
+
+            nextVertex:
+            for (DependencyVertex vertex : castVertices(getVertices())) {
+                if (vertex.hasBeenVisited()) {
+                    continue;
+                }
+                for (DependencyItem item : vertex.getData()) {
+                    if (item instanceof ClassItem) {
+                        ClassItem classItem = (ClassItem) item;
+                        long checksum = resolver.getStubChecksumWithClassloaderHit(classItem.internalName);
+                        boolean isChanged = classItem.checksum != checksum;
+
+                        if (isChanged) {
+                            // class has changed. Mark all the nodes it can reach as changed.
+                            boolean abort = markChanged(vertex, files);
+                            if (abort) {
+                                // a dependency changed that influences all files.
+                                return new ClasspathCheckResult(Collections.emptySet(), true);
+                            }
+                            // no need to process other items in this vertex, it has been marked as changed
+                            continue nextVertex;
+                        }
+                    }
+                }
+                vertex.markUnchanged();
+            }
+
+            return new ClasspathCheckResult(files, false);
+        }
+
+        private boolean markChanged(DependencyVertex vertex, Set<FileId> files) {
+            vertex.markChanged();
+
+            for (DependencyItem item : vertex.getData()) {
+                if (item instanceof SourceItem) {
+                    SourceItem sourceItem = (SourceItem) item;
+                    if (sourceItem.fileId == FileId.UNKNOWN) {
+                        return true;
+                    }
+                    files.add(sourceItem.fileId);
+                }
+            }
+
+            for (DependencyVertex succ : castVertices(successorsOf(vertex))) {
+                if (!vertex.isChanged()) {
+                    boolean abort = markChanged(succ, files);
+                    if (abort) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        protected Vertex<DependencyItem> addLeaf(Set<DependencyItem> nodeValue) {
+            return super.addLeaf(nodeValue);
         }
 
         private static class CompressionState {
@@ -137,11 +232,35 @@ public final class ClassDependencyGraph {
             }
         }
 
-        static final class DependencyVertex extends Vertex<DependencyItem> {
+        private static final class DependencyVertex extends Vertex<DependencyItem> {
             private PSet<SourceItem> downstream;
 
             DependencyVertex(TarjanGraph<DependencyItem> owner, Set<DependencyItem> data) {
                 super(owner, data);
+            }
+
+            private static final int NOT_VISITED = 0;
+            private static final int CHANGED = 1;
+            private static final int UNCHANGED = 2;
+
+            void reset() {
+                index = NOT_VISITED;
+            }
+
+            boolean hasBeenVisited() {
+                return index != NOT_VISITED;
+            }
+
+            void markChanged() {
+                index = CHANGED;
+            }
+
+            void markUnchanged() {
+                index = UNCHANGED;
+            }
+
+            boolean isChanged() {
+                return index == CHANGED;
             }
         }
     }
@@ -159,8 +278,7 @@ public final class ClassDependencyGraph {
     }
 
     /**
-     * Deserialize a structure written by {@link #serialize(OutputStream)}
-     * into a {@link ClassQueryGraph}.
+     * Deserialize a structure written by {@link #serialize(OutputStream)}.
      *
      * @param is Input stream
      *
@@ -168,7 +286,7 @@ public final class ClassDependencyGraph {
      *
      * @throws IOException if reading fails
      */
-    public static ClassQueryGraph deserialize(InputStream is) throws IOException {
+    public static ClassDependencyGraph deserialize(InputStream is) throws IOException {
         try (GZIPInputStream gzip = new GZIPInputStream(is);
              ObjectInputStream in = new ObjectInputStream(gzip)) {
             return deserialize(in);
@@ -207,197 +325,45 @@ public final class ClassDependencyGraph {
         }
     }
 
-    private static ClassQueryGraph deserialize(ObjectInputStream in) throws IOException {
+    ClasspathCheckResult checkClasspathIsUpToDate(AsmSymbolResolver resolver) {
+        return graph.checkClasspathIsUpToDate(resolver);
+    }
+
+    private static ClassDependencyGraph deserialize(ObjectInputStream in) throws IOException {
+        ClassDependencyGraph result = new ClassDependencyGraph();
+
+        List<Vertex<DependencyItem>> vertices = new ArrayList<>();
 
         final int numVertices = in.readInt();
-        final List<@Nullable NodeIdSet> successors = new ArrayList<>(numVertices);
-        final Map<String, BinaryInfo> classNodeIdByBinaryName = new HashMap<>();
-        final Map<Integer, Set<FileId>> filesByVxId = new HashMap<>();
-
         for (int i = 0; i < numVertices; i++) {
             int nodeSize = in.readInt();
+            Set<DependencyItem> nodeValue = new HashSet<>();
             for (int j = 0; j < nodeSize; j++) {
                 boolean isClassNode = in.readBoolean();
-                if (isClassNode) {
-                    ClassItem node = ClassItem.deserialize(in);
-                    classNodeIdByBinaryName.put(node.internalName, new BinaryInfo(i, node.checksum));
-                } else {
-                    SourceItem node = SourceItem.deserialize(in);
-                    filesByVxId.computeIfAbsent(i, k -> new HashSet<>()).add(node.fileId);
-                }
+                DependencyItem item = isClassNode ? ClassItem.deserialize(in) : SourceItem.deserialize(in);
+                nodeValue.add(item);
             }
+            Vertex<DependencyItem> vertex = result.graph.addLeaf(nodeValue);
+            vertices.add(vertex);
         }
 
-        for (int i = 0; i < numVertices; i++) {
+        for (Vertex<DependencyItem> vertex : vertices) {
             int numSuccessors = in.readInt();
-            if (numSuccessors == 0) {
-                successors.add(null);
-                continue;
-            }
-            NodeIdSet nodeSuccs = new NodeIdSet(numSuccessors);
             for (int j = 0; j < numSuccessors; j++) {
                 int succId = in.readInt();
-                nodeSuccs.set(j, succId);
+                Vertex<DependencyItem> succVertex = vertices.get(succId);
+                result.graph.addEdge(vertex, succVertex);
             }
-            successors.add(nodeSuccs);
         }
 
-        return new ClassQueryGraph(classNodeIdByBinaryName, filesByVxId, numVertices, successors);
+        return result;
     }
 
-    /**
-     * This is the deserialized structure. Its structure is meant to make queries fast.
-     * We will use this to replay queries and compare them to the current classpath.
-     */
-    public static final class ClassQueryGraph {
-        // todo some things are missing:
-        //  - initializing the ClasspathDependencyTracker
-        //  - taking care of self classpath (maybe AnalysisCache can keep doing this)
-        //  - taking care of newly added files (maybe AnalysisCache can keep doing this too)
-        // todo test
-        //  - consider the unknown file
-
-        // Maybe we should actually do the graph reduction when we load the
-        // graph. That way, it stays compatible with whatever info we collect
-        // during later analysis (we don't throw out any information). However,
-        // if a node is marked out of date, we have to throw it out.
-
-        final Map<String, BinaryInfo> classNodeIdByInternalName;
-        final int numVertices;
-        final List<@Nullable NodeIdSet> successors;
-        final Map<Integer, Set<FileId>> filesByVxId;
-
-
-        ClassQueryGraph(Map<String, BinaryInfo> classNodeIdByInternalName,
-                        Map<Integer, Set<FileId>> filesByVxId,
-                        int numVertices,
-                        List<@Nullable NodeIdSet> successors) {
-            this.classNodeIdByInternalName = classNodeIdByInternalName;
-            this.numVertices = numVertices;
-            this.successors = successors;
-            this.filesByVxId = filesByVxId;
-            assert successors.size() == numVertices;
-        }
-
-        /**
-         * Replay all queries to the classloader from the previous run
-         * with the current classpath. The hash of each result is compared
-         * with the cached hash. If the hash is different, all vertices
-         * reachable from the vertex of the query are marked as out-of-date,
-         * and their queries are not replayed.
-         *
-         * @param resolver Resolver with the current classpath
-         */
-        public ClasspathCheckResult checkClasspathIsUpToDate(AsmSymbolResolver resolver) {
-            BitSet changed = new BitSet(numVertices);
-            BitSet visited = new BitSet(numVertices);
-            Set<FileId> files = new HashSet<>();
-
-            // Could we do some of this in parallel?
-            for (Entry<String, BinaryInfo> entry : classNodeIdByInternalName.entrySet()) {
-                BinaryInfo info = entry.getValue();
-                if (visited.get(info.vertexId)) {
-                    continue;
-                }
-                long checksum = resolver.getStubChecksumWithClassloaderHit(entry.getKey());
-                boolean isChanged = info.checksum != checksum;
-
-                if (isChanged) {
-                    // class has changed. Mark all the nodes it can reach as changed.
-                    boolean abort = markChanged(info.vertexId, visited, changed, files);
-                    if (abort) {
-                        // a dependency changed that influences all files.
-                        return new ClasspathCheckResult(Collections.emptySet(), true);
-                    }
-                }
-            }
-            return new ClasspathCheckResult(files, false);
-        }
-
-        private boolean markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
-            visited.set(id);
-            changed.set(id);
-            Set<FileId> filesInThisVertex = filesByVxId.get(id);
-            if (filesInThisVertex != null) {
-                boolean added = files.addAll(filesInThisVertex);
-                if (added && filesInThisVertex.contains(FileId.UNKNOWN)) {
-                    // todo all files should be invalidated
-                    return true;
-                }
-            }
-            NodeIdSet successors = this.successors.get(id);
-            if (successors != null) {
-                for (int succ : successors.data) {
-                    if (!changed.get(succ)) {
-                        boolean abort = markChanged(succ, visited, changed, files);
-                        if (abort) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-
-        public static class ClasspathCheckResult {
-            private final Set<FileId> changedFiles;
-            private final boolean aborted;
-
-            ClasspathCheckResult(Set<FileId> changedFiles, boolean aborted) {
-                this.changedFiles = changedFiles;
-                this.aborted = aborted;
-            }
-
-            public static ClasspathCheckResult noCacheFile() {
-               return new ClasspathCheckResult(Collections.emptySet(), true);
-            }
-
-            public boolean allFilesNeedToBeProcessedAgain() {
-                return aborted;
-            }
-
-            public Set<FileId> getChangedFiles() {
-                return changedFiles;
-            }
-        }
-
-        /** A set of node IDs */
-        static class NodeIdSet {
-            // always full.
-            private final int[] data;
-
-            NodeIdSet(int capacity) {
-                data = new int[capacity];
-            }
-
-            void set(int idx, int id) {
-                assert idx == 0 || id > data[idx - 1];
-                data[idx] = id;
-            }
-
-        }
-
-        static class BinaryInfo {
-            final int vertexId;
-            final long checksum;
-
-            private BinaryInfo(int vertexId, long checksum) {
-                this.vertexId = vertexId;
-                this.checksum = checksum;
-            }
-        }
+    public DotGraphDescription<?> debugGraph() {
+        return graph.asGexfGraph();
     }
 
-    public DotGraphDescription<?> asWriteableGraph() {
-        GexfGraphDescription<Vertex<DependencyItem>> gexf = graph.asGexfGraph();
-        gexf.setLabelFun(v -> v.getData().stream().map(it -> it.toString().replace('/', '.')).collect(Collectors.joining(", ")));
-        gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceItem)));
-        gexf.recordAttribute("nodeSize", "int", v -> Integer.toString(v.getData().size()));
-        return gexf;
-    }
-
-    void finalizeGraph() {
+    void compressGraphForQueryPhase() {
         // note: these algorithms are not optimized enough for the size of graphs we may encounter.
         // It is likely that the transitive reduction especially is unnecessary.
         // We should use a more optimized implementation, maybe using parallel algorithms.
@@ -534,4 +500,25 @@ public final class ClassDependencyGraph {
     }
 
 
+    public static class ClasspathCheckResult {
+        private final Set<FileId> changedFiles;
+        private final boolean aborted;
+
+        ClasspathCheckResult(Set<FileId> changedFiles, boolean aborted) {
+            this.changedFiles = changedFiles;
+            this.aborted = aborted;
+        }
+
+        public static ClasspathCheckResult noCacheFile() {
+           return new ClasspathCheckResult(Collections.emptySet(), true);
+        }
+
+        public boolean allFilesNeedToBeProcessedAgain() {
+            return aborted;
+        }
+
+        public Set<FileId> getChangedFiles() {
+            return changedFiles;
+        }
+    }
 }
