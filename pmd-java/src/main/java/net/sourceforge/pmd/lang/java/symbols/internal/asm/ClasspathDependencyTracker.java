@@ -121,13 +121,13 @@ public class ClasspathDependencyTracker {
         ClassDependencyGraph graph = new ClassDependencyGraph();
         for (String internalName : resolver.getQueriedInternalNames()) {
 
-            Vertex<DependencyNode> fromClass = graph.addClassLeaf(internalName, resolver.getStubHash(internalName));
+            Vertex<DependencyNode> fromClass = graph.addClassLeaf(internalName, resolver.getStubChecksumInCache(internalName));
             ClassRequests req = binaryDeps.get(internalName);
             if (req == null) {
                 continue;
             }
             for (String dep : req.dependenciesInternalNames) {
-                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, resolver.getStubHash(dep));
+                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, resolver.getStubChecksumInCache(dep));
                 graph.recordDependency(fromClass, toClass);
             }
         }
@@ -136,7 +136,7 @@ public class ClasspathDependencyTracker {
             (fileId, requests) -> {
                 Vertex<DependencyNode> fromSource = graph.addSourceLeaf(fileId);
                 for (String req : requests.byInternalName.keySet()) {
-                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, resolver.getStubHash(req));
+                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, resolver.getStubChecksumInCache(req));
                     graph.recordDependency(fromSource, toClass);
                 }
             }

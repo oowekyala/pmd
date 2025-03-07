@@ -294,9 +294,8 @@ public final class ClassDependencyGraph {
                 if (visited.get(info.vertexId)) {
                     continue;
                 }
-                ClassStub sym = resolver.resolveClassFromBinaryName(entry.getKey(), ClasspathRequest.noOrigin());
-                boolean isChanged = sym == null && info.hash != 0
-                    || sym != null && sym.getAbiFingerprint() != info.hash;
+                long checksum = resolver.getStubChecksumWithClassloaderHit(entry.getKey());
+                boolean isChanged = info.checksum != checksum;
 
                 if (isChanged) {
                     // class has changed. Mark all the nodes it can reach as changed.
@@ -376,11 +375,11 @@ public final class ClassDependencyGraph {
 
         static class BinaryInfo {
             final int vertexId;
-            final long hash;
+            final long checksum;
 
-            private BinaryInfo(int vertexId, long hash) {
+            private BinaryInfo(int vertexId, long checksum) {
                 this.vertexId = vertexId;
-                this.hash = hash;
+                this.checksum = checksum;
             }
         }
     }

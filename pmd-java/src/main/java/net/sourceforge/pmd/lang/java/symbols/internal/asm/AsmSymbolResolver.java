@@ -21,6 +21,7 @@ import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
@@ -62,27 +63,39 @@ public class AsmSymbolResolver implements SymbolResolver {
         return knownStubs.keySet();
     }
 
-    long getStubHash(String internalName) {
+    long getStubChecksumInCache(String internalName) {
         ClassStub stub = knownStubs.get(internalName);
         if (stub == null || stub == failed) {
             return 0;
         }
-        return stub.getAbiFingerprint();
+        return stub.getAbiChecksum();
+    }
+
+    long getStubChecksumWithClassloaderHit(String internalName) {
+        ClassStub stub = resolveFromInternalNameFallible(internalName, ClasspathRequest.noOrigin());
+        if (stub == null || stub == failed) {
+            return 0;
+        }
+        return stub.getAbiChecksum();
     }
 
     @Override
-    public @Nullable ClassStub resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
+    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
         AssertionUtil.requireParamNotNull("binaryName", binaryName);
 
         String internalName = getInternalName(binaryName);
 
+        return resolveFromInternalNameFallible(internalName, origin);
+    }
+
+    private @Nullable ClassStub resolveFromInternalNameFallible(@NonNull String internalName, ClasspathRequest origin) {
         ClassStub found = knownStubs.computeIfAbsent(internalName, iname -> {
             @Nullable InputStream inputStream = getStreamOfInternalName(iname);
             if (inputStream == null) {
                 return failed;
             }
 
-            return new ClassStub(this, iname, new StreamLoader(binaryName, inputStream), ClassStub.UNKNOWN_ARITY);
+            return new ClassStub(this, iname, new StreamLoader(iname, inputStream), ClassStub.UNKNOWN_ARITY);
         });
 
         if (!found.hasCanonicalName()) {

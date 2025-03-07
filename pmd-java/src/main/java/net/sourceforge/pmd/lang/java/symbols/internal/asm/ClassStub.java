@@ -53,7 +53,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
     private final Names names;
 
     // Fingerprint of all members. TODO for now this is simply hash of classfile
-    private long abiFingerprint;
+    private long checksum;
     private final ClasspathRequest classpathRequest;
 
     // all the following are lazy and depend on the parse lock
@@ -102,7 +102,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
                         ClassReader classReader = new ClassReader(cis);
                         ClassStubBuilder builder = new ClassStubBuilder(ClassStub.this, resolver);
                         classReader.accept(builder, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-                        abiFingerprint = checksum.getValue();
+                        ClassStub.this.checksum = checksum.getValue();
                         return true;
                     } else {
                         return false;
@@ -177,9 +177,9 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
         return classpathRequest;
     }
 
-    long getAbiFingerprint() {
+    long getAbiChecksum() {
         parseLock.ensureParsed();
-        return abiFingerprint;
+        return checksum;
     }
 
     // <editor-fold  defaultstate="collapsed" desc="Setters used during loading">
