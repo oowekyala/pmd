@@ -8,7 +8,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest
 import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import org.apache.commons.lang3.reflect.TypeLiteral
 import org.junit.jupiter.api.Assertions.*

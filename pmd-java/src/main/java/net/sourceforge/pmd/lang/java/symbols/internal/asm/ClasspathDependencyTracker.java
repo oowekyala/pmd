@@ -4,16 +4,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.DependencyNode;
-import net.sourceforge.pmd.lang.rule.Rule;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.ClassFileRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.DependencyType;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.NoOrigin;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.SourceFileRequest;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
@@ -66,11 +68,6 @@ import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
  *
  */
 public class ClasspathDependencyTracker {
-    // todo maybe we need to coalesce dependencies by JAR. Initially I will build this at the file granularity.
-    //  Coarser (JAR) granularity might result in less memory usage and less bookkeeping, but has less precise dependency information.
-    //  Strongly connected components can be merged too to reduce size of data structure without losing information.
-    //  Whether this is beneficial depends on the topology of the graph, so let's see how it looks like before we optimize.
-    //  Maybe we can also special-case java.lang as all classes will need it.
 
     private final Map<FileId, SourceRequests> sourceDeps;
     private final Map<String, ClassRequests> binaryDeps;
@@ -116,26 +113,6 @@ public class ClasspathDependencyTracker {
     }
 
     /**
-     * Note that this graph only contains classes from the classpath
-     * and their dependencies. It does not contain source files.
-     */
-    public DotGraphDescription<?> asDotGraph() {
-        return new DotGraphDescription<>(
-            resolver.getQueriedInternalNames(),
-            v -> {
-                ClassRequests cr = binaryDeps.get(v);
-                if (cr == null) {
-                    return Collections.emptySet();
-                } else {
-                    return cr.dependenciesInternalNames;
-                }
-            },
-            v -> DotColor.BLACK,
-            v -> v.replace('/', '.')
-        );
-    }
-
-    /**
      * Make the final dependency graph by merging the info we have about class
      * and source file dependencies into a single graph. This structure can then
      * be persisted between runs.
@@ -170,90 +147,30 @@ public class ClasspathDependencyTracker {
         return graph;
     }
 
-    public enum DependencyType {
-        /** The request only needs access to the signatures of the file. */
-        SIGNATURE,
-        /** The request needs access to the full text of the source file. */
-        FULL,
+
+    public void restoreCachedGraph(ClasspathCheckResult result) {
+
     }
+
 
     /**
-     * Metadata about the origin of a request to the classpath. This allows
-     * tracking dependencies between source files and classpath entries.
+     * Note that this graph only contains classes from the classpath
+     * and their dependencies. It does not contain source files.
      */
-    public abstract static class ClasspathRequest {
-
-        private ClasspathRequest() {
-            // internal extension only
-        }
-
-        public static ClasspathRequest unknownOrigin() {
-            return new SourceFileRequest(FileId.UNKNOWN, DependencyType.SIGNATURE);
-        }
-
-        static ClasspathRequest noOrigin() {
-            return NoOrigin.INSTANCE;
-        }
-
-        public static ClasspathRequest signatureDep(@NonNull FileId origin) {
-            return new SourceFileRequest(origin, DependencyType.SIGNATURE);
-        }
-
-        public static ClasspathRequest signatureDep(Node origin) {
-            return signatureDep(origin.getTextDocument().getFileId());
-        }
-
-        public static ClasspathRequest fromRule(FileId origin, Rule unused) {
-            return signatureDep(origin);
-        }
-
-        public static ClasspathRequest fromRule(Node origin, Rule rule) {
-            return fromRule(origin.getTextDocument().getFileId(), rule);
-        }
-    }
-
-    /** Does not record dependencies. */
-    static final class NoOrigin extends ClasspathRequest {
-        static final NoOrigin INSTANCE = new NoOrigin();
-
-        private NoOrigin() {
-        }
-    }
-
-    /**
-     * The request is made from a source file analysed by PMD.
-     */
-    static final class SourceFileRequest extends ClasspathRequest {
-        /** The file making the request. */
-        final @NonNull FileId origin;
-        /** The kind of data requested. */
-        final DependencyType type;
-
-        public SourceFileRequest(@NonNull FileId origin, DependencyType type) {
-            this.origin = Objects.requireNonNull(origin);
-            this.type = type;
-        }
-
-    }
-
-    /**
-     * The request is made from a class file found on the classpath.
-     * This should only be created internally.
-     */
-    static final class ClassFileRequest extends ClasspathRequest {
-        final String internalName;
-
-        ClassFileRequest(String internalName) {
-            this.internalName = internalName;
-        }
-    }
-
-    static final class ModuleFileRequest extends ClasspathRequest {
-        final String moduleName;
-
-        ModuleFileRequest(String moduleName) {
-            this.moduleName = moduleName;
-        }
+    public DotGraphDescription<?> asDotGraph() {
+        return new DotGraphDescription<>(
+            resolver.getQueriedInternalNames(),
+            v -> {
+                ClassRequests cr = binaryDeps.get(v);
+                if (cr == null) {
+                    return Collections.emptySet();
+                } else {
+                    return cr.dependenciesInternalNames;
+                }
+            },
+            v -> DotColor.BLACK,
+            v -> v.replace('/', '.')
+        );
     }
 
 

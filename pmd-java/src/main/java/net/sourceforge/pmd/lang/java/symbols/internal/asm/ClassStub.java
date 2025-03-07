@@ -33,8 +33,6 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeParameterOwnerSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.SymbolEquality;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClassFileRequest;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.CtorStub;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ExecutableStub.MethodStub;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyClassSignature;
@@ -92,7 +90,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
 
         this.resolver = resolver;
         this.names = new Names(internalName);
-        this.classpathRequest = new ClassFileRequest(names.binaryName);
+        this.classpathRequest = ClasspathRequest.classFileRequest(internalName);
 
         this.parseLock = new ParseLock("ClassStub:" + internalName) {
             @Override

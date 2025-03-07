@@ -32,7 +32,6 @@ import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.BinaryInfo;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.NodeIdSet;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 import net.sourceforge.pmd.util.GraphUtil.GexfGraphDescription;
@@ -253,9 +252,10 @@ public final class ClassDependencyGraph {
     public static final class ClassQueryGraph {
         // todo some things are missing:
         //  - initializing the ClasspathDependencyTracker
-        //  - consider the unknown file
         //  - taking care of self classpath (maybe AnalysisCache can keep doing this)
         //  - taking care of newly added files (maybe AnalysisCache can keep doing this too)
+        // todo test
+        //  - consider the unknown file
 
         final Map<String, BinaryInfo> classNodeIdByInternalName;
         final int numVertices;
@@ -310,24 +310,6 @@ public final class ClassDependencyGraph {
             return new ClasspathCheckResult(files, false);
         }
 
-        public static class ClasspathCheckResult {
-            private final Set<FileId> changedFiles;
-            private final boolean aborted;
-
-            ClasspathCheckResult(Set<FileId> changedFiles, boolean aborted) {
-                this.changedFiles = changedFiles;
-                this.aborted = aborted;
-            }
-
-            public boolean allFilesNeedToBeProcessedAgain() {
-                return aborted;
-            }
-
-            public Set<FileId> getChangedFiles() {
-                return changedFiles;
-            }
-        }
-
         private boolean markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
             visited.set(id);
             changed.set(id);
@@ -351,6 +333,29 @@ public final class ClassDependencyGraph {
                 }
             }
             return false;
+        }
+
+
+        public static class ClasspathCheckResult {
+            private final Set<FileId> changedFiles;
+            private final boolean aborted;
+
+            ClasspathCheckResult(Set<FileId> changedFiles, boolean aborted) {
+                this.changedFiles = changedFiles;
+                this.aborted = aborted;
+            }
+
+            public static ClasspathCheckResult noCacheFile() {
+               return new ClasspathCheckResult(Collections.emptySet(), true);
+            }
+
+            public boolean allFilesNeedToBeProcessedAgain() {
+                return aborted;
+            }
+
+            public Set<FileId> getChangedFiles() {
+                return changedFiles;
+            }
         }
 
         /** A set of node IDs */

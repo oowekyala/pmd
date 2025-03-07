@@ -19,8 +19,6 @@ import org.pcollections.PSet;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolVisitor;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ModuleFileRequest;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 class ModuleStub implements JModuleSymbol, AsmStub, AnnotationOwner {
@@ -29,7 +27,7 @@ class ModuleStub implements JModuleSymbol, AsmStub, AnnotationOwner {
 
     private final String moduleName;
     private PSet<SymbolicValue.SymAnnot> annotations = HashTreePSet.empty();
-    private Set<String> exportedPackages = new HashSet<>();
+    private final Set<String> exportedPackages = new HashSet<>();
     private final ClasspathRequest classpathRequest;
 
     private final ParseLock parseLock;
@@ -37,7 +35,7 @@ class ModuleStub implements JModuleSymbol, AsmStub, AnnotationOwner {
     ModuleStub(AsmSymbolResolver resolver, String moduleName, @NonNull Loader loader) {
         this.resolver = resolver;
         this.moduleName = moduleName;
-        this.classpathRequest = new ModuleFileRequest(moduleName);
+        this.classpathRequest = ClasspathRequest.moduleFileRequest(moduleName);
 
         this.parseLock = new ParseLock("ModuleStub:" + moduleName) {
             @Override

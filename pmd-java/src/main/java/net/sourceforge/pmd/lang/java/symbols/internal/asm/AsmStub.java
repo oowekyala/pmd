@@ -7,8 +7,6 @@ package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
-
 /**
  * Common interface for symbols wrapping a class file "stub".
  * The class is parsed with ASM, only the signature information

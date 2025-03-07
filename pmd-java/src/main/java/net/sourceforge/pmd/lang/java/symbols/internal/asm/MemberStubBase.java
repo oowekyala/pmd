@@ -10,7 +10,6 @@ import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.java.symbols.JAccessibleElementSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 abstract class MemberStubBase implements JAccessibleElementSymbol, AsmStub, AnnotationOwner {

@@ -5,7 +5,6 @@
 package net.sourceforge.pmd.lang.java.internal;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +31,6 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunctio
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
@@ -83,25 +81,8 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
 
         Path javaCache = task.getCacheDir().getLanguageCache(getLanguage());
         classGraphCache = javaCache.resolve("class-dependency-graph.bin.gz");
-        try {
-            Files.createDirectories(javaCache);
-            if (Files.exists(classGraphCache)) {
-                try(InputStream in = Files.newInputStream(classGraphCache)) {
-                    ClassQueryGraph cachedDepGraph = ClassDependencyGraph.deserialize(in);
-                    TypeSystem ts = TypeSystem.usingClassLoaderClasspath(getProperties().getAnalysisClassLoader());
-                    AsmSymbolResolver symbolResolver = (AsmSymbolResolver) ts.bootstrapResolver();
-                    ClasspathCheckResult result = cachedDepGraph.checkClasspathIsUpToDate(symbolResolver);
-                    if (result.allFilesNeedToBeProcessedAgain()) {
-                        LOG.debug("All files will need to be processed again");
-                    } else {
-                        LOG.debug("Dependency analysis found {} changed files", result.getChangedFiles());
-                    }
-                }
-            }
-        } catch (IOException ioe) {
-            LOG.debug("Problem while reading cache file", ioe);
-        }
-
+        @Nullable ClasspathCheckResult classpathCheck = readClassGraphCache(javaCache);
+        // TODO augment the AnalysisCache with the result.
 
         // launch processing.
         AbstractPMDProcessor processor = AbstractPMDProcessor.newFileProcessor(newTask);
@@ -109,6 +90,29 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         // the call to close on the returned instance blocks instead.
         processor.processFiles();
         return processor;
+    }
+
+    private ClasspathCheckResult readClassGraphCache(Path javaCache) {
+        try {
+            Files.createDirectories(javaCache);
+            if (Files.exists(classGraphCache)) {
+
+                AsmSymbolResolver symbolResolver = (AsmSymbolResolver) typeSystem.bootstrapResolver();
+                ClasspathCheckResult result = symbolResolver.readClasspathDependencyCache(classGraphCache);
+
+                if (result.allFilesNeedToBeProcessedAgain()) {
+                    LOG.debug("All files will need to be processed again");
+                } else {
+                    LOG.debug("Dependency analysis found {} changed files", result.getChangedFiles());
+                }
+                return result;
+            } else {
+                LOG.debug("No dependency information from previous run");
+            }
+        } catch (IOException ioe) {
+            LOG.debug("Problem while reading cache file", ioe);
+        }
+        return null;
     }
 
     @Override

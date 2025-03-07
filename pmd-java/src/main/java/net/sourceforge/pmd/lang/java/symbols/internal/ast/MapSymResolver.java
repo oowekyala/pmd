@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest;
 
 /**
  * A symbol resolver that knows about a few hand-picked symbols.

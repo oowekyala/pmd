@@ -36,7 +36,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue.SymAnnot;
 import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Classpath;
 import net.sourceforge.pmd.lang.java.types.BasePrimitiveSymbol.RealPrimitiveSymbol;
 import net.sourceforge.pmd.lang.java.types.BasePrimitiveSymbol.VoidSymbol;

@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.FailedLoader;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.StreamLoader;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
@@ -48,13 +49,13 @@ public class AsmSymbolResolver implements SymbolResolver {
      * instead of caching failure cases separately.
      */
     private final ClassStub failed;
-    private final ClasspathDependencyTracker dependencyGraph;
+    private final ClasspathDependencyTracker dependencyTracker;
 
     public AsmSymbolResolver(TypeSystem ts, Classpath classLoader) {
         this.ts = ts;
         this.classLoader = classLoader;
         this.failed = new ClassStub(this, "/*failed-lookup*/", FailedLoader.INSTANCE, 0);
-        this.dependencyGraph = new ClasspathDependencyTracker(this);
+        this.dependencyTracker = new ClasspathDependencyTracker(this);
     }
 
     Set<String> getQueriedInternalNames() {
@@ -94,7 +95,7 @@ public class AsmSymbolResolver implements SymbolResolver {
         if (found == failed) { // NOPMD CompareObjectsWithEquals
             found = null;
         }
-        dependencyGraph.recordClasspathRequest(origin, internalName);
+        dependencyTracker.recordClasspathRequest(origin, internalName);
         return found;
     }
 
@@ -138,13 +139,13 @@ public class AsmSymbolResolver implements SymbolResolver {
     @NonNull ClassStub resolveFromInternalNameCannotFail(@NonNull String internalName, ClasspathRequest request, int observedArity) {
         return knownStubs.compute(internalName, (iname, prev) -> {
             if (prev != null) {
-                dependencyGraph.recordClasspathRequest(request, prev.getInternalName());
+                dependencyTracker.recordClasspathRequest(request, prev.getInternalName());
                 return prev;
             }
             @Nullable InputStream inputStream = getStreamOfInternalName(iname);
             Loader loader = inputStream == null ? FailedLoader.INSTANCE : new StreamLoader(internalName, inputStream);
             ClassStub result = new ClassStub(this, iname, loader, observedArity);
-            dependencyGraph.recordClasspathRequest(request, result.getInternalName());
+            dependencyTracker.recordClasspathRequest(request, result.getInternalName());
             return result;
         });
     }
@@ -182,7 +183,7 @@ public class AsmSymbolResolver implements SymbolResolver {
     public void writeReducedGraph(Path toPath) throws IOException {
         // todo do that asynchronously during reporting (it takes a second to reduce the graph. Probably better
         //  algorithms could be used)
-        ClassDependencyGraph summaryGraph = dependencyGraph.makeSummaryGraph();
+        ClassDependencyGraph summaryGraph = dependencyTracker.makeSummaryGraph();
         try (OutputStream out = Files.newOutputStream(toPath)) {
             summaryGraph.serialize(out);
         }
@@ -191,7 +192,7 @@ public class AsmSymbolResolver implements SymbolResolver {
         if (LOG.isTraceEnabled()) {
             toPath = toPath.getParent().resolve("depgraph-full.dot");
             try (BufferedWriter writer = Files.newBufferedWriter(toPath)) {
-                GraphUtil.toDot(writer, dependencyGraph.asDotGraph());
+                GraphUtil.toDot(writer, dependencyTracker.asDotGraph());
             }
             LOG.debug("Wrote class dependency graph to {}", toPath);
 
@@ -205,7 +206,22 @@ public class AsmSymbolResolver implements SymbolResolver {
 
     void recordOuterClass(ClassStub classStub, @Nullable ClassStub outerClass) {
         if (outerClass != null) {
-            dependencyGraph.recordClasspathRequest(classStub.getClasspathRequest(), outerClass.getInternalName());
+            dependencyTracker.recordClasspathRequest(classStub.getClasspathRequest(), outerClass.getInternalName());
         }
+    }
+
+    public ClasspathCheckResult readClasspathDependencyCache(Path classGraphCache) throws IOException {
+        if (!Files.exists(classGraphCache)) {
+            return ClasspathCheckResult.noCacheFile();
+        }
+        ClassQueryGraph cachedDepGraph;
+        try(InputStream in = Files.newInputStream(classGraphCache)) {
+            cachedDepGraph = ClassDependencyGraph.deserialize(in);
+        }
+        // compute out-of-date files
+        ClasspathCheckResult result = cachedDepGraph.checkClasspathIsUpToDate(this);
+        // restore cached dependencies into the tracker
+        dependencyTracker.restoreCachedGraph(result);
+        return result;
     }
 }
