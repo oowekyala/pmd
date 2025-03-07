@@ -64,6 +64,7 @@ abstract class AbstractAnalysisCache implements AnalysisCache {
     public boolean isUpToDate(final TextDocument document) {
         try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.ANALYSIS_CACHE, "up-to-date check")) {
             final AnalysisResult cachedResult = fileResultsCache.get(document.getFileId());
+            final AnalysisResult updatedResult;
 
             // is this a known file? has it changed?
             final boolean upToDate = cachedResult != null
@@ -73,13 +74,17 @@ abstract class AbstractAnalysisCache implements AnalysisCache {
                 LOG.trace("Incremental Analysis cache HIT");
                 
                 // copy results over
-                updatedResultsCache.put(document.getFileId(), cachedResult);
+                updatedResult = cachedResult;
             } else {
                 LOG.trace("Incremental Analysis cache MISS - {}",
                           cachedResult != null ? "file changed" : "no previous result found");
+                
+                // New file being analyzed, create new empty entry
+                updatedResult = new AnalysisResult(document.getCheckSum(), new ArrayList<>());
             }
 
-
+            updatedResultsCache.put(document.getFileId(), updatedResult);
+            
             return upToDate;
         }
     }
@@ -208,8 +213,6 @@ abstract class AbstractAnalysisCache implements AnalysisCache {
     @Override
     public FileAnalysisListener startFileAnalysis(TextDocument file) {
         final FileId fileName = file.getFileId();
-        AnalysisResult analysisResult = new AnalysisResult(file.getCheckSum(), new ArrayList<>());
-        updatedResultsCache.put(fileName, analysisResult);
 
         return new FileAnalysisListener() {
             private boolean failed = false;
@@ -217,7 +220,7 @@ abstract class AbstractAnalysisCache implements AnalysisCache {
             @Override
             public void onRuleViolation(RuleViolation violation) {
                 if (!failed) {
-                    analysisResult.addViolation(violation);
+                    updatedResultsCache.get(fileName).addViolation(violation);
                 }
             }
 

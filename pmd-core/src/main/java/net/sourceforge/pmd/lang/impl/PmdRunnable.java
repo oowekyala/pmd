@@ -61,44 +61,44 @@ abstract class PmdRunnable implements Runnable {
             RuleSets ruleSets = getRulesets();
 
             // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
-            if (!ruleSets.applies(textFile)) {
-                LOG.trace("Skipping file (lang: {}) because no rule applies: {}", textFile.getLanguageVersion(), textFile.getFileId());
-                return;
-            }
+            if (ruleSets.applies(textFile)) {
+                AnalysisCache analysisCache = task.getAnalysisCache();
+                try (TextDocument textDocument = TextDocument.create(textFile);
+                     FileAnalysisListener cacheListener = analysisCache.startFileAnalysis(textDocument)) {
 
-            AnalysisCache analysisCache = task.getAnalysisCache();
-            try (TextDocument textDocument = TextDocument.create(textFile)) {
+                    @SuppressWarnings("PMD.CloseResource")
+                    FileAnalysisListener completeListener = FileAnalysisListener.tee(listOf(listener, cacheListener));
 
-                if (analysisCache.isUpToDate(textDocument)) {
-                    LOG.trace("Skipping file (lang: {}) because it was found in the cache: {}", textFile.getLanguageVersion(), textFile.getFileId().getAbsolutePath());
-                    reportCachedRuleViolations(listener, textDocument);
-                    return;
-                }
+                    if (analysisCache.isUpToDate(textDocument)) {
+                        LOG.trace("Skipping file (lang: {}) because it was found in the cache: {}", textFile.getLanguageVersion(), textFile.getFileId().getAbsolutePath());
+                        // note: no cache listener here
+                        //                         vvvvvvvv
+                        reportCachedRuleViolations(listener, textDocument);
+                    } else {
+                        LOG.trace("Processing file (lang: {}): {}", textFile.getLanguageVersion(), textFile.getFileId().getAbsolutePath());
+                        try {
+                            processSource(completeListener, textDocument, ruleSets);
+                        } catch (Exception | StackOverflowError | AssertionError e) {
+                            if (e instanceof Error && !SystemProps.isErrorRecoveryMode()) { // NOPMD:
+                                throw e;
+                            }
 
-                LOG.trace("Processing file (lang: {}): {}", textFile.getLanguageVersion(), textFile.getFileId().getAbsolutePath());
-                try (FileAnalysisListener cacheListener = analysisCache.startFileAnalysis(textDocument);
-                     FileAnalysisListener completeListener = FileAnalysisListener.tee(listOf(listener, cacheListener))) {
-
-                    try {
-                        processSource(completeListener, textDocument, ruleSets);
-                    } catch (Exception | StackOverflowError | AssertionError e) {
-                        if (e instanceof Error && !SystemProps.isErrorRecoveryMode()) { // NOPMD:
-                            throw e;
+                            // The listener handles logging if needed,
+                            // it may also rethrow the error, as a FileAnalysisException (which we let through below)
+                            completeListener.onError(new Report.ProcessingError(e, textFile.getFileId()));
                         }
-
-                        // The listener handles logging if needed,
-                        // it may also rethrow the error, as a FileAnalysisException (which we let through below)
-                        completeListener.onError(new Report.ProcessingError(e, textFile.getFileId()));
                     }
                 }
+            } else {
+                LOG.trace("Skipping file (lang: {}) because no rule applies: {}", textFile.getLanguageVersion(), textFile.getFileId());
             }
         } catch (FileAnalysisException e) {
             throw e; // bubble managed exceptions, they were already reported
         } catch (Exception e) {
             throw FileAnalysisException.wrap(textFile.getFileId(), "An unknown exception occurred", e);
-        } finally {
-            TimeTracker.finishThread();
         }
+
+        TimeTracker.finishThread();
     }
 
     private void reportCachedRuleViolations(final FileAnalysisListener ctx, TextDocument file) {
