@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -252,6 +253,7 @@ public final class ClassDependencyGraph {
     public static final class ClassQueryGraph {
         // todo some things are missing:
         //  - initializing the ClasspathDependencyTracker
+        //  - consider the unknown file
         //  - taking care of self classpath (maybe AnalysisCache can keep doing this)
         //  - taking care of newly added files (maybe AnalysisCache can keep doing this too)
 
@@ -281,7 +283,7 @@ public final class ClassDependencyGraph {
          *
          * @param resolver Resolver with the current classpath
          */
-        public Set<FileId> replayQueries(AsmSymbolResolver resolver) {
+        public ClasspathCheckResult checkClasspathIsUpToDate(AsmSymbolResolver resolver) {
             BitSet changed = new BitSet(numVertices);
             BitSet visited = new BitSet(numVertices);
             Set<FileId> files = new HashSet<>();
@@ -298,27 +300,57 @@ public final class ClassDependencyGraph {
 
                 if (isChanged) {
                     // class has changed. Mark all the nodes it can reach as changed.
-                    markChanged(info.vertexId, visited, changed, files);
+                    boolean abort = markChanged(info.vertexId, visited, changed, files);
+                    if (abort) {
+                        // a dependency changed that influences all files.
+                        return new ClasspathCheckResult(Collections.emptySet(), true);
+                    }
                 }
             }
-            return files;
+            return new ClasspathCheckResult(files, false);
         }
 
-        private void markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
+        public static class ClasspathCheckResult {
+            private final Set<FileId> changedFiles;
+            private final boolean aborted;
+
+            ClasspathCheckResult(Set<FileId> changedFiles, boolean aborted) {
+                this.changedFiles = changedFiles;
+                this.aborted = aborted;
+            }
+
+            public boolean allFilesNeedToBeProcessedAgain() {
+                return aborted;
+            }
+
+            public Set<FileId> getChangedFiles() {
+                return changedFiles;
+            }
+        }
+
+        private boolean markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
             visited.set(id);
             changed.set(id);
             Set<FileId> filesInThisVertex = filesByVxId.get(id);
             if (filesInThisVertex != null) {
-                files.addAll(filesInThisVertex);
+                boolean added = files.addAll(filesInThisVertex);
+                if (added && filesInThisVertex.contains(FileId.UNKNOWN)) {
+                    // todo all files should be invalidated
+                    return true;
+                }
             }
             NodeIdSet successors = this.successors.get(id);
             if (successors != null) {
                 for (int succ : successors.data) {
                     if (!changed.get(succ)) {
-                        markChanged(succ, visited, changed, files);
+                        boolean abort = markChanged(succ, visited, changed, files);
+                        if (abort) {
+                            return true;
+                        }
                     }
                 }
             }
+            return false;
         }
 
         /** A set of node IDs */

@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.ast.Parser;
-import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.impl.AbstractPMDProcessor;
 import net.sourceforge.pmd.lang.impl.BatchLanguageProcessor;
@@ -35,6 +33,7 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -91,8 +90,12 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
                     ClassQueryGraph cachedDepGraph = ClassDependencyGraph.deserialize(in);
                     TypeSystem ts = TypeSystem.usingClassLoaderClasspath(getProperties().getAnalysisClassLoader());
                     AsmSymbolResolver symbolResolver = (AsmSymbolResolver) ts.bootstrapResolver();
-                    Set<FileId> changedFiles = cachedDepGraph.replayQueries(symbolResolver);
-                    LOG.debug("Found {} changed files", changedFiles.size());
+                    ClasspathCheckResult result = cachedDepGraph.checkClasspathIsUpToDate(symbolResolver);
+                    if (result.allFilesNeedToBeProcessedAgain()) {
+                        LOG.debug("All files will need to be processed again");
+                    } else {
+                        LOG.debug("Dependency analysis found {} changed files", result.getChangedFiles());
+                    }
                 }
             }
         } catch (IOException ioe) {
