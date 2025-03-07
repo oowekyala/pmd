@@ -505,13 +505,16 @@ public final class ClassDependencyGraph {
         }
 
         void serialize(ObjectOutputStream out) throws IOException {
-            out.writeUTF(fileId.getAbsolutePath());
-            // todo parent path
+            out.writeObject(fileId);
         }
 
         static SourceDependencyNode deserialize(ObjectInputStream in) throws IOException {
-            String absPath = in.readUTF();
-            return new SourceDependencyNode(FileId.fromAbsolutePath(absPath, null));
+            try {
+                FileId fileId = (FileId) in.readObject();
+                return new SourceDependencyNode(fileId);
+            } catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
         }
     }
 
