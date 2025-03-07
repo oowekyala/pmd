@@ -504,7 +504,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
         String mySimpleName = names.simpleName;
         if (mySimpleName == null) {
             parseLock.ensureParsed();
-            return Objects.requireNonNull(names.simpleName, "Null simple name after parsing");
+            return Objects.requireNonNull(names.simpleName, "Null simple name after parsing " + getInternalName());
         }
         return mySimpleName;
     }
@@ -660,6 +660,8 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
         }
 
         boolean isLocal() {
+            // todo a class may be local in a static or instance initializer.
+            //  in that case the method name and descriptor are null.
             return methodName != null || methodDescriptor != null;
         }
 
