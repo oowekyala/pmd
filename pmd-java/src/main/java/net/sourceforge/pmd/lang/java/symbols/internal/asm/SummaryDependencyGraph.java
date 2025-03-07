@@ -8,20 +8,24 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
-import net.sourceforge.pmd.lang.java.internal.TarjanGraph.UniqueGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.BinaryInfo;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.NodeIdSet;
+import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 
 /**
@@ -31,10 +35,10 @@ import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
 public final class SummaryDependencyGraph {
 
     // This graph is inverted. There is an edge U -> V if V depends on U.
-    private final TarjanGraph<DependencyNode> graph;
+    private final CompressibleGraph graph;
 
     SummaryDependencyGraph() {
-        graph = new UniqueGraph<>();
+        graph = new CompressibleGraph();
     }
 
     Vertex<DependencyNode> addSourceLeaf(FileId fileId) {
@@ -46,8 +50,75 @@ public final class SummaryDependencyGraph {
     }
 
     void recordDependency(Vertex<DependencyNode> from, Vertex<DependencyNode> to) {
-        // note the inversion
+        // notice the inversion
         graph.addEdge(to, from);
+    }
+
+    static class CompressibleGraph extends TarjanGraph.UniqueGraph<DependencyNode> {
+
+        @Override
+        protected Vertex<DependencyNode> makeVertex(Set<DependencyNode> data) {
+            return new DependencyVertex(this, data);
+        }
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        private Set<DependencyVertex> castVertices(Set<Vertex<DependencyNode>> vertices) {
+            return (Set) vertices;
+        }
+
+        void compressGraphHeuristically() {
+            Set<DependencyVertex> vertices = castVertices(getVertices());
+            CompressionState state = new CompressionState();
+
+            for (DependencyVertex vertex : vertices) {
+                if (vertex.downstream == null) {
+                    compressGraphRec(vertex, state);
+                }
+            }
+
+            batchMerge(state.toBeMerged.values());
+        }
+
+        static class CompressionState {
+            private Map<PSet<SourceDependencyNode>, Set<DependencyVertex>> toBeMerged = new HashMap<>();
+        }
+
+        private void compressGraphRec(DependencyVertex v, CompressionState state) {
+            v.downstream = HashTreePSet.empty();
+
+            for (DependencyNode node : v.getData()) {
+                if (node instanceof SourceDependencyNode) {
+                    v.downstream = v.downstream.plus((SourceDependencyNode) node);
+                }
+            }
+
+            for (DependencyVertex w : castVertices(successorsOf(v))) {
+                if (w.downstream == null) {
+                    compressGraphRec(w, state);
+                }
+                v.downstream = CollectionUtil.union(v.downstream, w.downstream);
+            }
+
+
+            for (DependencyVertex w : castVertices(successorsOf(v))) {
+                if (w.downstream.equals(v.downstream)) {
+                    Set<DependencyVertex> equivClass = state.toBeMerged.computeIfAbsent(v.downstream, k -> new LinkedHashSet<>());
+                    equivClass.add(v);
+                    equivClass.add(w);
+                    // They're equal, but maybe not the same instance.
+                    // We deduplicate them
+                    w.downstream = v.downstream;
+                }
+            }
+        }
+
+        static final class DependencyVertex extends Vertex<DependencyNode> {
+            private PSet<SourceDependencyNode> downstream;
+
+            DependencyVertex(TarjanGraph<DependencyNode> owner, Set<DependencyNode> data) {
+                super(owner, data);
+            }
+        }
     }
 
     public void serialize(OutputStream os) throws IOException {
@@ -66,7 +137,8 @@ public final class SummaryDependencyGraph {
 
     private void serialize(ObjectOutputStream out) throws IOException {
         Map<Vertex<DependencyNode>, Integer> vertexToId = new HashMap<>();
-        List<Vertex<DependencyNode>> vertices = graph.toposortVertices();
+        List<Vertex<DependencyNode>> vertices = new ArrayList<>(graph.getVertices());
+        // FIXME graph.toposortVertices();
         // write out all nodes
         out.writeInt(vertices.size());
         for (int i = 0; i < vertices.size(); i++) {
@@ -135,6 +207,8 @@ public final class SummaryDependencyGraph {
 
     /**
      * This is the deserialized structure. Its structure is meant to make queries fast.
+     * We will use this to replay queries and compare them to the current classpath.
+     * Replaying queries naturally repopulates the {@link ClassDependencyGraph}.
      */
     public static class ClassQueryGraph {
         final Map<String, BinaryInfo> classNodeIdByBinaryName;
@@ -201,9 +275,49 @@ public final class SummaryDependencyGraph {
     public void reduce() {
         // note: these algorithms are not optimized enough for the size of graphs we may encounter.
         // It is likely that the transitive reduction especially is unnecessary.
-        // We should use a proper graph library for this.
+        // We should use a more optimized implementation, maybe using parallel algorithms.
+        // I tried with jgrapht, but it's even worse.
+        //
+        // Alternatively I think we should find a way to reduce the number of nodes and edges.
+        // We can reduce the resolution of the graph. Let RG=(RV, RE) be a coarsening of G=(V,E).
+        // RG still respects all dependencies of G if
+        //      forall e=(s,t) in E, one of the following holds:
+        //          1. exists re=(rs, rt) in RE where s in rs, t in rt.
+        //          2. exists rv in RV where s in rv, t in rv.
+        //
+        // The degenerate case is RV has a single vertex that contains all vertices of V.
+        // A coarsening in this sense changes the transition relation, but the new transition
+        // relation is a superset of the original one.
+        //
+        // We want to find a "good coarsening". Coarsenings can be measured with two metrics:
+        // - compression: the fewer edges and vertices, the better.
+        // - minimality: the fewer extraneous edges exist, the better.
+        //
+        // A measure of minimality would be `card(->*_RG \ ->*_G)`, ie, the number of paths in the
+        // coarsening that are not part of the original graph.
+        //
+        // A measure of compression would be just number of edges and vertices.
+        //
+        // The problem now becomes an optimization problem. We want to maximize compression and minimize
+        // extra edges.
+        //
+        // Notice that the condensation of a graph is a perfectly minimal coarsening. But it might not be
+        // compressed enough. We need to find heuristics to compress the graph more.
+        //
+        // Another kind of coarsening that might work is just:
+        //  a node that has no successors may be merged with a sibling that has no successor.
+        // Here we could introduce a special kind of vertex that condenses several vertices, but does not assume
+        // that
+        //
+        //
+
         graph.mergeCycles();
-//        graph.transitiveReductionOnDag();
+        graph.compressGraphHeuristically();
+        //        if (graph.getVertices().size() < 10_000) {
+        //            graph.transitiveReductionOnDag();
+        //        } else {
+        //             graph will not be reduced, this would take too much time.
+        //        }
     }
 
     abstract static class DependencyNode {
@@ -213,7 +327,7 @@ public final class SummaryDependencyGraph {
         abstract void serialize(ObjectOutputStream out) throws IOException;
     }
 
-    private static final class ClassDependencyNode extends DependencyNode {
+    static final class ClassDependencyNode extends DependencyNode {
         private final String binaryName;
         private final long hash;
 
@@ -233,7 +347,7 @@ public final class SummaryDependencyGraph {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(binaryName);
+            return binaryName.hashCode();
         }
 
         @Override
@@ -271,7 +385,7 @@ public final class SummaryDependencyGraph {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(fileId);
+            return fileId.hashCode();
         }
 
         @Override

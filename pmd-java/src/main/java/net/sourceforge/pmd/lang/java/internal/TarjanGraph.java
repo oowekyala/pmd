@@ -9,6 +9,7 @@ import static net.sourceforge.pmd.util.CollectionUtil.union;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -35,22 +36,20 @@ import net.sourceforge.pmd.util.IteratorUtil;
 public class TarjanGraph<T> {
 
     /** Undefined index for Tarjan's algo. */
-    private static final int UNDEFINED = -1;
+    protected static final int UNDEFINED = -1;
 
     private final Set<Vertex<T>> vertices = new LinkedHashSet<>();
     // direct successors
     private Map<Vertex<T>, Set<Vertex<T>>> successors = new HashMap<>();
 
     public Vertex<T> addLeaf(T data) {
-        Vertex<T> v = new Vertex<>(this, Collections.singleton(data));
+        Vertex<T> v = makeVertex(Collections.singleton(data));
         vertices.add(v);
         return v;
     }
 
-    public Vertex<T> addLeaf(Set<T> data) {
-        Vertex<T> v = new Vertex<>(this, data);
-        vertices.add(v);
-        return v;
+    protected Vertex<T> makeVertex(Set<T> data) {
+        return new Vertex<>(this, data);
     }
 
     /**
@@ -158,11 +157,10 @@ public class TarjanGraph<T> {
                 w = state.stack.pop();
                 w.onStack = false;
                 // merge w into v
-                v.absorb(w);
+                v.absorb(w, false);
             } while (w != v); // NOPMD CompareObjectsWithEquals
         }
     }
-
     /**
      * Compute transitive reduction of this graph. This MUST be run
      * after {@link #mergeCycles()} has been run, as it requires an
@@ -213,14 +211,50 @@ public class TarjanGraph<T> {
         this.successors = newSuccessors;
     }
 
-    protected void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
-        Set<Vertex<T>> succ = union(successorsOf(vertex), successorsOf(toMerge));
-        succ.remove(toMerge);
-        succ.remove(vertex);
-        successors.put(vertex, succ);
-        successors.remove(toMerge);
-        vertices.remove(toMerge);
-        successors.values().forEach(it -> it.remove(toMerge));
+    void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge, boolean isBatchMerge) {
+        if (!isBatchMerge) {
+            Set<Vertex<T>> succ = union(successorsOf(vertex), successorsOf(toMerge));
+            succ.remove(toMerge);
+            succ.remove(vertex);
+            successors.put(vertex, succ);
+            successors.remove(toMerge);
+            vertices.remove(toMerge);
+            successors.values().forEach(it -> it.remove(toMerge));
+        }
+    }
+
+    // Merge many vertices together in one pass
+    protected void batchMerge(Collection<? extends Set<? extends Vertex<T>>> equivClasses) {
+        Map<Vertex<T>, Vertex<T>> remapping = new HashMap<>();
+
+        for (Set<? extends Vertex<T>> equivClass : equivClasses) {
+            if (equivClass.size() < 2) {
+                continue;
+            }
+            Iterator<? extends Vertex<T>> iter = equivClass.iterator();
+            Vertex<T> first = iter.next();
+            Set<Vertex<T>> newSuccessors = new LinkedHashSet<>(successorsOf(first));
+            while (iter.hasNext()) {
+                Vertex<T> next = iter.next();
+                remapping.put(next, first);
+                newSuccessors.addAll(successorsOf(next));
+                successors.remove(next);
+                vertices.remove(next);
+                first.absorb(next, true);
+            }
+            newSuccessors.remove(first);
+            successors.put(first, newSuccessors);
+        }
+        // finally remap all vertices
+        successors.values().forEach(it -> {
+            for (Vertex<T> v : new ArrayList<>(it)) {
+                Vertex<T> remapped = remapping.get(v);
+                if (remapped != null) {
+                    it.remove(v);
+                    it.add(remapped);
+                }
+            }
+        });
     }
 
     @Override
@@ -241,25 +275,25 @@ public class TarjanGraph<T> {
         this.successors.put(fromNode, successors);
     }
 
-    private static final class TarjanState<T> {
+    private static class TarjanState<T> {
 
         int index;
-        Deque<Vertex<T>> stack = new ArrayDeque<>();
+        final Deque<Vertex<T>> stack = new ArrayDeque<>();
 
     }
 
-    public static final class Vertex<T> {
+    public static class Vertex<T> {
 
         private final TarjanGraph<T> owner;
         private final Set<T> data;
         // Tarjan state
-        private int index = UNDEFINED;
+        protected int index = UNDEFINED;
         private int lowLink = UNDEFINED;
         private boolean onStack = false;
         // Toposort state
         private boolean mark;
 
-        private Vertex(TarjanGraph<T> owner, Set<T> data) {
+        protected Vertex(TarjanGraph<T> owner, Set<T> data) {
             this.owner = owner;
             this.data = new LinkedHashSet<>(data);
         }
@@ -269,12 +303,12 @@ public class TarjanGraph<T> {
         }
 
         /** Absorbs the given node into this node. */
-        private void absorb(Vertex<T> toMerge) {
+        private void absorb(Vertex<T> toMerge, boolean isBatchMerge) {
             if (this == toMerge) { // NOPMD CompareObjectsWithEquals
                 return;
             }
             this.data.addAll(toMerge.data);
-            owner.onAbsorb(this, toMerge);
+            owner.onAbsorb(this, toMerge, isBatchMerge);
         }
 
         @Override
@@ -292,6 +326,9 @@ public class TarjanGraph<T> {
         public UniqueGraph() {
         }
 
+        public Map<T, Vertex<T>> getVertexMap() {
+            return Collections.unmodifiableMap(vertexMap);
+        }
 
         @Override
         public Vertex<T> addLeaf(T data) {
@@ -299,8 +336,8 @@ public class TarjanGraph<T> {
         }
 
         @Override
-        protected void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge) {
-            super.onAbsorb(vertex, toMerge);
+        void onAbsorb(Vertex<T> vertex, Vertex<T> toMerge, boolean isBatchMerge) {
+            super.onAbsorb(vertex, toMerge, isBatchMerge);
             for (T ivar : toMerge.getData()) {
                 vertexMap.put(ivar, vertex);
             }

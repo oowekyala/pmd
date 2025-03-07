@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.java.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -184,10 +183,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         this.typeSystem.logStats();
         if (classGraphCache != null) {
             AsmSymbolResolver resolver = (AsmSymbolResolver) this.typeSystem.bootstrapResolver();
-            try (OutputStream out = Files.newOutputStream(classGraphCache)) {
-                resolver.writeReducedGraph(out);
-                LOG.trace("Wrote binary dependency graph to {}", classGraphCache);
-            }
+            resolver.writeReducedGraph(classGraphCache);
         }
         super.close();
     }
