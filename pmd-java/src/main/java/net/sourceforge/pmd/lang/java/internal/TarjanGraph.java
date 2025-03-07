@@ -148,11 +148,13 @@ public class TarjanGraph<T> {
         // https://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm
 
         TarjanState<T> state = new TarjanState<>();
-        for (Vertex<T> vertex : new ArrayList<>(vertices)) {
+        for (Vertex<T> vertex : vertices) {
             if (vertex.index == UNDEFINED) {
                 strongConnect(state, vertex);
             }
         }
+
+        batchMerge(state.toBeMerged);
     }
 
     private void strongConnect(TarjanState<T> state, Vertex<T> v) {
@@ -162,7 +164,7 @@ public class TarjanGraph<T> {
         state.stack.push(v);
         v.onStack = true;
 
-        for (Vertex<T> w : new ArrayList<>(successorsOf(v))) {
+        for (Vertex<T> w : successorsOf(v)) {
             if (w.index == UNDEFINED) {
                 // Successor has not yet been visited; recurse on it
                 strongConnect(state, w);
@@ -178,15 +180,20 @@ public class TarjanGraph<T> {
 
         // If v is a root node, pop the stack and generate an SCC
         if (v.lowLink == v.index) {
+            Set<Vertex<T>> toMerge = new HashSet<>();
+            toMerge.add(v);
             Vertex<T> w;
             do {
                 w = state.stack.pop();
                 w.onStack = false;
                 // merge w into v
-                v.absorb(w, false);
+                toMerge.add(w);
             } while (w != v); // NOPMD CompareObjectsWithEquals
+
+            state.toBeMerged.add(toMerge);
         }
     }
+
     /**
      * Compute transitive reduction of this graph. This MUST be run
      * after {@link #mergeCycles()} has been run, as it requires an
@@ -314,6 +321,7 @@ public class TarjanGraph<T> {
 
         int index;
         final Deque<Vertex<T>> stack = new ArrayDeque<>();
+        final List<Set<Vertex<T>>> toBeMerged = new ArrayList<>();
 
     }
 
