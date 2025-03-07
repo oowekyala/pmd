@@ -4,13 +4,16 @@
 
 package net.sourceforge.pmd.lang.document;
 
-import java.io.File;
+import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.document.FileIdImpl.FromAbsPathFileId;
+import net.sourceforge.pmd.lang.document.FileIdImpl.FromPathFileId;
+import net.sourceforge.pmd.lang.document.FileIdImpl.FromPathLikeString;
 import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.reporting.RuleViolation;
 
@@ -26,9 +29,12 @@ import net.sourceforge.pmd.reporting.RuleViolation;
  * of this interface (like {@link #getAbsolutePath()}) do not have to return
  * actual paths for those exotic files, and operate on a best-effort basis.
  *
+ * <p>A FileId must be serializable, because it might be serialized into the analysis
+ * cache.
+ *
  * @author Clément Fournier
  */
-public interface FileId extends Comparable<FileId> {
+public interface FileId extends Comparable<FileId>, Serializable {
 
     /**
      * The name used for an unknown file. This is mostly only
@@ -64,6 +70,10 @@ public interface FileId extends Comparable<FileId> {
         public String toString() {
             return "FileId(unknown)";
         }
+
+        private Object readResolve() {
+            return UNKNOWN;
+        }
     };
 
     /** The virtual file ID for standard input. */
@@ -96,6 +106,10 @@ public interface FileId extends Comparable<FileId> {
         @Override
         public String toString() {
             return "FileId(STDIN)";
+        }
+
+        private Object readResolve() {
+            return STDIN;
         }
     };
 
@@ -165,58 +179,7 @@ public interface FileId extends Comparable<FileId> {
      * @return A new file id
      */
     static FileId fromPathLikeString(String str) {
-        Path absPath = Paths.get(str).toAbsolutePath();
-
-        // this is null for the root path.
-        @Nullable Path fileNamePath = absPath.getFileName();
-        return new FileId() {
-            final String fileName = fileNamePath == null ? "" : fileNamePath.toString();
-            final String absPathStr = absPath.toString();
-
-
-            @Override
-            public String getAbsolutePath() {
-                return absPathStr;
-            }
-
-
-            @Override
-            public String getUriString() {
-                // pretend...
-                return "file://" + str;
-            }
-
-            @Override
-            public String getFileName() {
-                return fileName;
-            }
-
-            @Override
-            public String getOriginalPath() {
-                return str;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return obj instanceof FileId
-                    && ((FileId) obj).getUriString().equals(this.getUriString());
-            }
-
-            @Override
-            public int hashCode() {
-                return getUriString().hashCode();
-            }
-
-            @Override
-            public @Nullable FileId getParentFsPath() {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return "FileId(fromPathLike=" + str + ")";
-            }
-        };
+        return new FromPathLikeString(str);
     }
 
     /**
@@ -228,57 +191,7 @@ public interface FileId extends Comparable<FileId> {
      * @return A new file id.
      */
     static FileId fromPath(Path path, @Nullable FileId fsPath) {
-        return new FileId() {
-            // Compute these beforehand as that will fail if the path
-            // is invalid (better now than later).
-            // Also, not hitting the filesystem every time we want to
-            // do a compareTo is good for performance.
-            final String absPath = path.normalize().toAbsolutePath().toString();
-            final String uriString = path.normalize().toUri().toString();
-            final String fileName = path.getFileName().toString();
-            final String origPath = path.toString();
-
-            @Override
-            public String getAbsolutePath() {
-                return absPath;
-            }
-
-            @Override
-            public String getUriString() {
-                return uriString;
-            }
-
-            @Override
-            public String getFileName() {
-                return fileName;
-            }
-
-            @Override
-            public String getOriginalPath() {
-                return origPath;
-            }
-
-            @Override
-            public @Nullable FileId getParentFsPath() {
-                return fsPath;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return obj instanceof FileId
-                    && ((FileId) obj).getUriString().equals(this.getUriString());
-            }
-
-            @Override
-            public int hashCode() {
-                return getUriString().hashCode();
-            }
-
-            @Override
-            public String toString() {
-                return "FileId(fromPath=" + path + ")";
-            }
-        };
+        return new FromPathFileId(path, fsPath);
     }
 
     /**
@@ -342,55 +255,7 @@ public interface FileId extends Comparable<FileId> {
      * @return A new file id
      */
     static FileId fromAbsolutePath(String absPath, @Nullable FileId outer) {
-        Path fileName = Paths.get(absPath).getFileName();
-        // we know this one uses platform specific thing (for display)
-        String platformAbsPath = absPath.replace('/', File.separatorChar);
-        // we know this one uses / (for URIs)
-        String uriAbsPath = platformAbsPath.replace(File.separatorChar, '/');
-        String uriStr = outer != null ? "jar:" + outer.getUriString() + "!" + uriAbsPath
-                                      : "file://" + uriAbsPath;
-        // zip file
-        return new FileId() {
-            @Override
-            public String getFileName() {
-                return fileName.toString();
-            }
-
-            @Override
-            public String getOriginalPath() {
-                return absPath;
-            }
-
-            @Override
-            public String getAbsolutePath() {
-                return platformAbsPath;
-            }
-
-            @Override
-            public String getUriString() {
-                return uriStr;
-            }
-
-            @Override
-            public @Nullable FileId getParentFsPath() {
-                return outer;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return obj instanceof FileId && getUriString().equals(((FileId) obj).getUriString());
-            }
-
-            @Override
-            public int hashCode() {
-                return getUriString().hashCode();
-            }
-
-            @Override
-            public String toString() {
-                return "FileId(fromAbsolutePath=" + absPath + ",outer=" + outer + ")";
-            }
-        };
+        return new FromAbsPathFileId(absPath, outer);
     }
 
     /**
