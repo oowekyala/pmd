@@ -11,7 +11,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph.ClasspathCheckResult;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.DependencyNode;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.DependencyItem;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.ClassFileRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.DependencyType;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathRequest.NoOrigin;
@@ -121,22 +121,22 @@ public class ClasspathDependencyTracker {
         ClassDependencyGraph graph = new ClassDependencyGraph();
         for (String internalName : resolver.getQueriedInternalNames()) {
 
-            Vertex<DependencyNode> fromClass = graph.addClassLeaf(internalName, resolver.getStubChecksumInCache(internalName));
+            Vertex<DependencyItem> fromClass = graph.addClassLeaf(internalName, resolver.getStubChecksumInCache(internalName));
             ClassRequests req = binaryDeps.get(internalName);
             if (req == null) {
                 continue;
             }
             for (String dep : req.dependenciesInternalNames) {
-                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, resolver.getStubChecksumInCache(dep));
+                Vertex<DependencyItem> toClass = graph.addClassLeaf(dep, resolver.getStubChecksumInCache(dep));
                 graph.recordDependency(fromClass, toClass);
             }
         }
 
         sourceDeps.forEach(
             (fileId, requests) -> {
-                Vertex<DependencyNode> fromSource = graph.addSourceLeaf(fileId);
+                Vertex<DependencyItem> fromSource = graph.addSourceLeaf(fileId);
                 for (String req : requests.byInternalName.keySet()) {
-                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, resolver.getStubChecksumInCache(req));
+                    Vertex<DependencyItem> toClass = graph.addClassLeaf(req, resolver.getStubChecksumInCache(req));
                     graph.recordDependency(fromSource, toClass);
                 }
             }

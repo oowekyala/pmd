@@ -51,15 +51,15 @@ public final class ClassDependencyGraph {
         graph = new CompressibleGraph();
     }
 
-    Vertex<DependencyNode> addSourceLeaf(FileId fileId) {
-        return graph.addLeaf(new SourceDependencyNode(fileId));
+    Vertex<DependencyItem> addSourceLeaf(FileId fileId) {
+        return graph.addLeaf(new SourceItem(fileId));
     }
 
-    Vertex<DependencyNode> addClassLeaf(String binaryName, long hash) {
-        return graph.addLeaf(new ClassDependencyNode(binaryName, hash));
+    Vertex<DependencyItem> addClassLeaf(String binaryName, long hash) {
+        return graph.addLeaf(new ClassItem(binaryName, hash));
     }
 
-    void recordDependency(Vertex<DependencyNode> from, Vertex<DependencyNode> to) {
+    void recordDependency(Vertex<DependencyItem> from, Vertex<DependencyItem> to) {
         // notice the inversion
         graph.addEdge(to, from);
     }
@@ -68,15 +68,15 @@ public final class ClassDependencyGraph {
      * This is a variant of the {@link UniqueGraph} that implements a custom
      * graph compression (pruning) routine.
      */
-    private static class CompressibleGraph extends UniqueGraph<DependencyNode> {
+    private static class CompressibleGraph extends UniqueGraph<DependencyItem> {
 
         @Override
-        protected Vertex<DependencyNode> makeVertex(Set<DependencyNode> data) {
+        protected Vertex<DependencyItem> makeVertex(Set<DependencyItem> data) {
             return new DependencyVertex(this, data);
         }
 
         @SuppressWarnings({"unchecked", "rawtypes"})
-        private Set<DependencyVertex> castVertices(Set<Vertex<DependencyNode>> vertices) {
+        private Set<DependencyVertex> castVertices(Set<Vertex<DependencyItem>> vertices) {
             return (Set) vertices;
         }
 
@@ -105,15 +105,15 @@ public final class ClassDependencyGraph {
         }
 
         private static class CompressionState {
-            private final Map<PSet<SourceDependencyNode>, Set<DependencyVertex>> toBeMerged = new HashMap<>();
+            private final Map<PSet<SourceItem>, Set<DependencyVertex>> toBeMerged = new HashMap<>();
         }
 
         private void compressGraphRec(DependencyVertex v, CompressionState state) {
             v.downstream = HashTreePSet.empty();
 
-            for (DependencyNode node : v.getData()) {
-                if (node instanceof SourceDependencyNode) {
-                    v.downstream = v.downstream.plus((SourceDependencyNode) node);
+            for (DependencyItem node : v.getData()) {
+                if (node instanceof SourceItem) {
+                    v.downstream = v.downstream.plus((SourceItem) node);
                 }
             }
 
@@ -137,10 +137,10 @@ public final class ClassDependencyGraph {
             }
         }
 
-        static final class DependencyVertex extends Vertex<DependencyNode> {
-            private PSet<SourceDependencyNode> downstream;
+        static final class DependencyVertex extends Vertex<DependencyItem> {
+            private PSet<SourceItem> downstream;
 
-            DependencyVertex(TarjanGraph<DependencyNode> owner, Set<DependencyNode> data) {
+            DependencyVertex(TarjanGraph<DependencyItem> owner, Set<DependencyItem> data) {
                 super(owner, data);
             }
         }
@@ -176,25 +176,25 @@ public final class ClassDependencyGraph {
     }
 
     private void serialize(ObjectOutputStream out) throws IOException {
-        Map<Vertex<DependencyNode>, Integer> vertexToId = new HashMap<>();
-        List<Vertex<DependencyNode>> vertices = new ArrayList<>(graph.getVertices());
+        Map<Vertex<DependencyItem>, Integer> vertexToId = new HashMap<>();
+        List<Vertex<DependencyItem>> vertices = new ArrayList<>(graph.getVertices());
 
         // write out all nodes
         out.writeInt(vertices.size());
         for (int i = 0; i < vertices.size(); i++) {
-            Vertex<DependencyNode> vertex = vertices.get(i);
+            Vertex<DependencyItem> vertex = vertices.get(i);
             vertexToId.put(vertex, i);
             out.writeInt(vertex.getData().size());
-            for (DependencyNode node : vertex.getData()) {
-                boolean isClassNode = node instanceof ClassDependencyNode;
+            for (DependencyItem node : vertex.getData()) {
+                boolean isClassNode = node instanceof ClassItem;
                 out.writeBoolean(isClassNode);
                 node.serialize(out);
             }
         }
         // then write out edges
         List<Integer> successors = new ArrayList<>();
-        for (Vertex<DependencyNode> vertex : vertices) {
-            for (Vertex<DependencyNode> succ : graph.successorsOf(vertex)) {
+        for (Vertex<DependencyItem> vertex : vertices) {
+            for (Vertex<DependencyItem> succ : graph.successorsOf(vertex)) {
                 Integer id = vertexToId.get(succ);
                 Objects.requireNonNull(id, "id should not be null");
                 successors.add(id);
@@ -219,10 +219,10 @@ public final class ClassDependencyGraph {
             for (int j = 0; j < nodeSize; j++) {
                 boolean isClassNode = in.readBoolean();
                 if (isClassNode) {
-                    ClassDependencyNode node = ClassDependencyNode.deserialize(in);
-                    classNodeIdByBinaryName.put(node.binaryName, new BinaryInfo(i, node.hash));
+                    ClassItem node = ClassItem.deserialize(in);
+                    classNodeIdByBinaryName.put(node.internalName, new BinaryInfo(i, node.checksum));
                 } else {
-                    SourceDependencyNode node = SourceDependencyNode.deserialize(in);
+                    SourceItem node = SourceItem.deserialize(in);
                     filesByVxId.computeIfAbsent(i, k -> new HashSet<>()).add(node.fileId);
                 }
             }
@@ -256,6 +256,11 @@ public final class ClassDependencyGraph {
         //  - taking care of newly added files (maybe AnalysisCache can keep doing this too)
         // todo test
         //  - consider the unknown file
+
+        // Maybe we should actually do the graph reduction when we load the
+        // graph. That way, it stays compatible with whatever info we collect
+        // during later analysis (we don't throw out any information). However,
+        // if a node is marked out of date, we have to throw it out.
 
         final Map<String, BinaryInfo> classNodeIdByInternalName;
         final int numVertices;
@@ -385,9 +390,9 @@ public final class ClassDependencyGraph {
     }
 
     public DotGraphDescription<?> asWriteableGraph() {
-        GexfGraphDescription<Vertex<DependencyNode>> gexf = graph.asGexfGraph();
+        GexfGraphDescription<Vertex<DependencyItem>> gexf = graph.asGexfGraph();
         gexf.setLabelFun(v -> v.getData().stream().map(it -> it.toString().replace('/', '.')).collect(Collectors.joining(", ")));
-        gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceDependencyNode)));
+        gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceItem)));
         gexf.recordAttribute("nodeSize", "int", v -> Integer.toString(v.getData().size()));
         return gexf;
     }
@@ -435,20 +440,25 @@ public final class ClassDependencyGraph {
         graph.compressGraphHeuristically();
     }
 
-    abstract static class DependencyNode {
-        private DependencyNode() {
+    /**
+     * One of the values of the {@link CompressibleGraph}. Vertices
+     * of the graph contain a set of those.
+     */
+    abstract static class DependencyItem {
+        private DependencyItem() {
         }
 
         abstract void serialize(ObjectOutputStream out) throws IOException;
     }
 
-    static final class ClassDependencyNode extends DependencyNode {
-        private final String binaryName;
-        private final long hash;
+    /** Represents a class file in the dependency graph. */
+    private static final class ClassItem extends DependencyItem {
+        private final String internalName;
+        private final long checksum;
 
-        ClassDependencyNode(String binaryName, long hash) {
-            this.binaryName = binaryName;
-            this.hash = hash;
+        ClassItem(String internalName, long checksum) {
+            this.internalName = internalName;
+            this.checksum = checksum;
         }
 
         @Override
@@ -456,36 +466,37 @@ public final class ClassDependencyGraph {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            ClassDependencyNode that = (ClassDependencyNode) o;
-            return Objects.equals(binaryName, that.binaryName);
+            ClassItem that = (ClassItem) o;
+            return Objects.equals(internalName, that.internalName);
         }
 
         @Override
         public int hashCode() {
-            return binaryName.hashCode();
+            return internalName.hashCode();
         }
 
         @Override
         public String toString() {
-            return binaryName;
+            return internalName;
         }
 
         void serialize(ObjectOutputStream out) throws IOException {
-            out.writeUTF(binaryName);
-            out.writeLong(hash);
+            out.writeUTF(internalName);
+            out.writeLong(checksum);
         }
 
-        static ClassDependencyNode deserialize(ObjectInputStream in) throws IOException {
+        static ClassItem deserialize(ObjectInputStream in) throws IOException {
             String binName = in.readUTF();
             long hash = in.readLong();
-            return new ClassDependencyNode(binName, hash);
+            return new ClassItem(binName, hash);
         }
     }
 
-    private static final class SourceDependencyNode extends DependencyNode {
+    /** Represents a source file in the dependency graph. */
+    private static final class SourceItem extends DependencyItem {
         private final FileId fileId;
 
-        SourceDependencyNode(FileId fileId) {
+        SourceItem(FileId fileId) {
             this.fileId = fileId;
         }
 
@@ -494,7 +505,7 @@ public final class ClassDependencyGraph {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            SourceDependencyNode that = (SourceDependencyNode) o;
+            SourceItem that = (SourceItem) o;
             return Objects.equals(fileId, that.fileId);
         }
 
@@ -512,10 +523,10 @@ public final class ClassDependencyGraph {
             out.writeObject(fileId);
         }
 
-        static SourceDependencyNode deserialize(ObjectInputStream in) throws IOException {
+        static SourceItem deserialize(ObjectInputStream in) throws IOException {
             try {
                 FileId fileId = (FileId) in.readObject();
-                return new SourceDependencyNode(fileId);
+                return new SourceItem(fileId);
             } catch (ClassNotFoundException e) {
                 throw new IOException(e);
             }
