@@ -44,7 +44,7 @@ public final class GraphUtil {
         private final List<V> vertices;
         private final Function<? super V, ? extends Collection<? extends V>> successorFun;
         private final Function<? super V, DotColor> colorFun;
-        private final Function<? super V, String> labelFun;
+        private Function<? super V, String> labelFun;
 
         /**
          * Create a new graph.
@@ -62,6 +62,10 @@ public final class GraphUtil {
             this.vertices.sort(Comparator.comparing(Object::toString)); // for reproducibility in tests
             this.successorFun = successorFun;
             this.colorFun = colorFun;
+            this.labelFun = labelFun;
+        }
+
+        public void setLabelFun(Function<? super V, String> labelFun) {
             this.labelFun = labelFun;
         }
 

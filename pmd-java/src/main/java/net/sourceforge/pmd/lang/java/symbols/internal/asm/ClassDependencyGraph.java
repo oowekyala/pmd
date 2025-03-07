@@ -1,24 +1,14 @@
 package net.sourceforge.pmd.lang.java.symbols.internal.asm;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.document.FileId;
@@ -86,168 +76,45 @@ public class ClassDependencyGraph {
 
     private final Map<FileId, SourceRequests> sourceDeps;
     private final Map<String, ClassRequests> binaryDeps;
-    private final Map<String, Long> hashesByBinaryName;
+    private final AsmSymbolResolver resolver;
 
-    public ClassDependencyGraph() {
+    public ClassDependencyGraph(AsmSymbolResolver resolver) {
+        this.resolver = resolver;
         sourceDeps = new ConcurrentHashMap<>();
         binaryDeps = new ConcurrentHashMap<>();
-        hashesByBinaryName = new ConcurrentHashMap<>();
     }
 
-    private ClassDependencyGraph(Map<FileId, SourceRequests> sourceDeps, Map<String, ClassRequests> binaryDeps, Map<String, Long> hashesByBinaryName) {
-        this.sourceDeps = new ConcurrentHashMap<>(sourceDeps);
-        this.binaryDeps = new ConcurrentHashMap<>(binaryDeps);
-        this.hashesByBinaryName = new ConcurrentHashMap<>(hashesByBinaryName);
-    }
 
     /**
      * Record that the given origin made a classpath request for the given binary name.
      *
-     * @param binaryName Binary name for the request
+     * @param internalName Binary name for the request
      * @param request The origin file
-     * @param found The result of the request
      */
-    void recordClasspathRequest(ClasspathRequest request, @NonNull String binaryName, @Nullable ClassStub found) {
+    void recordClasspathRequest(ClasspathRequest request, @NonNull String internalName) {
+        if (request == NoOrigin.INSTANCE) {
+            return;
+        }
         if (request instanceof SourceFileRequest) {
             SourceFileRequest sourceRequest = (SourceFileRequest) request;
-            if (sourceRequest.type == DependencyType.NO_DEP) {
-                // todo this likely can be handled better. Maybe another subclass of ClasspathRequest can be used in this case.
-                return;
-            }
 
             sourceDeps.compute(sourceRequest.origin, (fid, entries) -> {
                 if (entries == null) {
                     entries = new SourceRequests();
                 }
-                entries.record(binaryName, sourceRequest.type == DependencyType.SIGNATURE);
+                entries.record(internalName, sourceRequest.type == DependencyType.SIGNATURE);
                 return entries;
             });
         } else if (request instanceof ClassFileRequest) {
             ClassFileRequest classRequest = (ClassFileRequest) request;
-            binaryDeps.compute(classRequest.binaryName, (k, entries) -> {
+            binaryDeps.compute(classRequest.internalName, (k, entries) -> {
                 if (entries == null) {
                     entries = new ClassRequests();
                 }
-                entries.record(binaryName);
+                entries.record(internalName);
                 return entries;
             });
         }
-
-        // finally record the hash of the found file.
-        long hash = found == null ? 0 : found.abiFingerprint;
-        hashesByBinaryName.putIfAbsent(binaryName, hash);
-    }
-
-    private static final int MAGIC_NUMBER = 0x5B75FFF;
-
-    public void serialize(OutputStream out) throws IOException {
-        try (GZIPOutputStream gzip = new GZIPOutputStream(out);
-             ObjectOutputStream objOut = new ObjectOutputStream(gzip)) {
-            serialize(objOut);
-        }
-    }
-
-    public static ClassDependencyGraph deserialize(InputStream in) throws IOException {
-        try (GZIPInputStream gzip = new GZIPInputStream(in);
-             ObjectInputStream objIn = new ObjectInputStream(gzip)) {
-            return deserialize(objIn);
-        }
-    }
-
-    void serialize(ObjectOutputStream out) throws IOException {
-        out.writeInt(MAGIC_NUMBER);
-        out.writeInt(hashesByBinaryName.size());
-        Map<String, Integer> classToId = new HashMap<>();
-        int nextId = 0;
-        for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
-            out.writeUTF(entry.getKey());
-            out.writeLong(entry.getValue());
-            classToId.put(entry.getKey(), nextId);
-            nextId++;
-        }
-        // edges
-        // for each source file, write out its name, and its dependencies.
-        // todo write out hash of source file
-        out.writeInt(sourceDeps.size());
-        for (Entry<FileId, SourceRequests> entry : sourceDeps.entrySet()) {
-            FileId fileId = entry.getKey();
-            SourceRequests sourceRequests = entry.getValue();
-            // todo use relative path
-            out.writeUTF(fileId.getAbsolutePath());
-            out.writeInt(sourceRequests.byBinaryName.size());
-            for (Entry<String, RequestData> request : sourceRequests.byBinaryName.entrySet()) {
-                // must be non-null
-                int id = classToId.get(request.getKey());
-                out.writeInt(id);
-            }
-        }
-
-        out.writeInt(binaryDeps.size());
-        for (Entry<String, ClassRequests> entry : binaryDeps.entrySet()) {
-            int fromId = classToId.get(entry.getKey());
-            out.writeInt(fromId);
-            HashSet<String> deps = entry.getValue().dependenciesBinaryNames;
-            out.writeInt(deps.size());
-            for (String dep : deps) {
-                int toId = classToId.get(dep);
-                out.writeInt(toId);
-            }
-        }
-    }
-
-    static ClassDependencyGraph deserialize(ObjectInputStream in) throws IOException {
-        if (in.readInt() != MAGIC_NUMBER) {
-            throw new IOException("Invalid file format");
-        }
-
-        int numClasses = in.readInt();
-        List<String> idToClass = new ArrayList<>(numClasses);
-        Map<String, Long> hashesByBinaryName = new HashMap<>(numClasses);
-        for (int i = 0; i < numClasses; i++) {
-            String className = in.readUTF();
-            long hash = in.readLong();
-            idToClass.add(className);
-            hashesByBinaryName.put(className, hash);
-        }
-
-        int sourceDepsSize = in.readInt();
-        Map<FileId, SourceRequests> sourceDeps = new HashMap<>(sourceDepsSize);
-        for (int i = 0; i < sourceDepsSize; i++) {
-            String absPath = in.readUTF();
-            int requestSize = in.readInt();
-            SourceRequests requests = new SourceRequests();
-            for (int j = 0; j < requestSize; j++) {
-                int requestId = in.readInt();
-                String request = idToClass.get(requestId);
-                requests.record(request, true);
-            }
-            sourceDeps.put(
-                // todo this is most likely wrong
-                FileId.fromAbsolutePath(absPath, null),
-                requests
-            );
-        }
-
-        int binDepsSize = in.readInt();
-        Map<String, ClassRequests> binaryDeps = new HashMap<>(binDepsSize);
-        for (int i = 0; i < binDepsSize; i++) {
-            int fromId = in.readInt();
-            String fromName = idToClass.get(fromId);
-            int numEdges = in.readInt();
-            ClassRequests requests = new ClassRequests();
-            for (int j = 0; j < numEdges; j++) {
-                int toId = in.readInt();
-                String toName = idToClass.get(toId);
-                requests.record(toName);
-            }
-            binaryDeps.put(fromName, requests);
-        }
-
-        return new ClassDependencyGraph(
-            sourceDeps,
-            binaryDeps,
-            hashesByBinaryName
-        );
     }
 
     void toDot(Appendable a) throws IOException {
@@ -256,13 +123,13 @@ public class ClassDependencyGraph {
 
     public DotGraphDescription<?> asDotGraph() {
         return new DotGraphDescription<>(
-            hashesByBinaryName.keySet(),
+            resolver.getQueriedInternalNames(),
             v -> {
                 ClassRequests cr = binaryDeps.get(v);
                 if (cr == null) {
                     return Collections.emptySet();
                 } else {
-                    return cr.dependenciesBinaryNames;
+                    return cr.dependenciesInternalNames;
                 }
             },
             v -> DotColor.BLACK,
@@ -272,14 +139,15 @@ public class ClassDependencyGraph {
 
     public SummaryDependencyGraph makeSummaryGraph() {
         SummaryDependencyGraph graph = new SummaryDependencyGraph();
-        for (Entry<String, Long> entry : hashesByBinaryName.entrySet()) {
-            Vertex<DependencyNode> fromClass = graph.addClassLeaf(entry.getKey(), entry.getValue());
-            ClassRequests req = binaryDeps.get(entry.getKey());
+        for (String internalName : resolver.getQueriedInternalNames()) {
+
+            Vertex<DependencyNode> fromClass = graph.addClassLeaf(internalName, resolver.getStubHash(internalName));
+            ClassRequests req = binaryDeps.get(internalName);
             if (req == null) {
                 continue;
             }
-            for (String dep : req.dependenciesBinaryNames) {
-                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, hashesByBinaryName.get(dep));
+            for (String dep : req.dependenciesInternalNames) {
+                Vertex<DependencyNode> toClass = graph.addClassLeaf(dep, resolver.getStubHash(dep));
                 graph.recordDependency(fromClass, toClass);
             }
         }
@@ -287,8 +155,8 @@ public class ClassDependencyGraph {
         sourceDeps.forEach(
             (fileId, requests) -> {
                 Vertex<DependencyNode> fromSource = graph.addSourceLeaf(fileId);
-                for (String req : requests.byBinaryName.keySet()) {
-                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, hashesByBinaryName.get(req));
+                for (String req : requests.byInternalName.keySet()) {
+                    Vertex<DependencyNode> toClass = graph.addClassLeaf(req, resolver.getStubHash(req));
                     graph.recordDependency(fromSource, toClass);
                 }
             }
@@ -299,23 +167,11 @@ public class ClassDependencyGraph {
         return graph;
     }
 
-    public void computeChangedClasses(AsmSymbolResolver symbolResolver) {
-        // todo replay queries and check the found hash is the same as the recorded hash
-        //  if not, mark the nodes as out-of-date. Then, collect all the files that have an out-of-date dependency.
-        //  I think it would be easier if we didn't serialize this data structure but another, where the graph is
-        //  already inverted and reduced. Inverted because dependencies flow backwards.
-    }
-
-    // TODO a way to serialize this data structure and write it to disk
-    // TODO a way to query the graph
-
     public enum DependencyType {
         /** The request only needs access to the signatures of the file. */
         SIGNATURE,
         /** The request needs access to the full text of the source file. */
         FULL,
-        /** Used only to check a dependency, should not update dependencies. */
-        NO_DEP
     }
 
     /**
@@ -330,6 +186,10 @@ public class ClassDependencyGraph {
 
         public static ClasspathRequest unknownOrigin() {
             return new SourceFileRequest(FileId.UNKNOWN, DependencyType.SIGNATURE);
+        }
+
+        static ClasspathRequest noOrigin() {
+            return NoOrigin.INSTANCE;
         }
 
         public static ClasspathRequest signatureDep(@NonNull FileId origin) {
@@ -349,6 +209,13 @@ public class ClassDependencyGraph {
         }
     }
 
+    /** Does not record dependencies. */
+    static final class NoOrigin extends ClasspathRequest {
+        static final NoOrigin INSTANCE = new NoOrigin();
+
+        private NoOrigin() {
+        }
+    }
     /**
      * The request is made from a source file analysed by PMD.
      */
@@ -370,10 +237,10 @@ public class ClassDependencyGraph {
      * This should only be created internally.
      */
     static final class ClassFileRequest extends ClasspathRequest {
-        final String binaryName;
+        final String internalName;
 
-        ClassFileRequest(String binaryName) {
-            this.binaryName = binaryName;
+        ClassFileRequest(String internalName) {
+            this.internalName = internalName;
         }
     }
 
@@ -387,51 +254,18 @@ public class ClassDependencyGraph {
 
 
     private static final class SourceRequests {
-        private final HashMap<String, RequestData> byBinaryName = new HashMap<>();
+        private final HashMap<String, Boolean> byInternalName = new HashMap<>();
 
-        void record(String binaryName, boolean isSigOnly) {
-            byBinaryName.compute(binaryName, (name2, data) -> {
-                if (data == null) {
-                    return new RequestData(binaryName, isSigOnly);
-                } else {
-                    data.isSigOnly = isSigOnly;
-                    return data;
-                }
-            });
+        void record(String internalName, boolean isSigOnly) {
+            byInternalName.compute(internalName, (name2, data) -> data == null ? isSigOnly : data && isSigOnly);
         }
     }
 
     private static final class ClassRequests {
-        private final HashSet<String> dependenciesBinaryNames = new HashSet<>();
+        private final HashSet<String> dependenciesInternalNames = new HashSet<>();
 
         void record(String binaryName) {
-            dependenciesBinaryNames.add(binaryName);
-        }
-    }
-
-
-    private static final class RequestData {
-        private final String binName;
-        private boolean isSigOnly;
-
-        RequestData(String binName, boolean isSigOnly) {
-            this.binName = binName;
-            this.isSigOnly = isSigOnly;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            RequestData that = (RequestData) o;
-            return isSigOnly == that.isSigOnly
-                && Objects.equals(binName, that.binName);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(binName, isSigOnly);
+            dependenciesInternalNames.add(binaryName);
         }
     }
 

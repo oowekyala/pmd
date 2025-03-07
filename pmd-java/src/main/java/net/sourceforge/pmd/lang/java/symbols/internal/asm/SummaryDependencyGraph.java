@@ -6,13 +6,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -23,6 +26,7 @@ import org.pcollections.PSet;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph;
 import net.sourceforge.pmd.lang.java.internal.TarjanGraph.Vertex;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.BinaryInfo;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.NodeIdSet;
 import net.sourceforge.pmd.util.CollectionUtil;
@@ -81,7 +85,7 @@ public final class SummaryDependencyGraph {
         }
 
         static class CompressionState {
-            private Map<PSet<SourceDependencyNode>, Set<DependencyVertex>> toBeMerged = new HashMap<>();
+            private final Map<PSet<SourceDependencyNode>, Set<DependencyVertex>> toBeMerged = new HashMap<>();
         }
 
         private void compressGraphRec(DependencyVertex v, CompressionState state) {
@@ -160,7 +164,7 @@ public final class SummaryDependencyGraph {
                 successors.add(id);
             }
             successors.sort(Integer::compareTo);
-            out.write(successors.size());
+            out.writeInt(successors.size());
             for (Integer succ : successors) {
                 out.writeInt(succ);
             }
@@ -173,7 +177,7 @@ public final class SummaryDependencyGraph {
         final int numVertices = in.readInt();
         final List<@Nullable NodeIdSet> successors = new ArrayList<>(numVertices);
         final Map<String, BinaryInfo> classNodeIdByBinaryName = new HashMap<>();
-        final Map<FileId, Integer> sourceNodeIdByFileId = new HashMap<>();
+        final Map<Integer, Set<FileId>> filesByVxId = new HashMap<>();
 
         for (int i = 0; i < numVertices; i++) {
             int nodeSize = in.readInt();
@@ -184,7 +188,7 @@ public final class SummaryDependencyGraph {
                     classNodeIdByBinaryName.put(node.binaryName, new BinaryInfo(i, node.hash));
                 } else {
                     SourceDependencyNode node = SourceDependencyNode.deserialize(in);
-                    sourceNodeIdByFileId.put(node.fileId, i);
+                    filesByVxId.computeIfAbsent(i, k -> new HashSet<>()).add(node.fileId);
                 }
             }
         }
@@ -196,14 +200,14 @@ public final class SummaryDependencyGraph {
                 continue;
             }
             NodeIdSet nodeSuccs = new NodeIdSet(numSuccessors);
-            successors.add(nodeSuccs);
             for (int j = 0; j < numSuccessors; j++) {
                 int succId = in.readInt();
                 nodeSuccs.set(j, succId);
             }
+            successors.add(nodeSuccs);
         }
 
-        return new ClassQueryGraph(classNodeIdByBinaryName, sourceNodeIdByFileId, numVertices, successors);
+        return new ClassQueryGraph(classNodeIdByBinaryName, filesByVxId, numVertices, successors);
     }
 
     /**
@@ -212,21 +216,58 @@ public final class SummaryDependencyGraph {
      * Replaying queries naturally repopulates the {@link ClassDependencyGraph}.
      */
     public static class ClassQueryGraph {
-        final Map<String, BinaryInfo> classNodeIdByBinaryName;
-        final Map<FileId, Integer> sourceNodeIdByFileId;
+        final Map<String, BinaryInfo> classNodeIdByInternalName;
         final int numVertices;
         final List<@Nullable NodeIdSet> successors;
+        final Map<Integer, Set<FileId>> filesByVxId;
 
 
-        ClassQueryGraph(Map<String, BinaryInfo> classNodeIdByBinaryName,
-                        Map<FileId, Integer> sourceNodeIdByFileId,
+        ClassQueryGraph(Map<String, BinaryInfo> classNodeIdByInternalName,
+                        Map<Integer, Set<FileId>> filesByVxId,
                         int numVertices,
                         List<@Nullable NodeIdSet> successors) {
-            this.classNodeIdByBinaryName = classNodeIdByBinaryName;
-            this.sourceNodeIdByFileId = sourceNodeIdByFileId;
+            this.classNodeIdByInternalName = classNodeIdByInternalName;
             this.numVertices = numVertices;
             this.successors = successors;
+            this.filesByVxId = filesByVxId;
             assert successors.size() == numVertices;
+        }
+
+        public Set<FileId> replayQueries(AsmSymbolResolver resolver) {
+            BitSet changed = new BitSet(numVertices);
+            BitSet visited = new BitSet(numVertices);
+            Set<FileId> files = new HashSet<>();
+
+            // Could we do some of this in parallel?
+            for (Entry<String, BinaryInfo> entry : classNodeIdByInternalName.entrySet()) {
+                BinaryInfo info = entry.getValue();
+                if (visited.get(info.vertexId)) {
+                    continue;
+                }
+                ClassStub sym = (ClassStub) resolver.resolveClassFromBinaryName(entry.getKey(), ClasspathRequest.noOrigin());
+                boolean isChanged = sym == null && info.hash != 0
+                    || sym != null && sym.getAbiFingerprint() != info.hash;
+
+                if (isChanged) {
+                    // class has changed. Mark all the nodes it can reach as changed.
+                    markChanged(info.vertexId, visited, changed, files);
+                }
+            }
+            return files;
+        }
+
+        private void markChanged(int id, BitSet visited, BitSet changed, Set<FileId> files) {
+            visited.set(id);
+            changed.set(id);
+            files.addAll(filesByVxId.get(id));
+            NodeIdSet successors = this.successors.get(id);
+            if (successors != null) {
+                for (int succ : successors.data) {
+                    if (!changed.get(succ)) {
+                        markChanged(succ, visited, changed, files);
+                    }
+                }
+            }
         }
 
 
@@ -244,17 +285,12 @@ public final class SummaryDependencyGraph {
             }
 
             boolean contains(int id) {
-                if (data.length <= 4) {
-                    // linear check for small size. 4*32 bit is 128bit which is a cache line.
-                    for (int i = 0; i < data.length; i++) {
-                        if (data[i] == id) {
-                            return true;
-                        }
+                for (int datum : data) {
+                    if (datum == id) {
+                        return true;
                     }
-                    return false;
                 }
-                int index = Arrays.binarySearch(data, 0, data.length, id);
-                return index >= 0;
+                return false;
             }
         }
 
@@ -271,6 +307,7 @@ public final class SummaryDependencyGraph {
 
     public DotGraphDescription<?> asWriteableGraph() {
         GexfGraphDescription<Vertex<DependencyNode>> gexf = graph.asGexfGraph();
+        gexf.setLabelFun(v -> v.getData().stream().map(it -> it.toString().replace('/', '.')).collect(Collectors.joining(", ")));
         gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceDependencyNode)));
         gexf.recordAttribute("nodeSize", "int", v -> Integer.toString(v.getData().size()));
         return gexf;
@@ -394,7 +431,7 @@ public final class SummaryDependencyGraph {
 
         @Override
         public String toString() {
-            return '/' + fileId.getFileName();
+            return '@' + fileId.getFileName();
         }
 
         void serialize(ObjectOutputStream out) throws IOException {

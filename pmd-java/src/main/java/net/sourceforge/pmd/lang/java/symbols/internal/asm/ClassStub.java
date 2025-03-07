@@ -55,7 +55,7 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
     private final Names names;
 
     // Fingerprint of all members. TODO for now this is simply hash of classfile
-    long abiFingerprint;
+    private long abiFingerprint;
     private final ClasspathRequest classpathRequest;
 
     // all the following are lazy and depend on the parse lock
@@ -177,6 +177,11 @@ final class ClassStub implements JClassSymbol, AsmStub, AnnotationOwner {
     @Override
     public ClasspathRequest getClasspathRequest() {
         return classpathRequest;
+    }
+
+    long getAbiFingerprint() {
+        parseLock.ensureParsed();
+        return abiFingerprint;
     }
 
     // <editor-fold  defaultstate="collapsed" desc="Setters used during loading">

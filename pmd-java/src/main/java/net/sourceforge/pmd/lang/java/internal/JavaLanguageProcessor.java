@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import net.sourceforge.pmd.lang.InternalApiBridge;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
 import net.sourceforge.pmd.lang.ast.Parser;
+import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.impl.AbstractPMDProcessor;
 import net.sourceforge.pmd.lang.impl.BatchLanguageProcessor;
@@ -87,15 +89,14 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             if (Files.exists(classGraphCache)) {
                 try(InputStream in = Files.newInputStream(classGraphCache)) {
                     ClassQueryGraph cachedDepGraph = SummaryDependencyGraph.deserialize(in);
-                    // Here we should replay all queries on the classloader and compare the
-                    // recorded hashes with the new hashes.
-                    // TODO there is a problem: the classpath check is also there to guard against PMD version change.
-                    // TODO the TypeSystem should be created here
-//                    prevCache.computeChangedClasses(typeSystem.bootstrapResolver());
+                    TypeSystem ts = TypeSystem.usingClassLoaderClasspath(getProperties().getAnalysisClassLoader());
+                    AsmSymbolResolver symbolResolver = (AsmSymbolResolver) ts.bootstrapResolver();
+                    Set<FileId> changedFiles = cachedDepGraph.replayQueries(symbolResolver);
+                    LOG.debug("Found {} changed files", changedFiles.size());
                 }
             }
         } catch (IOException ioe) {
-
+            LOG.debug("Problem while reading cache file", ioe);
         }
 
 

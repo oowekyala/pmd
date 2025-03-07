@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -54,7 +55,19 @@ public class AsmSymbolResolver implements SymbolResolver {
         this.ts = ts;
         this.classLoader = classLoader;
         this.failed = new ClassStub(this, "/*failed-lookup*/", FailedLoader.INSTANCE, 0);
-        this.dependencyGraph = new ClassDependencyGraph();
+        this.dependencyGraph = new ClassDependencyGraph(this);
+    }
+
+    Set<String> getQueriedInternalNames() {
+        return knownStubs.keySet();
+    }
+
+    long getStubHash(String internalName) {
+        ClassStub stub = knownStubs.get(internalName);
+        if (stub == null || stub == failed) {
+            return 0;
+        }
+        return stub.getAbiFingerprint();
     }
 
     @Override
@@ -82,7 +95,7 @@ public class AsmSymbolResolver implements SymbolResolver {
         if (found == failed) { // NOPMD CompareObjectsWithEquals
             found = null;
         }
-        dependencyGraph.recordClasspathRequest(origin, binaryName, found);
+        dependencyGraph.recordClasspathRequest(origin, internalName);
         return found;
     }
 
@@ -126,13 +139,13 @@ public class AsmSymbolResolver implements SymbolResolver {
     @NonNull ClassStub resolveFromInternalNameCannotFail(@NonNull String internalName, ClasspathRequest request, int observedArity) {
         return knownStubs.compute(internalName, (iname, prev) -> {
             if (prev != null) {
-                dependencyGraph.recordClasspathRequest(request, prev.getBinaryName(), prev);
+                dependencyGraph.recordClasspathRequest(request, prev.getInternalName());
                 return prev;
             }
             @Nullable InputStream inputStream = getStreamOfInternalName(iname);
             Loader loader = inputStream == null ? FailedLoader.INSTANCE : new StreamLoader(internalName, inputStream);
             ClassStub result = new ClassStub(this, iname, loader, observedArity);
-            dependencyGraph.recordClasspathRequest(request, result.getBinaryName(), result);
+            dependencyGraph.recordClasspathRequest(request, result.getInternalName());
             return result;
         });
     }
@@ -193,7 +206,7 @@ public class AsmSymbolResolver implements SymbolResolver {
 
     void recordOuterClass(ClassStub classStub, @Nullable ClassStub outerClass) {
         if (outerClass != null) {
-            dependencyGraph.recordClasspathRequest(classStub.getClasspathRequest(), outerClass.getBinaryName(), outerClass);
+            dependencyGraph.recordClasspathRequest(classStub.getClasspathRequest(), outerClass.getInternalName());
         }
     }
 }
