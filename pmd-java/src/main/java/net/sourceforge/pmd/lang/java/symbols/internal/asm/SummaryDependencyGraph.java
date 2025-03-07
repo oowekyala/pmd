@@ -27,6 +27,7 @@ import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph.NodeIdSet;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
+import net.sourceforge.pmd.util.GraphUtil.GexfGraphDescription;
 
 /**
  * This is the data structure that is written to disk. It has info about the
@@ -268,8 +269,11 @@ public final class SummaryDependencyGraph {
         }
     }
 
-    public DotGraphDescription<?> asDotGraph() {
-        return graph.asDotGraph();
+    public DotGraphDescription<?> asWriteableGraph() {
+        GexfGraphDescription<Vertex<DependencyNode>> gexf = graph.asGexfGraph();
+        gexf.recordAttribute("containsFile", "boolean", v -> Boolean.toString(v.getData().stream().anyMatch(it -> it instanceof SourceDependencyNode)));
+        gexf.recordAttribute("nodeSize", "int", v -> Integer.toString(v.getData().size()));
+        return gexf;
     }
 
     public void reduce() {

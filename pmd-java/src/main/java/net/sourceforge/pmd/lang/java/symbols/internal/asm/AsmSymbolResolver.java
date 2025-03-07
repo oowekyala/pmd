@@ -183,9 +183,9 @@ public class AsmSymbolResolver implements SymbolResolver {
             }
             LOG.debug("Wrote class dependency graph to {}", toPath);
 
-            toPath = toPath.getParent().resolve("depgraph-reduced.dot");
+            toPath = toPath.getParent().resolve("depgraph-reduced.gexf");
             try (BufferedWriter writer = Files.newBufferedWriter(toPath)) {
-                GraphUtil.toDot(writer, summaryGraph.asDotGraph());
+                GraphUtil.toGexf(writer, summaryGraph.asWriteableGraph());
             }
             LOG.debug("Wrote reduced dependency graph to {}", toPath);
         }

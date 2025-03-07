@@ -25,6 +25,7 @@ import java.util.Set;
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
+import net.sourceforge.pmd.util.GraphUtil.GexfGraphDescription;
 import net.sourceforge.pmd.util.IteratorUtil;
 
 /**
@@ -264,6 +265,15 @@ public class TarjanGraph<T> {
 
     public DotGraphDescription<?> asDotGraph() {
         return new DotGraphDescription<>(
+            vertices,
+            this::successorsOf,
+            v -> DotColor.BLACK,
+            v -> v.data.toString()
+        );
+    }
+
+    public GexfGraphDescription<Vertex<T>> asGexfGraph() {
+        return new GexfGraphDescription<>(
             vertices,
             this::successorsOf,
             v -> DotColor.BLACK,

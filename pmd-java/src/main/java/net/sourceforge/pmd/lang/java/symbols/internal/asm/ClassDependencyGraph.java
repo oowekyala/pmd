@@ -251,7 +251,7 @@ public class ClassDependencyGraph {
     }
 
     void toDot(Appendable a) throws IOException {
-        GraphUtil.toDot(a, makeSummaryGraph().asDotGraph());
+        GraphUtil.toDot(a, asDotGraph());
     }
 
     public DotGraphDescription<?> asDotGraph() {
