@@ -21,10 +21,9 @@ import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.FailedLoader;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.Loader.StreamLoader;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
@@ -49,13 +48,13 @@ public class AsmSymbolResolver implements SymbolResolver {
      * instead of caching failure cases separately.
      */
     private final ClassStub failed;
-    private final ClassDependencyGraph dependencyGraph;
+    private final ClasspathDependencyTracker dependencyGraph;
 
     public AsmSymbolResolver(TypeSystem ts, Classpath classLoader) {
         this.ts = ts;
         this.classLoader = classLoader;
         this.failed = new ClassStub(this, "/*failed-lookup*/", FailedLoader.INSTANCE, 0);
-        this.dependencyGraph = new ClassDependencyGraph(this);
+        this.dependencyGraph = new ClasspathDependencyTracker(this);
     }
 
     Set<String> getQueriedInternalNames() {
@@ -71,7 +70,7 @@ public class AsmSymbolResolver implements SymbolResolver {
     }
 
     @Override
-    public @Nullable JClassSymbol resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
+    public @Nullable ClassStub resolveClassFromBinaryName(@NonNull String binaryName, ClasspathRequest origin) {
         AssertionUtil.requireParamNotNull("binaryName", binaryName);
 
         String internalName = getInternalName(binaryName);
@@ -183,7 +182,7 @@ public class AsmSymbolResolver implements SymbolResolver {
     public void writeReducedGraph(Path toPath) throws IOException {
         // todo do that asynchronously during reporting (it takes a second to reduce the graph. Probably better
         //  algorithms could be used)
-        SummaryDependencyGraph summaryGraph = dependencyGraph.makeSummaryGraph();
+        ClassDependencyGraph summaryGraph = dependencyGraph.makeSummaryGraph();
         try (OutputStream out = Files.newOutputStream(toPath)) {
             summaryGraph.serialize(out);
         }

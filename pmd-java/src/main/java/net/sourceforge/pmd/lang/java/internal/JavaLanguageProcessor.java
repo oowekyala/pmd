@@ -33,8 +33,8 @@ import net.sourceforge.pmd.lang.java.rule.xpath.internal.MatchesSignatureFunctio
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.MetricFunction;
 import net.sourceforge.pmd.lang.java.rule.xpath.internal.NodeIsFunction;
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.AsmSymbolResolver;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.SummaryDependencyGraph.ClassQueryGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClassQueryGraph;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger.SimpleLogger;
@@ -88,7 +88,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
             Files.createDirectories(javaCache);
             if (Files.exists(classGraphCache)) {
                 try(InputStream in = Files.newInputStream(classGraphCache)) {
-                    ClassQueryGraph cachedDepGraph = SummaryDependencyGraph.deserialize(in);
+                    ClassQueryGraph cachedDepGraph = ClassDependencyGraph.deserialize(in);
                     TypeSystem ts = TypeSystem.usingClassLoaderClasspath(getProperties().getAnalysisClassLoader());
                     AsmSymbolResolver symbolResolver = (AsmSymbolResolver) ts.bootstrapResolver();
                     Set<FileId> changedFiles = cachedDepGraph.replayQueries(symbolResolver);

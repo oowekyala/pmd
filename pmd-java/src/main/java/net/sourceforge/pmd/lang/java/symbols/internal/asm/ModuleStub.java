@@ -19,8 +19,8 @@ import org.pcollections.PSet;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolVisitor;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest;
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ModuleFileRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest;
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ModuleFileRequest;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 class ModuleStub implements JModuleSymbol, AsmStub, AnnotationOwner {

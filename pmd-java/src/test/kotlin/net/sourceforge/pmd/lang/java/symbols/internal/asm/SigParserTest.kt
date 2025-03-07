@@ -12,7 +12,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import javasymbols.testdata.impls.SomeInnerClasses
 import net.sourceforge.pmd.lang.java.symbols.JTypeParameterSymbol
-import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClassDependencyGraph.ClasspathRequest
+import net.sourceforge.pmd.lang.java.symbols.internal.asm.ClasspathDependencyTracker.ClasspathRequest
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.GenericSigBase.LazyMethodType
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.TypeParamsParser.BaseTypeParamsBuilder
 import net.sourceforge.pmd.lang.java.types.*
