@@ -32,6 +32,7 @@ import net.sourceforge.pmd.reporting.RuleViolation;
  */
 public class FileAnalysisCache extends AbstractAnalysisCache {
 
+    // TODO use Path here
     private final File cacheFile;
 
     /**

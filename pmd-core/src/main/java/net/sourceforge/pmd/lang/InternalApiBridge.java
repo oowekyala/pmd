@@ -8,7 +8,7 @@ import java.util.List;
 
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
-import net.sourceforge.pmd.cache.internal.CacheDirectoryManager;
+import net.sourceforge.pmd.cache.internal.PmdCacheManager;
 import net.sourceforge.pmd.lang.document.TextFile;
 import net.sourceforge.pmd.lang.rule.internal.RuleSets;
 import net.sourceforge.pmd.reporting.GlobalAnalysisListener;
@@ -34,10 +34,10 @@ public final class InternalApiBridge {
                                                                     GlobalAnalysisListener listener,
                                                                     int threadCount,
                                                                     AnalysisCache analysisCache,
-                                                                    CacheDirectoryManager cacheDirectoryManager,
+                                                                    PmdCacheManager pmdCacheManager,
                                                                     PmdReporter messageReporter,
                                                                     LanguageProcessorRegistry lpRegistry) {
-        return new LanguageProcessor.AnalysisTask(rulesets, files, listener, threadCount, analysisCache, cacheDirectoryManager, messageReporter, lpRegistry);
+        return new LanguageProcessor.AnalysisTask(rulesets, files, listener, threadCount, analysisCache, pmdCacheManager, messageReporter, lpRegistry);
     }
 
     public static LanguageProcessor.AnalysisTask taskWithFiles(LanguageProcessor.AnalysisTask originalTask, List<TextFile> newFiles) {

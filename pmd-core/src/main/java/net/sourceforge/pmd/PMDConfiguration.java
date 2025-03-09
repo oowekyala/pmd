@@ -19,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
-import net.sourceforge.pmd.cache.internal.CacheDirectoryManager;
+import net.sourceforge.pmd.cache.internal.PmdCacheManager;
 import net.sourceforge.pmd.cache.internal.FileAnalysisCache;
 import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
@@ -112,7 +112,7 @@ public class PMDConfiguration extends AbstractConfiguration {
     private boolean showSuppressedViolations = false;
 
     private AnalysisCache analysisCache = new NoopAnalysisCache();
-    private CacheDirectoryManager cacheDirectory = new CacheDirectoryManager(Paths.get(".pmd"));
+    private PmdCacheManager cacheDirectory = new PmdCacheManager(Paths.get(".pmd"));
     private boolean ignoreIncrementalAnalysis;
 
     public PMDConfiguration() {
@@ -381,7 +381,7 @@ public class PMDConfiguration extends AbstractConfiguration {
         return analysisCache;
     }
 
-    CacheDirectoryManager getCacheDirectory() {
+    PmdCacheManager getCacheDirectory() {
         return cacheDirectory;
     }
 
@@ -415,7 +415,7 @@ public class PMDConfiguration extends AbstractConfiguration {
         if (cacheLocation == null) {
             setAnalysisCache(new NoopAnalysisCache());
         } else {
-            cacheDirectory = new CacheDirectoryManager(Paths.get(cacheLocation));
+            cacheDirectory = new PmdCacheManager(Paths.get(cacheLocation));
             setAnalysisCache(new FileAnalysisCache(cacheDirectory.getAnalysisCacheFile().toFile()));
         }
     }
