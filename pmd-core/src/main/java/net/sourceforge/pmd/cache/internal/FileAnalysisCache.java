@@ -76,7 +76,8 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
                         executionClassPathChecksum = inputStream.readLong();
 
                         // Cached results
-                        while (inputStream.available() > 0) {
+                        int numEntries = inputStream.readInt();
+                        for (int i = 0; i < numEntries; i++) {
                             final FileId fileId = (FileId) inputStream.readObject();
                             if (!fileIdsInAnalysis.contains(fileId)) {
                                 LOG.debug("File {} is in the cache but is not part of the analysis", fileId);
@@ -85,7 +86,7 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
 
                             final int countViolations = inputStream.readInt();
                             final List<RuleViolation> violations = new ArrayList<>(countViolations);
-                            for (int i = 0; i < countViolations; i++) {
+                            for (int j = 0; j < countViolations; j++) {
                                 violations.add(CachedRuleViolation.loadFromStream(inputStream, fileId, ruleMapper));
                             }
 
@@ -135,6 +136,7 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
                 outputStream.writeLong(auxClassPathChecksum);
                 outputStream.writeLong(executionClassPathChecksum);
 
+                outputStream.writeInt(updatedResultsCache.size());
                 for (final Map.Entry<FileId, AnalysisResult> resultEntry : updatedResultsCache.entrySet()) {
                     final List<RuleViolation> violations = resultEntry.getValue().getViolations();
 

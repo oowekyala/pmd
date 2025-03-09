@@ -1,3 +1,7 @@
+/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
 package net.sourceforge.pmd.lang.document;
 
 import java.io.File;
@@ -88,7 +92,7 @@ public final class FileIdImpl {
         private final FileId outer;
         private transient String fileName;
 
-        public FromAbsPathFileId(final String absPath, final @Nullable FileId outer) {
+        FromAbsPathFileId(final String absPath, final @Nullable FileId outer) {
             this.outer = outer;
             this.absPath = absPath;
             this.fileName = Paths.get(absPath).getFileName().toString();

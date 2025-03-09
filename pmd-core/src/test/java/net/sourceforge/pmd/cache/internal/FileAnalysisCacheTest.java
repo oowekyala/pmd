@@ -10,7 +10,6 @@ import static net.sourceforge.pmd.util.CollectionUtil.setOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -140,7 +139,7 @@ class FileAnalysisCacheTest {
         final List<RuleViolation> cachedViolations = reloadedCache.getCachedViolations(sourceFile);
         assertEquals(1, cachedViolations.size(), "Cached rule violations count mismatch");
         final RuleViolation cachedViolation = cachedViolations.get(0);
-        assertSame(sourceFile.getFileId(), cachedViolation.getFileId());
+        assertEquals(sourceFile.getFileId(), cachedViolation.getFileId());
         assertEquals(textLocation.getStartLine(), cachedViolation.getBeginLine());
         assertEquals(textLocation.getStartColumn(), cachedViolation.getBeginColumn());
         assertEquals(textLocation.getEndLine(), cachedViolation.getEndLine());
