@@ -56,7 +56,7 @@ class UnusedMethodTest {
         Language apexLanguage = ApexLanguageModule.getInstance();
         LanguageVersion languageVersion = apexLanguage.getDefaultVersion();
         PMDConfiguration configuration = new PMDConfiguration();
-        configuration.setIgnoreIncrementalAnalysis(true);
+        configuration.setIncrementalAnalysisEnabled(false);
         configuration.setDefaultLanguageVersion(languageVersion);
         configuration.setThreads(0); // don't use separate threads
         configuration.prependAuxClasspath(".");

@@ -23,13 +23,12 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
+import net.sourceforge.pmd.cache.internal.AnalysisCache;
 import net.sourceforge.pmd.cache.internal.AnalysisCacheListener;
-import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
 import net.sourceforge.pmd.internal.LogMessages;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
 import net.sourceforge.pmd.internal.util.FileCollectionUtil;
@@ -383,8 +382,10 @@ public final class PmdAnalysis implements AutoCloseable {
 
     void performAnalysisImpl(List<? extends GlobalReportBuilderListener> extraListeners, List<TextFile> textFiles) {
 
+        AnalysisCache analysisCache;
         try {
-            configuration.getCacheDirectory().initCache();
+            configuration.getCacheManager().initCache();
+            analysisCache = configuration.createAnalysisCache();
         } catch (IOException e) {
             reporter.errorEx("Exception while initializing cache directory", e);
             throw new RuntimeException(e);
@@ -395,7 +396,7 @@ public final class PmdAnalysis implements AutoCloseable {
         GlobalAnalysisListener listener;
         try {
             @SuppressWarnings("PMD.CloseResource")
-            AnalysisCacheListener cacheListener = new AnalysisCacheListener(configuration.getAnalysisCache(),
+            AnalysisCacheListener cacheListener = new AnalysisCacheListener(analysisCache,
                                                                             rulesets,
                                                                             configuration.getClassLoader(),
                                                                             textFiles);
@@ -423,8 +424,6 @@ public final class PmdAnalysis implements AutoCloseable {
                 listener.onConfigError(new Report.ConfigurationError(rule, rule.dysfunctionReason()));
             }
 
-            encourageToUseIncrementalAnalysis(configuration);
-
             try (LanguageProcessorRegistry lpRegistry = LanguageProcessorRegistry.create(
                 // only start the applicable languages (and dependencies)
                 new LanguageRegistry(getApplicableLanguages(true)),
@@ -439,8 +438,8 @@ public final class PmdAnalysis implements AutoCloseable {
                     textFiles,
                     listener,
                     configuration.getThreads(),
-                    configuration.getAnalysisCache(),
-                    configuration.getCacheDirectory(),
+                    analysisCache,
+                    configuration.getCacheManager(),
                     reporter,
                     lpRegistry
                 );
@@ -614,19 +613,6 @@ public final class PmdAnalysis implements AutoCloseable {
 
     void printErrorDetected(int errors) {
         printErrorDetected(getReporter(), errors);
-    }
-
-    private static void encourageToUseIncrementalAnalysis(final PMDConfiguration configuration) {
-        final PmdReporter reporter = configuration.getReporter();
-
-        if (!configuration.isIgnoreIncrementalAnalysis()
-            && configuration.getAnalysisCache() instanceof NoopAnalysisCache
-            && reporter.isLoggable(Level.WARN)) {
-            final String version =
-                PMDVersion.isUnknown() || PMDVersion.isSnapshot() ? "latest" : "pmd-doc-" + PMDVersion.VERSION;
-            reporter.warn("This analysis could be faster, please consider using Incremental Analysis: "
-                            + "https://docs.pmd-code.org/{0}/pmd_userdocs_incremental_analysis.html", version);
-        }
     }
 
 }

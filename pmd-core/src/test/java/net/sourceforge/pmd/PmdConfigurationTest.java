@@ -10,18 +10,18 @@ import static org.hamcrest.Matchers.empty;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -161,20 +161,20 @@ class PmdConfigurationTest {
         configuration.setReportFormat("csv");
         Renderer renderer = configuration.createRenderer();
         assertEquals(CSVRenderer.class, renderer.getClass(), "Renderer class");
-        assertEquals(false, renderer.isShowSuppressedViolations(), "Default renderer show suppressed violations");
+        assertFalse(renderer.isShowSuppressedViolations(), "Default renderer show suppressed violations");
 
         configuration.setShowSuppressedViolations(true);
         renderer = configuration.createRenderer();
         assertEquals(CSVRenderer.class, renderer.getClass(), "Renderer class");
-        assertEquals(true, renderer.isShowSuppressedViolations(), "Changed renderer show suppressed violations");
+        assertTrue(renderer.isShowSuppressedViolations(), "Changed renderer show suppressed violations");
     }
 
     @Test
     void testShowSuppressedViolations() {
         PMDConfiguration configuration = new PMDConfiguration();
-        assertEquals(false, configuration.isShowSuppressedViolations(), "Default show suppressed violations");
+        assertFalse(configuration.isShowSuppressedViolations(), "Default show suppressed violations");
         configuration.setShowSuppressedViolations(true);
-        assertEquals(true, configuration.isShowSuppressedViolations(), "Changed show suppressed violations");
+        assertTrue(configuration.isShowSuppressedViolations(), "Changed show suppressed violations");
     }
 
     @Test
@@ -189,49 +189,37 @@ class PmdConfigurationTest {
     }
 
     @Test
-    void testAnalysisCache(@TempDir Path folder) throws IOException {
+    void testAnalysisCache(@TempDir Path folder) {
         final PMDConfiguration configuration = new PMDConfiguration();
-        assertNotNull(configuration.getAnalysisCache(), "Default cache is null");
-        assertTrue(configuration.getAnalysisCache() instanceof NoopAnalysisCache, "Default cache is not a noop");
-        configuration.setAnalysisCache(null);
-        assertNotNull(configuration.getAnalysisCache(), "Default cache was set to null");
+        assertNotNull(configuration.getCacheManager(), "Default cache is null");
+        assertInstanceOf(FileAnalysisCache.class, configuration.createAnalysisCache(), "Default cache is a noop");
+        configuration.setCacheDirectoryLocation(null);
+        assertInstanceOf(NoopAnalysisCache.class, configuration.createAnalysisCache(), "Default cache is a noop");
 
-        final File cacheFile = folder.resolve("pmd-cachefile").toFile();
-        assertTrue(cacheFile.createNewFile());
-        final FileAnalysisCache analysisCache = new FileAnalysisCache(cacheFile);
-        configuration.setAnalysisCache(analysisCache);
-        assertSame(analysisCache, configuration.getAnalysisCache(), "Configured cache not stored");
     }
 
     @Test
     void testAnalysisCacheLocation() {
         final PMDConfiguration configuration = new PMDConfiguration();
+        configuration.setCacheDirectoryLocation(null);
+        assertInstanceOf(NoopAnalysisCache.class, configuration.createAnalysisCache(), "Null cache location accepted");
 
-        configuration.setAnalysisCacheLocation(null);
-        assertNotNull(configuration.getAnalysisCache(), "Null cache location accepted");
-        assertTrue(configuration.getAnalysisCache() instanceof NoopAnalysisCache, "Null cache location accepted");
-
-        configuration.setAnalysisCacheLocation("pmd.cache");
-        assertNotNull(configuration.getAnalysisCache(), "Not null cache location produces null cache");
-        assertTrue(configuration.getAnalysisCache() instanceof FileAnalysisCache,
-                "File cache location doesn't produce a file cache");
+        configuration.setCacheDirectoryLocation(Paths.get("pmd.cache"));
+        assertInstanceOf(FileAnalysisCache.class, configuration.createAnalysisCache(), "File cache location doesn't produce a file cache");
     }
 
 
     @Test
-    void testIgnoreIncrementalAnalysis(@TempDir Path folder) throws IOException {
+    void testIgnoreIncrementalAnalysis(@TempDir Path folder) {
         final PMDConfiguration configuration = new PMDConfiguration();
 
         // set dummy cache location
-        final File cacheFile = folder.resolve("pmd-cachefile").toFile();
-        assertTrue(cacheFile.createNewFile());
-        final FileAnalysisCache analysisCache = new FileAnalysisCache(cacheFile);
-        configuration.setAnalysisCache(analysisCache);
-        assertNotNull(configuration.getAnalysisCache(), "Null cache location accepted");
-        assertFalse(configuration.getAnalysisCache() instanceof NoopAnalysisCache, "Non null cache location, cache should not be noop");
+        final Path cacheLoc = folder.resolve("pmd-cachedir");
+        configuration.setCacheDirectoryLocation(cacheLoc);
+        assertInstanceOf(FileAnalysisCache.class, configuration.createAnalysisCache(), "Non null cache location, cache should not be noop");
 
-        configuration.setIgnoreIncrementalAnalysis(true);
-        assertTrue(configuration.getAnalysisCache() instanceof NoopAnalysisCache, "Ignoring incremental analysis should turn the cache into a noop");
+        configuration.setIncrementalAnalysisEnabled(false);
+        assertInstanceOf(NoopAnalysisCache.class, configuration.createAnalysisCache(), "Ignoring incremental analysis should turn the cache into a noop");
     }
 
     @Test

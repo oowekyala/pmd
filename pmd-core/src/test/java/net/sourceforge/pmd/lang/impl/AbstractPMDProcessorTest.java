@@ -67,7 +67,7 @@ abstract class AbstractPMDProcessorTest {
     protected PmdAnalysis createPmdAnalysis() {
         PMDConfiguration configuration = new PMDConfiguration();
         configuration.setThreads(getThreads());
-        configuration.setIgnoreIncrementalAnalysis(true);
+        configuration.setIncrementalAnalysisEnabled(false);
         reporter = Mockito.spy(configuration.getReporter());
         configuration.setReporter(reporter);
 

@@ -136,7 +136,7 @@ class PmdAnalysisTest {
     void testFileWithSpecificLanguage() {
         final Language language = Dummy2LanguageModule.getInstance();
         PMDConfiguration config = new PMDConfiguration();
-        config.setIgnoreIncrementalAnalysis(true);
+        config.setIncrementalAnalysisEnabled(false);
         RuleSet ruleset = RuleSet.forSingleRule(new TestRule());
 
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
@@ -155,7 +155,7 @@ class PmdAnalysisTest {
     void testTextFileWithSpecificLanguage() {
         final Language language = Dummy2LanguageModule.getInstance();
         PMDConfiguration config = new PMDConfiguration();
-        config.setIgnoreIncrementalAnalysis(true);
+        config.setIncrementalAnalysisEnabled(false);
         RuleSet ruleset = RuleSet.forSingleRule(new TestRule());
 
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {

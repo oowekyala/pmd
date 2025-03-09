@@ -259,7 +259,7 @@ public abstract class RuleTst {
      */
     Report runTestFromString(String code, Rule rule, LanguageVersion languageVersion) {
         PMDConfiguration configuration = new PMDConfiguration();
-        configuration.setIgnoreIncrementalAnalysis(true);
+        configuration.setIncrementalAnalysisEnabled(false);
         configuration.setDefaultLanguageVersion(languageVersion);
         configuration.setThreads(0); // don't use separate threads
         configuration.setClassLoader(TEST_AUXCLASSPATH_CLASSLOADER);

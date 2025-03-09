@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -271,8 +272,8 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand<PMDConfiguration> 
         configuration.setThreads(threads);
         configuration.setFailOnViolation(failOnViolation);
         configuration.setFailOnError(failOnError);
-        configuration.setAnalysisCacheLocation(cacheLocation != null ? cacheLocation.toString() : null);
-        configuration.setIgnoreIncrementalAnalysis(noCache);
+        configuration.setCacheDirectoryLocation(cacheLocation != null ? Paths.get(cacheLocation.toString()) : null);
+        configuration.setIncrementalAnalysisEnabled(!noCache);
 
         if (languageVersion != null) {
             configuration.setDefaultLanguageVersions(languageVersion);

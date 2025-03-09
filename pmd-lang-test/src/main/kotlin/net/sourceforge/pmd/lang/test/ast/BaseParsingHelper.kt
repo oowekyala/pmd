@@ -252,7 +252,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
         val config = PMDConfiguration().apply {
             suppressMarker = params.suppressMarker
             forceLanguageVersion = defaultVersion
-            isIgnoreIncrementalAnalysis = true
+            isIncrementalAnalysisEnabled = false
             threads = 0 // don't use separate threads for rule execution
         }
 

@@ -14,13 +14,16 @@ import net.sourceforge.pmd.lang.Language;
  * Interface with a cache directory where PMD can save data from one run to the next.
  */
 @Experimental
-public class PmdCacheManager {
+public final class PmdCacheManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(PmdCacheManager.class);
 
+    /** Root directory of the cache. */
     private final Path root;
+    /** Temporary directory. */
+    private final Path tmpDir;
 
-    /** Create a manager for the cache. */
+    /** Initialize a cache manager with the given directory. */
     public PmdCacheManager(Path root) {
         this.root = root;
     }

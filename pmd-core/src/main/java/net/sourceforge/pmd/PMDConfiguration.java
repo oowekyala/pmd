@@ -16,12 +16,13 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
-import net.sourceforge.pmd.cache.internal.PmdCacheManager;
 import net.sourceforge.pmd.cache.internal.FileAnalysisCache;
 import net.sourceforge.pmd.cache.internal.NoopAnalysisCache;
+import net.sourceforge.pmd.cache.internal.PmdCacheManager;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
@@ -111,9 +112,8 @@ public class PMDConfiguration extends AbstractConfiguration {
     private Properties reportProperties = new Properties();
     private boolean showSuppressedViolations = false;
 
-    private AnalysisCache analysisCache = new NoopAnalysisCache();
     private PmdCacheManager cacheDirectory = new PmdCacheManager(Paths.get(".pmd"));
-    private boolean ignoreIncrementalAnalysis;
+    private boolean enableIncrementalAnalysis = true;
 
     public PMDConfiguration() {
         this(DEFAULT_REGISTRY);
@@ -371,34 +371,12 @@ public class PMDConfiguration extends AbstractConfiguration {
      *
      * @apiNote This is internal API.
      */
-    AnalysisCache getAnalysisCache() {
-        // Make sure we are not null
-        if (analysisCache == null || isIgnoreIncrementalAnalysis() && !(analysisCache instanceof NoopAnalysisCache)) {
-            // sets a noop cache
-            setAnalysisCache(new NoopAnalysisCache());
+    AnalysisCache createAnalysisCache() {
+        if (cacheDirectory == null || !isIncrementalAnalysisEnabled()) {
+            return new NoopAnalysisCache();
         }
 
-        return analysisCache;
-    }
-
-    PmdCacheManager getCacheDirectory() {
-        return cacheDirectory;
-    }
-
-    /**
-     * Sets the analysis cache to be used. Setting a
-     * value of {@code null} will cause a Noop AnalysisCache to be used.
-     * If incremental analysis was explicitly disabled ({@link #isIgnoreIncrementalAnalysis()}),
-     * then this method is a noop.
-     *
-     * @param cache The analysis cache to be used.
-     *
-     * @apiNote This is internal API. Use {@link #setAnalysisCacheLocation(String)} to configure a cache.
-     */
-    void setAnalysisCache(final AnalysisCache cache) {
-        // the doc says it's a noop if incremental analysis was disabled,
-        // but it's actually the getter that enforces that
-        this.analysisCache = cache == null ? new NoopAnalysisCache() : cache;
+        return new FileAnalysisCache(cacheDirectory.getAnalysisCacheFile().toFile());
     }
 
     /**
@@ -410,14 +388,50 @@ public class PMDConfiguration extends AbstractConfiguration {
      *
      * @param cacheLocation The location of the analysis cache to be used. Use {@code null}
      *                      to disable the cache.
+     *
+     * @deprecated Use {@link #setCacheDirectoryLocation(Path)}
      */
+    @Deprecated
     public void setAnalysisCacheLocation(final String cacheLocation) {
-        if (cacheLocation == null) {
-            setAnalysisCache(new NoopAnalysisCache());
-        } else {
-            cacheDirectory = new PmdCacheManager(Paths.get(cacheLocation));
-            setAnalysisCache(new FileAnalysisCache(cacheDirectory.getAnalysisCacheFile().toFile()));
-        }
+        setCacheDirectoryLocation(
+            cacheLocation == null ? null : Paths.get(cacheLocation));
+    }
+
+    /**
+     * If true, enable incremental analysis. This saves a record of violations
+     * from one run to the next. The violation cache is located in PMD's
+     * {@linkplain #setCacheDirectoryLocation(Path) cache directory}. Incremental
+     * analysis is enabled by default. If the cache location is set to null,
+     * then incremental analysis will not work, whether enabled or not.
+     *
+     * @param enable True if incremental analysis should be used
+     */
+    public void setIncrementalAnalysisEnabled(boolean enable) {
+        this.enableIncrementalAnalysis = enable;
+    }
+
+    public boolean isIncrementalAnalysisEnabled() {
+        return enableIncrementalAnalysis;
+    }
+
+    /**
+     * Set the location of the data directory that PMD uses to persist
+     * files between two runs. This must be a directory, if it is a
+     * regular file, it will be deleted at the start of the analysis.
+     * If the parameter is null, then no cache directory will be persisted.
+     *
+     * <p>Since PMD 7.12.0, the default cache location is a subdirectory called {@code .pmd}
+     * in the current directory.
+     *
+     * @param cacheLocation The cache location, or null
+     */
+    public void setCacheDirectoryLocation(final @Nullable Path cacheLocation) {
+        cacheDirectory = cacheLocation == null ? null : new PmdCacheManager(cacheLocation);
+    }
+
+
+    @Nullable PmdCacheManager getCacheManager() {
+        return cacheDirectory;
     }
 
 
@@ -427,10 +441,12 @@ public class PMDConfiguration extends AbstractConfiguration {
      * disabled. The analysis cached location is ignored, even if it's specified.
      *
      * @param noCache Whether to ignore incremental analysis or not
+     *
+     * @deprecated Use {@link #setIncrementalAnalysisEnabled(boolean)} (which is the reverse of this method)
      */
+    @Deprecated
     public void setIgnoreIncrementalAnalysis(boolean noCache) {
-        // see #getAnalysisCache for the implementation.
-        this.ignoreIncrementalAnalysis = noCache;
+        setIncrementalAnalysisEnabled(!noCache);
     }
 
 
@@ -439,9 +455,12 @@ public class PMDConfiguration extends AbstractConfiguration {
      * or not.
      *
      * @return {@code true} if incremental analysis is explicitly disabled
+     *
+     * @deprecated Use {@link #isIncrementalAnalysisEnabled()} (which is the reverse of this method)
      */
+    @Deprecated
     public boolean isIgnoreIncrementalAnalysis() {
-        return ignoreIncrementalAnalysis;
+        return !enableIncrementalAnalysis;
     }
 
     /**

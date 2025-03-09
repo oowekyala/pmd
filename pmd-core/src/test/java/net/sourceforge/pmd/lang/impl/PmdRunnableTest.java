@@ -72,7 +72,7 @@ class PmdRunnableTest {
 
     private Report process(LanguageVersion lv) {
         configuration.setForceLanguageVersion(lv);
-        configuration.setIgnoreIncrementalAnalysis(true);
+        configuration.setIncrementalAnalysisEnabled(false);
         try (PmdAnalysis pmd = PmdAnalysis.create(configuration)) {
             pmd.files().addSourceFile(FileId.fromPathLikeString("test.dummy"), "foo");
             pmd.addRuleSet(RuleSet.forSingleRule(rule));
