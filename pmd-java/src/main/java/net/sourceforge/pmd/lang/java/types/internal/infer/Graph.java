@@ -152,7 +152,11 @@ class Graph<T> {
         successors.put(vertex, succ);
         successors.remove(toMerge);
         vertices.remove(toMerge);
-        successors.values().forEach(it -> it.remove(toMerge));
+        successors.values().forEach(it -> {
+            if (it.remove(toMerge)) {
+                it.add(vertex);
+            }
+        });
     }
 
     @Override
