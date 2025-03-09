@@ -23,6 +23,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.sourceforge.pmd.util.GraphUtil;
 import net.sourceforge.pmd.util.GraphUtil.DotColor;
 import net.sourceforge.pmd.util.GraphUtil.DotGraphDescription;
@@ -252,11 +254,26 @@ public class TarjanGraph<T> {
             successors.put(vertex, succ);
             successors.remove(toMerge);
             vertices.remove(toMerge);
-            successors.values().forEach(it -> it.remove(toMerge));
+            successors.values().forEach(it -> {
+                if (it.remove(toMerge)) {
+                    it.add(vertex);
+                }
+            });
         }
     }
 
-    // Merge many vertices together in one pass
+    /** Remove many vertices at once. */
+    public void batchRemove(Collection<? extends Vertex<T>> toRemove) {
+        vertices.removeAll(toRemove);
+        successors.keySet().removeAll(toRemove);
+        successors.values().forEach(it -> {
+            it.removeAll(toRemove);
+        });
+    }
+
+    /**
+     * Merge many vertices together in one pass.
+     */
     protected void batchMerge(Collection<? extends Set<? extends Vertex<T>>> equivClasses) {
         Map<Vertex<T>, Vertex<T>> remapping = new HashMap<>();
 
@@ -389,6 +406,10 @@ public class TarjanGraph<T> {
                 vertexMap.put(v, vertex);
             }
             return vertex;
+        }
+
+        public @Nullable Vertex<T> getVertex(T t) {
+            return vertexMap.get(t);
         }
 
         @Override

@@ -54,7 +54,7 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     private final JavaParser parser;
     private final JavaParser parserWithoutProcessing;
     private TypeSystem typeSystem;
-    private Path classGraphCache;
+    private JavaCacheManager javaCacheManager;
 
     public JavaLanguageProcessor(JavaLanguageProperties properties, TypeSystem typeSystem) {
         super(properties);
@@ -80,8 +80,8 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         task.getRulesets().initializeRules(task.getLpRegistry(), task.getMessageReporter());
 
         Path javaCache = task.getCacheDir().getLanguageCache(getLanguage());
-        classGraphCache = javaCache.resolve("class-dependency-graph.bin.gz");
-        @Nullable ClasspathCheckResult classpathCheck = readClassGraphCache(javaCache);
+        javaCacheManager = new JavaCacheManager(javaCache);
+        @Nullable ClasspathCheckResult classpathCheck = readClassGraphCache();
         // TODO augment the AnalysisCache with the result.
 
         // launch processing.
@@ -92,13 +92,12 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
         return processor;
     }
 
-    private ClasspathCheckResult readClassGraphCache(Path javaCache) {
+    private ClasspathCheckResult readClassGraphCache() {
         try {
-            Files.createDirectories(javaCache);
-            if (Files.exists(classGraphCache)) {
+            if (Files.exists(javaCacheManager.getReducedDepGraphPath())) {
 
                 AsmSymbolResolver symbolResolver = (AsmSymbolResolver) typeSystem.bootstrapResolver();
-                ClasspathCheckResult result = symbolResolver.readClasspathDependencyCache(classGraphCache);
+                ClasspathCheckResult result = symbolResolver.readClasspathDependencyCache(javaCacheManager);
 
                 if (result.allFilesNeedToBeProcessedAgain()) {
                     LOG.debug("All files will need to be processed again");
@@ -189,10 +188,41 @@ public class JavaLanguageProcessor extends BatchLanguageProcessor<JavaLanguagePr
     @Override
     public void close() throws Exception {
         this.typeSystem.logStats();
-        if (classGraphCache != null) {
+        if (javaCacheManager != null) {
             AsmSymbolResolver resolver = (AsmSymbolResolver) this.typeSystem.bootstrapResolver();
-            resolver.writeReducedGraph(classGraphCache);
+            resolver.writeReducedGraph(javaCacheManager);
         }
         super.close();
+    }
+
+    public static final class JavaCacheManager {
+        private final Path root;
+
+        private JavaCacheManager(Path root) {
+            this.root = root;
+        }
+
+        /**
+         * Path to the reduced dependency graph. Reducing the graph
+         * may take a second so it is better to do it at the end of
+         * processing, concurrently with reporting, than to do it
+         * at the start of the analysis and block the main thread.
+         * Reducing the graph allows for faster up-to-date checks,
+         * but throws away some dependency information. This is why
+         * we also persist the full, unreduced graph. That one is used
+         * to initialize the dependency tracker's internal structure.
+         */
+        public Path getReducedDepGraphPath() {
+            return root.resolve("dep-graph-reduced.bin.gz");
+        }
+
+        /**
+         * The full dependency graph.
+         *
+         * @see #getReducedDepGraphPath()
+         */
+        public Path getSourceDepGraphPath() {
+            return root.resolve("dep-graph-full.bin.gz");
+        }
     }
 }

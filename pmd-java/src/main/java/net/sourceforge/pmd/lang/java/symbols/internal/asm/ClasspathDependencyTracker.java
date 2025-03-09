@@ -146,8 +146,14 @@ public class ClasspathDependencyTracker {
     }
 
 
-    public void restoreCachedGraph(ClasspathCheckResult result) {
+    public void restoreCachedGraph(ClassDependencyGraph sourceEdges, ClasspathCheckResult result) {
+        if (result.allFilesNeedToBeProcessedAgain()) {
+            // in that case all dependencies will be recomputed, we don't use the cached ones
+            return;
+        }
 
+        sourceEdges.removeAllSourceFiles(result.getChangedFiles());
+        // todo add the edges to the maps of this graph.
     }
 
 

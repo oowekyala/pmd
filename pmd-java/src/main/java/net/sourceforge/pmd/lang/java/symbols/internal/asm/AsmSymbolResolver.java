@@ -21,6 +21,7 @@ import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.sourceforge.pmd.lang.java.internal.JavaLanguageProcessor.JavaCacheManager;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JModuleSymbol;
 import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
@@ -192,14 +193,21 @@ public class AsmSymbolResolver implements SymbolResolver {
 
     }
 
-    public void writeReducedGraph(Path toPath) throws IOException {
-        // todo do that asynchronously during reporting (it takes a second to reduce the graph. Probably better
-        //  algorithms could be used)
+    public void writeReducedGraph(JavaCacheManager javaCacheManager) throws IOException {
+        // todo do that asynchronously during reporting (it takes a second to reduce the graph).
+        Path toPath = javaCacheManager.getSourceDepGraphPath();
         ClassDependencyGraph summaryGraph = dependencyTracker.makeDepGraph();
         try (OutputStream out = Files.newOutputStream(toPath)) {
-            summaryGraph.serialize(out);
+            summaryGraph.serialize(out, true);
         }
         LOG.debug("Wrote binary dependency graph to {}", toPath);
+
+        summaryGraph.compressGraphForQueryPhase();
+        toPath = javaCacheManager.getReducedDepGraphPath();
+        try (OutputStream out = Files.newOutputStream(toPath)) {
+            summaryGraph.serialize(out, false);
+        }
+        LOG.debug("Wrote compressed binary dependency graph to {}", toPath);
 
         if (LOG.isTraceEnabled()) {
             toPath = toPath.getParent().resolve("depgraph-full.dot");
@@ -223,21 +231,43 @@ public class AsmSymbolResolver implements SymbolResolver {
         }
     }
 
-    public ClasspathCheckResult readClasspathDependencyCache(Path classGraphCache) throws IOException {
-        if (!Files.exists(classGraphCache)) {
+    public ClasspathCheckResult readClasspathDependencyCache(JavaCacheManager javaCacheManager) throws IOException {
+        if (!Files.exists(javaCacheManager.getReducedDepGraphPath())
+            || !Files.exists(javaCacheManager.getSourceDepGraphPath())) {
             return ClassDependencyGraph.ClasspathCheckResult.noCacheFile();
         }
-        ClassDependencyGraph cachedDepGraph;
-        try(InputStream in = Files.newInputStream(classGraphCache)) {
-            cachedDepGraph = ClassDependencyGraph.deserialize(in);
-        }
-        // compute out-of-date files
-        ClassDependencyGraph graphCopy = new ClassDependencyGraph(cachedDepGraph);
-        graphCopy.compressGraphForQueryPhase();
 
-        ClasspathCheckResult result = graphCopy.checkClasspathIsUpToDate(this);
+        ClassDependencyGraph compressedGraph;
+        try (InputStream in = Files.newInputStream(javaCacheManager.getReducedDepGraphPath())) {
+            compressedGraph = ClassDependencyGraph.deserialize(in);
+        }
+
+        ClassDependencyGraph sourceDepGraph;
+        try (InputStream in = Files.newInputStream(javaCacheManager.getSourceDepGraphPath())) {
+            sourceDepGraph = ClassDependencyGraph.deserialize(in);
+        }
+
+        // note: files that are not up-to-date should be removed from the graph, and
+        // repopulated by the ClasspathDependencyTracker at the end of the analysis,
+        // as their dependencies might have changed.
+
+        // todo how to do this? Maybe initialize the ClasspathDependencyTracker first.
+        //  then collect files that are out of date, and remove them in bulk from the
+        //  CDT when we're done? The problem is that to find out if a file is out-of-date
+        //  we need to parse it, and this already creates the edges in the dependency tracker.
+        //  Well.
+
+        //  Replaying queries is going to repopulate the class->class dependencies. So
+        //  in the end, only the source->source and source->class dependencies are missing from
+        //  the graph. Those source files that are up-to-date can be added directly to the graph
+        //  as they aren't going to be processed. The others can wait until they are processed.
+        //  So IIUC, the "full" dependency graph should only contain source->source and source->class
+        //  edges.
+        ClasspathCheckResult result = compressedGraph.checkClasspathIsUpToDate(this);
+
         // restore cached dependencies into the tracker
-        dependencyTracker.restoreCachedGraph(result);
+        dependencyTracker.restoreCachedGraph(sourceDepGraph, result);
+
         return result;
     }
 }

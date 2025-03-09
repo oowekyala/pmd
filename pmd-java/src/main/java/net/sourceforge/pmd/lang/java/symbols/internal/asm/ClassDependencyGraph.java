@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 import org.slf4j.Logger;
@@ -68,6 +70,17 @@ public final class ClassDependencyGraph {
     void recordDependency(Vertex<DependencyItem> from, Vertex<DependencyItem> to) {
         // notice the inversion
         graph.addEdge(to, from);
+    }
+
+    /**
+     * Remove source files that were marked as out-of-date due to classpath changes.
+     * They will be reprocessed.
+     */
+    void removeAllSourceFiles(Set<FileId> changedFiles) {
+        List<@NonNull Vertex<DependencyItem>> verticesToRemove
+            = CollectionUtil.mapNotNull(changedFiles, fid -> graph.getVertex(new SourceItem(fid)));
+
+        graph.batchRemove(verticesToRemove);
     }
 
     /**
@@ -268,17 +281,18 @@ public final class ClassDependencyGraph {
     /**
      * Serialize this dependency graph onto the given stream.
      * @param os Output stream
+     * @param onlySourceEdges If true, edges from a class node to another are not written out.
      * @throws IOException If writing fails
      */
-    public void serialize(OutputStream os) throws IOException {
+    public void serialize(OutputStream os, boolean onlySourceEdges) throws IOException {
         try (GZIPOutputStream gzip = new GZIPOutputStream(os);
              ObjectOutputStream out = new ObjectOutputStream(gzip)) {
-            serialize(out);
+            serializeImpl(out, onlySourceEdges);
         }
     }
 
     /**
-     * Deserialize a structure written by {@link #serialize(OutputStream)}.
+     * Deserialize a structure.
      *
      * @param is Input stream
      *
@@ -293,9 +307,10 @@ public final class ClassDependencyGraph {
         }
     }
 
-    private void serialize(ObjectOutputStream out) throws IOException {
+    private void serializeImpl(ObjectOutputStream out, boolean onlySourceEdges) throws IOException {
         Map<Vertex<DependencyItem>, Integer> vertexToId = new HashMap<>();
         List<Vertex<DependencyItem>> vertices = new ArrayList<>(graph.getVertices());
+        BitSet containsSourceItems = new BitSet(vertices.size());
 
         // write out all nodes
         out.writeInt(vertices.size());
@@ -307,15 +322,27 @@ public final class ClassDependencyGraph {
                 boolean isClassNode = node instanceof ClassItem;
                 out.writeBoolean(isClassNode);
                 node.serialize(out);
+                if (!isClassNode) {
+                    containsSourceItems.set(i);
+                }
             }
         }
+
         // then write out edges
         List<Integer> successors = new ArrayList<>();
-        for (Vertex<DependencyItem> vertex : vertices) {
+        for (int i = 0; i < vertices.size(); i++) {
+            Vertex<DependencyItem> vertex = vertices.get(i);
+            boolean edgeStartHasSource = containsSourceItems.get(i);
+
             for (Vertex<DependencyItem> succ : graph.successorsOf(vertex)) {
                 Integer id = vertexToId.get(succ);
                 Objects.requireNonNull(id, "id should not be null");
-                successors.add(id);
+
+                boolean edgeTargetHasSource = containsSourceItems.get(id);
+                if (!onlySourceEdges || edgeTargetHasSource || edgeStartHasSource) {
+                    successors.add(id);
+                }
+
             }
             out.writeInt(successors.size());
             for (Integer succ : successors) {
