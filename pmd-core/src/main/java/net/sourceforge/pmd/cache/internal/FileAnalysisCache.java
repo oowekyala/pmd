@@ -6,16 +6,17 @@ package net.sourceforge.pmd.cache.internal;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.PMDVersion;
@@ -56,14 +57,12 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
      * @param cacheFile The file which backs the file analysis cache.
      */
     private void loadFromFile(final File cacheFile, Collection<? extends TextFile> files) {
-        Map<String, FileId> idMap =
-            files.stream().map(TextFile::getFileId)
-                 .collect(Collectors.toMap(FileId::getUriString, id -> id));
+        Set<FileId> fileIdsInAnalysis = files.stream().map(TextFile::getFileId).collect(Collectors.toSet());
 
         try (TimedOperation ignored = TimeTracker.startOperation(TimedOperationCategory.ANALYSIS_CACHE, "load")) {
             if (cacheExists()) {
                 try (
-                    DataInputStream inputStream = new DataInputStream(
+                    ObjectInputStream inputStream = new ObjectInputStream(
                         new BufferedInputStream(Files.newInputStream(cacheFile.toPath())));
                 ) {
                     final String cacheVersion = inputStream.readUTF();
@@ -78,12 +77,9 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
 
                         // Cached results
                         while (inputStream.available() > 0) {
-                            final String filePathId = inputStream.readUTF();
-                            FileId fileId = idMap.get(filePathId);
-                            if (fileId == null) {
-                                LOG.debug("File {} is in the cache but is not part of the analysis",
-                                          filePathId);
-                                fileId = FileId.fromURI(filePathId);
+                            final FileId fileId = (FileId) inputStream.readObject();
+                            if (!fileIdsInAnalysis.contains(fileId)) {
+                                LOG.debug("File {} is in the cache but is not part of the analysis", fileId);
                             }
                             final long checksum = inputStream.readLong();
 
@@ -102,7 +98,7 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
                     }
                 } catch (final EOFException e) {
                     LOG.warn("Cache file {} is malformed, will not be used for current analysis", cacheFile.getPath());
-                } catch (final IOException e) {
+                } catch (final IOException | ClassNotFoundException e) {
                     LOG.error("Could not load analysis cache from file: {}", e.getMessage());
                 }
             } else if (cacheFile.isDirectory()) {
@@ -130,7 +126,7 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
             }
 
             try (
-                DataOutputStream outputStream = new DataOutputStream(
+                ObjectOutputStream outputStream = new ObjectOutputStream(
                     new BufferedOutputStream(Files.newOutputStream(cacheFile.toPath())))
             ) {
                 outputStream.writeUTF(pmdVersion);
@@ -142,7 +138,7 @@ public class FileAnalysisCache extends AbstractAnalysisCache {
                 for (final Map.Entry<FileId, AnalysisResult> resultEntry : updatedResultsCache.entrySet()) {
                     final List<RuleViolation> violations = resultEntry.getValue().getViolations();
 
-                    outputStream.writeUTF(resultEntry.getKey().getUriString()); // the path id
+                    outputStream.writeObject(resultEntry.getKey());
                     outputStream.writeLong(resultEntry.getValue().getFileChecksum());
 
                     outputStream.writeInt(violations.size());

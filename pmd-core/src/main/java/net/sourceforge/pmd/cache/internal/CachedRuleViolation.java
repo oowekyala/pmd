@@ -4,9 +4,9 @@
 
 package net.sourceforge.pmd.cache.internal;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -82,7 +82,7 @@ final class CachedRuleViolation implements RuleViolation {
      */
     /* package */
     static CachedRuleViolation loadFromStream(
-        DataInputStream stream,
+        ObjectInputStream stream,
         FileId fileFileId, CachedRuleMapper mapper) throws IOException {
 
         String description = stream.readUTF();
@@ -98,7 +98,7 @@ final class CachedRuleViolation implements RuleViolation {
                                        beginLine, beginColumn, endLine, endColumn, additionalInfo);
     }
 
-    private static @NonNull Map<String, String> readAdditionalInfo(DataInputStream stream) throws IOException {
+    private static @NonNull Map<String, String> readAdditionalInfo(ObjectInputStream stream) throws IOException {
         int numAdditionalInfoKeyValuePairs = stream.readInt();
         if (numAdditionalInfoKeyValuePairs == 0) {
             return Collections.emptyMap();
@@ -120,7 +120,7 @@ final class CachedRuleViolation implements RuleViolation {
      * @param stream    The stream on which to store the violation.
      * @param violation The rule violation to cache.
      */
-    /* package */ static void storeToStream(final DataOutputStream stream,
+    /* package */ static void storeToStream(final ObjectOutputStream stream,
             final RuleViolation violation) throws IOException {
         stream.writeUTF(StringUtil.nullToEmpty(violation.getDescription()));
         stream.writeUTF(StringUtil.nullToEmpty(violation.getRule().getRuleClass()));
