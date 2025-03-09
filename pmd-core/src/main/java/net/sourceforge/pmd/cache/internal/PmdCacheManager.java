@@ -20,8 +20,6 @@ public final class PmdCacheManager {
 
     /** Root directory of the cache. */
     private final Path root;
-    /** Temporary directory. */
-    private final Path tmpDir;
 
     /** Initialize a cache manager with the given directory. */
     public PmdCacheManager(Path root) {

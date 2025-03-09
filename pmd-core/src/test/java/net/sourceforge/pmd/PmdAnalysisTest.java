@@ -46,6 +46,7 @@ class PmdAnalysisTest {
     @Test
     void testPmdAnalysisWithEmptyConfig() {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             assertThat(pmd.files().getCollectedFiles(), empty());
             assertThat(pmd.rulesets(), empty());
@@ -56,6 +57,7 @@ class PmdAnalysisTest {
     @Test
     void testRendererInteractions() throws IOException {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         config.addInputPath(Paths.get("sample-source/dummy"));
         Renderer renderer = spy(Renderer.class);
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
@@ -73,6 +75,7 @@ class PmdAnalysisTest {
     @Test
     void testRulesetLoading() {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         config.addRuleSet("rulesets/dummy/basic.xml");
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
             assertThat(pmd.rulesets(), hasSize(1));
@@ -82,6 +85,7 @@ class PmdAnalysisTest {
     @Test
     void testRulesetWhenSomeoneHasAnError() {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         config.addRuleSet("rulesets/dummy/basic.xml");
         config.addRuleSet("rulesets/xxxe/notaruleset.xml");
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
@@ -93,6 +97,7 @@ class PmdAnalysisTest {
     @Test
     void testParseException() {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         config.setThreads(1);
         config.setForceLanguageVersion(DummyLanguageModule.getInstance().getVersionWhereParserThrows());
         try (PmdAnalysis pmd = PmdAnalysis.create(config)) {
@@ -108,6 +113,7 @@ class PmdAnalysisTest {
     @Test
     void testRuleFailureDuringInitialization() {
         PMDConfiguration config = new PMDConfiguration();
+        config.setIncrementalAnalysisEnabled(false);
         config.setThreads(1);
         PmdReporter mockReporter = spy(PmdReporter.quiet());
         config.setReporter(mockReporter);

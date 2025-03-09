@@ -29,6 +29,7 @@ import net.sourceforge.pmd.benchmark.TimedOperation;
 import net.sourceforge.pmd.benchmark.TimedOperationCategory;
 import net.sourceforge.pmd.cache.internal.AnalysisCache;
 import net.sourceforge.pmd.cache.internal.AnalysisCacheListener;
+import net.sourceforge.pmd.cache.internal.PmdCacheManager;
 import net.sourceforge.pmd.internal.LogMessages;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
 import net.sourceforge.pmd.internal.util.FileCollectionUtil;
@@ -384,7 +385,10 @@ public final class PmdAnalysis implements AutoCloseable {
 
         AnalysisCache analysisCache;
         try {
-            configuration.getCacheManager().initCache();
+            PmdCacheManager cacheDir = configuration.getCacheManager();
+            if (cacheDir != null) {
+                cacheDir.initCache();
+            }
             analysisCache = configuration.createAnalysisCache();
         } catch (IOException e) {
             reporter.errorEx("Exception while initializing cache directory", e);
