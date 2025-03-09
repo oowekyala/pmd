@@ -213,20 +213,20 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand<PMDConfiguration> 
     }
 
     @Option(names = "--cache",
-            description = "Specify the location of the cache file for incremental analysis. "
-                    + "This should be the full path to the file, including the desired file name (not just the parent directory). "
-                    + "If the file doesn't exist, it will be created on the first run. The file will be overwritten on each run "
-                    + "with the most up-to-date rule violations.")
+            defaultValue = ".pmd",
+            description = "Specify the location of the cache directory for incremental analysis. "
+                    + "If this location is a file and not a directory, it will be overwritten.  "
+                    + "PMD will use this directory to cache data from one run to the next.")
     public void setCacheLocation(final Path cacheLocation) {
         this.cacheLocation = cacheLocation;
     }
 
-    @Option(names = "--no-cache", description = "Explicitly disable incremental analysis. The '-cache' option is ignored if this switch is present in the command line.")
+    @Option(names = "--no-cache", description = "Explicitly disable incremental analysis. The '--cache' option is ignored if this switch is present in the command line.")
     public void setNoCache(final boolean noCache) {
         this.noCache = noCache;
     }
 
-    @Option(names = { "--threads", "-t" }, description = "Sets the number of threads used by PMD.",
+    @Option(names = { "--threads", "-t" }, description = "Set the number of threads used by PMD.",
             defaultValue = "1")
     public void setThreads(final int threads) {
         if (threads < 0) {
