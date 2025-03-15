@@ -158,6 +158,108 @@ class DataFlowNode {
     </test-code>
 
     <test-code>
+        <description>Consider iterators #2</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+import java.util.Iterator;
+class DataFlowNode {
+    void loop(Iterable<DataFlowNode> path) {
+        Iterator<DataFlowNode> i = path.iterator();
+        for (; i.hasNext();) {
+            DataFlowNode inode = i.next();
+            if (inode == null) {
+                continue;
+            }
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <!-- Some of those tests about iterators are disabled because that's difficult to implement today. -->
+    <!-- Currently these are not false positives but false negatives so it doesn't matter much. -->
+    <test-code disabled="true">
+        <description>Consider iterators #3</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+import java.util.Iterator;
+class DataFlowNode {
+    void loop(Iterable<DataFlowNode> path) {
+        Iterator<DataFlowNode> i = path.iterator();
+        for (i = path.iterator(); i.hasNext();) {
+            DataFlowNode inode = i.next();
+            if (inode == null) {
+                continue;
+            }
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Consider iterators #5</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Iterator;
+class DataFlowNode {
+    void loop(Iterable<DataFlowNode> path) {
+        Iterator<DataFlowNode> i = path.iterator();
+        i.next();
+        for (; i.hasNext();) {
+            DataFlowNode inode = i.next();
+            if (inode == null) {
+                continue;
+            }
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code disabled="true">
+        <description>Consider iterators #4</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+import java.util.Iterator;
+class DataFlowNode {
+    void loop(Iterable<DataFlowNode> path) {
+        Iterator<DataFlowNode> i;
+        i = path.iterator();
+        for (; i.hasNext();) {
+            DataFlowNode inode = i.next();
+            if (inode == null) {
+                continue;
+            }
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code disabled="true">
+        <description>Consider iterators #5</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+import java.util.Iterator;
+class DataFlowNode {
+    void loop(Iterable<DataFlowNode> path) {
+        Iterator<DataFlowNode> i = null;
+        if (path != null) {
+            i = path.iterator();
+            for (; i.hasNext(); ) {
+                DataFlowNode inode = i.next();
+                if (inode == null) {
+                    continue;
+                }
+            }
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
         <description>Index var starts after zero</description>
         <expected-problems>0</expected-problems>
         <code><![CDATA[
@@ -170,6 +272,22 @@ public class MyClass {
         }
         int i = 1;
         for (; i < filters.size(); i++) {
+            builder.append(' ');
+            builder.append(filters.get(i));
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Index var starts at unknown value</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+public class MyClass {
+    void loop(List<String> filters, int start, StringBuilder builder) {
+        for (int i = start; i < filters.size(); i++) {
             builder.append(' ');
             builder.append(filters.get(i));
         }
@@ -459,7 +577,7 @@ public class Test {
     </test-code>
     <test-code>
         <description>#4094 use dataflow to get initial value of iterator</description>
-        <expected-problems>5</expected-problems>
+        <expected-problems>7</expected-problems>
         <code><![CDATA[
             import java.util.*;
 

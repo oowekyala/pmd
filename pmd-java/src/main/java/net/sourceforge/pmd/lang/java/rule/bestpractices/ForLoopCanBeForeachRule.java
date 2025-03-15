@@ -9,6 +9,7 @@ import static net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKi
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -66,12 +67,12 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
         final @Nullable ASTStatementExpressionList update = forLoop.getUpdate();
         final ASTExpression guardCondition = forLoop.getCondition();
 
-        if (init == null && update == null || guardCondition == null) {
+        if (init == null && update == null && guardCondition == null) {
             return data;
         }
 
         // checked to be either Iterator or int
-        ASTVariableId index = getIndexVarDeclaration(init, update);
+        ASTVariableId index = getIndexVarDeclaration(init, update, guardCondition);
 
         if (index == null) {
             return data;
@@ -99,20 +100,39 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
     /**
      * Finds the declaration of the index variable and its occurrences, null to abort
      */
-    private @Nullable ASTVariableId getIndexVarDeclaration(@Nullable ASTStatement init, ASTStatementExpressionList update) {
-        if (init == null) {
-            return guessIndexVarFromUpdate(update);
-        } else if (init instanceof ASTLocalVariableDeclaration) {
+    private @Nullable ASTVariableId getIndexVarDeclaration(@Nullable ASTStatement init,
+                                                           ASTStatementExpressionList update,
+                                                           ASTExpression condition) {
+
+
+        if (init instanceof ASTLocalVariableDeclaration) {
             NodeStream<ASTVariableId> varIds = ((ASTLocalVariableDeclaration) init).getVarIds();
             if (varIds.count() == 1) {
-                ASTVariableId first = varIds.firstOrThrow();
-                if (ITERATOR_CALL.matchesCall(first.getInitializer())
-                    || JavaAstUtils.isLiteralInt(first.getInitializer(), 0)) {
-                    return first;
-                }
+                return varIds.firstOrThrow();
+            } else {
+                return null;
             }
         }
 
+        ASTVariableId result;
+        if (condition != null) {
+            result = guessIndexVarFromCondition(condition);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return guessIndexVarFromUpdate(update);
+    }
+
+    private static @Nullable ASTVariableId guessIndexVarFromCondition(ASTExpression condition) {
+        if (ITERATOR_HAS_NEXT.matchesCall(condition)) {
+            ASTExpression qual = ((ASTMethodCall) condition).getQualifier();
+            if (qual instanceof ASTVariableAccess) {
+                JVariableSymbol sym = ((ASTVariableAccess) qual).getReferencedSym();
+                return sym != null ? sym.tryGetNode() : null;
+            }
+        }
         return null;
     }
 
@@ -233,7 +253,15 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
             && hasValueZeroBeforeLoop(loop, index);
     }
 
-    private boolean hasValueZeroBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+    private static boolean hasValueZeroBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+        return hasValueBeforeLoop(loop, index, e -> JavaAstUtils.isLiteralInt(e, 0));
+    }
+
+    private static boolean hasIterableCallBeforeLoop(ASTForStatement loop, ASTVariableId index) {
+        return hasValueBeforeLoop(loop, index, ITERATOR_CALL::matchesCall);
+    }
+
+    private static boolean hasValueBeforeLoop(ASTForStatement loop, ASTVariableId index, Predicate<ASTExpression> matches) {
         DataflowResult dataflow = DataflowPass.getDataflowResult(loop.getRoot());
         ReachingDefinitionSet reaching = dataflow.getReachingDefinitionsAtStartOfLoop(loop, index.getSymbol());
         if (reaching.isNotFullyKnown() || reaching.getReaching().isEmpty()) {
@@ -242,7 +270,7 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
 
         for (AssignmentEntry assignment : reaching.getReaching()) {
             ASTExpression rhs = assignment.getRhsAsExpression();
-            if (!JavaAstUtils.isLiteralInt(rhs, 0)) {
+            if (!matches.test(rhs)) {
                 return false;
             }
         }
@@ -303,8 +331,12 @@ public class ForLoopCanBeForeachRule extends AbstractJavaRulechainRule {
                     .any(it -> loop == it);
     }
 
-    private static boolean isReplaceableIteratorLoop(ASTVariableId var, ASTForStatement stmt) {
-        List<ASTNamedReferenceExpr> usages = var.getLocalUsages();
+    private static boolean isReplaceableIteratorLoop(ASTVariableId index, ASTForStatement stmt) {
+        if (!hasIterableCallBeforeLoop(stmt, index)) {
+            return false;
+        }
+
+        List<ASTNamedReferenceExpr> usages = index.getLocalUsages();
         if (usages.size() != 2) {
             return false;
         }
