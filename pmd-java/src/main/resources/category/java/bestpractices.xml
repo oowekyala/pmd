@@ -1117,6 +1117,91 @@ public class Foo {
         </example>
     </rule>
 
+    <rule name="ReduceNestingDepth"
+          language="java"
+          since="7.12.0"
+          message="Consider reducing nesting depth by writing `{0}`"
+          class="net.sourceforge.pmd.lang.java.rule.bestpractices.ReduceNestingDepthRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_bestpractices.html#reducenestingdepth">
+        <description>
+            This rule makes recommendations to reduce nesting to a minimum. This reduces somewhat the cognitive
+            complexity of a piece of code. See also {% rule java/CognitiveComplexity %}.
+
+            For instance a long statement or block within an if statement is followed by a shorter set of statements.
+            You can move the simpler `return null` into the if statement to reduce the visual complexity of the statement.
+            ```
+            void foo() {
+              Obj something = getSomething();
+              if (something != null)
+                return someLongExpression(
+                  a,
+                  b,
+                  c
+                );
+              return null;
+            }
+            ```
+            could be written
+            ```
+            void foo() {
+              Obj something = getSomething();
+              if (something == null)
+                return null;
+
+              return someLongExpression(
+                a,
+                b,
+                c
+              );
+            }
+            ```
+
+        </description>
+        <priority>3</priority>
+        <example>
+<![CDATA[
+            enum Example {
+
+                // In this example a statement is spread over several lines which require their own indentation.
+                // You can move the simpler `return null` into the if statement to reduce the visual complexity
+                // of the code.
+                void foo() {
+                    Obj something = getSomething();
+                    if (something != null)
+                        return someLongExpression(
+                            a,
+                            b,
+                            c
+                        );
+                    return null;
+                }
+
+                // could be:
+                void foo() {
+                    Obj something = getSomething();
+
+                    if (something == null)
+                        return null;
+
+                    return someLongExpression(
+                        a,
+                        b,
+                        c
+                    );
+                }
+
+
+                public static Set<Example> newSet() {
+                    return new HashSet<>(); // Could be EnumSet.noneOf(Example.class)
+                }
+
+                public static <V> Map<Example, V> newMap() {
+                    return new HashMap<>(); // Could be new EnumMap<>(Example.class)
+                }
+            }
+            ]]>
+        </example>
+    </rule>
 
     <rule name="ReplaceEnumerationWithIterator"
           language="java"
@@ -1845,6 +1930,7 @@ public class Foo {
 ]]>
         </example>
     </rule>
+
 
 
     <rule name="UseEnumCollections"
