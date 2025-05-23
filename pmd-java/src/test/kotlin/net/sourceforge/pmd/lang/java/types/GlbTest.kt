@@ -13,6 +13,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
 import net.sourceforge.pmd.lang.java.symbols.internal.asm.createUnresolvedAsmSymbol
 import net.sourceforge.pmd.lang.java.types.testdata.LubTestData
+import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import net.sourceforge.pmd.lang.test.ast.shouldBeA
 
 /**
@@ -21,7 +22,7 @@ import net.sourceforge.pmd.lang.test.ast.shouldBeA
  *
  * @author Clément Fournier
  */
-class GlbTest : FunSpec({
+class GlbTest : IntelliMarker, FunSpec({
 
     with(TypeDslOf(testTypeSystem)) { // import construction DSL
         with(gen) { // import constants
@@ -208,6 +209,30 @@ class GlbTest : FunSpec({
                 acu.varAccesses("bound").firstOrThrow().typeMirror.shouldBeA<JTypeVar> {
                     it.symbol shouldBe acu.typeVar("S").symbol
                 }
+            }
+
+            test("f:StackOverflowError in 7.13.0 #5721") {
+                val (acu, _) = javaParser.parseWithTypeInferenceSpy(
+                    """
+                        class C<T0 extends C<? extends T0>, T1 extends C2<? extends T1, ? extends T0>> {}
+                        class C2<T2 extends C2<? extends T2>, T3 extends C<? extends T3, ? extends T2>> {
+                            T2 t;
+                            
+                            protected Builder(C2<? super T2> x) {
+                               foo(t, x);
+                            }
+                        }
+    
+                """.trimIndent()
+                )
+
+                val (c, c2) = acu.declaredTypeSignatures()
+                val t2 = acu.typeVar("T2")
+
+                acu.varId("t") shouldHaveType t2
+                acu.varAccesses("t").firstOrThrow() shouldHaveType t2
+                val ty = c2
+                TypeOps.projectUpwards(TypeConversion.capture(c))
             }
         }
     }
