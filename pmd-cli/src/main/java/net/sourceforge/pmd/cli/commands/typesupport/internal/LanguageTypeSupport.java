@@ -32,6 +32,10 @@ public class LanguageTypeSupport implements ITypeConverter<Language>, Iterable<S
         return lang;
     }
 
+    public LanguageRegistry getLanguageRegistry() {
+        return languageRegistry;
+    }
+
     @Override
     public Iterator<String> iterator() {
         return languageRegistry.getLanguages().stream().map(Language::getId).iterator();

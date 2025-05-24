@@ -357,6 +357,15 @@ class PmdCliTest extends BaseCliTest {
     }
 
     @Test
+    void languageProperties() throws Exception {
+        runCli(OK, "-Ldummy:foo=value",
+                "-d", srcDir.toString(), "-f", "text", "-R", RULESET_WITH_VIOLATION)
+                .verify(r -> {
+                    r.checkStdErr(containsString("ueaeu"));
+                });
+    }
+
+    @Test
     void testZipFileAsSource() throws Exception {
         Path zipArchive = createTemporaryZipArchive("sources.zip");
         CliExecutionResult result = runCli(VIOLATIONS_FOUND, "--dir", zipArchive.toString(), "--rulesets", "rulesets/dummy/basic.xml");
