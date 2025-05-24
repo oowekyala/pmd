@@ -11,11 +11,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 
 import net.sourceforge.pmd.AbstractConfiguration;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport.LanguagePropertySpec;
 import net.sourceforge.pmd.cli.internal.CliExitCode;
 import net.sourceforge.pmd.cli.internal.PmdRootLogger;
 import net.sourceforge.pmd.util.log.internal.SimpleMessageReporter;
@@ -181,6 +183,7 @@ public abstract class AbstractAnalysisPmdSubcommand<C extends AbstractConfigurat
 
     protected abstract CliExitCode doExecute(C conf);
 
+    protected abstract Map<LanguagePropertySpec, String> getLanguageProperties();
 
     @Override
     protected CliExitCode execute() {
@@ -196,6 +199,10 @@ public abstract class AbstractAnalysisPmdSubcommand<C extends AbstractConfigurat
     protected void validate() throws ParameterException {
         super.validate();
         getFileCollectionOptions().validate(spec);
+        getLanguageProperties().forEach(
+                (lpSpec, value) ->
+                        lpSpec.validate(spec.commandLine(), value)
+        );
     }
 
     protected final void setCommonConfigProperties(C configuration) {
@@ -210,6 +217,9 @@ public abstract class AbstractAnalysisPmdSubcommand<C extends AbstractConfigurat
         // configuration.setReportProperties(properties);
         configuration.setFailOnViolation(failOnViolation);
         configuration.setFailOnError(failOnError);
+
+        getLanguageProperties().forEach(
+                (spec, value) -> spec.configure(configuration, value));
 
     }
 

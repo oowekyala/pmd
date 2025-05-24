@@ -4,13 +4,19 @@
 
 package net.sourceforge.pmd.cli.commands.internal;
 
+import static net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport.LanguagePropertySpec;
+
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.cli.commands.typesupport.internal.CpdLanguageTypeSupport;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport.CpdLanguagePropertySupport;
 import net.sourceforge.pmd.cli.internal.CliExitCode;
 import net.sourceforge.pmd.cpd.CPDConfiguration;
 import net.sourceforge.pmd.cpd.CpdAnalysis;
@@ -89,6 +95,21 @@ public class CpdCommand extends AbstractAnalysisPmdSubcommand<CPDConfiguration> 
             description = "Pattern to find the blocks to skip. Start and End pattern separated by |.",
             defaultValue = CpdLanguagePropertiesDefaults.DEFAULT_SKIP_BLOCKS_PATTERN)
     private String skipBlocksPattern;
+
+    @Option(names = "-L",
+            description = LanguagePropertySupport.DESCRIPTION,
+            converter = CpdLanguagePropertySupport.class,
+            paramLabel = LanguagePropertySupport.PARAM_LABEL,
+            completionCandidates = CpdLanguagePropertySupport.class,
+            showDefaultValue = CommandLine.Help.Visibility.NEVER
+    )
+    private Map<LanguagePropertySpec, String> languageProperties = new HashMap<>();
+
+
+    @Override
+    public Map<LanguagePropertySpec, String> getLanguageProperties() {
+        return languageProperties;
+    }
 
     @Override
     protected FileCollectionOptions<CPDConfiguration> getFileCollectionOptions() {

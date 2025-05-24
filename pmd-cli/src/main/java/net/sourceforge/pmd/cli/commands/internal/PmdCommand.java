@@ -10,8 +10,10 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,9 @@ import net.sourceforge.pmd.benchmark.TextTimingReportRenderer;
 import net.sourceforge.pmd.benchmark.TimeTracker;
 import net.sourceforge.pmd.benchmark.TimingReport;
 import net.sourceforge.pmd.benchmark.TimingReportRenderer;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport.LanguagePropertySpec;
+import net.sourceforge.pmd.cli.commands.typesupport.internal.LanguagePropertySupport.PmdLanguagePropertySupport;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.NumThreadsConverter;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.PmdLanguageTypeSupport;
 import net.sourceforge.pmd.cli.commands.typesupport.internal.PmdLanguageVersionTypeSupport;
@@ -236,6 +241,21 @@ public class PmdCommand extends AbstractAnalysisPmdSubcommand<PMDConfiguration> 
         this.showProgressBar = showProgressBar;
     }
 
+
+    @Option(names = "-L",
+            description = LanguagePropertySupport.DESCRIPTION,
+            converter = PmdLanguagePropertySupport.class,
+            paramLabel = LanguagePropertySupport.PARAM_LABEL,
+            completionCandidates = PmdLanguagePropertySupport.class,
+            showDefaultValue = CommandLine.Help.Visibility.NEVER
+    )
+    private Map<LanguagePropertySpec, String> languageProperties = new HashMap<>();
+
+
+    @Override
+    public Map<LanguagePropertySpec, String> getLanguageProperties() {
+        return languageProperties;
+    }
 
     @Override
     protected FileCollectionOptions<PMDConfiguration> getFileCollectionOptions() {
