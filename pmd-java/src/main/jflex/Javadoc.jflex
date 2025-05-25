@@ -46,6 +46,7 @@ TAG_IDENTIFIER=[^\ \t\f\n\r]+
 INLINE_TAG_IDENTIFIER=[^\ \t\f\n\r\}]+
 
 %%
+// TODO HTML comments
 
 <YYINITIAL> "/**" { yybegin(COMMENT_DATA_START); return JavadocTokenType.COMMENT_START; }
 <COMMENT_DATA_START> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }

@@ -7,6 +7,12 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 /** Ids for javadoc nodes. */
 public enum JavadocNodeId {
     ROOT("Comment"),
+    COMMENT_DATA("Data"),
+    WHITESPACE("Whitespace"),
+    INLINE_TAG("InlineTag"),
+    BLOCK_TAG("BlockTag"),
+    MALFORMED("Error"),
+    REF("Ref"),
     ;
 
     private final String xpathName;
