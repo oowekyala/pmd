@@ -12,6 +12,7 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_GT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_IDENT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_RCLOSE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.INLINE_TAG_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
@@ -30,7 +31,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdWhitespace;
 
 public class JavadocParser {
 
-    private final JavadocLexerAdapter lexer;
+    private final JavadocLexer lexer;
 
     private final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
 
@@ -39,7 +40,7 @@ public class JavadocParser {
     private boolean isEoi;
 
     public JavadocParser(String fileText, int startOffset, int maxOffset) {
-        lexer = new JavadocLexerAdapter(fileText, startOffset, maxOffset);
+        lexer = new JavadocLexer(fileText, startOffset, maxOffset);
     }
 
     public JavadocNode.JdComment parse() {
@@ -92,7 +93,7 @@ public class JavadocParser {
                 JdInlineTag tag = new JdInlineTag(tok.getImage());
                 tag.jjtSetFirstToken(start);
                 parseTagContent(tag);
-                tag.jjtSetLastToken(tok);
+                tag.jjtSetLastToken(tokIs(INLINE_TAG_END) ? tok : tok.getPrevious());
                 linkLeaf(tag);
             } else if (!isEnd()) {
                 growDataLeaf(start, tok);
@@ -100,6 +101,11 @@ public class JavadocParser {
         }
     }
 
+    /**
+     * Parse the content of a tag depending on its name. After this exits,
+     * {@link #tok} must be the last token of the tag (either {@link JavadocTokenType#INLINE_TAG_END}
+     * or another tag if
+     */
     private void parseTagContent(JdInlineTag tag) {
         // TODO parse depending on tag name
     }
