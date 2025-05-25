@@ -10,6 +10,7 @@ import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.util.StringUtil;
 
 class AbstractJavadocNode extends AbstractNode<AbstractJavadocNode, JavadocNode> implements JavadocNode {
 
@@ -80,5 +81,15 @@ class AbstractJavadocNode extends AbstractNode<AbstractJavadocNode, JavadocNode>
     @Override
     public FileLocation getReportLocation() {
         return getFirstToken().getReportLocation();
+    }
+
+    /**
+     * This toString implementation is only meant for debugging purposes.
+     */
+    @Override
+    public String toString() {
+        FileLocation loc = getReportLocation();
+        return "!debug only! [" + getXPathNodeName() + ":" + loc.getStartPos().toDisplayStringWithColon() + "]"
+            + StringUtil.elide(getText().toString(), 150, "(truncated)");
     }
 }

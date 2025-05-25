@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.ast.test.shouldHaveText
+import net.sourceforge.pmd.lang.java.ast.methodRef
 
 
 class JdocInlineTagParserTests : JdocParserTestSpec({
@@ -32,6 +33,21 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
             }
         }
 
+
+        """
+        /**
+         * See {@link A#method(B, C)}
+         */
+        """.trimIndent() should parseAsJdoc {
+            data("See ")
+            link {
+                it::getRef shouldBe jdocMethodRef("method") {
+                    classRef("A")
+                    classRef("B")
+                    classRef("C")
+                }
+            }
+        }
 
         """
         /**
@@ -92,7 +108,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                 it shouldHaveText "{@link }" 
                 // TODO malformed?
                 it::getRef shouldBe null
-                it.label.toString() shouldBe null
+                it.label?.toString() shouldBe null
             }
         }
 
@@ -108,7 +124,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                 it shouldHaveText "{@link}" 
                 // TODO malformed?
                 it::getRef shouldBe null
-                it.label.toString() shouldBe null
+                it.label?.toString() shouldBe null
             }
         }
 
