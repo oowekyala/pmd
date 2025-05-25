@@ -134,6 +134,7 @@ fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec
             it::isImplicit shouldBe false
             spec()
         }
+
 fun TreeNodeWrapper<Node, out JavadocNode>.emptyClassRef(spec: NodeSpec<JdocRef.JdocClassRef> = EmptyAssertions) =
         child<JdocRef.JdocClassRef> {
             it::getSimpleRef shouldBe ""
@@ -150,6 +151,12 @@ fun TreeNodeWrapper<Node, out JavadocNode>.fieldRef(name: String, spec: NodeSpec
 
 fun TreeNodeWrapper<Node, out JavadocNode>.unknownInline(name: String, spec: NodeSpec<JdocInlineTag.JdocUnknownInlineTag> = EmptyAssertions) =
         child<JdocInlineTag.JdocUnknownInlineTag> {
+            it::getTagName shouldBe name
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.blockTag(name: String, spec: NodeSpec<JdocBlockTag> = EmptyAssertions) =
+        child<JdocBlockTag> {
             it::getTagName shouldBe name
             spec()
         }
