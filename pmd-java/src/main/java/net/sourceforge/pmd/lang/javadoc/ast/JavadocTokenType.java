@@ -13,9 +13,7 @@ public enum JavadocTokenType {
     /** End of input. */
     COMMENT_END("*/", true),
 
-    /**
-     * Name of an inline or block tag. This includes the preceding @ sign.
-     */
+    /** Name of an inline or block tag. This includes the preceding @ sign. */
     TAG_NAME("@<tag name>", false),
 
     /**
@@ -50,11 +48,14 @@ public enum JavadocTokenType {
      */
     INLINE_TAG_END("}", true),
 
-    /**
-     * Significant text for the HTML output.
-     */
+    /** Significant text for the HTML output. */
     COMMENT_DATA("<comment data>", false),
 
+    /**
+     * Catch all rule for things that don't match anything. Normally
+     * should never occur anywhere, bad characters (like invalid usage
+     * of {@code <>&}) are lexed as {@link #COMMENT_DATA}.
+     */
     BAD_CHAR("<bad character>", false),
 
     HTML_LT("<", true),
@@ -96,11 +97,15 @@ public enum JavadocTokenType {
         return this != WHITESPACE && this != LINE_BREAK;
     }
 
-    public boolean isConst() {
+    /**
+     * If true, {@link #getConstValue()} returns the image of the token.
+     * It can be shared between all tokens of this type.
+     */
+    boolean isConst() {
         return isConst;
     }
 
-    public String getConstValue() {
+    String getConstValue() {
         return value;
     }
 
