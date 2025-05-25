@@ -4,12 +4,17 @@
 
 package net.sourceforge.pmd.lang.javadoc;
 
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Test;
 
+import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
 import net.sourceforge.pmd.lang.ast.test.BaseTreeDumpTest;
 import net.sourceforge.pmd.lang.ast.test.RelevantAttributePrinter;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 
 /**
  *
@@ -17,9 +22,21 @@ import net.sourceforge.pmd.lang.ast.test.RelevantAttributePrinter;
 public class JavadocTreeDumpTest extends BaseTreeDumpTest {
 
     public JavadocTreeDumpTest() {
-        super(new RelevantAttributePrinter(), ".javadoc");
+        super(new JavadocAttributesPrinter(), ".javadoc");
     }
 
+    static class JavadocAttributesPrinter extends RelevantAttributePrinter {
+
+        @Override
+        protected void fillAttributes(@NonNull Node node, @NonNull List<AttributeInfo> result) {
+            super.fillAttributes(node, result);
+            if (node instanceof JdocCommentData) {
+                result.add(new AttributeInfo("TextData", ((JdocCommentData) node).getData().toString()));
+            } else if (node instanceof JdocHtmlComment) {
+                result.add(new AttributeInfo("TextData", ((JdocHtmlComment) node).getData().toString()));
+            }
+        }
+    }
 
 
     @Override

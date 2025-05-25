@@ -18,8 +18,6 @@ enum JavadocNodeId {
     UNKNOWN_INLINE_TAG("UnknownInlineTag"),
 
 
-    PARAM_TAG("BlockTag"),
-    THROWS_TAG("BlockTag"),
     SIMPLE_BLOCK_TAG("BlockTag"),
     UNKNOWN_BLOCK_TAG("UnknownBlockTag"),
 

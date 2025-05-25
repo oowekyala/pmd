@@ -119,7 +119,9 @@ class MainJdocParser extends BaseJavadocParser {
         pushNode(tag);
         // the next html leaves/inline tags/comment data will
         // be added as children of the block tag
-        dispatch();
+        if (!tokens.isEoi()) {
+            dispatch();
+        }
     }
 
     private void inlineTag() {
@@ -401,8 +403,7 @@ class MainJdocParser extends BaseJavadocParser {
         if (tokIs(COMMENT_DATA)) {
             JdocToken cdata = head();
 
-            JdocRefParser refParser = new JdocRefParser(cdata);
-            JdocRef ref = refParser.parse();
+            JdocRef ref = new JdocRefParser(cdata).parse();
             if (ref != null) {
                 assert ref.getFirstToken() != null : "RefParser should have set first token on " + ref;
                 assert ref.getLastToken() != null : "RefParser should have set last token on " + ref;

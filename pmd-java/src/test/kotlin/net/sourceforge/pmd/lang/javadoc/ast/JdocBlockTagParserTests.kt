@@ -31,6 +31,30 @@ class JdocBlockTagParserTests : JdocParserTestSpec({
     }
 
 
+
+    parserTest("Test block tag followed by other tag with no content") {
+        """
+        /**
+         * Param {@code <T>} is no {@code
+         *   <R>
+         * }
+         * @return
+         * @return
+         */
+        """.trimIndent() should parseAsJdoc {
+            data("Param ")
+            code("<T>")
+            data(" is no ")
+            code("<R>")
+            blockTag("@return") {
+            }
+            blockTag("@return") {
+            }
+        }
+
+    }
+
+
     parserTest("Test block tag precedence over HTML") {
 
         """
