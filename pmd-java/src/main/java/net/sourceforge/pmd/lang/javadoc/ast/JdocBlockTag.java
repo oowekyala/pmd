@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.FileLocation;
 
 /**
  * An inline javadoc tag, eg {@code @return}.
@@ -39,6 +40,11 @@ public class JdocBlockTag extends AbstractJavadocNode {
      */
     public String getTagName() {
         return tagName;
+    }
+
+    @Override
+    public FileLocation getReportLocation() {
+        return getFirstToken().getReportLocation(); // report on the tag name
     }
 
     /** An unknown block tag. */
