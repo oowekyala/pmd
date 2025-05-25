@@ -6,7 +6,9 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 
-
+/**
+ * Main entry point to parse javadoc comments.
+ */
 public final class JavadocParserUtils {
 
     /**

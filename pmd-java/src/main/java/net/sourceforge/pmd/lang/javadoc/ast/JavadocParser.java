@@ -463,7 +463,10 @@ class JavadocParser {
             public AbstractJavadocNode parse(String name, JavadocParser parser) {
                 return CODE.parse(name, parser);
             }
-        };
+        },
+
+        // TODO @value
+        ;
 
         private static final EnumSet<JavadocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME);
 

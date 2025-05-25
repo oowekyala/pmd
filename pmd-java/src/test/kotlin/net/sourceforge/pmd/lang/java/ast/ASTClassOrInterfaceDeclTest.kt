@@ -5,6 +5,8 @@
 
 package net.sourceforge.pmd.lang.java.ast
 
+import io.kotlintest.shouldBe
+import net.sourceforge.pmd.lang.ast.test.firstToken
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 
 // TODO merge the java ASTClassOrInterfaceDeclarationTest into this
@@ -54,6 +56,26 @@ class ASTClassOrInterfaceDeclTest : ParserTestSpec({
 
                         classBody {}
                     }
+                }
+            }
+        }
+    }
+
+
+    parserTest("Normal classes") {
+
+        inContext(TopLevelTypeDeclarationParsingCtx) {
+            """
+               public @F class Top {
+
+               }
+            """ should parseAs {
+
+                classDecl(simpleName = "Top") {
+                    it.firstToken.getImage() shouldBe "public"
+
+                    annotation("F")
+                    classBody {}
                 }
             }
         }
