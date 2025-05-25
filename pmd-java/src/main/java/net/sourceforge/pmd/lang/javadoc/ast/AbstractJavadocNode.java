@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.lang.ast.AbstractNode;
+import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
 abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, TextAvailableNode {
@@ -46,6 +47,16 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, 
     @Override
     public JavadocToken jjtGetLastToken() {
         return (JavadocToken) super.jjtGetLastToken();
+    }
+
+    @Override
+    public void jjtSetFirstToken(GenericToken token) {
+        super.firstToken = token;
+    }
+
+    @Override
+    public void jjtSetLastToken(GenericToken token) {
+        super.lastToken = token;
     }
 
     @Override
