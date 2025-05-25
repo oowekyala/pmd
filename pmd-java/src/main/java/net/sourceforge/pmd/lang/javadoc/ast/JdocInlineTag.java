@@ -170,8 +170,17 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     public static class JdocInheritDoc extends JdocInlineTag {
 
         JdocInheritDoc(String tagName) {
-            super(JavadocNodeId.VALUE_TAG, tagName);
+            super(JavadocNodeId.INHERIT_DOC_TAG, tagName);
         }
 
+    }
+    /**
+     * A {@code {@snippet }} tag.
+     */
+    public static class JdocSnippet extends JdocInlineTag {
+        // todo attributes and comments
+        JdocSnippet(String literalCode) {
+            super(JavadocNodeId.SNIPPET_TAG, "@snippet");
+        }
     }
 }

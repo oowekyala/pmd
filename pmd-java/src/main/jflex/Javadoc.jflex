@@ -51,6 +51,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %state HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ, INLINE_TAG
 
 %xstate REF_START, REF_MEMBER, REF_PARAMS_START, REF_PARAMS, REF_REST, REF_REST_WS
+%xstate SNIPPET_START, SNIPPET_BODY, SNIPPET_COMMENT
+
 
 HEX_DIGIT=              [0-9a-fA-F]
 BLOCK_TAG_ID=           "@"[^\ \t\f\n\r]+
@@ -75,6 +77,7 @@ JAVA_IDENT=[:jletter:]+
 TYPE_PARAM_IDENT=("<" {JAVA_IDENT} ">")
 IDENT_START=[:jletter:]
 
+SNIPPET_ATTR="\"" [^"\""]* "\"" | "'" [^"'"]* "'"
 %%
 
 <YYINITIAL>             "/**"                  { yybegin(COMMENT_DATA_START); return JdocTokenType.COMMENT_START; }
@@ -131,7 +134,6 @@ IDENT_START=[:jletter:]
 
 <PARAM_TAG_START>       {JAVA_IDENT}
                       | {TYPE_PARAM_IDENT}     { yybegin(IGNORED_WS);                   return JdocTokenType.PARAM_NAME; }
-
 
 // this is for whitespace either trailing a line or the whole input
 
@@ -224,4 +226,31 @@ IDENT_START=[:jletter:]
 
 <REF_REST> {
                         [^]+                   {                              return JdocTokenType.COMMENT_DATA;   }
+}
+
+
+// Special part about snippets
+
+<SNIPPET_START> {
+    {HTML_ATTR_NAME}       {                              return JdocTokenType.SNIPPET_ATTR_NAME; }
+    "="                    {                              return JdocTokenType.SNIPPET_EQ;        }
+    {SNIPPET_ATTR}         {                              return JdocTokenType.SNIPPET_ATTR_VAL;  }
+    ":"                    { yybegin(SNIPPET_BODY);       return JdocTokenType.SNIPPET_SEP;    }
+    {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
+    [^]                    {                              return JdocTokenType.BAD_CHAR;       }
+}
+
+<SNIPPET_BODY> {
+    "//"                   { yybegin(SNIPPET_COMMENT);       return JdocTokenType.SNIPPET_SEP;    }
+    {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
+    [^]                    {                              return JdocTokenType.BAD_CHAR;       }
+}
+
+<SNIPPET_COMMENT> {
+    {HTML_ATTR_NAME}       {                              return JdocTokenType.SNIPPET_ATTR_NAME; }
+    "="                    {                              return JdocTokenType.SNIPPET_EQ;        }
+    {SNIPPET_ATTR}         {                              return JdocTokenType.SNIPPET_ATTR_VAL;  }
+    {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
+    \R                     { yybegin(SNIPPET_BODY); }
+    [^]                    {                              return JdocTokenType.BAD_CHAR;       }
 }
