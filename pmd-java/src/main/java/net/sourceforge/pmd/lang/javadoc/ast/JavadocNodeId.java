@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 /** Ids for javadoc nodes. */
-public enum JavadocNodeId {
+enum JavadocNodeId {
     ROOT("Comment"),
     COMMENT_DATA("Data"),
     WHITESPACE("Whitespace"),

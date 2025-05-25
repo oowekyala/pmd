@@ -94,109 +94,129 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 WHITESPACE_CHAR=[\ \t\f]
 DIGIT=[0-9]
+HEX_DIGIT=[0-9a-fA-F]
 ALPHA=[:jletter:]
 IDENTIFIER={ALPHA}({ALPHA}|{DIGIT}|[":.-"])*
 TAG_IDENTIFIER=[^\ \t\f\n\r]+
 INLINE_TAG_IDENTIFIER=[^\ \t\f\n\r\}]+
 LINE_TERM=(\r\n | [\r\n\u0085\u2028\u2029]) // Uses the same convention as java.util.regex.Pattern#line-terminators
 
+ENTITY = "&" {ALPHA}+ ";" 
+       | "&#" {DIGIT}+ ";"
+       | "&#" [xX] {HEX_DIGIT}+ ";"
+
 HTML_TAG_NAME=({ALPHA}|"_"|":")({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
 HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 
 %%
-// TODO HTML comments
 
-<YYINITIAL> "/**" { yybegin(COMMENT_DATA_START); return JavadocTokenType.COMMENT_START; }
+<YYINITIAL>             "/**"              { yybegin(COMMENT_DATA_START); return JavadocTokenType.COMMENT_START; }
 
-<COMMENT_DATA, COMMENT_DATA_START> ("</") {
-    yybegin(IN_HTML);
-    return JavadocTokenType.HTML_LCLOSE;
-}
-<COMMENT_DATA, COMMENT_DATA_START> "<!--" { yybegin(IN_HTML_COMMENT); return JavadocTokenType.HTML_COMMENT_START; }
-<IN_HTML_COMMENT> "-->" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_COMMENT_END; }
-<IN_HTML_COMMENT> "--" { yybegin(COMMENT_DATA); return JavadocTokenType.BAD_CHAR; }
-<IN_HTML_COMMENT> . { return JavadocTokenType.HTML_COMMENT_CONTENT; }
+<COMMENT_DATA, 
+ COMMENT_DATA_START>    ("</")             { yybegin(IN_HTML); return JavadocTokenType.HTML_LCLOSE; }
+
+<COMMENT_DATA, 
+ COMMENT_DATA_START>    "<!--"             { yybegin(IN_HTML_COMMENT); return JavadocTokenType.HTML_COMMENT_START; }
+<IN_HTML_COMMENT>       "-->"              { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_COMMENT_END; }
+<IN_HTML_COMMENT>       "--"               { yybegin(COMMENT_DATA); return JavadocTokenType.BAD_CHAR; }
+<IN_HTML_COMMENT>       .                  { return JavadocTokenType.HTML_COMMENT_CONTENT; }
 
 
-<COMMENT_DATA, COMMENT_DATA_START> [\<] {
-    yybegin(IN_HTML);
-    return JavadocTokenType.HTML_LT;
-}
-<IN_HTML> {HTML_TAG_NAME} { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_IDENT; }
-<IN_HTML, HTML_ATTRS> [\>] { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_GT; }
-<IN_HTML, HTML_ATTRS> "/>" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_RCLOSE; }
+<COMMENT_DATA, 
+ COMMENT_DATA_START>    [<]                { yybegin(IN_HTML); return JavadocTokenType.HTML_LT; }
+<IN_HTML>               {HTML_TAG_NAME}    { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_IDENT; }
+<IN_HTML, 
+ HTML_ATTRS>            [\>]               { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_GT; }
+<IN_HTML, 
+ HTML_ATTRS>            "/>"               { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_RCLOSE; }
 
-<HTML_ATTRS> {HTML_ATTR_NAME} { return JavadocTokenType.HTML_IDENT; }
-<HTML_ATTRS> [=]  { yybegin(HTML_ATTR_VAL); return JavadocTokenType.HTML_EQ; }
-<HTML_ATTR_VAL> [\"] { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_DQUOTE; }
-<HTML_ATTR_VAL> [\'] { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_SQUOTE; }
-<HTML_ATTRS, HTML_ATTR_VAL> {WHITESPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
+<HTML_ATTRS>            {HTML_ATTR_NAME}   { return JavadocTokenType.HTML_IDENT; }
+<HTML_ATTRS>            [=]                { yybegin(HTML_ATTR_VAL); return JavadocTokenType.HTML_EQ; }
+<HTML_ATTR_VAL>         [\"]               { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_DQUOTE; }
+<HTML_ATTR_VAL>         [\']               { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_SQUOTE; }
+<HTML_ATTRS, 
+ HTML_ATTR_VAL>         {WHITESPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
 
 // unquoted 
-<HTML_ATTR_VAL> {HTML_ATTR_NAME} { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_VAL; }
+<HTML_ATTR_VAL>         {HTML_ATTR_NAME}   { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_VAL; }
 
-<HTML_ATTR_VAL_DQ> [\"] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_DQUOTE; }
-<HTML_ATTR_VAL_SQ> [\'] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_SQUOTE; }
-<HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ> . { return JavadocTokenType.HTML_ATTR_VAL; }
+<HTML_ATTR_VAL_DQ>      [\"]               { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_DQUOTE; }
+<HTML_ATTR_VAL_SQ>      [\']               { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_SQUOTE; }
+<HTML_ATTR_VAL_DQ, 
+ HTML_ATTR_VAL_SQ>      .                  { return JavadocTokenType.HTML_ATTR_VAL; }
 
-<COMMENT_DATA_START, COMMENT_DATA> "{"
-{
-  boolean isTagStart = lookahead('@');
-  yybegin(isTagStart ? INLINE_TAG_NAME : COMMENT_DATA);
-  return isTagStart ? JavadocTokenType.INLINE_TAG_START : JavadocTokenType.COMMENT_DATA;
-}
+<COMMENT_DATA_START, 
+ COMMENT_DATA>          "{"
+    {
+      boolean isTagStart = lookahead('@');
+      yybegin(isTagStart ? INLINE_TAG_NAME : COMMENT_DATA);
+      return isTagStart ? JavadocTokenType.INLINE_TAG_START 
+                        : JavadocTokenType.COMMENT_DATA;
+    }
+
 // brace balancing inside code and literal envs
-<INSIDE_CODE_TAG> "{" { braces++; return JavadocTokenType.COMMENT_DATA; }
-<INSIDE_CODE_TAG> "}"
-      {
-          if (--braces >= 0) { return JavadocTokenType.COMMENT_DATA; }
-          else { yybegin(COMMENT_DATA); braces = 0; return JavadocTokenType.INLINE_TAG_END; }
-      }
 
-<INLINE_TAG_NAME> ("@code" | "@literal") { yybegin(CODE_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
-<INLINE_TAG_NAME> "@"{INLINE_TAG_IDENTIFIER} { setInline(); yybegin(INLINE_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
-<COMMENT_DATA_START, LINE_HEAD> "@"{TAG_IDENTIFIER} { yybegin(BLOCK_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<INSIDE_CODE_TAG>       "{"                 { braces++; return JavadocTokenType.COMMENT_DATA; }
+
+<INSIDE_CODE_TAG>       "}"
+    {
+      if (--braces >= 0) 
+          return JavadocTokenType.COMMENT_DATA;
+      else {
+          yybegin(COMMENT_DATA); 
+          braces = 0; 
+          return JavadocTokenType.INLINE_TAG_END; 
+      }
+    }
 
 // closing }
-<COMMENT_DATA_START, COMMENT_DATA, INLINE_TAG_DOC_SPACE, CODE_TAG_SPACE>
-        "}" {
-          if (isInline()) {
-            yybegin(COMMENT_DATA);
-            return JavadocTokenType.INLINE_TAG_END;
-          } else {
-            return JavadocTokenType.COMMENT_DATA;
-          }
+<COMMENT_DATA_START, 
+ COMMENT_DATA, 
+ INLINE_TAG_DOC_SPACE, 
+ CODE_TAG_SPACE>        "}" 
+    {
+      if (isInline()) {
+        yybegin(COMMENT_DATA);
+        return JavadocTokenType.INLINE_TAG_END;
+      } else {
+        return JavadocTokenType.COMMENT_DATA;
       }
+    }
 
-// {@literal &identifier; } or {@literal &#digits; } or {@literal &#xhex-digits; }
-<COMMENT_DATA> "&" {IDENTIFIER} ";" {return JavadocTokenType.HTML_ENTITY;}
+<INLINE_TAG_NAME>       ("@code" | "@literal")      { yybegin(CODE_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
+<INLINE_TAG_NAME>       "@"{INLINE_TAG_IDENTIFIER}  { setInline(); yybegin(INLINE_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<COMMENT_DATA_START, 
+ LINE_HEAD>             "@"{TAG_IDENTIFIER}         { yybegin(BLOCK_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+
 
 // whitespace
 
-<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITESPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
+<INLINE_TAG_DOC_SPACE, 
+ BLOCK_TAG_DOC_SPACE>   {WHITESPACE_CHAR}+       { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
 
-<CODE_TAG_SPACE> {WHITESPACE_CHAR}+ { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
+<CODE_TAG_SPACE>        {WHITESPACE_CHAR}+       { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
+<COMMENT_DATA_START>    {WHITESPACE_CHAR}+       { return JavadocTokenType.WHITESPACE; }
+<COMMENT_DATA>          {WHITESPACE_CHAR}+       { return JavadocTokenType.COMMENT_DATA; }
 
-<COMMENT_DATA_START> {WHITESPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
+<COMMENT_DATA_START, 
+ COMMENT_DATA>          {ENTITY}                 { return JavadocTokenType.HTML_ENTITY; }
+<COMMENT_DATA_START, 
+ COMMENT_DATA>          [^&<>]                   { yybegin(COMMENT_DATA); return JavadocTokenType.COMMENT_DATA; }
+<INSIDE_CODE_TAG> .                              { return JavadocTokenType.COMMENT_DATA; }
 
-<COMMENT_DATA> {WHITESPACE_CHAR}+ { return JavadocTokenType.COMMENT_DATA; }
-
-// TODO HTML entities [^&]
-<COMMENT_DATA_START, COMMENT_DATA> .   { yybegin(COMMENT_DATA); return JavadocTokenType.COMMENT_DATA; }
-<INSIDE_CODE_TAG> .                    { return JavadocTokenType.COMMENT_DATA; }
-
-<LINE_HEAD> {WHITESPACE_CHAR}+    { exitLineHead(); return JavadocTokenType.WHITESPACE; }
 
 // Trailing spaces before the end marker
 // If the comment is one one line, eg /** Foo */, it shouldn't be lexed as COMMENT_DATA
-{WHITESPACE_CHAR}+ / "*/"         { return JavadocTokenType.WHITESPACE; }
+                        {WHITESPACE_CHAR}+ / "*/"                      { return JavadocTokenType.WHITESPACE; }
 // Trailing whitespace before a line terminator
-{WHITESPACE_CHAR}+ / {LINE_TERM}  { return JavadocTokenType.WHITESPACE; }
+                        {WHITESPACE_CHAR}+ / {LINE_TERM}               { return JavadocTokenType.WHITESPACE; }
 
 // line termination (all states)
 // the part / [^/]  avoids matching "*/"
-{LINE_TERM} {WHITESPACE_CHAR}* "*" / [^/]      { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
-{LINE_TERM}                                    { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
+                        {LINE_TERM} {WHITESPACE_CHAR}* "*" / [^/]      { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
+                        {LINE_TERM}                                    { enterLineHead(); return JavadocTokenType.LINE_BREAK; }
+
+<LINE_HEAD>             {WHITESPACE_CHAR}+                             { exitLineHead(); return JavadocTokenType.WHITESPACE; }
 
 "*/" { return JavadocTokenType.COMMENT_END; }
 [^]  { return JavadocTokenType.BAD_CHAR; }
