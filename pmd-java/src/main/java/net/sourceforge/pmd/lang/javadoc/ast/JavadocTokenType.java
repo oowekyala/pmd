@@ -13,7 +13,9 @@ public enum JavadocTokenType {
     /** End of input. */
     COMMENT_END("*/", true),
 
-    /** Name of an inline or block tag. */
+    /**
+     * Name of an inline or block tag. This includes the preceding @ sign.
+     */
     TAG_NAME("@<tag name>", false),
 
     /**
