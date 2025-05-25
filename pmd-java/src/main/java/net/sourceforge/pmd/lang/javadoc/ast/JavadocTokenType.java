@@ -24,7 +24,7 @@ public enum JavadocTokenType {
 
     /**
      * This also takes care of any following asterisk. Leading whitespace
-     * after a line break (incl asterisk), and trailing whitespace before
+     * after a line break (or asterisk), and trailing whitespace before
      * the line break, is treated as {@link #WHITESPACE}.
      *
      * <p>Line break tokens are always insignificant for parsing. In a
