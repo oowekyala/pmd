@@ -107,7 +107,7 @@ enum HtmlTagBehaviour {
     }
 
     boolean shouldCloseBecauseTagIsStarting(String startingTag) {
-        return impl.shouldCloseBecauseParentIsEnded(startingTag);
+        return impl.shouldCloseBecauseTagIsStarting(startingTag);
     }
 
     boolean isVoid() {

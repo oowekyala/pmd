@@ -130,6 +130,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${jflex-output}</outputDirectory>
+                            <dot>true</dot>
                             <lexDefinitions>
                                 <lexDefinition>src/main/jflex/Javadoc.jflex</lexDefinition>
                             </lexDefinitions>

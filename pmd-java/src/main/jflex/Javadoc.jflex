@@ -34,7 +34,6 @@ package net.sourceforge.pmd.lang.javadoc.ast;
     }
 %}
 
-%debug
 
 %state COMMENT_DATA_START, COMMENT_DATA
 %state INLINE_TAG_NAME
@@ -91,7 +90,6 @@ UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
 <HTML_ATTR_VAL_DQ>      [^\"&\R]+              {                             return JavadocTokenType.HTML_ATTR_VAL; }
 <HTML_ATTR_VAL_SQ>      [^\'&\R]+              {                             return JavadocTokenType.HTML_ATTR_VAL; }
 
-// TODO brace balancing is broken
 <COMMENT_DATA_START,
  COMMENT_DATA>          "{" / {INLINE_TAG_ID}  { yybegin(INLINE_TAG_NAME);   return JavadocTokenType.INLINE_TAG_START; }
 <COMMENT_DATA_START,
@@ -99,8 +97,8 @@ UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
 
 // brace balancing inside inline tags
 
-<INLINE_TAG>            "{"                    {                      braces++; return JavadocTokenType.COMMENT_DATA; }
 <INLINE_TAG_START>      "{"                    { yybegin(INLINE_TAG); braces++; return JavadocTokenType.COMMENT_DATA; }
+<INLINE_TAG>            "{"                    {                      braces++; return JavadocTokenType.COMMENT_DATA; }
 <INLINE_TAG,
  INLINE_TAG_START>      "}"                    { if (--braces >= 0)             return JavadocTokenType.COMMENT_DATA;
                                                  else { yybegin(COMMENT_DATA);  return JavadocTokenType.INLINE_TAG_END; }
@@ -112,7 +110,7 @@ UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
  INLINE_TAG_START>      {BLOCK_TAG_ID}         { yybegin(COMMENT_DATA_START);           return JavadocTokenType.TAG_NAME; }
 
 
-// whitespace and regular text
+// this is for whitespace either trailing a line or the whole input
 
                         {WS_CHAR}+
                             / (\R | "*/")      {                             return JavadocTokenType.WHITESPACE;   }
