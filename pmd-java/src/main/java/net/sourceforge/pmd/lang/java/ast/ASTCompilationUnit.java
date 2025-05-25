@@ -14,6 +14,7 @@ import net.sourceforge.pmd.annotation.Experimental;
 import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.RootNode;
+import net.sourceforge.pmd.lang.java.internal.JavaAstProcessor;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.ast.internal.LazyTypeResolver;
@@ -147,8 +148,10 @@ public final class ASTCompilationUnit extends AbstractJavaNode implements RootNo
         return lazyTypeResolver.getTypeSystem();
     }
 
-    void setTypeResolver(LazyTypeResolver typeResolver) {
+    void initResolvers(LazyTypeResolver typeResolver, JavaAstProcessor astProcessor) {
         this.lazyTypeResolver = typeResolver;
+        assert lazyTypeResolver != null;
+        assert astProcessor != null;
     }
 
     @NonNull LazyTypeResolver getLazyTypeResolver() {

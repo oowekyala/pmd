@@ -22,6 +22,7 @@ import net.sourceforge.pmd.lang.java.symbols.internal.UnresolvedClassStore;
 import net.sourceforge.pmd.lang.java.symbols.internal.ast.SymbolResolutionPass;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.ReferenceCtx;
 import net.sourceforge.pmd.lang.java.symbols.table.internal.SymbolTableResolver;
+import net.sourceforge.pmd.lang.java.types.TypeInternals;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.internal.infer.TypeInferenceLogger;
 
@@ -155,11 +156,10 @@ public final class JavaAstProcessor {
         process(globalProcessor, semanticErrorReporter, globalProcessor.newTypeInfLogger(), ast);
     }
 
-    public static void process(JavaLanguageProcessor globalProcessor,
-                                          SemanticErrorReporter semanticErrorReporter,
-                                          TypeInferenceLogger typeInfLogger,
+    private static void process(JavaLanguageProcessor globalProcessor,
+                                           SemanticErrorReporter semanticErrorReporter,
+                                           TypeInferenceLogger typeInfLogger,
                                            ASTCompilationUnit ast) {
-
 
         JavaAstProcessor astProc = new JavaAstProcessor(
             globalProcessor,

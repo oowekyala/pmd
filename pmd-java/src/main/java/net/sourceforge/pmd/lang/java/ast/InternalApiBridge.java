@@ -147,7 +147,8 @@ public final class InternalApiBridge {
     }
 
     public static void initTypeResolver(ASTCompilationUnit acu, JavaAstProcessor processor, TypeInferenceLogger logger) {
-        acu.setTypeResolver(new LazyTypeResolver(processor, logger));
+        LazyTypeResolver resolver = new LazyTypeResolver(processor, logger);
+        acu.initResolvers(resolver, processor);
     }
 
     public static void setOverload(InvocationNode expression, OverloadSelectionResult result) {

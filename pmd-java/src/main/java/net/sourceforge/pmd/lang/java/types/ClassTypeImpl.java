@@ -206,7 +206,7 @@ class ClassTypeImpl implements JClassType {
     }
 
     @Override
-    public final JClassType selectInner(JClassSymbol symbol, List<? extends JTypeMirror> targs, PSet<SymAnnot> typeAnnotations) {
+    public final @NonNull JClassType selectInner(JClassSymbol symbol, List<? extends JTypeMirror> targs, PSet<SymAnnot> typeAnnotations) {
         return new ClassTypeImpl(ts,
                                  this,
                                  symbol,

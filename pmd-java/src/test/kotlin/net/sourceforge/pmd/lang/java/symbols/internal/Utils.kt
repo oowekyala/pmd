@@ -18,8 +18,6 @@ import java.util.*
 /** Testing utilities */
 
 
-val testSymResolver: SymbolResolver = testTypeSystem.bootstrapResolver()
-
 fun classSym(klass: Class<*>?) = testTypeSystem.getClassSymbol(klass)
 
 fun <T, K> List<T>.groupByUnique(keySelector: (T) -> K): Map<K, T> =
