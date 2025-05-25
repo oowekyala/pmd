@@ -90,4 +90,9 @@ public class AntlrToken implements GenericToken<AntlrToken> {
     public boolean isDefault() {
         return channel == Lexer.DEFAULT_TOKEN_CHANNEL;
     }
+
+    @Override
+    public boolean isEof() {
+        return token.getType() == Token.EOF;
+    }
 }

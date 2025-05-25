@@ -81,6 +81,11 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
         return getImage().isEmpty();
     }
 
+    @Override
+    public boolean isEof() {
+        return false;
+    }
+
     /**
      * Creates a zero-length token with the given kind right before the
      * given successor token. This links the tokens appropriately.

@@ -139,11 +139,6 @@ public class ScalaCpdLexer implements CpdLexer {
             super(tokenManager);
         }
 
-        @Override
-        protected boolean shouldStopProcessing(ScalaTokenAdapter currentToken) {
-            return currentToken == null;
-        }
-
     }
 
 }
