@@ -9,10 +9,12 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.Html
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.EMPTY;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.SINGLE_QUOTED;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.UNQUOTED;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.ATTR_DELIMITERS;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.COMMENT_DATA;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.EXPECTED_TOKEN;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_END;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_DQUOTE;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_EQ;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_GT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_IDENT;
@@ -172,19 +174,6 @@ class MainJdocParser extends BaseJavadocParser {
      * @param prevEnd Token that should be used as the end token of the autoclosed tag
      * @param curTag  Name of the tag being opened
      */
-
-    /**
-     * oho
-     *
-     * @param prevEnd Token that should be used as the end token of the autoclosed tag
-     * @param curTag  Name of the tag being opened
-     *
-     *
-     * @deprecated
-     *
-     * ohi
-     *
-     */
     private void maybeImplicitClose(JdocToken prevEnd, String curTag) {
         if (nodes.peek() instanceof JdocHtml) {
 
@@ -308,10 +297,6 @@ class MainJdocParser extends BaseJavadocParser {
         skipWhitespace();
         while (tokIs(HTML_IDENT)) {
             final JdocToken name = head();
-            final HtmlAttrSyntax syntax;
-            final @Nullable JdocToken value;
-            final JdocToken end;
-            @Nullable JdocMalformed malformed = null;
 
             nextNonWs();
 
@@ -319,59 +304,46 @@ class MainJdocParser extends BaseJavadocParser {
                 // name=
                 //     ^
                 nextNonWs();
-                if (tokIs(JdocTokenType.ATTR_DELIMITERS)) {
+                if (tokIsAny(ATTR_DELIMITERS)) {
                     // name="
                     //      ^
                     JdocTokenType firstDelimKind = head().getKind();
-                    syntax = firstDelimKind == HTML_SQUOTE ? SINGLE_QUOTED : DOUBLE_QUOTED;
+                    HtmlAttrSyntax syntax = firstDelimKind == HTML_SQUOTE ? SINGLE_QUOTED : DOUBLE_QUOTED;
                     nextNonWs();
+                    final @Nullable JdocToken value;
                     if (tokIs(HTML_ATTR_VAL)) {
                         // name="value
                         //           ^
                         value = head();
+                        nextNonWs();
                     } else {
                         // empty value, eg name=""
-                        value = null;
+                        nextNonWs();
+                        value = JdocToken.implicitBefore(HTML_ATTR_VAL, head());
                     }
-                    nextNonWs();
                     // name="value"
                     //            ^
-                    end = head();
-
                     if (!tokIs(firstDelimKind)) {
-                        malformed = new JdocMalformed(EnumSet.of(firstDelimKind), head());
+                        JdocHtmlAttr attr = html.newAttribute(name, value, value, syntax);
+                        attr.newError(EnumSet.of(firstDelimKind), head());
+                    } else {
+                        html.newAttribute(name, value, head(), syntax);
                     }
                 } else if (tokIs(HTML_ATTR_VAL)) {
                     // name=value
                     //          ^
-                    syntax = UNQUOTED;
-                    value = head();
-                    end = head();
+                    html.newAttribute(name, head(), head(), UNQUOTED);
                 } else {
                     // "=", then something that's neither an ident or delimiter
-                    syntax = UNQUOTED; // dummy
-                    value = null;
-                    end = head();
-                    malformed = new JdocMalformed(EnumSet.of(HTML_EQ), head());
+                    html.newError(EnumSet.of(HTML_ATTR_VAL, HTML_SQUOTE, HTML_DQUOTE), head());
                 }
+                advance();
             } else {
                 // tok is then the next token to be processed
                 // (eg whitespace or ">")
-                syntax = EMPTY;
-                value = null;
-                end = name;
+                html.newAttribute(name, null, name, EMPTY);
             }
 
-            JdocHtmlAttr attr = new JdocHtmlAttr(value, syntax);
-            attr.setFirstToken(name);
-            attr.setLastToken(end);
-            if (malformed != null) {
-                attr.jjtAddChild(malformed, 0);
-            }
-            html.addAttribute(attr);
-            if (syntax != EMPTY) {
-                advance();
-            }
             skipWhitespace();
         }
     }

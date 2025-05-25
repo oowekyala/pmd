@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 
 
 /**
@@ -256,9 +257,14 @@ public interface JavadocNode extends TextAvailableNode {
             this.behaviour = HtmlTagBehaviour.lookup(tagName);
         }
 
-        void addAttribute(JdocHtmlAttr attr) {
+        JdocHtmlAttr newAttribute(JdocToken first, JdocToken value, JdocToken end, HtmlAttrSyntax syntax) {
+            JdocHtmlAttr attr = new JdocHtmlAttr(value, syntax);
+            attr.setFirstToken(first);
+            attr.setLastToken(end);
+
             attributes.put(attr.getName(), attr);
             appendChild(attr);
+            return attr;
         }
 
         /** Returns the name of the tag. */

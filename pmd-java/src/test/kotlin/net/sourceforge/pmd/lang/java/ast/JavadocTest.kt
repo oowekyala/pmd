@@ -27,7 +27,7 @@ class JavadocTest : ParserTestSpec({
                     }
 
                     annotation("F")
-                    classBody {}
+                    typeBody {}
                 }
             }
         }

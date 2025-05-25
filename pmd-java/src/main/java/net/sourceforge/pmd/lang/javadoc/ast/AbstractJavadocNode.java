@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.lang.ast.Node;
@@ -42,6 +43,12 @@ class AbstractJavadocNode implements JavadocNode {
         children[index] = (AbstractJavadocNode) child;
         child.jjtSetChildIndex(index);
         child.jjtSetParent(this);
+    }
+
+    JdocMalformed newError(EnumSet<JdocTokenType> expected, JdocToken actual) {
+        JdocMalformed n = new JdocMalformed(expected, actual);
+        appendChild(n);
+        return n;
     }
 
 

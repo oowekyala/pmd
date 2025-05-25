@@ -15,7 +15,7 @@ interface InlineTagParser {
 
     /**
      * Parse an inline tag. When the method is called, the parser's
-     * {@link MainJdocParser#head()} is set on the {@link JdocTokenType#TAG_NAME}.
+     * {@link MainJdocParser#head() head} is set on the {@link JdocTokenType#TAG_NAME}.
      * When it returns, it should be set on the {@link JdocTokenType#INLINE_TAG_END}.
      *
      * <p>This method does not need to set the first/end tokens on
