@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.HtmlTagBehaviour.TagBehaviourImpl.Vo
 /**
  * Encodes behaviour like whether an element's end tag can be omitted.
  *
- * TODO support optional start tag
+ * TODO support optional start tag?
  *
  * See https://html.spec.whatwg.org/multipage/syntax.html#optional-tags
  */

@@ -4,11 +4,8 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +37,7 @@ public interface JavadocNode extends TextAvailableNode {
 
 
     @Override
+    @Nullable
     JavadocNode jjtGetParent();
     @Override
     JavadocNode jjtGetChild(int index);
@@ -58,7 +56,9 @@ public interface JavadocNode extends TextAvailableNode {
     String getText();
 
 
-    /** Root node of Javadoc ASTs. */
+    /**
+     * Root node of Javadoc ASTs.
+     */
     class JdocComment extends AbstractJavadocNode implements RootNode {
 
         JdocComment() {
@@ -130,13 +130,19 @@ public interface JavadocNode extends TextAvailableNode {
             }
         }
 
+        @Override
+        public String getText() {
+            return getFirstToken().getImage();
+        }
+
         /**
          * Returns the constant corresponding to the entity. Returns null
          * if it's unknown.
          */
         @Nullable
-        public NamedSgmlEntity getConstant() {
-            return name != null ? NamedSgmlEntity.fromName(name) : NamedSgmlEntity.fromCodePoint(getCodePoint());
+        public KnownHtmlEntity getConstant() {
+            return name != null ? KnownHtmlEntity.lookupByName(getText())
+                                : KnownHtmlEntity.lookupByCode(getCodePoint());
         }
 
         /**
@@ -166,60 +172,6 @@ public interface JavadocNode extends TextAvailableNode {
             return base == 16;
         }
 
-        enum EntityKind {
-            DECIMAL,
-            NAMED,
-            HEXADECIMAL
-        }
-
-        public enum NamedSgmlEntity {
-            NBSP(160),
-            LT(60),
-            GT(62),
-            AMP(38),
-            QUOT(34),
-            APOS(39),
-            // TODO many more
-            //   https://www.w3schools.com/html/html_entities.asp
-            //   https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
-            ;
-
-            private static final Map<String, NamedSgmlEntity> BY_NAME =
-                Arrays.stream(values()).collect(Collectors.toMap(NamedSgmlEntity::getName, e -> e));
-
-            private static final Map<Integer, NamedSgmlEntity> BY_CODEPOINT =
-                Arrays.stream(values()).collect(Collectors.toMap(NamedSgmlEntity::getCodePoint, e -> e));
-
-            private final int codePoint;
-
-            NamedSgmlEntity(int codePoint) {
-                this.codePoint = codePoint;
-            }
-
-            public int getCodePoint() {
-                return codePoint;
-            }
-
-            public String getName() {
-                return name().toLowerCase(Locale.ROOT);
-            }
-
-            @Override
-            public String toString() {
-                return "&" + getName() + ";";
-            }
-
-            @Nullable
-            public static NamedSgmlEntity fromName(String name) {
-                Objects.requireNonNull(name, "Name was null");
-                return BY_NAME.get(name);
-            }
-
-            @Nullable
-            public static NamedSgmlEntity fromCodePoint(int name) {
-                return BY_CODEPOINT.get(name);
-            }
-        }
     }
 
     /** Unexpected token tag. */
@@ -340,6 +292,7 @@ public interface JavadocNode extends TextAvailableNode {
             /**
              * Eg {@code <li>a<li>b}, the end tag is inferred because some other tag follows,
              * or because the parent is closed. Only valid for some combinations of tags.
+             * TODO maybe use an implicit end tag?
              */
             IMPLICIT,
             /** Unclosed, because no {@link #IMPLICIT} condition matched. This is an error. */
@@ -421,6 +374,9 @@ public interface JavadocNode extends TextAvailableNode {
         }
     }
 
+    /**
+     * The end tag of an HTML element, eg {@code </pre>}.
+     */
     class JdocHtmlEnd extends AbstractJavadocNode {
 
         private final String tagName;
