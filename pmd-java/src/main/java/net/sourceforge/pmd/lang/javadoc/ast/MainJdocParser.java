@@ -30,7 +30,6 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCharacterReference;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
@@ -215,7 +214,7 @@ class MainJdocParser extends BaseJavadocParser {
                 last.setCloseSyntax(HtmlCloseSyntax.UNCLOSED);
             }
             top.setLastToken(lastToken);
-            top.jjtClose();
+            top.closeNode();
             last = top;
         }
         if (lastIsExplicit && last != null) { // this was closed normally
@@ -238,7 +237,7 @@ class MainJdocParser extends BaseJavadocParser {
                 html.setCloseSyntax(HtmlCloseSyntax.IMPLICIT);
             }
             top.setLastToken(lastToken);
-            top.jjtClose();
+            top.closeNode();
         }
 
         // the last HTML node, unclosed
@@ -372,7 +371,7 @@ class MainJdocParser extends BaseJavadocParser {
 
     private void growDataLeaf(JdocToken first, JdocToken last) {
         AbstractJavadocNode top = this.nodes.getFirst();
-        JavadocNode lastNode = top.jjtGetNumChildren() > 0 ? top.jjtGetChild(top.jjtGetNumChildren() - 1) : null;
+        JavadocNode lastNode = top.getLastChild();
         if (lastNode instanceof JdocCommentData) {
             ((JdocCommentData) lastNode).setLastToken(last);
         } else {

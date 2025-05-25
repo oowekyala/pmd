@@ -8,6 +8,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
+import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 /** A token implementation for Javadoc nodes. */
 public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDocument> implements PrevLinkedToken<JdocToken> {
@@ -17,13 +19,11 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     @Nullable
     JdocToken next;
 
-    private final String image;
     private final JdocTokenType kind;
 
     JdocToken(JdocTokenType kind, String image, int startInclusive, int endExclusive, JavadocTokenDocument document) {
         super(startInclusive, endExclusive, document);
         this.kind = kind;
-        this.image = image;
     }
 
     /**
@@ -51,13 +51,8 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     }
 
     @Override
-    public String getImage() {
-        return image;
-    }
-
-    @Override
-    public String toString() {
-        return image;
+    public Chars getImageCs() {
+        return document.getTextDocument().sliceTranslatedText(getRegion());
     }
 
     /** This always returns null. There are no comment tokens in this javadoc grammar. */
@@ -71,42 +66,12 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
         return getImage().isEmpty();
     }
 
-    JdocToken split(int indexInImage, JdocTokenType leftKind, JdocTokenType rightKind) {
-        assert indexInImage >= 0 && indexInImage <= image.length();
-
-        String leftIm = this.image.substring(0, indexInImage);
-        String rightIm = this.image.substring(indexInImage);
-
-        JdocToken left = new JdocToken(leftKind,
-                                       leftIm,
-                                       this.getStartInDocument(),
-                                       this.getStartInDocument() + indexInImage,
-                                       this.getDocument());
-
-        JdocToken right = new JdocToken(rightKind,
-                                        rightIm,
-                                        this.getStartInDocument() + indexInImage,
-                                        this.getEndInDocument(),
-                                        this.getDocument());
-
-        left.prev = this.prev;
-        left.next = right;
-
-        right.prev = left;
-        right.next = this.next;
-
-        this.prev = null;
-        this.next = null;
-
-        return left;
-    }
-
     /**
      * Creates a zero-length token with the given kind right before the
      * given successor token. This links the tokens appropriately.
      */
     static JdocToken implicitBefore(JdocTokenType kind, JdocToken successor) {
-        JdocToken tok = new JdocToken(kind, successor.getStartInDocument(), successor.getDocument());
+        JdocToken tok = new JdocToken(kind, successor.getRegion().getStartOffset(), successor.getDocument());
         tok.prev = successor.prev;
         tok.next = successor;
         successor.prev = tok;

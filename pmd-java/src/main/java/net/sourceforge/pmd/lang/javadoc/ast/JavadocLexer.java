@@ -12,18 +12,18 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_CONTENT;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.EnumSet;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.apache.commons.io.input.CharSequenceReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
-import net.sourceforge.pmd.lang.ast.impl.JavaInputReader;
-import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
+import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
- * Wraps the generated JFlex lexer into a {@link TokenStream}. The parsers
+ * Wraps the generated JFlex lexer into a {@link TokenManager}. The parsers
  * use the additional abstraction {@link TokenCursor}.
  */
 class JavadocLexer implements TokenManager<JdocToken> {
@@ -38,13 +38,13 @@ class JavadocLexer implements TokenManager<JdocToken> {
         );
 
 
-    private final TokenDocument<JavadocToken> doc;
+    private final JavadocTokenDocument doc;
     private int maxOffset;
     private JavadocFlexer lexer;
     private final int initialState;
     private int curOffset;
     private JdocToken prevToken;
-    private JavaInputReader reader;
+    private Reader reader;
     @Nullable
     private JdocTokenType pendingTok;
 
@@ -68,7 +68,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
      * @param endOffset   End offset (exclusive) in the file text
      */
     public JavadocLexer(String fullText, int startOffset, int endOffset) {
-        this(startOffset, endOffset, new JavadocTokenDocument(fullText), JavadocFlexer.YYINITIAL);
+        this(TextRegion.fromBothOffsets(startOffset, endOffset), new JavadocTokenDocument(fullText), JavadocFlexer.YYINITIAL);
     }
 
     /**
@@ -79,7 +79,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
      *                     defined on {@link JavadocFlexer}
      */
     public JavadocLexer(JdocToken token, int initialState) {
-        this(token.getStartInDocument(), token.getEndInDocument(), token.getDocument(), initialState);
+        this(token.getRegion(), token.getDocument(), initialState);
     }
 
     /**
@@ -88,25 +88,19 @@ class JavadocLexer implements TokenManager<JdocToken> {
      * lexer stops when the region is ended, or when it encounters a "*" "/"
      * token (end of comment), whichever comes first.
      *
-     * @param startOffset  Start offset in the file text
-     * @param endOffset    End offset (exclusive) in the file text
+     * @param region       Region to lex in the file text
      * @param document     Token document
      * @param initialState Initial state of the lexer
      */
-    public JavadocLexer(int startOffset, int endOffset, TokenDocument<JavadocToken> document, int initialState) {
+    public JavadocLexer(TextRegion region, JavadocTokenDocument document, int initialState) {
         this.doc = document;
-        this.curOffset = startOffset;
-        this.maxOffset = endOffset;
+        this.curOffset = region.getStartOffset();
+        this.maxOffset = region.getEndOffset();
         this.initialState = initialState;
     }
 
-    public TokenDocument<JavadocToken> getDoc() {
+    public JavadocTokenDocument getDoc() {
         return doc;
-    }
-
-    @Override
-    public boolean isEof(@NonNull JdocToken token) {
-        return token == null;
     }
 
     void replaceLastWith(JdocToken tipOfChain, JdocToken newFirstTok, JdocToken newLastTok) {
@@ -118,16 +112,15 @@ class JavadocLexer implements TokenManager<JdocToken> {
     }
 
     @Override
-    @Nullable
     @SuppressWarnings("PMD.AssignmentInOperand")
-    public JdocToken getNextToken() {
+    public @Nullable JdocToken getNextToken() {
 
         try {
             if (lexer == null) {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                reader = new JavaInputReader(doc.getFullText(), curOffset, maxOffset);
+                reader = new CharSequenceReader(doc.getFullText().subSequence(curOffset, maxOffset));
                 this.lexer = new JavadocFlexer(reader);
                 lexer.yybegin(initialState);
             }
@@ -151,7 +144,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
 
             // in the image, unicode escapes are translated
             final String image;
-            final int start = reader.inputOffset(curOffset);
+            final int start = curOffset;
             final int end;
             if (tok == null) {
                 // EOF
@@ -173,7 +166,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             }
 
             curOffset += image.length();
-            end = reader.inputOffset(curOffset);
+            end = curOffset;
 
             JdocToken next = new JdocToken(tok, image, start, end, doc);
             if (prevToken != null) {
@@ -183,7 +176,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw new TokenMgrError("Error lexing Javadoc comment", e);
+            throw new TokenMgrError(-1, -1, null, "Error lexing Javadoc comment", e);
         }
     }
 }

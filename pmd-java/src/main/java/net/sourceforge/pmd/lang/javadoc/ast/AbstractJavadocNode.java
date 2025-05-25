@@ -5,26 +5,18 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 import java.util.EnumSet;
-import java.util.stream.Collectors;
 
-import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.util.DataMap;
-import net.sourceforge.pmd.util.DataMap.DataKey;
+import net.sourceforge.pmd.lang.ast.impl.AbstractNode;
+import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.document.FileLocation;
+import net.sourceforge.pmd.util.document.TextRegion;
 
-class AbstractJavadocNode implements JavadocNode {
+class AbstractJavadocNode extends AbstractNode<AbstractJavadocNode, JavadocNode> implements JavadocNode {
 
-    private final DataMap<DataKey<?, ?>> userMap = DataMap.newDataMap();
-
-    private static final AbstractJavadocNode[] EMPTY_ARRAY = new AbstractJavadocNode[0];
     private final JavadocNodeId id;
 
     private JdocToken firstToken;
     private JdocToken lastToken;
-
-    private AbstractJavadocNode[] children = EMPTY_ARRAY;
-    private int childIndex;
-    private AbstractJavadocNode parent;
-    private Object userData;
 
 
     AbstractJavadocNode(JavadocNodeId id) {
@@ -33,19 +25,8 @@ class AbstractJavadocNode implements JavadocNode {
 
 
     @Override
-    public void jjtAddChild(Node child, int index) {
-        if (!(child instanceof AbstractJavadocNode)) {
-            throw new IllegalArgumentException("Need a javadoc node, got " + child);
-        }
-
-        if (index >= children.length) {
-            final AbstractJavadocNode[] newChildren = new AbstractJavadocNode[index + 1];
-            System.arraycopy(children, 0, newChildren, 0, children.length);
-            children = newChildren;
-        }
-        children[index] = (AbstractJavadocNode) child;
-        child.jjtSetChildIndex(index);
-        child.jjtSetParent(this);
+    protected void addChild(AbstractJavadocNode child, int index) {
+        super.addChild(child, index);
     }
 
     JdocMalformed newError(EnumSet<JdocTokenType> expected, JdocToken actual) {
@@ -56,33 +37,11 @@ class AbstractJavadocNode implements JavadocNode {
 
 
     void appendChild(JavadocNode node) {
-        jjtAddChild(node, jjtGetNumChildren());
+        addChild((AbstractJavadocNode) node, getNumChildren());
     }
 
+    void closeNode() {
 
-    @Override
-    public AbstractJavadocNode getParent() {
-        return parent;
-    }
-
-    @Override
-    public int getIndexInParent() {
-        return childIndex;
-    }
-
-    @Override
-    public JavadocNode getChild(int index) {
-        return children[index];
-    }
-
-    @Override
-    public JavadocNode jjtGetChild(int index) {
-        return getChild(index);
-    }
-
-    @Override
-    public int getNumChildren() {
-        return children.length;
     }
 
     @Override
@@ -109,61 +68,17 @@ class AbstractJavadocNode implements JavadocNode {
     }
 
     @Override
-    public DataMap<DataKey<?, ?>> getUserMap() {
-        return userMap;
+    public Chars getText() {
+        return getTextDocument().sliceTranslatedText(getTextRegion());
     }
 
     @Override
-    public String getText() {
-        return getFirstToken().rangeTo(getLastToken()).map(JdocToken::getImage).collect(Collectors.joining());
+    public TextRegion getTextRegion() {
+        return TextRegion.union(getFirstToken().getRegion(), getLastToken().getRegion());
     }
 
     @Override
-    public int getBeginLine() {
-        return firstToken.getBeginLine();
-    }
-
-    @Override
-    public int getBeginColumn() {
-        return firstToken.getBeginColumn();
-    }
-
-    @Override
-    public int getEndLine() {
-        return lastToken.getEndLine();
-    }
-
-    @Override
-    public JavadocNode jjtGetParent() {
-        return parent;
-    }
-
-    @Override
-    public void jjtClose() {
-        if (lastToken == null && jjtGetNumChildren() > 0) {
-            setLastToken(jjtGetChild(0).getLastToken());
-        }
-    }
-
-    @Override
-    public void jjtSetParent(Node parent) {
-        if (!(parent instanceof AbstractJavadocNode)) {
-            throw new IllegalArgumentException("Need a javadoc node, got " + parent);
-        }
-        this.parent = (AbstractJavadocNode) parent;
-    }
-
-    @Override
-    public int getEndColumn() {
-        return lastToken.getEndColumn();
-    }
-
-
-    // unsupported stuff, fuck those methods
-
-
-    @Override
-    public String toString() {
-        return getText();
+    public FileLocation getReportLocation() {
+        return getFirstToken().getReportLocation();
     }
 }
