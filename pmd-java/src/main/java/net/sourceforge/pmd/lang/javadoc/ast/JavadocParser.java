@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCharacterReference;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml;
@@ -99,6 +100,9 @@ public class JavadocParser {
             break;
         case HTML_COMMENT_START:
             linkLeaf(htmlComment());
+            break;
+        case CHARACTER_REFERENCE:
+            linkLeaf(new JdocCharacterReference(head()));
             break;
         }
     }

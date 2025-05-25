@@ -75,8 +75,11 @@ public enum JavadocTokenType {
     HTML_COMMENT_END("-->", true),
     HTML_COMMENT_CONTENT("<comment>", false),
 
+    /** Identifier of an HTML attribute or tag. */
     HTML_IDENT("<identifier>", false),
-    HTML_ENTITY("<HTML entity>", false),
+
+    /** An HTML character reference. See {@link JavadocNode.JdocCharacterReference}. */
+    CHARACTER_REFERENCE("<HTML entity>", false),
     ;
 
     static final EnumSet<JavadocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);

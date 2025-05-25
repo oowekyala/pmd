@@ -82,24 +82,38 @@ class JavadocParserTest : JavadocParserSpec({
         }
     }
 
-    parserTest("Test nested HTML") {
+    parserTest("Test HTML char references") {
 
         """
 /**
- *  <i> foo</i> <p> aha
+ *  <i> &amp; foo</i> <p> &#10; aha &#x00a;
  */
         """.trimIndent() should parseAs {
 
             html("i") {
-                it::getText shouldBe "<i> foo</i>"
+                it::getText shouldBe "<i> &amp; foo</i>"
+                data(" ")
+                namedEntity("amp")
                 data(" foo")
                 htmlEnd("i")
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> aha\n */"
-                data(" aha")
+                it::getText shouldBe "<p> &#10; aha &#x00a;\n */"
+                data(" ")
+                decCharReference(10)
+                data(" aha ")
+                hexCharReference(10) {
+                    it::getText shouldBe "&#x00a;"
+                }
             }
+        }
+
+        // bad reference
+        """
+/** & amp; */
+        """.trimIndent() should parseAs {
+            data("& amp;")
         }
     }
 
@@ -295,6 +309,30 @@ fun TreeNodeWrapper<Node, out JavadocNode>.literal(data: String, spec: NodeSpec<
             it::isLiteral shouldBe true
             it::isCode shouldBe false
             it::getData shouldBe data
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.namedEntity(name: String, spec: NodeSpec<JdocCharacterReference> = EmptyAssertions) =
+        child<JdocCharacterReference> {
+            it::getName shouldBe name
+            it::getCodePoint shouldBe 0
+            it::isHexadecimal shouldBe false
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.hexCharReference(point: Int, spec: NodeSpec<JdocCharacterReference> = EmptyAssertions) =
+        child<JdocCharacterReference> {
+            it::getName shouldBe null
+            it::getCodePoint shouldBe point
+            it::isHexadecimal shouldBe true
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.decCharReference(point: Int, spec: NodeSpec<JdocCharacterReference> = EmptyAssertions) =
+        child<JdocCharacterReference> {
+            it::getName shouldBe null
+            it::getCodePoint shouldBe point
+            it::isHexadecimal shouldBe false
             spec()
         }
 

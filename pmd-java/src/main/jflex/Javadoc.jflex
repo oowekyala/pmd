@@ -50,10 +50,11 @@ INLINE_TAG_ID=          "@"[^\ \t\f\n\r\{\}]+
 WS_CHAR=                [ \t\f]
 LEADER=                 {WS_CHAR}* "*"
 
-ENTITY=                 "&" [:jletter:]+ ";"
-                      | "&#" [:digit:]+ ";"
-                      | "&#" [xX] {HEX_DIGIT}+ ";"
+ENTITY=                 "&" [:jletter:]+ ";"        // named
+                      | "&#" [:digit:]+ ";"         // decimal
+                      | "&#" [xX] {HEX_DIGIT}+ ";"  // hex
 
+// Distinction is semantic
 HTML_TAG_NAME=          [^\s\"\'<>/=]+
 HTML_ATTR_NAME=         [^\s\"\'<>/=]+
 UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
@@ -121,10 +122,10 @@ UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
  HTML_ATTRS,
  HTML_ATTR_VAL>         {WS_CHAR}+             {                             return JavadocTokenType.WHITESPACE;   }
 
-<COMMENT_DATA_START>    {ENTITY}               { yybegin(COMMENT_DATA);      return JavadocTokenType.HTML_ENTITY;  }
+<COMMENT_DATA_START>    {ENTITY}               { yybegin(COMMENT_DATA);      return JavadocTokenType.CHARACTER_REFERENCE;  }
 <COMMENT_DATA,
  HTML_ATTR_VAL_DQ,
- HTML_ATTR_VAL_SQ>      {ENTITY}               {                             return JavadocTokenType.HTML_ENTITY;  }
+ HTML_ATTR_VAL_SQ>      {ENTITY}               {                             return JavadocTokenType.CHARACTER_REFERENCE;  }
 
 <COMMENT_DATA_START>    .                      { yybegin(COMMENT_DATA);      return JavadocTokenType.COMMENT_DATA; }
 <INLINE_TAG_START>      .                      { yybegin(INLINE_TAG);        return JavadocTokenType.COMMENT_DATA; }
