@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.GenericToken;
+import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
 abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {

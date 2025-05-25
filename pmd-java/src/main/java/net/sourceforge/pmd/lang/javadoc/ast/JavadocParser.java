@@ -5,13 +5,17 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_ATTR_START;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.DOUBLE_QUOTED;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.EMPTY;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.SINGLE_QUOTED;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.UNQUOTED;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_COMMENT_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_GT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_IDENT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_RCLOSE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_SQUOTE;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.INLINE_TAG_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
@@ -37,6 +41,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtml;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
@@ -248,27 +254,74 @@ public class JavadocParser {
         }
     }
 
-    private void htmlAttrs(JdocHtml acc) {
+    private void htmlAttrs(JdocHtml html) {
+        // name=
+        //    ^
         skipWhitespace();
         while (tokIs(HTML_IDENT)) {
-            String name = tok.getImage();
-            advance();
-            skipWhitespace();
-            if (tokIs(HTML_EQ)) {
-                advance();
+            final JavadocToken name = tok;
+            final HtmlAttrSyntax syntax;
+            final @Nullable JavadocToken value;
+            final JavadocToken end;
+            @Nullable JdocMalformed malformed = null;
 
-                if (tokIs(HTML_ATTR_START)) {
-                    advance();
+            nextNonWs();
+
+            if (tokIs(HTML_EQ)) {
+                // name=
+                //     ^
+                nextNonWs();
+                if (tokIs(JavadocTokenType.ATTR_DELIMITERS)) {
+                    // name="
+                    //      ^
+                    JavadocTokenType firstDelimKind = tok.getKind();
+                    syntax = firstDelimKind == HTML_SQUOTE ? SINGLE_QUOTED : DOUBLE_QUOTED;
+                    nextNonWs();
                     if (tokIs(HTML_ATTR_VAL)) {
-                        acc.attributes.put(name, tok.getImage());
+                        // name="value
+                        //           ^
+                        value = tok;
+                    } else {
+                        // empty value, eg name=""
+                        value = null;
                     }
-                    advance();
-                    skipWhitespace();
+                    nextNonWs();
+                    // name="value"
+                    //            ^
+                    end = tok;
+
+                    if (!tokIs(firstDelimKind)) {
+                        malformed = new JdocMalformed(EnumSet.of(firstDelimKind), tok);
+                    }
+                } else if (tokIs(HTML_ATTR_VAL)) {
+                    // name=value
+                    //          ^
+                    syntax = UNQUOTED;
+                    value = tok;
+                    end = tok;
+                } else {
+                    // "=", then something that's neither an ident or delimiter
+                    syntax = UNQUOTED; // dummy
+                    value = null;
+                    end = tok;
+                    malformed = new JdocMalformed(EnumSet.of(HTML_EQ), tok);
                 }
             } else {
-                acc.attributes.put(name, JdocHtml.UNATTRIBUTED);
-                advance();
-                skipWhitespace();
+                // tok is then the next token to be processed
+                // (eg whitespace or ">")
+                syntax = EMPTY;
+                value = null;
+                end = name;
+            }
+
+            JdocHtmlAttr attr = new JdocHtmlAttr(value, syntax);
+            attr.jjtSetLastToken(end);
+            if (malformed != null) {
+                attr.jjtAddChild(malformed, 0);
+            }
+            html.addAttribute(attr);
+            if (syntax != EMPTY) {
+                nextNonWs();
             }
         }
     }
@@ -279,8 +332,17 @@ public class JavadocParser {
         }
     }
 
+    private void nextNonWs() {
+        advance();
+        skipWhitespace();
+    }
+
     private boolean tokIs(JavadocTokenType ttype) {
         return tok != null && tok.getKind() == ttype;
+    }
+
+    private boolean tokIs(EnumSet<JavadocTokenType> ttype) {
+        return tok != null && ttype.contains(tok.getKind());
     }
 
     private boolean isEnd() {

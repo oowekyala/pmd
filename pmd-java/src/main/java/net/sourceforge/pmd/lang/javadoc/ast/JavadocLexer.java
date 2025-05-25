@@ -5,9 +5,13 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.ATTR_DELIMITERS;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_DATA;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_END;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_COMMENT_CONTENT;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_DQUOTE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_SQUOTE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -41,6 +45,10 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
         this.maxOffset = endOffset;
     }
 
+    public TokenDocument getDoc() {
+        return doc;
+    }
+
     @Override
     @Nullable
     @SuppressWarnings("PMD.AssignmentInOperand")
@@ -51,7 +59,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
 
         try {
             if (lexer == null) {
-                StringReader reader = new StringReader(doc.getFullText());
+                StringReader reader = new StringReader(doc.getFullText()); // TODO java unicode escapes
                 long skipped = reader.skip(curOffset);
                 if (skipped == 0 && curOffset != 0) {
                     return null;
@@ -72,8 +80,8 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
             if (tok == null) {
                 // EOF
                 return null;
-            } else if (tok == COMMENT_DATA || tok == HTML_COMMENT_CONTENT) {
-                // comment data tokens are single chars, we merge them here
+            } else if (JavadocTokenType.MERGED_TOKENS.contains(tok)) {
+                // those tokens are single chars, we merge them here
                 while ((curOffset + len) < maxOffset
                     && (pendingTok = lexer.advance()) == tok) {
                     len += lexer.yylength();

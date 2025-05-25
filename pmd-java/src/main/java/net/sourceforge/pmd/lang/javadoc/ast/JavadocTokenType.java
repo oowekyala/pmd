@@ -5,6 +5,8 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
+import java.util.EnumSet;
+
 public enum JavadocTokenType {
     COMMENT_START("/**", true),
     COMMENT_END("*/", true),
@@ -58,8 +60,8 @@ public enum JavadocTokenType {
      */
 
     HTML_EQ("=", true),
-    HTML_ATTR_START("[\"']", false),
-    HTML_ATTR_END("[\"']", false),
+    HTML_SQUOTE("\"", true),
+    HTML_DQUOTE("'", true),
     HTML_ATTR_VAL("<attribute value>", false),
 
     HTML_COMMENT_START("<!--", true),
@@ -69,6 +71,11 @@ public enum JavadocTokenType {
     HTML_IDENT("<identifier>", false),
     HTML_ENTITY("<HTML entity>", false),
     ;
+
+    static final EnumSet<JavadocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
+    // the flexer produces single chars for those tokens, we merge them here
+    static final EnumSet<JavadocTokenType> MERGED_TOKENS =
+        EnumSet.of(COMMENT_DATA, HTML_COMMENT_CONTENT, HTML_ATTR_VAL, BAD_CHAR);
 
     private final boolean isConst;
     private String value;
