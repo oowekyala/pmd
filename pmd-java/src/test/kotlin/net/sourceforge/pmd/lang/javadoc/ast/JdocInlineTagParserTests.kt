@@ -185,7 +185,7 @@ class JdocInlineTagParserTests : JavadocParserSpec({
     }
 
 
-    parserTest("Test some inline tags") {
+    parserTest("Test @code inline tag") {
 
 
         """

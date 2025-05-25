@@ -153,4 +153,15 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
             return children(JdocRef.class).first();
         }
     }
+
+    /**
+     * An {@code {@inheritDoc }} tag.
+     */
+    public static class JdocInheritDoc extends JdocInlineTag {
+
+        JdocInheritDoc(String tagName) {
+            super(JavadocNodeId.VALUE_TAG, tagName);
+        }
+
+    }
 }

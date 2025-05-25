@@ -45,8 +45,8 @@ class AbstractJavadocNode implements JavadocNode {
     }
 
 
-    public void pushChild(JavadocNode child) {
-        jjtAddChild(child, jjtGetNumChildren());
+    void appendChild(JavadocNode node) {
+        jjtAddChild(node, jjtGetNumChildren());
     }
 
     @Override
@@ -117,10 +117,6 @@ class AbstractJavadocNode implements JavadocNode {
         return parent;
     }
 
-
-    void appendChild(AbstractJavadocNode node) {
-        jjtAddChild(node, jjtGetNumChildren());
-    }
 
     @Override
     public void jjtOpen() {

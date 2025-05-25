@@ -10,6 +10,7 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.Html
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.SINGLE_QUOTED;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax.UNQUOTED;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.COMMENT_DATA;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.EXPECTED_TOKEN;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_EQ;
@@ -44,6 +45,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocInheritDoc;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
@@ -112,7 +114,13 @@ class MainJdocParser extends BaseJavadocParser {
             if (tokIs(TAG_NAME)) {
                 AbstractJavadocNode tag = parseInlineTagContent(head().getImage());
                 tag.setFirstToken(start);
-                tag.setLastToken(tokIs(INLINE_TAG_END) ? head() : head().getPrevious());
+                if (tokIs(INLINE_TAG_END)) {
+                    tag.setLastToken(head());
+                } else {
+                    tag.setLastToken(head().getPrevious());
+                    JdocToken error = JdocToken.implicitBefore(EXPECTED_TOKEN, head());
+                    tag.appendChild(new JdocMalformed(EnumSet.of(INLINE_TAG_END), error));
+                }
                 linkLeaf(tag);
             } else if (!tokens.isEoi()) {
                 growDataLeaf(start, head());
@@ -412,13 +420,23 @@ class MainJdocParser extends BaseJavadocParser {
                 assert ref.getLastToken() != null : "RefParser should have set last token on " + ref;
                 lexer.replaceLastWith(tokBeforeRef, ref.getFirstToken(), ref.getLastToken());
                 tokens.reset(ref.getLastToken());
-                parent.pushChild(ref);
+                parent.appendChild(ref);
                 firstLabelTok = nextNonWs() && tokIs(COMMENT_DATA) ? head() : null;
             }
             // otherwise, link is unparsable
             // doesn't matter, we'll just consume until the closing brace
         }
         return firstLabelTok;
+    }
+
+    private void expectInlineTagEnd(JdocInlineTag tag) {
+        skipWhitespace();
+        if (!tokIs(KnownInlineTagParser.INLINE_TAG_ENDERS)) {
+            tag.appendChild(new JdocMalformed(JdocTokenType.EMPTY_SET, head()));
+            while (!tokIs(KnownInlineTagParser.INLINE_TAG_ENDERS) && advance()) {
+                // skip
+            }
+        }
     }
 
     enum KnownInlineTagParser implements TagParser {
@@ -437,7 +455,7 @@ class MainJdocParser extends BaseJavadocParser {
                         // skip
                     }
                     JdocCommentData label = new JdocCommentData(firstLabelTok, parser.head().prev);
-                    tag.pushChild(label);
+                    tag.appendChild(label);
                 }
 
                 return tag;
@@ -478,41 +496,24 @@ class MainJdocParser extends BaseJavadocParser {
                 JdocValue tag = new JdocValue(name);
                 JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
                 if (firstLabelTok != null) {
-                    JdocMalformed label = new JdocMalformed(JdocTokenType.EMPTY_SET, firstLabelTok);
-                    tag.pushChild(label);
-                    while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
-                        // skip
-                    }
+                    parser.expectInlineTagEnd(tag);
                 }
                 return tag;
             }
+
         },
+
         INHERIT_DOC("@inheritDoc") {
             @Override
             public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+                JdocInheritDoc tag = new JdocInheritDoc(name);
                 parser.advance();
-                parser.skipWhitespace();
-                if (parser.tokIs())
-                JdocToken firstTok = parser.head().getPrevious();
-                assert firstTok != null;
-
-                JdocValue tag = new JdocValue(name);
-                JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
-                if (firstLabelTok != null) {
-                    JdocMalformed label = new JdocMalformed(JdocTokenType.EMPTY_SET, firstLabelTok);
-                    tag.pushChild(label);
-                    while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
-                        // skip
-                    }
-                }
+                parser.expectInlineTagEnd(tag);
                 return tag;
             }
-        }
+        };
 
-        // TODO @value
-        ;
-
-        private static final EnumSet<JdocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME);
+        private static final EnumSet<JdocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME); // TAG_NAME is the start of a block tag
 
         private static final Map<String, KnownInlineTagParser> LOOKUP = Arrays.stream(values()).collect(Collectors.toMap(KnownInlineTagParser::getName, p -> p));
         private final String name;
@@ -557,6 +558,9 @@ class MainJdocParser extends BaseJavadocParser {
          * Parse an inline tag. When the method is called, the parser's
          * {@link #head()} is set on the {@link JdocTokenType#TAG_NAME}.
          * When it returns, it should be set on the {@link JdocTokenType#INLINE_TAG_END}.
+         *
+         * <p>This method does not need to set the first/end tokens on
+         * the returned node.
          *
          * @param name   Name of the tag to parse
          * @param parser Parser

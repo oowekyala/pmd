@@ -218,9 +218,7 @@ public interface JavadocNode extends TextAvailableNode {
             if (actual == null) {
                 return "Unexpected end of input, expecting " + format(expected);
             }
-            String message = "Unexpected token " + actual.getImage()
-                + " (" + actual.getKind() + ") at "
-                + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
+            String message = "Unexpected " + actual.getKind().format(actual) + " at " + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
             if (!expected.isEmpty()) {
                 return message + " expecting " + format(expected);
             } else {

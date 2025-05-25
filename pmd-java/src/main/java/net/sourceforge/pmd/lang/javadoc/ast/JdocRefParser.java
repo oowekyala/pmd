@@ -82,7 +82,7 @@ class JdocRefParser extends BaseJavadocParser {
                 }
             }
         } else if (tokIs(BAD_CHAR)) {
-            classRef.pushChild(new JdocMalformed(JdocTokenType.EMPTY_SET, head()));
+            classRef.appendChild(new JdocMalformed(JdocTokenType.EMPTY_SET, head()));
             classRef.setLastToken(head());
         }
         return classRef;
