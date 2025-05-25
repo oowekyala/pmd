@@ -156,6 +156,9 @@ IDENT_START=[:jletter:]
 <COMMENT_DATA,
  INLINE_TAG>            .                      {                             return JdocTokenType.COMMENT_DATA; }
 
+<HTML_ATTR_VAL_DQ,
+ HTML_ATTR_VAL_SQ>      .                      {                             return JdocTokenType.HTML_ATTR_VAL; }
+
 
 
 // ALL STATES
