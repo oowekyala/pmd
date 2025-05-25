@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
@@ -22,17 +21,16 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocValue;
-import net.sourceforge.pmd.lang.javadoc.ast.MainJdocParser.TagParser;
 
 /**
  * Lists all known inline tags and encapsulates the logic to parse them.
  *
  * @author Clément Fournier
  */
-enum KnownInlineTagParser implements TagParser {
+enum KnownInlineTagParser implements InlineTagParser {
     LINK("@link") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             parser.advance();
             parser.skipWhitespace();
             JdocToken firstTok = parser.head().getPrevious();
@@ -54,14 +52,14 @@ enum KnownInlineTagParser implements TagParser {
 
     LINKPLAIN("@linkplain") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             return LINK.parse(name, parser);
         }
     },
 
     CODE("@code") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             parser.advance();
             String data = consumeInlineTag(parser);
             return new JdocLiteral(name, data);
@@ -70,14 +68,14 @@ enum KnownInlineTagParser implements TagParser {
 
     LITERAL("@literal") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             return CODE.parse(name, parser);
         }
     },
 
     VALUE("@value") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             parser.advance();
             parser.skipWhitespace();
             JdocToken firstTok = parser.head().getPrevious();
@@ -95,7 +93,7 @@ enum KnownInlineTagParser implements TagParser {
 
     INHERIT_DOC("@inheritDoc") {
         @Override
-        public AbstractJavadocNode parse(String name, MainJdocParser parser) {
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
             JdocInheritDoc tag = new JdocInheritDoc(name);
             parser.advance();
             expectInlineTagEnd(parser, tag);
@@ -103,9 +101,23 @@ enum KnownInlineTagParser implements TagParser {
         }
     };
 
-    private static final EnumSet<JdocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME); // TAG_NAME is the start of a block tag
 
-    private static final Map<String, KnownInlineTagParser> LOOKUP = Arrays.stream(values()).collect(Collectors.toMap(KnownInlineTagParser::getName, p -> p));
+    static final InlineTagParser UNKNOWN_PARSER = new InlineTagParser() {
+        @Override
+        public String getName() {
+            return "@";
+        }
+
+        @Override
+        public JdocInlineTag parse(String name, MainJdocParser parser) {
+            parser.advance();
+            String data = consumeInlineTag(parser);
+            return new JdocUnknownInlineTag(name, data);
+        }
+    };
+
+    private static final EnumSet<JdocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME); // TAG_NAME is the start of a block tag
+    private static final Map<String, InlineTagParser> LOOKUP = Arrays.stream(values()).collect(Collectors.toMap(KnownInlineTagParser::getName, p -> p));
     private final String name;
 
     KnownInlineTagParser(String name) {
@@ -117,15 +129,11 @@ enum KnownInlineTagParser implements TagParser {
         return name;
     }
 
-    @Nullable // case sensitive
-    static KnownInlineTagParser lookup(String name) {
-        return LOOKUP.get(name);
-    }
-
-    public static JdocUnknownInlineTag parseUnknown(String name, MainJdocParser parser) {
-        parser.advance();
-        String data = consumeInlineTag(parser);
-        return new JdocUnknownInlineTag(name, data);
+    @NonNull
+    static JdocInlineTag selectAndParse(String name, MainJdocParser parser) {
+        InlineTagParser tagParser = LOOKUP.getOrDefault(name, UNKNOWN_PARSER);
+        assert tagParser != null;
+        return tagParser.parse(name, parser);
     }
 
     @NonNull
