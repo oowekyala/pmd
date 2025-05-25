@@ -49,7 +49,7 @@ class JavadocParserTest : JavadocParserSpec({
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> aha"
+                it::getText shouldBe "<p> aha\n */"
                 data(" aha")
             }
         }
@@ -70,12 +70,12 @@ class JavadocParserTest : JavadocParserSpec({
             }
             data(" ")
             html("p") {
-                it::getText shouldBe "<p> aha"
+                it::getText shouldBe "<p> aha\n */"
                 data(" aha")
             }
         }
     }
-    parserTest("f:Autoclosing HTML") {
+    parserTest("Autoclosing HTML") {
 
         """
 /**
@@ -96,23 +96,23 @@ class JavadocParserTest : JavadocParserSpec({
 
             html("p") {
                 data("OHA")
-                html("ul") {
-                    html("li") {
-                        data("LI one")
-                    }
-                    html("li") {
-                        data("LI two")
-                        html("p") {
-                            data("LIP ")
-                            typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
-                        }
-                    }
-                    html("li") {
-                        data("LI three")
-                        htmlEnd("li")
-                    }
-                    htmlEnd("ul")
+            }
+            html("ul") {
+                html("li") {
+                    data("LI one")
                 }
+                html("li") {
+                    data("LI two")
+                    html("p") {
+                        data("LIP ")
+                        typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
+                    }
+                }
+                html("li") {
+                    data("LI three")
+                    htmlEnd("li")
+                }
+                htmlEnd("ul")
             }
 
         }

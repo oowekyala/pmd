@@ -17,6 +17,7 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
@@ -44,41 +45,12 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
 public class JavadocParser {
 
-    private static final Map<String, Set<String>> HTML_AUTOCLOSED;
     private final JavadocLexer lexer;
     private final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
 
     private JavadocToken tok;
     /** End of input. */
     private boolean isEoi;
-
-
-    static {
-        /*
-        An li element's end tag may be omitted if the li element is immediately followed by another li element or if there is no more content in the parent element.
-
-        A dt element's end tag may be omitted if the dt element is immediately followed by another dt element or a dd element.
-        
-        A dd element's end tag may be omitted if the dd element is immediately followed by another dd element or a dt element, or if there is no more content in the parent element.
-        
-        A p element's end tag may be omitted if the p element is immediately followed by an 
-              , or if there is no more content in the parent element and the parent element is an HTML element that is not an
-        a, audio, del, ins, map, noscript, or video element, or an autonomous custom element.
-        
-        */
-        Map<String, Set<String>> tags = new HashMap<>();
-        tags.put("li", setOf("li"));
-        tags.put("dt", setOf("dd", "dd"));
-        tags.put("dd", setOf("dd", "dt"));
-        tags.put("p", setOf("address", "article", "aside", "blockquote",
-                            "details", "div", "dl", "fieldset", "figcaption",
-                            "figure", "footer", "form",
-                            "h1", "h2", "h3", "h4", "h5", "h6",
-                            "header", "hgroup", "hr", "main", "menu", "nav",
-                            "ol", "p", "pre", "section", "table", "ul", "li"));
-
-        HTML_AUTOCLOSED = invertMap(tags);
-    }
 
 
     public JavadocParser(String text) {
@@ -106,7 +78,10 @@ public class JavadocParser {
             dispatch();
         }
 
-        comment.jjtSetLastToken(tok);
+        while (!nodes.isEmpty()) {
+            AbstractJavadocNode top = nodes.pop();
+            top.jjtSetLastToken(tok);
+        }
         return comment;
     }
 
@@ -172,10 +147,10 @@ public class JavadocParser {
             html.jjtSetFirstToken(start);
             advance();
             htmlAttrs(html);
-            maybeAutoclose(start.prev, html.getTagName());
+            maybeImplicitClose(start.prev, html.getTagName());
             linkLeaf(html);
             if (tok.getKind() == HTML_RCLOSE) {
-                html.setAutoclose(true);
+                html.setAutoclose();
                 html.jjtSetLastToken(tok);
             } else {
                 pushNode(html);
@@ -188,12 +163,40 @@ public class JavadocParser {
         }
     }
 
-    private void maybeAutoclose(JavadocToken prevEnd, String curTag) {
-        AbstractJavadocNode top = nodes.peek();
-        if (top instanceof JdocHtml
-            && HTML_AUTOCLOSED.getOrDefault(curTag, Collections.emptySet()).contains(((JdocHtml) top).getTagName())) {
-            top.jjtSetLastToken(prevEnd);
-            popNode();
+    /**
+     * Autoclose current HTML nodes if applicable.
+     * Some nodes higher up in the stack may be autoclosed, and cause
+     * their children to be autoclosed as well.
+     *
+     * @param prevEnd Token that should be used as the end token of the autoclosed tag
+     * @param curTag  Name of the tag being opened
+     */
+    private void maybeImplicitClose(JavadocToken prevEnd, String curTag) {
+        if (nodes.peek() instanceof JdocHtml) {
+
+            int i = 0;
+            for (AbstractJavadocNode node : new ArrayList<>(nodes)) {
+                i++;
+                if (node instanceof JdocHtml) {
+                    JdocHtml topHtml = (JdocHtml) node;
+                    if (topHtml.getBehaviour().shouldCloseBecauseTagIsStarting(curTag)) {
+                        popImplicitCloseNodes(i, prevEnd);
+                        i = 0;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void popImplicitCloseNodes(int n, JavadocToken lastToken) {
+        while (n-- > 0) {
+            JdocHtml top = (JdocHtml) nodes.pop();
+            top.jjtSetLastToken(lastToken);
+            top.jjtClose();
         }
     }
 
@@ -224,14 +227,24 @@ public class JavadocParser {
                 html.jjtSetLastToken(tok);
                 html.jjtAddChild(new JdocMalformed(EnumSet.of(HTML_GT), tok), 0);
             }
-            AbstractJavadocNode top = peekNode();
-            if (top instanceof JdocHtml && ((JdocHtml) top).getTagName().equals(html.getTagName())) {
-                AbstractJavadocNode node = popNode();
-                node.jjtSetLastToken(tokIs(HTML_GT) ? tok : ident);
-            }
+            findNodeToClose(html, tokIs(HTML_GT) ? tok : ident);
             return;
         }
         linkLeaf(new JdocMalformed(EnumSet.of(HTML_IDENT), tok));
+    }
+
+    private void findNodeToClose(JdocHtmlEnd end, JavadocToken lastToken) {
+        int i = 0;
+        for (AbstractJavadocNode node : new ArrayList<>(nodes)) {
+            i++;
+            if (node instanceof JdocHtml) {
+                JdocHtml topHtml = (JdocHtml) node;
+                if (topHtml.getTagName().equals(end.getTagName())) {
+                    popImplicitCloseNodes(i, lastToken);
+                    return;
+                }
+            }
+        }
     }
 
     private void htmlAttrs(JdocHtml acc) {
