@@ -28,6 +28,7 @@ import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -218,9 +219,14 @@ public class JavadocParser {
     }
 
     private void htmlEnd() {
+        // </
+        //  ^
         JavadocToken start = tok;
         advance();
         skipWhitespace();
+        // </a
+        //   ^
+
         if (tokIs(HTML_IDENT)) {
             JavadocToken ident = tok;
             JdocHtmlEnd html = new JdocHtmlEnd(ident.getImage());
@@ -228,11 +234,12 @@ public class JavadocParser {
             linkLeaf(html);
             advance();
             skipWhitespace();
-            if (tokIs(HTML_GT)) {
-                html.jjtSetLastToken(tok);
-            } else {
-                html.jjtSetLastToken(tok);
-                html.jjtAddChild(new JdocMalformed(EnumSet.of(HTML_GT), tok), 0);
+            // </a>
+            //    ^
+
+            html.jjtSetLastToken(tok);
+            if (!tokIs(HTML_GT)) {
+                html.appendChild(new JdocMalformed(EnumSet.of(HTML_GT), tok));
             }
             findNodeToClose(html, tokIs(HTML_GT) ? tok : ident);
             return;
@@ -316,6 +323,7 @@ public class JavadocParser {
             }
 
             JdocHtmlAttr attr = new JdocHtmlAttr(value, syntax);
+            attr.jjtSetFirstToken(name);
             attr.jjtSetLastToken(end);
             if (malformed != null) {
                 attr.jjtAddChild(malformed, 0);
@@ -423,15 +431,6 @@ public class JavadocParser {
         return tags;
     }
 
-    private static Set<String> setOf(String strings) {
-        return Collections.singleton(strings);
-    }
-
-    private static Set<String> setOf(String... strings) {
-        HashSet<String> hashSet = new HashSet<>(strings.length);
-        Collections.addAll(hashSet, strings);
-        return Collections.unmodifiableSet(hashSet);
-    }
 
     enum KnownInlineTagParser implements TagParser {
         LINK("@link") {
@@ -488,7 +487,7 @@ public class JavadocParser {
             return name;
         }
 
-        @Nullable
+        @Nullable // TODO case insensitive lookup
         static KnownInlineTagParser lookup(String name) {
             return LOOKUP.get(name);
         }

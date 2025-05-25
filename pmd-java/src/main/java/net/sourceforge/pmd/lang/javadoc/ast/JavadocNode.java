@@ -27,6 +27,7 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
  *     and its subclasses.
  *     <li>HTML nodes are represented by {@link JdocHtml}.
  *     <li>HTML comments are represented by {@link JdocHtmlComment}.
+ *     <li>Malformed HTML is represented by {@link JdocMalformed}.
  *     <li>Whitespace characters, and leading asterisks are only available
  *     in the tokens (see {@link JavadocTokenType#LINE_BREAK} and {@link JavadocTokenType#WHITESPACE}).
  * </ul>
@@ -89,14 +90,14 @@ public interface JavadocNode extends TextAvailableNode {
     class JdocMalformed extends AbstractJavadocNode {
 
         private final Set<JavadocTokenType> expected;
-        private final JavadocToken actual;
+        private final @Nullable JavadocToken actual;
 
-        JdocMalformed(EnumSet<JavadocTokenType> expected, JavadocToken token) {
+        JdocMalformed(EnumSet<JavadocTokenType> expected, @Nullable JavadocToken actual) {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
-            this.actual = token;
-            jjtSetFirstToken(token);
-            jjtSetLastToken(token);
+            this.actual = actual;
+            jjtSetFirstToken(actual);
+            jjtSetLastToken(actual);
         }
 
         /** Null if EOF. */
@@ -107,6 +108,27 @@ public interface JavadocNode extends TextAvailableNode {
 
         public Set<JavadocTokenType> getExpected() {
             return expected;
+        }
+
+        public String getMessage() {
+            if (actual == null) {
+                return "Unexpected end of input, expecting " + format(expected);
+            } else {
+                return "Unexpected token of type " + actual.getKind() + " at "
+                    + actual.getBeginLine() + ":" + actual.getBeginColumn() + " expecting " + format(expected);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return getMessage();
+        }
+
+        private static String format(Set<JavadocTokenType> types) {
+            if (types.size() == 1) {
+                return types.iterator().next().toString();
+            }
+            return types.stream().map(JavadocTokenType::toString).collect(Collectors.joining(", ", "one of ", ""));
         }
     }
 
@@ -137,7 +159,7 @@ public interface JavadocNode extends TextAvailableNode {
 
         void addAttribute(JdocHtmlAttr attr) {
             attributes.put(attr.getName(), attr);
-            jjtAddChild(attr, this.jjtGetNumChildren());
+            appendChild(attr);
         }
 
         /** Returns the name of the tag. */
@@ -193,8 +215,11 @@ public interface JavadocNode extends TextAvailableNode {
          */
         @NonNull
         public String getValue() {
-            return getSyntax() == HtmlAttrSyntax.EMPTY ? getName()
-                                                       : getValueToken().getImage();
+            return getSyntax() == HtmlAttrSyntax.EMPTY
+                   ? getName()
+                   : getValueToken() == null
+                     ? ""
+                     : getValueToken().getImage();
         }
 
         /** Returns the name of the attribute. */
