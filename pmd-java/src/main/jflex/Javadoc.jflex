@@ -4,14 +4,14 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %%
 
 
-%class JavaDocLexer
+%class JavadocLexer
 %unicode
 %function advance
 %type JavadocTokenType
 
 %{
 
-  public JavaDocLexer() {}
+  public JavadocLexer() {}
 
   public boolean lookahead(char c) {
     if (zzMarkedPos >= zzBuffer.length) return false;

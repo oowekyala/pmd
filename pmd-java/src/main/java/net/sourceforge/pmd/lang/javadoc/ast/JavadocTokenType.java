@@ -27,6 +27,8 @@ public enum JavadocTokenType {
 
     HTML_LT("<", true),
     HTML_GT(">", true),
+    HTML_LCLOSE("</", true),
+    HTML_RCLOSE("/>", true),
     HTML_IDENT("identifier", false),
     HTML_ENTITY("HTML entity", false),
     ;
@@ -37,6 +39,14 @@ public enum JavadocTokenType {
     JavadocTokenType(String value, boolean isConst) {
         this.value = value;
         this.isConst = isConst;
+    }
+
+    public boolean isConst() {
+        return isConst;
+    }
+
+    public String getConstValue() {
+        return value;
     }
 
     @Override
