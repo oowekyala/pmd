@@ -202,7 +202,30 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_DATA, "@ param fullText"),
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
-                Tok(COMMENT_DATA, "}"),
+                Tok(INLINE_TAG_END, "}"),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_END)
+        )
+
+    }
+    test("Test @code brace matching") {
+
+
+        """
+/**
+ * {@code {@code }}
+ */
+
+        """.trim().shouldHaveTokens(
+                Tok(COMMENT_START),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
+                Tok(INLINE_TAG_START),
+                Tok(TAG_NAME, "@code"),
+                Tok(WHITESPACE, " "),
+                Tok(COMMENT_DATA, "{@code }"),
+                Tok(INLINE_TAG_END, "}"),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
