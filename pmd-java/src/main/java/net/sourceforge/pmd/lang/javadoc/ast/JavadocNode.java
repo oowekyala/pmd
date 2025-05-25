@@ -113,19 +113,4 @@ public interface JavadocNode extends Node {
         }
     }
 
-    /** An inline javadoc tag, eg {@code {@code }}. */
-    class JdocInlineTag extends AbstractJavadocNode {
-
-        private final String tagName;
-
-        JdocInlineTag(String tagName) {
-            super(JavadocNodeId.INLINE_TAG);
-            this.tagName = tagName;
-        }
-
-        public String getTagName() {
-            return tagName;
-        }
-    }
-
 }

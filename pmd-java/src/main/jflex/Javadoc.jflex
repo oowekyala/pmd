@@ -96,7 +96,6 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 <COMMENT_DATA, COMMENT_DATA_START> "<!--" { yybegin(IN_HTML_COMMENT); return JavadocTokenType.HTML_COMMENT_START; }
 <IN_HTML_COMMENT> "-->" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_COMMENT_END; }
 <IN_HTML_COMMENT> "--" { yybegin(COMMENT_DATA); return JavadocTokenType.BAD_CHAR; }
-      // TODO also ended by EOL
 <IN_HTML_COMMENT> . { return JavadocTokenType.HTML_COMMENT_CONTENT; }
 
 

@@ -17,18 +17,26 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlStart;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlStart;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocInlineTag;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocWhitespace;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 
 public class JavadocParser {
 
@@ -91,9 +99,11 @@ public class JavadocParser {
         JavadocToken start = tok;
         if (advance()) {
             if (tokIs(TAG_NAME)) {
-                JdocInlineTag tag = new JdocInlineTag(tok.getImage());
+                AbstractJavadocNode tag = parseInlineTagContent(tok.getImage());
                 tag.jjtSetFirstToken(start);
-                parseTagContent(tag);
+                while (advance() && tok.getKind() != INLINE_TAG_END || tok.getKind() != TAG_NAME) {
+                    // advance does the job
+                }
                 tag.jjtSetLastToken(tokIs(INLINE_TAG_END) ? tok : tok.getPrevious());
                 linkLeaf(tag);
             } else if (!isEnd()) {
@@ -103,12 +113,17 @@ public class JavadocParser {
     }
 
     /**
-     * Parse the content of a tag depending on its name. After this exits,
-     * {@link #tok} must be the last token of the tag (either {@link JavadocTokenType#INLINE_TAG_END}
-     * or another type if the tag is unclosed).
+     * Parse the content of an inline tag depending on its name. After
+     * this exits, we'll consume tokens until the next INLINE_TAG_END,
+     * or element that interrupts the tag.
      */
-    private void parseTagContent(JdocInlineTag tag) {
-        // TODO parse depending on tag name
+    private AbstractJavadocNode parseInlineTagContent(String name) {
+        TagParser parser = KnownInlineTagParser.lookup(name);
+        if (parser == null) {
+            return new JdocUnknownInlineTag(name);
+        } else {
+            return parser.parse(name, this);
+        }
     }
 
     private AbstractJavadocNode htmlComment() {
@@ -236,6 +251,60 @@ public class JavadocParser {
         }
         tok = t;
         return true;
+    }
+
+    private void consumeUntil(Predicate<JavadocToken> stopCondition, Predicate<JavadocToken> filter, Consumer<JavadocToken> action) {
+        while (stopCondition.test(tok) && advance()) {
+            if (filter.test(tok)) {
+                action.accept(tok);
+            }
+        }
+    }
+
+    enum KnownInlineTagParser implements TagParser {
+        LINK("@link") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                parser.skipWhitespace();
+                StringBuilder builder = new StringBuilder();
+                parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
+                                    it -> it.getKind().isSignificant(),
+                                    tok -> builder.append(tok.getImage()));
+
+                return new JdocLink(name, builder.toString());
+            }
+        },
+        LINKPLAIN("@linkplain") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                return LINK.parse(name, parser);
+            }
+        };
+        private static final EnumSet<JavadocTokenType> INLINE_TAG_ENDERS = EnumSet.of(INLINE_TAG_END, TAG_NAME);
+        private static final Map<String, KnownInlineTagParser> LOOKUP = Arrays.stream(values()).collect(Collectors.toMap(KnownInlineTagParser::getName, p -> p));
+        private final String name;
+
+        KnownInlineTagParser(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Nullable
+        static KnownInlineTagParser lookup(String name) {
+            return LOOKUP.get(name);
+        }
+    }
+
+    interface TagParser {
+
+        String getName();
+
+
+        AbstractJavadocNode parse(String name, JavadocParser parser);
     }
 
 
