@@ -128,7 +128,15 @@ public enum JdocTokenType {
 
 
     /** An implicit token, generated to support an implicit node. */
-    EXPECTED_TOKEN("", true);
+    EXPECTED_TOKEN("", true),
+
+    SNIPPET_ATTR_NAME("<attribute name>", false),
+    SNIPPET_ATTR_VAL("<attribute value>", false),
+    SNIPPET_EQ("=", true),
+    SNIPPET_COLON(":", true),
+    SNIPPET_COMMENT("//", true),
+
+    ;
 
     static final EnumSet<JdocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
     static final EnumSet<JdocTokenType> EMPTY_SET = EnumSet.noneOf(JdocTokenType.class);
@@ -143,7 +151,7 @@ public enum JdocTokenType {
 
 
     public String format(JdocToken token) {
-        assert token.getKind() == this;
+        assert token.getKindEnum() == this;
         return isConst ? "token '" + token.getImage() + "'"
                        : "token '" + token.getImage() + "' (" + this + ")";
     }

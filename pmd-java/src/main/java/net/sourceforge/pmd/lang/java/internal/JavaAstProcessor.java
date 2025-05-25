@@ -53,7 +53,6 @@ public final class JavaAstProcessor {
                              TypeInferenceLogger typeInfLogger,
                              ASTCompilationUnit acu) {
 
-        this.symResolver = globalProc.getTypeSystem().bootstrapResolver();
         this.globalProc = globalProc;
         this.logger = logger;
         this.typeInferenceLogger = typeInfLogger;

@@ -235,13 +235,13 @@ SNIPPET_ATTR="\"" [^"\""]* "\"" | "'" [^"'"]* "'"
     {HTML_ATTR_NAME}       {                              return JdocTokenType.SNIPPET_ATTR_NAME; }
     "="                    {                              return JdocTokenType.SNIPPET_EQ;        }
     {SNIPPET_ATTR}         {                              return JdocTokenType.SNIPPET_ATTR_VAL;  }
-    ":"                    { yybegin(SNIPPET_BODY);       return JdocTokenType.SNIPPET_SEP;    }
+    ":"                    { yybegin(SNIPPET_BODY);       return JdocTokenType.SNIPPET_COLON;    }
     {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
     [^]                    {                              return JdocTokenType.BAD_CHAR;       }
 }
 
 <SNIPPET_BODY> {
-    "//"                   { yybegin(SNIPPET_COMMENT);       return JdocTokenType.SNIPPET_SEP;    }
+    "//"                   { yybegin(SNIPPET_COMMENT);       return JdocTokenType.SNIPPET_COMMENT;    }
     {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
     [^]                    {                              return JdocTokenType.BAD_CHAR;       }
 }

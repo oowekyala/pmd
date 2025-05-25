@@ -155,8 +155,8 @@ enum KnownInlineTagParser implements InlineTagParser {
 
     private static @NonNull String consumeInlineTag(MainJdocParser parser) {
         StringBuilder builder = new StringBuilder();
-        parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
-                            it -> it.getKind().isSignificant(),
+        parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKindEnum()),
+                            it -> it.getKindEnum().isSignificant(),
                             tok -> builder.append(tok.getImage()));
         return builder.toString();
     }

@@ -7,7 +7,7 @@ package net.sourceforge.pmd.lang;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.GenericToken;
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.lang.ast.LexException;
 
 /**
  * Common interface for interacting with parser Token Managers.
@@ -15,12 +15,10 @@ import net.sourceforge.pmd.lang.ast.TokenMgrError;
 public interface TokenManager<T extends GenericToken<T>> {
 
     /**
-     * Returns the next token in the chain. When the end of file is reached,
-     * the method {@link #isEof(GenericToken)} should return true on that token.
-     * If this method returns null, it is assumed the end of file is reached
-     * anyway.
+     * Returns the next token in the chain.
+     * If this method returns null, it is assumed the end of file is reached.
      *
-     * @throws TokenMgrError If a lex exception occurred.
+     * @throws LexException If a lex exception occurred.
      */
     @Nullable T getNextToken();
 

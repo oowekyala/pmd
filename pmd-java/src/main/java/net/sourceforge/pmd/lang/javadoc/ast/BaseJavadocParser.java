@@ -18,11 +18,15 @@ import java.util.function.Predicate;
 class BaseJavadocParser {
 
     protected TokenCursor<JdocToken> tokens;
+    protected final JavadocLexer lexer;
 
-    public BaseJavadocParser(JavadocLexer lexer) {this.tokens = new TokenCursor<>(lexer);}
+    public BaseJavadocParser(JavadocLexer lexer) {
+        this.tokens = new TokenCursor<>(lexer);
+        this.lexer = lexer;
+    }
 
     protected boolean skipWhitespace() {
-        while (head().getKind() == WHITESPACE && advance()) {
+        while (head().getKindEnum() == WHITESPACE && advance()) {
             // advance
         }
         return !tokens.isEoi();
@@ -33,11 +37,11 @@ class BaseJavadocParser {
     }
 
     protected boolean tokIs(JdocTokenType ttype) {
-        return tokens.head() != null && tokens.head().getKind() == ttype;
+        return tokens.head() != null && tokens.head().getKindEnum() == ttype;
     }
 
     protected boolean tokIsAny(EnumSet<JdocTokenType> ttype) {
-        return tokens.head() != null && ttype.contains(tokens.head().getKind());
+        return tokens.head() != null && ttype.contains(tokens.head().getKindEnum());
     }
 
 

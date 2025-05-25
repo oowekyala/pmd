@@ -4,30 +4,19 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import net.sourceforge.pmd.lang.BaseLanguageModule;
-import net.sourceforge.pmd.lang.LanguageVersionHandler;
-import net.sourceforge.pmd.lang.Parser;
-import net.sourceforge.pmd.lang.ParserOptions;
+import net.sourceforge.pmd.lang.impl.SimpleLanguageModuleBase;
 
 /**
  *
  */
-public class JavadocLanguage extends BaseLanguageModule {
+public class JavadocLanguage extends SimpleLanguageModuleBase {
 
-    static final JavadocLanguage INSTANCE = new JavadocLanguage();
+    public static final JavadocLanguage INSTANCE = new JavadocLanguage();
 
-    public static final String NAME = "Javadoc";
-    public static final String TERSE_NAME = "javadoc";
-
-    //todo unregistered
 
     public JavadocLanguage() {
-        super(NAME, "Javadoc", TERSE_NAME, "javadoc");
-        addDefaultVersion("", new LanguageVersionHandler() {
-            @Override
-            public Parser getParser(ParserOptions parserOptions) {
-                return task -> JavadocParserFacade.parseJavadoc(task.getTextDocument());
-            }
-        });
+        super(LanguageMetadata.withId("javadoc").name("Javadoc").extensions("_not_an_extension").dependsOnLanguage("java"),
+              () -> JavadocParserFacade::parseJavadoc);
     }
+
 }

@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldHaveText
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldHaveText
 
 
 class JdocSnippetTest : JdocParserTestSpec({

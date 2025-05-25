@@ -18,16 +18,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.lang.ast.AstInfo;
 import net.sourceforge.pmd.lang.ast.GenericToken;
+import net.sourceforge.pmd.lang.ast.Parser;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 import net.sourceforge.pmd.lang.ast.impl.GenericNode;
-import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
-import net.sourceforge.pmd.lang.document.Chars;
-import net.sourceforge.pmd.lang.document.TextDocument;
 
 
 /**
@@ -89,25 +89,24 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
      */
     class JdocComment extends AbstractJavadocNode implements RootNode {
 
-        private final TextDocument textDocument;
         private final AstInfo<JdocComment> astInfo;
         private @Nullable JavadocCommentOwner javaLeaf;
 
-        JdocComment(TextDocument textDocument) {
+        JdocComment(Parser.ParserTask task) {
             super(JavadocNodeId.ROOT);
-            this.textDocument = textDocument;
+            this.astInfo = new AstInfo<>(task, this);
         }
 
         @Override
-        public @NonNull TextDocument getTextDocument() {
-            return textDocument;
+        public AstInfo<JdocComment> getAstInfo() {
+            return astInfo;
         }
 
         @Override
         public @Nullable JSymbolTable getJavaSymbolTable() {
-            if (javaLeaf instanceof ASTAnyTypeDeclaration) {
+            if (javaLeaf instanceof ASTTypeDeclaration) {
                 // declarations of the body are in scope in here
-                return ((ASTAnyTypeDeclaration) javaLeaf).getBody().getSymbolTable();
+                return ((ASTTypeDeclaration) javaLeaf).getBody().getSymbolTable();
             }
             return javaLeaf == null ? null : javaLeaf.getSymbolTable();
         }
@@ -115,9 +114,9 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         /**
          * Returns the type of an empty reference.
          */
-        public @Nullable ASTAnyTypeDeclaration getContextType() {
-            if (javaLeaf instanceof ASTAnyTypeDeclaration) {
-                return (ASTAnyTypeDeclaration) javaLeaf;
+        public @Nullable ASTTypeDeclaration getContextType() {
+            if (javaLeaf instanceof ASTTypeDeclaration) {
+                return (ASTTypeDeclaration) javaLeaf;
             }
             return javaLeaf == null ? null : javaLeaf.getEnclosingType();
         }
@@ -150,7 +149,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         @NoAttribute
         public CharSequence getData() {
             return GenericToken.streamRange(getFirstToken(), getLastToken())
-                               .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
+                               .filter(it -> it.getKindEnum() == JdocTokenType.COMMENT_DATA)
                                .map(JdocToken::getImage)
                                .collect(Collectors.joining(" "));
         }
@@ -158,7 +157,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         public @Nullable JdocToken getSingleDataToken() {
             JdocToken found = null;
             for (JdocToken token : GenericToken.range(getFirstToken(), getLastToken())) {
-                if (token.getKind() == JdocTokenType.COMMENT_DATA) {
+                if (token.getKindEnum() == JdocTokenType.COMMENT_DATA) {
                     if (found != null) {
                         return null;
                     } else {
@@ -190,7 +189,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
 
         JdocCharacterReference(JdocToken tok) {
             super(JavadocNodeId.CHARACTER_REFERENCE);
-            assert tok.getKind() == JdocTokenType.CHARACTER_REFERENCE;
+            assert tok.getKindEnum() == JdocTokenType.CHARACTER_REFERENCE;
             setFirstToken(tok);
             setLastToken(tok);
 
@@ -281,7 +280,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
             if (actual == null) {
                 return "Unexpected end of input, expecting " + format(expected);
             }
-            String message = "Unexpected " + actual.getKind().format(actual) + " at " + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
+            String message = "Unexpected " + actual.getKindEnum().format(actual) + " at " + this.actual.getReportLocation().getStartPos().toDisplayStringWithColon();
             if (!expected.isEmpty()) {
                 return message + ", expecting " + format(expected);
             } else {
@@ -478,7 +477,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
         @NoAttribute
         public CharSequence getData() {
             return GenericToken.streamRange(getFirstToken(), getLastToken())
-                               .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
+                               .filter(it -> it.getKindEnum() == JdocTokenType.HTML_COMMENT_CONTENT)
                                .map(JdocToken::getImage)
                                .collect(Collectors.joining());
         }

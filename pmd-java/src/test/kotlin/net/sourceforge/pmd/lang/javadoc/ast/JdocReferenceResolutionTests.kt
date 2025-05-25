@@ -5,9 +5,9 @@
 package net.sourceforge.pmd.lang.javadoc.ast
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestSpec
 import net.sourceforge.pmd.lang.java.types.JClassType
+import net.sourceforge.pmd.lang.test.ast.shouldBeA
 
 
 class JdocReferenceResolutionTests : ParserTestSpec({

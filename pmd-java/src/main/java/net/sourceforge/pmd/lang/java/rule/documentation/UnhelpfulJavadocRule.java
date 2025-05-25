@@ -13,16 +13,15 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import net.sourceforge.pmd.RuleContext;
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTMethodOrConstructorDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -32,6 +31,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocToken;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 
 /**
@@ -44,7 +44,7 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
     }
 
     @Override
-    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+    public Object visit(ASTClassDeclaration node, Object data) {
         //        process(node, data);
         return super.visit(node, data);
     }
@@ -67,7 +67,7 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         return data;
     }
 
-    private void checkMethodComment(ASTMethodOrConstructorDeclaration method, RuleContext ctx) {
+    private void checkMethodComment(ASTExecutableDeclaration method, RuleContext ctx) {
         JdocComment javadoc = method.getJavadocTree();
         if (javadoc == null) {
             return;
@@ -75,7 +75,7 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
 
         ProblemCollector collector = new ProblemCollector();
 
-        List<ASTVariableDeclaratorId> formals = method.getFormalParameters().toStream().map(ASTFormalParameter::getVarId).toList();
+        List<ASTVariableId> formals = method.getFormalParameters().toStream().map(ASTFormalParameter::getVarId).toList();
 
         for (JdocBlockTag blockTag : javadoc.descendants(JdocBlockTag.class)) {
             switch (blockTag.getTagName()) {
@@ -92,13 +92,13 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         collector.report(ctx);
     }
 
-    private void checkParamTag(ProblemCollector collector, List<ASTVariableDeclaratorId> formals, JdocBlockTag paramTag) {
+    private void checkParamTag(ProblemCollector collector, List<ASTVariableId> formals, JdocBlockTag paramTag) {
         String paramName = paramTag.getParamName();
         if (paramName == null) {
             return;
         }
 
-        ASTVariableDeclaratorId formal = getFormal(formals, paramName);
+        ASTVariableId formal = getFormal(formals, paramName);
         if (formal == null) {
             return;
         }
@@ -130,8 +130,8 @@ public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
         }
     }
 
-    private ASTVariableDeclaratorId getFormal(List<ASTVariableDeclaratorId> formals, String paramName) {
-        for (ASTVariableDeclaratorId fi : formals) {
+    private ASTVariableId getFormal(List<ASTVariableId> formals, String paramName) {
+        for (ASTVariableId fi : formals) {
             if (fi.getName().equals(paramName)) {
                 return fi;
             }

@@ -6,9 +6,8 @@ package net.sourceforge.pmd.lang.javadoc.ast
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldHaveText
-import net.sourceforge.pmd.lang.java.ast.methodRef
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldHaveText
 
 
 class JdocInlineTagParserTests : JdocParserTestSpec({

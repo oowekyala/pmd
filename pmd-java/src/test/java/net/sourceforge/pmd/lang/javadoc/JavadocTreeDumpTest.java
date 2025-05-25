@@ -10,14 +10,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Test;
 
 import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper;
-import net.sourceforge.pmd.lang.ast.test.BaseTreeDumpTest;
-import net.sourceforge.pmd.lang.ast.test.RelevantAttributePrinter;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
+import net.sourceforge.pmd.lang.test.ast.BaseParsingHelper;
+import net.sourceforge.pmd.lang.test.ast.BaseTreeDumpTest;
+import net.sourceforge.pmd.lang.test.ast.RelevantAttributePrinter;
 
 /**
  *

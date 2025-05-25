@@ -11,8 +11,8 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
+import net.sourceforge.pmd.lang.ast.LexException;
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
 
 final class TokenCursor<T extends PrevLinkedToken<T>> {
 
@@ -35,7 +35,7 @@ final class TokenCursor<T extends PrevLinkedToken<T>> {
      * input is reached. In the latter case, the cursor stays on the last
      * token.
      *
-     * @throws TokenMgrError If the lexer throws
+     * @throws LexException If the lexer throws
      */
     public boolean advance() {
         if (isEoi) {

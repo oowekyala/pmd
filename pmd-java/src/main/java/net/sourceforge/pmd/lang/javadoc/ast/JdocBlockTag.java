@@ -57,7 +57,7 @@ public class JdocBlockTag extends AbstractJavadocNode {
 
 
     void setParamName(@NonNull JdocToken paramToken) {
-        assert paramToken.getKind() == JdocTokenType.PARAM_NAME;
+        assert paramToken.getKindEnum() == JdocTokenType.PARAM_NAME;
         Chars image = paramToken.getImageCs();
         if (image.startsWith('<', 0)) {
             // keep the '<' to be able to interpret it later, but remove the '>'
