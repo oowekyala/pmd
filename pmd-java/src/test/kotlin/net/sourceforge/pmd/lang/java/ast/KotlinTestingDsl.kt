@@ -24,31 +24,6 @@ import java.beans.PropertyDescriptor
 import java.io.PrintStream
 import java.util.*
 
-interface Ver<T : Ver<T>> : Comparable<T> {
-
-    val ordinal: Int
-
-    val values: Array<T>
-
-    val displayName: String
-
-    val parser: BaseParsingHelper<*, *>
-
-    operator fun not(): List<T> = values.toList() - (this as T)
-
-
-    /**
-     * Overloads the range operator, e.g. (`J9..J11`).
-     * If both operands are the same, a singleton list is returned.
-     */
-    operator fun rangeTo(last: T): List<T> =
-            when {
-                last == this                -> listOf(this as T)
-                last.ordinal > this.ordinal -> values.filter { ver -> ver >= (this as T) && ver <= last }
-                else                        -> values.filter { ver -> ver <= (this as T) && ver >= last }
-            }
-}
-
 /**
  * Represents the different Java language versions.
  */
@@ -81,9 +56,9 @@ enum class JavaVersion : Comparable<JavaVersion> {
      */
     operator fun rangeTo(last: JavaVersion): List<JavaVersion> =
             when {
-                last == this                -> listOf(this)
+                last == this -> listOf(this)
                 last.ordinal > this.ordinal -> values().filter { ver -> ver >= this && ver <= last }
-                else                        -> values().filter { ver -> ver <= this && ver >= last }
+                else -> values().filter { ver -> ver <= this && ver >= last }
             }
 
     companion object {
@@ -111,7 +86,6 @@ object CustomTreePrinter : KotlintestBeanTreePrinter<Node>(NodeTreeLikeAdapter) 
             when {
                 prop.name in ignoredProps                          -> false
                 prop.readMethod?.declaringClass !== node.javaClass -> false
-
                 // avoid outputting too much, it's bad for readability
                 node is ASTNumericLiteral                          -> when {
                     node.isIntegral -> prop.name == "valueAsInt"
