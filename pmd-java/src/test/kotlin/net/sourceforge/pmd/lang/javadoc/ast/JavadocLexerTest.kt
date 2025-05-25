@@ -7,6 +7,8 @@ package net.sourceforge.pmd.lang.javadoc.ast
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.*
+import org.assertj.core.util.diff.DiffUtils
+import org.junit.ComparisonFailure
 
 
 class JavadocLexerTest : FunSpec({
@@ -65,7 +67,7 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_DATA, "some javadoc"),
                 Tok(WHITESPACE, " "),
                 Tok(LINE_BREAK, "\n"),
-                Tok(LEADER,"                "),
+                Tok(WHITESPACE, "                "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
@@ -96,13 +98,13 @@ class JavadocLexerTest : FunSpec({
  */
 """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " * "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "fileText    Full file text"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " * "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "startOffset Start offset in the file text"),
@@ -123,15 +125,15 @@ class JavadocLexerTest : FunSpec({
  */
 """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " * "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "abc"),
                 Tok(WHITESPACE, "   "),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " *    "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "    "),
                 Tok(COMMENT_DATA, "^^^"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " *    "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "    "),
                 Tok(COMMENT_DATA, "those are spaces"),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, " "),
@@ -151,21 +153,21 @@ class JavadocLexerTest : FunSpec({
  */
 """.trim().shouldHaveTokens(
                 Tok(COMMENT_START),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " * "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "fileText"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " *          "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "          "),
                 Tok(COMMENT_DATA, "Full file text"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " * "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, " "),
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "startOffset"),
-                Tok(LINE_BREAK, "\n"),
-                Tok(LEADER, " *          "),
+                Tok(LINE_BREAK, "\n *"),
+                Tok(WHITESPACE, "          "),
                 Tok(COMMENT_DATA, "Start offset in the file text"),
                 Tok(LINE_BREAK, "\n"),
                 Tok(WHITESPACE, " "),
@@ -390,7 +392,11 @@ private fun JavadocToken.assertMatches(ttype: JavadocTokenType, start: Int, end:
 
 
 private fun String.shouldHaveTokens(vararg tokens: Tok) {
-    val toks = JavadocLexer(this).consume().map { Tok(it.kind, it.image) }
+    val actual = JavadocLexer(this).consume().map { Tok(it.kind, it.image) }
 
-    toks shouldBe tokens.toList()
+    val diff = DiffUtils.diff(tokens.toList(), actual)
+    if (diff.deltas.isEmpty()) {
+        return
+    }
+    throw ComparisonFailure("Tokens didn't match", tokens.joinToString(separator = ",\n"), actual.joinToString(separator = ",\n"))
 }
