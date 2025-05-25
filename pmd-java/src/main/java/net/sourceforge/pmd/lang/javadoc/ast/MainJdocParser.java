@@ -49,12 +49,12 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocValue;
 
-class JavadocParser extends BaseJavadocParser {
+class MainJdocParser extends BaseJavadocParser {
 
     protected final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
     private final JavadocLexer lexer;
 
-    JavadocParser(JavadocLexer lexer) {
+    MainJdocParser(JavadocLexer lexer) {
         super(lexer);
         this.lexer = lexer;
     }
@@ -424,7 +424,7 @@ class JavadocParser extends BaseJavadocParser {
     enum KnownInlineTagParser implements TagParser {
         LINK("@link") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 parser.advance();
                 parser.skipWhitespace();
                 JdocToken firstTok = parser.head().getPrevious();
@@ -446,14 +446,14 @@ class JavadocParser extends BaseJavadocParser {
 
         LINKPLAIN("@linkplain") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 return LINK.parse(name, parser);
             }
         },
 
         CODE("@code") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 parser.advance();
                 String data = consumeInlineTag(parser);
                 return new JdocLiteral(name, data);
@@ -462,14 +462,14 @@ class JavadocParser extends BaseJavadocParser {
 
         LITERAL("@literal") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 return CODE.parse(name, parser);
             }
         },
 
         VALUE("@value") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 parser.advance();
                 parser.skipWhitespace();
                 JdocToken firstTok = parser.head().getPrevious();
@@ -489,7 +489,7 @@ class JavadocParser extends BaseJavadocParser {
         },
         INHERIT_DOC("@inheritDoc") {
             @Override
-            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+            public AbstractJavadocNode parse(String name, MainJdocParser parser) {
                 parser.advance();
                 parser.skipWhitespace();
                 if (parser.tokIs())
@@ -531,14 +531,14 @@ class JavadocParser extends BaseJavadocParser {
             return LOOKUP.get(name);
         }
 
-        public static JdocUnknownInlineTag parseUnknown(String name, JavadocParser parser) {
+        public static JdocUnknownInlineTag parseUnknown(String name, MainJdocParser parser) {
             parser.advance();
             String data = consumeInlineTag(parser);
             return new JdocUnknownInlineTag(name, data);
         }
 
         @NonNull
-        private static String consumeInlineTag(JavadocParser parser) {
+        private static String consumeInlineTag(MainJdocParser parser) {
             StringBuilder builder = new StringBuilder();
             parser.consumeUntil(it -> INLINE_TAG_ENDERS.contains(it.getKind()),
                                 it -> it.getKind().isSignificant(),
@@ -563,7 +563,7 @@ class JavadocParser extends BaseJavadocParser {
          *
          * @return A node for the tag
          */
-        AbstractJavadocNode parse(String name, JavadocParser parser);
+        AbstractJavadocNode parse(String name, MainJdocParser parser);
     }
 
 

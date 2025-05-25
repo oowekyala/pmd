@@ -23,7 +23,8 @@ import net.sourceforge.pmd.lang.ast.impl.JavaInputReader;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
 /**
- * Wraps the generated JFlex lexer.
+ * Wraps the generated JFlex lexer into a {@link TokenStream}. The parsers
+ * use the additional abstraction {@link TokenCursor}.
  */
 class JavadocLexer implements TokenManager<JdocToken> {
 

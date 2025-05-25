@@ -9,20 +9,20 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 /**
  * Main entry point to parse javadoc comments.
  */
-public final class JavadocParserUtils {
+public final class JavadocParsingUtils {
 
     /**
      * Parse the region of the file text enclosed by the start and end
-     * as a {@link JdocComment}. The region must start with the token {@code /*}
+     * as a {@link JdocComment}. The region must start with the token {@code /**}
      * and end with the token {@code * /}.
      *
      * @param fullFileText   File text
-     * @param startInclusive Start offset
-     * @param endExclusive   End offset
+     * @param startInclusive Start offset of the comment (index of the opening '/' char)
+     * @param endExclusive   End offset of the comment (index after the closing '/' char)
      *
-     * @return A comment
+     * @return A Javadoc comment tree
      */
     public static JdocComment parseJavadoc(String fullFileText, int startInclusive, int endExclusive) {
-        return new JavadocParser(new JavadocLexer(fullFileText, startInclusive, endExclusive)).parse();
+        return new MainJdocParser(new JavadocLexer(fullFileText, startInclusive, endExclusive)).parse();
     }
 }

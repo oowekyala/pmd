@@ -11,9 +11,11 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
+ * Shared utilities for the several javadoc parsers.
+ *
  * @author Clément Fournier
  */
-public class BaseJavadocParser {
+class BaseJavadocParser {
 
     protected TokenCursor<JdocToken> tokens;
 
