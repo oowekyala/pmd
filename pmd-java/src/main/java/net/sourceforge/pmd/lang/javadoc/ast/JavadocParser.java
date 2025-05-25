@@ -486,6 +486,27 @@ class JavadocParser extends BaseJavadocParser {
                 }
                 return tag;
             }
+        },
+        INHERIT_DOC("@inheritDoc") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                parser.advance();
+                parser.skipWhitespace();
+                if (parser.tokIs())
+                JdocToken firstTok = parser.head().getPrevious();
+                assert firstTok != null;
+
+                JdocValue tag = new JdocValue(name);
+                JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
+                if (firstLabelTok != null) {
+                    JdocMalformed label = new JdocMalformed(JdocTokenType.EMPTY_SET, firstLabelTok);
+                    tag.pushChild(label);
+                    while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
+                        // skip
+                    }
+                }
+                return tag;
+            }
         }
 
         // TODO @value
