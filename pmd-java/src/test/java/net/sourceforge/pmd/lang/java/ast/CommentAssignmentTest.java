@@ -18,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import net.sourceforge.pmd.lang.java.BaseParserTest;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
 
 class CommentAssignmentTest extends BaseParserTest {
 
@@ -88,6 +90,25 @@ class CommentAssignmentTest extends BaseParserTest {
 
         assertCommentEquals(node.descendants(ASTPackageDeclaration.class).firstOrThrow(),
                             "/** Comment 1 */");
+    }
+
+    @Test
+    public void testReferencesInComment() {
+
+        ASTCompilationUnit node = java.parse("/** {@link #field} */\n"
+                                                 + "class Foo {\n"
+                                                 + " public static final int field = 0;\n"
+                                                 + "}");
+
+
+        ASTAnyTypeDeclaration type = node.descendants(ASTAnyTypeDeclaration.class).firstOrThrow();
+        ASTVariableDeclaratorId fieldId = node.descendants(ASTVariableDeclaratorId.class).firstOrThrow();
+        JdocComment tree = type.getJavadocTree();
+        assertNotNull(tree);
+        JdocFieldRef ref = tree.descendants(JdocFieldRef.class).firstOrThrow();
+
+        assertNotNull(ref.resolveRef());
+        assertEquals(fieldId, ref.resolveRef().getSymbol().tryGetNode());
     }
 
     @Test

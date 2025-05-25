@@ -14,8 +14,6 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
     /*
         TODO tests:
          - html comments
-         - method reference
-         - block tags
     */
 
     parserTest("Test @link inline tags") {
