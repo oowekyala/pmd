@@ -13,18 +13,19 @@ public enum JavadocTokenType {
     /** Name of an inline or block tag. */
     TAG_NAME("@<tag name>", false),
     WHITESPACE("<whitespace>", false),
+    /**
+     * A line break starts with a line terminator ({@code \n | \r\n}),
+     * contains the following whitespace chars
+     * <pre>
+     * lineBreak ::= ("\n" | "\r\n") {:whitespace:}* ("*" {:whitespace:}*)
+     * </pre>
+     */
+    LINE_BREAK("<line break>", false),
     INLINE_TAG_START("{", true),
     INLINE_TAG_END("}", true),
     COMMENT_DATA("<comment data>", false),
 
-    VAL_COMMA(",", true),
-    VAL_LPAREN("(", true),
-    VAL_RPAREN(")", true),
-    VAL_HASH("#", true),
-    VAL_PART("<identifier>", false),
-
     BAD_CHAR("<bad character>", false),
-
 
     HTML_LT("<", true),
     HTML_GT(">", true),
