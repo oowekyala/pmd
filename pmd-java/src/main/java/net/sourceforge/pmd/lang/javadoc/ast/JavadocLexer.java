@@ -5,16 +5,15 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.ATTR_DELIMITERS;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.BAD_CHAR;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_DATA;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_END;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_DQUOTE;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_SQUOTE;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_ATTR_VAL;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_COMMENT_CONTENT;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -22,6 +21,16 @@ import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
 public class JavadocLexer implements TokenManager<JavadocToken> {
+
+    // the flexer produces single chars for those tokens, we merge them here
+    private static final EnumSet<JavadocTokenType> MERGED_TOKENS =
+        EnumSet.of(
+            COMMENT_DATA,
+            HTML_COMMENT_CONTENT,
+            HTML_ATTR_VAL,
+            BAD_CHAR
+        );
+
 
     private final TokenDocument<JavadocToken> doc;
     private int maxOffset;
@@ -80,7 +89,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
             if (tok == null) {
                 // EOF
                 return null;
-            } else if (JavadocTokenType.MERGED_TOKENS.contains(tok)) {
+            } else if (MERGED_TOKENS.contains(tok)) {
                 // those tokens are single chars, we merge them here
                 while ((curOffset + len) < maxOffset
                     && (pendingTok = lexer.advance()) == tok) {
@@ -103,8 +112,7 @@ public class JavadocLexer implements TokenManager<JavadocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);// TODO
         }
-        return null;
     }
 }

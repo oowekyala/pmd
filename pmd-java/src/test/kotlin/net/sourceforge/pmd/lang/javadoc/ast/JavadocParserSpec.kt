@@ -45,6 +45,6 @@ enum class JavadocVer : Ver<JavadocVer> {
     override val values: Array<JavadocVer> get() = values()
     override val displayName: String get() = "Javadoc"
 
-    override fun parse(code: String): RootNode = JavadocParser(code).parse()
+    override fun parse(code: String): RootNode = JavadocParser(JavadocLexer(code)).parse()
 
 }
