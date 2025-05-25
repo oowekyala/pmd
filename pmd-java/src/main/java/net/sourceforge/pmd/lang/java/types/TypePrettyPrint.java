@@ -171,7 +171,7 @@ public final class TypePrettyPrint {
             JClassType enclosing = t.getEnclosingType();
             boolean isAnon = t.getSymbol().isAnonymousClass();
 
-            if (enclosing != null && !isAnon) {
+            if (enclosing != null && !isAnon && sb.qualifyNames) {
                 visitClass(enclosing, sb);
                 sb.append('#');
             } else if (t.hasErasedSuperTypes() && !t.isRaw()) {

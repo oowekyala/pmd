@@ -79,6 +79,30 @@ Determines whether the dimensions of non-header comments found are within the sp
         </example>
     </rule>
 
+    <rule name="EmptyGeneratedJavadoc"
+          language="java"
+          since="7.0.0"
+          message="This {0} adds no information and should be fleshed out or removed"
+          class="net.sourceforge.pmd.lang.java.rule.documentation.EmptyGeneratedJavadocRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_documentation.html#emptygeneratedjavadoc">
+        <description>
+            TODO
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+/**
+ * joinOnto.
+ *
+ * @param sb        StringBuilder
+ * @param items     Object[]
+ * @param separator String
+ */
+ void joinOnto(StringBuilder sb, Object[] items, String separator) {}
+]]>
+        </example>
+    </rule>
+
     <rule name="UncommentedEmptyConstructor"
           language="java"
           since="3.4"
