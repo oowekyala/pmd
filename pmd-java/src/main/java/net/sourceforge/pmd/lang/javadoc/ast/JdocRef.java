@@ -23,7 +23,7 @@ public interface JdocRef extends JavadocNode {
          * Returns the reference to the owner class.
          */
         default JdocClassRef getOwnerClassRef() {
-            return (JdocClassRef) jjtGetChild(0);
+            return (JdocClassRef) getFirstChild();
         }
     }
 
@@ -57,7 +57,7 @@ public interface JdocRef extends JavadocNode {
 
         JdocFieldRef(JdocClassRef classRef, JdocToken fieldName) {
             super(JavadocNodeId.FIELD_REF);
-            jjtAddChild(classRef, 0);
+            addChild(classRef, 0);
             setFirstToken(classRef.getFirstToken());
             setLastToken(fieldName);
         }
@@ -79,7 +79,7 @@ public interface JdocRef extends JavadocNode {
 
         public JdocExecutableRef(JdocClassRef classRef, JdocToken nametok) {
             super(JavadocNodeId.EXECUTABLE_REF);
-            jjtAddChild(classRef, 0);
+            addChild(classRef, 0);
             setFirstToken(classRef.getFirstToken());
             name = nametok.getImage();
         }

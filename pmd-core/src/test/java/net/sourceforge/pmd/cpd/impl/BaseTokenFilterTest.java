@@ -50,11 +50,6 @@ class BaseTokenFilterTest {
         }
 
         @Override
-        public boolean isEof() {
-            return text == null;
-        }
-
-        @Override
         public String getImageCs() {
             return text;
         }
@@ -98,10 +93,6 @@ class BaseTokenFilterTest {
             super(tokenManager);
         }
 
-        @Override
-        protected boolean shouldStopProcessing(final T currentToken) {
-            return currentToken == null;
-        }
 
         @Override
         protected void analyzeTokens(final T currentToken, final Iterable<T> remainingTokens) {

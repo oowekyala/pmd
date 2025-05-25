@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
 import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.util.document.FileLocation;
 
 /** A token implementation for Javadoc nodes. */
 public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDocument> implements PrevLinkedToken<JdocToken> {
@@ -53,6 +53,12 @@ public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDoc
     @Override
     public Chars getImageCs() {
         return document.getTextDocument().sliceTranslatedText(getRegion());
+    }
+
+
+    @Override
+    public FileLocation getReportLocation() {
+        return document.getTextDocument().toLocation(getRegion());
     }
 
     /** This always returns null. There are no comment tokens in this javadoc grammar. */

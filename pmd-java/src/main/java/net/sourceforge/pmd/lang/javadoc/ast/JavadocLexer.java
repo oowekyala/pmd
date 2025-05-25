@@ -20,6 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.util.document.TextDocument;
 import net.sourceforge.pmd.util.document.TextRegion;
 
 /**
@@ -50,11 +51,9 @@ class JavadocLexer implements TokenManager<JdocToken> {
 
     /**
      * Build a lexer that scans the whole text.
-     *
-     * @see #JavadocLexer(String, int, int)
      */
-    public JavadocLexer(String commentText) {
-        this(commentText, 0, commentText.length());
+    public JavadocLexer(TextDocument commentText) {
+        this(commentText, TextRegion.fromOffsetLength(0, commentText.getLength()));
     }
 
     /**
@@ -63,12 +62,11 @@ class JavadocLexer implements TokenManager<JdocToken> {
      * lexer stops when the region is ended, or when it encounters a "*" "/"
      * token (end of comment), whichever comes first.
      *
-     * @param fullText    Full file text, may contain Java unicode escapes
-     * @param startOffset Start offset in the file text
-     * @param endOffset   End offset (exclusive) in the file text
+     * @param fullText Full file text, may contain Java unicode escapes
+     * @param region   Region of the file
      */
-    public JavadocLexer(String fullText, int startOffset, int endOffset) {
-        this(TextRegion.fromBothOffsets(startOffset, endOffset), new JavadocTokenDocument(fullText), JavadocFlexer.YYINITIAL);
+    public JavadocLexer(TextDocument fullText, TextRegion region) {
+        this(region, new JavadocTokenDocument(fullText), JavadocFlexer.YYINITIAL);
     }
 
     /**

@@ -122,7 +122,7 @@ public class BaseTokenFilter<T extends GenericToken<T>> implements TokenManager<
      * @return True if the token filter has finished consuming all tokens, false otherwise
      */
     protected boolean shouldStopProcessing(T currentToken) {
-        return currentToken.isEof();
+        return currentToken == null;
     }
 
     private final class RemainingTokens implements Iterable<T> {
