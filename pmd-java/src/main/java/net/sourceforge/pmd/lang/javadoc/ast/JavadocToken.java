@@ -11,7 +11,7 @@ import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
 /** A token implementation for Javadoc nodes. */
-public class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<JavadocToken>> implements PrevLinkedToken<JavadocToken> {
+public final class JavadocToken extends OffsetBasedToken<JavadocToken, TokenDocument<JavadocToken>> implements PrevLinkedToken<JavadocToken> {
 
     @Nullable
     JavadocToken prev;
