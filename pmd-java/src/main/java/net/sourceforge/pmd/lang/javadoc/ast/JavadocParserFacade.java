@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import java.io.IOException;
 
+import net.sourceforge.pmd.annotation.InternalApi;
 import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
@@ -14,7 +15,11 @@ import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * Main entry point to parse javadoc comments.
+ *
+ * <p><b>None of this is published API, and compatibility can be broken anytime!</b>
+ * Use this only at your own risk.
  */
+@InternalApi
 public final class JavadocParserFacade {
 
     /**

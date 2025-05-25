@@ -7,6 +7,9 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import java.util.EnumSet;
 
+/**
+ * Token types for {@link JdocToken}.
+ */
 public enum JdocTokenType {
 
     /* ****************
