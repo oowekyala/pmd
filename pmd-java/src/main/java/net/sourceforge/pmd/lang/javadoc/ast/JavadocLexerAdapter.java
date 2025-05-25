@@ -44,7 +44,7 @@ public class JavadocLexerAdapter implements TokenManager {
             if (lexer == null) {
                 StringReader reader = new StringReader(doc.getFullText());
                 long skipped = reader.skip(curOffset);
-                if (skipped == 0) {
+                if (skipped == 0 && curOffset != 0) {
                     return null;
                 }
 
@@ -59,7 +59,7 @@ public class JavadocLexerAdapter implements TokenManager {
             }
 
             String image;
-            int len = 0;
+            int len = lexer.yylength();
             if (tok == null) {
                 // EOF
                 return null;
@@ -72,7 +72,6 @@ public class JavadocLexerAdapter implements TokenManager {
                 image = doc.getFullText().substring(curOffset, curOffset + len);
             } else {
                 image = tok.isConst() ? tok.getConstValue() : lexer.yytext();
-                len = lexer.yylength();
             }
 
             int start = curOffset;

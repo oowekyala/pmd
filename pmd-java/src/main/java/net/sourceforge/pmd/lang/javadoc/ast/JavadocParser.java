@@ -5,22 +5,22 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 
-import java.io.IOException;
-import java.io.Reader;
-
-import net.sourceforge.pmd.lang.java.ast.ParseException;
-
 public class JavadocParser {
 
-    private final CharSequence fileText;
-    private final Reader reader;
+    private final JavadocLexerAdapter lexer;
 
-    private int curOffset;
+    public JavadocParser(String fileText, int startOffset, int maxOffset) {
+        lexer = new JavadocLexerAdapter(fileText, startOffset, maxOffset);
+    }
 
-    public JavadocParser(Reader reader, int startOffset, CharSequence fileText) {
-        this.reader = reader;
-        this.curOffset = startOffset;
-        this.fileText = fileText;
+    public JavadocComment parse() {
+        JavadocComment comment = new JavadocComment();
+        JavadocToken ntoken = lexer.getNextToken();
+        if (ntoken.getKind() == JavadocTokenType.COMMENT_START) {
+
+        }
+
+        return comment;
     }
 
 }
