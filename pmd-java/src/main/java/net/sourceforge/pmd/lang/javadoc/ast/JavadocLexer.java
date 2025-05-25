@@ -12,15 +12,16 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_ATTR_VAL;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.HTML_COMMENT_CONTENT;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
-import net.sourceforge.pmd.lang.ast.LexException;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.util.document.Chars;
+
+import com.sun.tools.example.debug.expr.TokenMgrError;
 
 /**
  * Wraps the generated JFlex lexer into a {@link TokenManager}. The parsers
@@ -94,7 +95,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
         this.initialState = initialState;
     }
 
-    public JavadocTokenDocument getDoc() {
+    JavadocTokenDocument getDoc() {
         return doc;
     }
 
@@ -108,16 +109,14 @@ class JavadocLexer implements TokenManager<JdocToken> {
 
     @Override
     @SuppressWarnings("PMD.AssignmentInOperand")
-    public @Nullable JdocToken getNextToken() {
+    public @Nullable JdocToken getNextToken() throws TokenMgrError {
 
         try {
             if (lexer == null) {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                Reader reader = doc.getFullText().slice(curOffset, maxOffset - curOffset).newReader();
-                this.lexer = new JavadocFlexer(reader);
-                lexer.yybegin(initialState);
+                return openLexer();
             }
 
             if (prevToken != null && prevToken.next != null) {
@@ -166,7 +165,24 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw new LexException(-1, -1, null, "Error lexing Javadoc comment", e);
+            throw lexerError(e);
         }
+    }
+
+    private TokenMgrError lexerError(@Nullable Throwable e) {
+        return new TokenMgrError(-1, -1, null, "Error lexing Javadoc comment", e);
+    }
+
+    private JdocToken openLexer() throws IOException {
+        Chars slice = doc.getFullText().slice(curOffset, maxOffset - curOffset);
+        this.lexer = new JavadocFlexer(slice.newReader());
+        lexer.yybegin(initialState);
+        JdocTokenType firstKind = lexer.advance();
+        if (firstKind != JdocTokenType.COMMENT_START) {
+            throw lexerError(null);
+        }
+        JdocToken firstToken = new JdocToken(firstKind, "/**", 0, 3, doc);
+        doc.setFirstToken(firstToken);
+        return firstToken;
     }
 }
