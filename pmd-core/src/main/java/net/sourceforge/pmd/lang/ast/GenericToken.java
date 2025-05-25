@@ -153,5 +153,4 @@ public interface GenericToken<T extends GenericToken<T>> extends Comparable<T>, 
      * internal API and may change at any time when the language's grammar is changed.
      */
     int getKind();
-
 }

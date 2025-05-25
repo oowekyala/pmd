@@ -75,7 +75,7 @@ public class AntlrToken implements GenericToken<AntlrToken> {
 
     @Override
     public boolean isEof() {
-        return token.getType() == Token.EOF;
+        return kind == Token.EOF;
     }
 
     @Override

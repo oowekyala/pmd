@@ -56,7 +56,7 @@ public class ConfusingArgumentToVarargsMethodRule extends AbstractJavaRulechainR
             } else {
                 message = "Unclear if a varargs or non-varargs call is intended. Cast to {0} or {0}[] to clarify intent.";
             }
-            asCtx(data).addViolationWithMessage(varargsArg, message, TypePrettyPrint.prettyPrint(expectedComponent, TypePrettyPrint.withSimpleNames()));
+            asCtx(data).addViolationWithMessage(varargsArg, message, TypePrettyPrint.prettyPrintWithSimpleNames(expectedComponent));
         }
 
         return null;

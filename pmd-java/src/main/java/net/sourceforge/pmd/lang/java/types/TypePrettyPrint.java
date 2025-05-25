@@ -29,12 +29,12 @@ public final class TypePrettyPrint {
 
     }
 
-    public static TypePrettyPrinter withSimpleNames() {
-        return new TypePrettyPrinter().qualifyNames(false);
-    }
-
     public static @NonNull String prettyPrint(@NonNull JTypeVisitable t) {
         return prettyPrint(t, new TypePrettyPrinter());
+    }
+
+    public static @NonNull String prettyPrintWithSimpleNames(@NonNull JTypeVisitable t) {
+        return prettyPrint(t, new TypePrettyPrinter().qualifyNames(false));
     }
 
     public static String prettyPrint(@NonNull JTypeVisitable t, TypePrettyPrinter prettyPrinter) {

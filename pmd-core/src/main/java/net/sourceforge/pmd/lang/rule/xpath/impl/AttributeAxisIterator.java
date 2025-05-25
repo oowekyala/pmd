@@ -92,7 +92,7 @@ public class AttributeAxisIterator implements Iterator<Attribute> {
                          try {
                              return new MethodWrapper(m);
                          } catch (ReflectiveOperationException e) {
-                             throw AssertionUtil.shouldNotReachHere(e, "Method '" + m + "' should be accessible, but: " + e);
+                             throw AssertionUtil.shouldNotReachHere("Method '" + m + "' should be accessible, but: " + e, e);
                          }
                      })
                      .collect(Collectors.toList());

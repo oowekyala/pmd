@@ -15,6 +15,8 @@ import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextRegion;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocParserFacade;
 
 /**
  * A {@link JavaComment} that has Javadoc content.
@@ -40,6 +42,11 @@ public final class JavadocComment extends JavaComment {
                 .stream()
                 .map(JavaComment::getToken)
                 .collect(Collectors.toList());
+    }
+
+    public JavadocNode.JdocComment getJdocTree() {
+        // FIXME doesn't account for markdown
+        return JavadocParserFacade.parseJavaToken(this, tokens.get(0));
     }
 
     @Override
