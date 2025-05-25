@@ -23,11 +23,15 @@ import net.sourceforge.pmd.util.document.TextFile;
 public final class JavadocParserFacade {
 
     /**
-     * Parse the region of the file text enclosed by the start and end
-     * as a {@link JdocComment}. The region must start with the token {@code /**}
-     * and end with the token {@code * /}.
+     * Parse the given text document as a javadoc "file". The document must start
+     * with the token {@code /**} and end with the token {@code * /} (though this
+     * is not enforced, lexing just stops on EOF or the comment end marker).
      *
-     * @param document   Text docuemnt
+     * <p>Note that java unicode escapes are not expected to occur in the file,
+     * because there is already a preliminary translation phase before we parse
+     * java source.
+     *
+     * @param document Text document for the comment
      *
      * @return A Javadoc comment tree
      */
@@ -36,13 +40,17 @@ public final class JavadocParserFacade {
         return new MainJdocParser(lexer).parse();
     }
 
-    public static JdocComment parseJavadoc(JavaccToken token) {
+    /**
+     * Parse a <i>Java</i> token corresponding to a javadoc comment as if
+     * with {@link #parseJavadoc(TextDocument)}.
+     */
+    public static JdocComment parseJavaToken(JavaccToken token) {
         TextDocument baseDocument = token.getDocument().getTextDocument();
         // todo subdocuments
         try {
             TextDocument textDocument = TextDocument.create(
                 TextFile.forReader(
-                    baseDocument.getText().slice(token.getRegion()).newReader(),
+                    baseDocument.sliceTranslatedText(token.getRegion()).newReader(),
                     baseDocument.getDisplayName(),
                     baseDocument.getLanguageVersion() // a java version
                 ).build()

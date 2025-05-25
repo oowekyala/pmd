@@ -130,7 +130,7 @@ public enum JdocTokenType {
     static final EnumSet<JdocTokenType> EMPTY_SET = EnumSet.noneOf(JdocTokenType.class);
 
     private final boolean isConst;
-    private String value;
+    private final String value;
 
     JdocTokenType(String value, boolean isConst) {
         this.value = value;

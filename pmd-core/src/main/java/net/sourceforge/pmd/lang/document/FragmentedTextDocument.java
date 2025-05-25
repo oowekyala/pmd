@@ -19,7 +19,7 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
 
     FragmentedTextDocument(TextDocument base, Fragment firstFragment, Fragment lastFragment) {
         super(base);
-        assert firstFragment != lastFragment; // NOPMD
+        assert firstFragment != lastFragment : "Normally if there is a single fragment another implementation should be used"; // NOPMD
         this.text = toChars(firstFragment, lastFragment);
         this.lastAccessedFragment = firstFragment;
     }

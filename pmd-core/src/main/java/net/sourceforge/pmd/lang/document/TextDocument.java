@@ -11,6 +11,7 @@ import java.io.Reader;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 /**
  * Represents a textual document, providing methods to edit it incrementally
@@ -280,7 +281,7 @@ public interface TextDocument extends Closeable {
         try {
             return create(textFile);
         } catch (IOException e) {
-            throw new AssertionError("String text file should never throw IOException", e);
+            throw AssertionUtil.shouldNotReachHere("String text file should never throw IOException", e);
         }
     }
 }

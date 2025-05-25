@@ -58,8 +58,7 @@ enum KnownBlockTagParser implements BlockTagParser {
         return new JdocSimpleBlockTag(JavadocNodeId.SIMPLE_BLOCK_TAG, name);
     }
 
-    @NonNull
-    static JdocBlockTag selectAndParse(String name, MainJdocParser parser) {
+    static @NonNull JdocBlockTag selectAndParse(String name, MainJdocParser parser) {
         BlockTagParser tagParser = LOOKUP.getOrDefault(name, UNKNOWN_PARSER);
         assert tagParser != null;
         return tagParser.parse(name, parser);
