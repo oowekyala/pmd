@@ -86,6 +86,7 @@ object CustomTreePrinter : KotlintestBeanTreePrinter<Node>(NodeTreeLikeAdapter) 
             when {
                 prop.name in ignoredProps                          -> false
                 prop.readMethod?.declaringClass !== node.javaClass -> false
+
                 // avoid outputting too much, it's bad for readability
                 node is ASTNumericLiteral                          -> when {
                     node.isIntegral -> prop.name == "valueAsInt"

@@ -103,7 +103,7 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         }
     }
 
-    open abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val javaVersion: V) {
+    abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val javaVersion: V) {
 
 
         /**

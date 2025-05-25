@@ -106,10 +106,10 @@ class JavadocParserTest : JavadocParserSpec({
                             data("LIP ")
                             typeLink(name = "net.sourceforge.pmd.lang.java.ast.JavaNode")
                         }
-                        html("li") {
-                            data("LI three")
-                            htmlEnd("li")
-                        }
+                    }
+                    html("li") {
+                        data("LI three")
+                        htmlEnd("li")
                     }
                     htmlEnd("ul")
                 }
