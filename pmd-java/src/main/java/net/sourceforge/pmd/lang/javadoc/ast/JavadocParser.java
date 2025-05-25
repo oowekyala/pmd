@@ -12,7 +12,6 @@ import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_GT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_IDENT;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_RCLOSE;
-import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.INLINE_TAG_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
@@ -93,10 +92,7 @@ public class JavadocParser {
                 JdInlineTag tag = new JdInlineTag(tok.getImage());
                 tag.jjtSetFirstToken(start);
                 parseTagContent(tag);
-                if (tokIs(INLINE_TAG_END)) {
-                    // else what
-                    tag.jjtSetLastToken(tok);
-                }
+                tag.jjtSetLastToken(tok);
                 linkLeaf(tag);
             } else if (!isEnd()) {
                 growDataLeaf(start, tok);

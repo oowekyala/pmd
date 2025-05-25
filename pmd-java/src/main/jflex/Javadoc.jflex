@@ -19,7 +19,9 @@ package net.sourceforge.pmd.lang.javadoc.ast;
     return lookahead(c, 0);
   }
 
+  // when true we're sensitive to "}" as they would close the tag
   private boolean inInlineTag;
+  private boolean inHtmlPre;
 
   public boolean lookahead(char c, int distance) {
     if (zzMarkedPos + distance >= zzBuffer.length) return false;
@@ -32,8 +34,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
       }
   }
 
-  private void maybeSetInline() {
-      inInlineTag = zzLexicalState == INLINE_TAG_DOC_SPACE;
+  private void setInline() {
+      inInlineTag = true;
   }
 
   private boolean isInline() {
@@ -125,8 +127,8 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
       }
 
 <INLINE_TAG_NAME> ("@code" | "@literal") { yybegin(CODE_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
-<INLINE_TAG_NAME> "@"{INLINE_TAG_IDENTIFIER} { yybegin(INLINE_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
-<COMMENT_DATA_START> "@"{INLINE_TAG_IDENTIFIER} { yybegin(BLOCK_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<INLINE_TAG_NAME> "@"{INLINE_TAG_IDENTIFIER} { setInline(); yybegin(INLINE_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<COMMENT_DATA_START> "@"{TAG_IDENTIFIER} { yybegin(BLOCK_TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
 // closing }
 <COMMENT_DATA_START, COMMENT_DATA, INLINE_TAG_DOC_SPACE, CODE_TAG_SPACE>
         "}" {
@@ -141,11 +143,11 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 // {@literal &identifier; } or {@literal &#digits; } or {@literal &#xhex-digits; }
 <COMMENT_DATA> "&" {IDENTIFIER} ";" {return JavadocTokenType.HTML_ENTITY;}
 
-<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { maybeSetInline(); yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
+// whitespace
+
+<INLINE_TAG_DOC_SPACE, BLOCK_TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
 
 <CODE_TAG_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(INSIDE_CODE_TAG); return JavadocTokenType.WHITESPACE; }
-
-// whitespace
 
 <COMMENT_DATA_START> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
 
