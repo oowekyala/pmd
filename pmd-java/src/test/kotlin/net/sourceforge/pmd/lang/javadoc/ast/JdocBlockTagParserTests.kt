@@ -45,21 +45,19 @@ class JdocBlockTagParserTests : JdocParserTestSpec({
          * </pre>
          */
         """.trimIndent() should parseAsJdoc {
-            jdoc {
-                data("Param ")
-                code("<T>")
-                data(" is no ")
-                code("<R>")
-                blockTag("@return") {
-                    data("A return value ")
-                    html("pre") {
+            data("Param ")
+            code("<T>")
+            data(" is no ")
+            code("<R>")
+            blockTag("@return") {
+                data("A return value ")
+                html("pre") {
 
-                    }
                 }
-                blockTag("@author") {
-                    data("name")
-                    htmlEnd("pre")
-                }
+            }
+            blockTag("@author") {
+                data("name")
+                htmlEnd("pre")
             }
         }
     }

@@ -76,7 +76,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                     it shouldHaveText "Oha#" 
 
                     malformed {
-                        it.message.shouldContain("Unexpected token #")
+                        it.message.shouldContain("Unexpected token '#'")
                     }
                 }
 
@@ -161,7 +161,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                 }
 
                 malformed {
-                    it shouldHaveText "label" 
+                    it shouldHaveText "label label"
                 }
             }
         }
