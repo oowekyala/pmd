@@ -34,11 +34,11 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocToken;
 
 
 /**
- * @author Brian Remedios
+ * @author Clément Fournier
  */
-public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
+public class UnhelpfulJavadocRule extends AbstractJavaRulechainRule {
 
-    public EmptyGeneratedJavadocRule() {
+    public UnhelpfulJavadocRule() {
         super(JavadocCommentOwner.class);
     }
 

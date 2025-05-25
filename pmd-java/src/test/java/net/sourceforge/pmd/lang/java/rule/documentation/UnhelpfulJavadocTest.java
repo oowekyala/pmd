@@ -6,6 +6,6 @@ package net.sourceforge.pmd.lang.java.rule.documentation;
 
 import net.sourceforge.pmd.testframework.PmdRuleTst;
 
-public class EmptyGeneratedJavadocTest extends PmdRuleTst {
+public class UnhelpfulJavadocTest extends PmdRuleTst {
     // no additional unit tests
 }
