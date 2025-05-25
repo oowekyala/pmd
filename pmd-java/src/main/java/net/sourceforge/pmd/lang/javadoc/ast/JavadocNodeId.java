@@ -12,6 +12,9 @@ public enum JavadocNodeId {
     INLINE_TAG("InlineTag"),
     BLOCK_TAG("BlockTag"),
     MALFORMED("Error"),
+    HTML_START("HtmlStart"),
+    HTML_END("HtmlEnd"),
+    HTML_COMMENT("HtmlComment"),
     REF("Ref"),
     ;
 

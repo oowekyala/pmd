@@ -7,16 +7,28 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.COMMENT_START;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_ATTR_START;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_ATTR_VAL;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_COMMENT_END;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_EQ;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_GT;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_IDENT;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.HTML_RCLOSE;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.INLINE_TAG_END;
 import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.TAG_NAME;
+import static net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.WHITESPACE;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdCommentData;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlEnd;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlStart;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdInlineTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdWhitespace;
@@ -26,11 +38,8 @@ public class JavadocParser {
     private final JavadocLexerAdapter lexer;
 
     private final Deque<AbstractJavadocNode> nodes = new ArrayDeque<>();
-    private final Deque<JavadocToken> tokens = new ArrayDeque<>();
-    private final Deque<Integer> marks = new ArrayDeque<>();
 
     private JavadocToken tok;
-    private int curMark;
 
     public JavadocParser(String fileText, int startOffset, int maxOffset) {
         lexer = new JavadocLexerAdapter(fileText, startOffset, maxOffset);
@@ -61,7 +70,19 @@ public class JavadocParser {
                     linkLeaf(new JdWhitespace(tok));
                     break;
                 case INLINE_TAG_START:
-                    inlineTag(tok);
+                    AbstractJavadocNode node = inlineTag();
+                    if (node != null) {
+                        linkLeaf(node);
+                    }
+                    break;
+                case HTML_LT:
+                    linkLeaf(html());
+                    break;
+                case HTML_LCLOSE:
+                    linkLeaf(htmlEnd());
+                    break;
+                case HTML_COMMENT_START:
+                    linkLeaf(htmlComment());
                     break;
                 }
             }
@@ -71,50 +92,133 @@ public class JavadocParser {
         return null;
     }
 
-    private void inlineTag() {
-        if (advance() != null && tok.getKind() == TAG_NAME) {
-            open(new JdInlineTag(tok.getImage()));
+    private AbstractJavadocNode inlineTag() {
+        JavadocToken start = tok;
+        advance();
 
+        if (tokIs(TAG_NAME)) {
+            JdInlineTag tag = new JdInlineTag(tok.getImage());
+            tag.jjtSetFirstToken(start);
+            parseTagContent(tag);
+            if (tokIs(INLINE_TAG_END)) {
+                // else what
+                tag.jjtSetLastToken(tok);
+            }
+            return tag;
+        } else {
+            growDataLeaf(start, tok);
+            return null;
         }
+    }
+
+    private void parseTagContent(JdInlineTag tag) {
+        // TODO
+    }
+
+    private AbstractJavadocNode htmlComment() {
+        JdHtmlComment comment = new JdHtmlComment();
+        comment.jjtSetFirstToken(tok);
+        advance();
+        while (tok != null && !tokIs(HTML_COMMENT_END)) {
+            comment.jjtSetLastToken(tok);
+            advance();
+        }
+        return comment;
+    }
+
+    private AbstractJavadocNode htmlEnd() {
+        JavadocToken start = tok;
+        advance();
+        skipWhitespace();
+        if (tokIs(HTML_IDENT)) {
+            JdHtmlEnd html = new JdHtmlEnd(tok.getImage());
+            html.jjtSetFirstToken(start);
+            advance();
+            skipWhitespace();
+            if (tokIs(HTML_GT)) {
+                html.jjtSetLastToken(tok);
+            } else {
+                JdMalformed malformed = new JdMalformed(EnumSet.of(HTML_GT), tok);
+                html.jjtAddChild(malformed, 0);
+            }
+            return html;
+        }
+        return new JdMalformed(EnumSet.of(HTML_IDENT), tok);
+    }
+
+    private AbstractJavadocNode html() {
+        JavadocToken start = tok;
+        advance();
+        skipWhitespace();
+
+        if (tokIs(HTML_IDENT)) {
+            JdHtmlStart html = new JdHtmlStart(tok.getImage());
+            html.jjtSetFirstToken(start);
+            htmlAttrs(html);
+            switch (tok.getKind()) {
+            case HTML_RCLOSE:
+                html.setAutoclose(true);
+                // fallthrough
+            case HTML_GT:
+                html.jjtSetLastToken(tok);
+                break;
+            default:
+                JdMalformed malformed = new JdMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), tok);
+                html.jjtAddChild(malformed, 0);
+            }
+            return html;
+        }
+        return new JdMalformed(EnumSet.of(HTML_IDENT), tok);
+    }
+
+    private void htmlAttrs(JdHtmlStart acc) {
+        skipWhitespace();
+        while (tokIs(HTML_IDENT)) {
+            String name = tok.getImage();
+            advance();
+            skipWhitespace();
+            if (tokIs(HTML_EQ)) {
+                advance();
+
+                if (tokIs(HTML_ATTR_START)) {
+                    advance();
+                    if (tokIs(HTML_ATTR_VAL)) {
+                        acc.attributes.put(name, tok.getImage());
+                    }
+                    advance();
+                    skipWhitespace();
+                }
+            } else {
+                acc.attributes.put(name, JdHtmlStart.UNATTRIBUTED);
+                skipWhitespace();
+            }
+        }
+    }
+
+    private void skipWhitespace() {
+        while (tok != null && tok.getKind() == WHITESPACE) {
+            advance();
+        }
+    }
+
+    private boolean tokIs(JavadocTokenType ttype) {
+        return tok != null && tok.getKind() == ttype;
     }
 
     private boolean isEnd(JavadocToken next) {
         return next == null || next.getKind() == COMMENT_END;
     }
 
-    private void treatAsDataUntil(final JavadocToken first, Function<? super JavadocToken, Boolean> recoverWhile) {
-        growDataLeaf(first, consumeWhile(first, recoverWhile));
-    }
-
-    private @NonNull JavadocToken consumeWhile(final JavadocToken first, Function<? super JavadocToken, Boolean> take) {
-
-        JavadocToken current = first;
-        @NonNull JavadocToken last = current;
-        while (current != null && take.apply(current)) {
-            last = current;
-            current = lexer.getNextToken();
-        }
-
-        return current == null ? last : current;
-    }
-
-    private JdMalformed error(JavadocTokenType expected, JavadocToken actual, Function<? super JavadocToken, Boolean> recoverWhile) {
-        JdMalformed error = new JdMalformed(expected, actual);
-        error.jjtSetFirstToken(actual);
-        error.jjtSetLastToken(consumeWhile(actual, recoverWhile));
-        return error;
-    }
-
     private void linkLeaf(AbstractJavadocNode node) {
         if (node == null) {
             return;
         }
-        AbstractJavadocNode top = this.stack.peek();
+        AbstractJavadocNode top = this.nodes.peek();
         Objects.requireNonNull(top).jjtAddChild(node, top.jjtGetNumChildren());
     }
 
     private void growDataLeaf(JavadocToken first, JavadocToken last) {
-        AbstractJavadocNode top = this.stack.peek();
+        AbstractJavadocNode top = this.nodes.getFirst();
         JavadocNode lastNode = top.jjtGetNumChildren() > 0 ? top.jjtGetChild(top.jjtGetNumChildren() - 1) : null;
         if (lastNode instanceof JdCommentData) {
             ((JdCommentData) lastNode).jjtSetLastToken(last);
@@ -124,31 +228,8 @@ public class JavadocParser {
     }
 
 
-    private JavadocToken advance() {
-        return tok = lexer.getNextToken();
-    }
-
-    private void open(AbstractJavadocNode node) {
-        node.jjtSetFirstToken(tok);
-        marks.push(curMark);
-        curMark = nodes.size();
-        nodes.push(node);
-    }
-
-    private void close() {
-        AbstractJavadocNode top = nodes.pop();
-        int arity = nodes.size() - curMark;
-        curMark = marks.pop();
-        while (arity-- > 0) {
-            top.jjtAddChild(popNode(), arity);
-        }
-        top.jjtSetLastToken(tok);
-        nodes.add(top);
-    }
-
-    private AbstractJavadocNode popNode() {
-        curMark = marks.pop();
-        return nodes.pop();
+    private void advance() {
+        tok = lexer.getNextToken();
     }
 
 

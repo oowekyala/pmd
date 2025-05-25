@@ -32,10 +32,16 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %state PARAM_TAG_SPACE
 %state DOC_TAG_VALUE
 %state DOC_TAG_VALUE_IN_PAREN
-%state DOC_TAG_VALUE_IN_LTGT
 %state INLINE_TAG_NAME
 %state INSIDE_CODE_TAG
 %state CODE_TAG_SPACE
+
+%state IN_HTML
+%state IN_HTML_COMMENT
+
+%state HTML_ATTRS
+%state HTML_ATTR_VAL_DQ
+%state HTML_ATTR_VAL_SQ
 
 WHITE_DOC_SPACE_CHAR=[\ \t\f\n\r]
 WHITE_DOC_SPACE_NO_LR=[\ \t\f]
@@ -44,6 +50,9 @@ ALPHA=[:jletter:]
 IDENTIFIER={ALPHA}({ALPHA}|{DIGIT}|[":.-"])*
 TAG_IDENTIFIER=[^\ \t\f\n\r]+
 INLINE_TAG_IDENTIFIER=[^\ \t\f\n\r\}]+
+
+HTML_TAG_NAME=({ALPHA}|"_"|":")({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
+HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 
 %%
 // TODO HTML comments
@@ -64,16 +73,34 @@ INLINE_TAG_IDENTIFIER=[^\ \t\f\n\r\}]+
 <INLINE_TAG_NAME, COMMENT_DATA_START> "@param" { yybegin(PARAM_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
 <PARAM_TAG_SPACE> {WHITE_DOC_SPACE_CHAR}+ {yybegin(DOC_TAG_VALUE); return JavadocTokenType.WHITESPACE; }
 <DOC_TAG_VALUE, COMMENT_DATA, COMMENT_DATA_START> ("</") {
-    yybegin(DOC_TAG_VALUE_IN_LTGT);
+    yybegin(IN_HTML);
     return JavadocTokenType.HTML_LCLOSE;
 }
+<DOC_TAG_VALUE, COMMENT_DATA, COMMENT_DATA_START> "<!--" { yybegin(IN_HTML_COMMENT); return JavadocTokenType.HTML_COMMENT_START; }
+<IN_HTML_COMMENT> "-->" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_COMMENT_END; }
+<IN_HTML_COMMENT> "--" { yybegin(COMMENT_DATA); return JavadocTokenType.BAD_CHAR; }
+      // TODO also ended by EOL
+<IN_HTML_COMMENT> . { return JavadocTokenType.HTML_COMMENT_CONTENT; }
+
+
 <DOC_TAG_VALUE, COMMENT_DATA, COMMENT_DATA_START> [\<] {
-    yybegin(DOC_TAG_VALUE_IN_LTGT);
+    yybegin(IN_HTML);
     return JavadocTokenType.HTML_LT;
 }
-<DOC_TAG_VALUE_IN_LTGT> {IDENTIFIER} { return JavadocTokenType.HTML_IDENT; }
-<DOC_TAG_VALUE_IN_LTGT> [\>] { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_GT; }
-<DOC_TAG_VALUE_IN_LTGT> "/>" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_RCLOSE; }
+<IN_HTML> {HTML_TAG_NAME} { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_IDENT; }
+<IN_HTML> [\>] { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_GT; }
+<IN_HTML> "/>" { yybegin(COMMENT_DATA); return JavadocTokenType.HTML_RCLOSE; }
+
+
+<HTML_ATTRS> {HTML_ATTR_NAME} { return JavadocTokenType.HTML_IDENT; }
+<HTML_ATTRS> [=] { return JavadocTokenType.HTML_EQ; }
+<HTML_ATTRS> [\"] { yybegin(HTML_ATTR_VAL_DQ); return JavadocTokenType.HTML_ATTR_START; }
+<HTML_ATTRS> [\'] { yybegin(HTML_ATTR_VAL_SQ); return JavadocTokenType.HTML_ATTR_START; }
+<HTML_ATTRS> {WHITE_DOC_SPACE_CHAR}+ { return JavadocTokenType.WHITESPACE; }
+
+<HTML_ATTR_VAL_DQ> [\"] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_END; }
+<HTML_ATTR_VAL_SQ> [\'] { yybegin(HTML_ATTRS); return JavadocTokenType.HTML_ATTR_END; }
+<HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ> . { return JavadocTokenType.HTML_ATTR_VAL; }
 
 <COMMENT_DATA_START, COMMENT_DATA> "{"
 {

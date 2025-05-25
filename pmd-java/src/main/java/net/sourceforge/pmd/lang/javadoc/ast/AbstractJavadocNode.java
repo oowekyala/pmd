@@ -44,4 +44,8 @@ abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
     public int getEndColumn() {
         return lastToken.getEndColumn();
     }
+
+    public JavadocNodeId getId() {
+        return id;
+    }
 }
