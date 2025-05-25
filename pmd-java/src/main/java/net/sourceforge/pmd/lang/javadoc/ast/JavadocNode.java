@@ -33,6 +33,8 @@ import net.sourceforge.pmd.util.document.TextDocument;
  *     <li>Significant text of the comment is represented by {@link JdocCommentData}.
  *     <li>Javadoc inline tags (eg {@code {@code foo}}, are represented by {@link JdocInlineTag}
  *     and its subclasses.
+ *     <li>References to Java members are represented by {@link JdocRef}
+ *     and its subclasses.
  *     <li>HTML nodes are represented by {@link JdocHtml}.
  *     <li>HTML comments are represented by {@link JdocHtmlComment}.
  *     <li>Malformed HTML is represented by {@link JdocMalformed}.
