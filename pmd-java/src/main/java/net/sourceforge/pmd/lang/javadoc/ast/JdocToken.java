@@ -8,10 +8,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
 import net.sourceforge.pmd.lang.ast.impl.OffsetBasedToken;
-import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
 
 /** A token implementation for Javadoc nodes. */
-public final class JdocToken extends OffsetBasedToken<JdocToken> implements PrevLinkedToken<JdocToken> {
+public final class JdocToken extends OffsetBasedToken<JdocToken, JavadocTokenDocument> implements PrevLinkedToken<JdocToken> {
 
     @Nullable
     JdocToken prev;
@@ -21,7 +20,7 @@ public final class JdocToken extends OffsetBasedToken<JdocToken> implements Prev
     private final String image;
     private final JdocTokenType kind;
 
-    JdocToken(JdocTokenType kind, String image, int startInclusive, int endExclusive, TokenDocument document) {
+    JdocToken(JdocTokenType kind, String image, int startInclusive, int endExclusive, JavadocTokenDocument document) {
         super(startInclusive, endExclusive, document);
         this.kind = kind;
         this.image = image;
@@ -30,7 +29,7 @@ public final class JdocToken extends OffsetBasedToken<JdocToken> implements Prev
     /**
      * Constructor for a zero-length token.
      */
-    JdocToken(JdocTokenType kind, int offset, TokenDocument document) {
+    JdocToken(JdocTokenType kind, int offset, JavadocTokenDocument document) {
         this(kind, "", offset, offset, document);
     }
 
@@ -67,11 +66,8 @@ public final class JdocToken extends OffsetBasedToken<JdocToken> implements Prev
         return null;
     }
 
-    /**
-     * Returns true if this token is implicit, ie a zero length token at
-     * some position.
-     */
-    boolean isImplicit() {
+    @Override
+    public boolean isImplicit() {
         return getImage().isEmpty();
     }
 
