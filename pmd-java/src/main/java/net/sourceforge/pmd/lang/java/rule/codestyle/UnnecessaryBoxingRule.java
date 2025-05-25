@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.codestyle;
 
+import static net.sourceforge.pmd.lang.java.types.TypePrettyPrint.prettyPrint;
+import static net.sourceforge.pmd.lang.java.types.TypePrettyPrint.withSimpleNames;
 import static net.sourceforge.pmd.util.CollectionUtil.setOf;
 
 import java.util.Set;
@@ -24,7 +26,6 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
-import net.sourceforge.pmd.lang.java.types.TypePrettyPrint;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext;
 import net.sourceforge.pmd.lang.java.types.ast.ExprContext.ExprContextKind;
@@ -160,8 +161,9 @@ public class UnnecessaryBoxingRule extends AbstractJavaRulechainRule {
             } else if (sourceType.box().equals(conversionOutput)) {
                 reason = "explicit boxing";
             } else if (ctxType != null) {
-                reason = "explicit conversion from " + TypePrettyPrint.prettyPrintWithSimpleNames(sourceType)
-                    + " to " + TypePrettyPrint.prettyPrintWithSimpleNames(ctxType);
+                        reason = "explicit conversion from "
+                            + prettyPrint(sourceType, withSimpleNames())
+                            + " to " + prettyPrint(ctxType, withSimpleNames());
                 if (!conversionOutput.equals(ctxType)) {
                     reason += " through " + TypePrettyPrint.prettyPrintWithSimpleNames(conversionOutput);
                 }

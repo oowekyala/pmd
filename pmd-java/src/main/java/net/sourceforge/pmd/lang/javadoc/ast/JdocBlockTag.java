@@ -11,7 +11,7 @@ import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
 
 /**
- * An inline javadoc tag, eg {@code @return}.
+ * An javadoc tag that delimits a block, eg {@code @return} or {@code @param}.
  */
 public class JdocBlockTag extends AbstractJavadocNode {
 
@@ -36,7 +36,7 @@ public class JdocBlockTag extends AbstractJavadocNode {
 
     /**
      * Returns the tag name. This contains an {@code '@'} character,
-     * eg {@code @code}, or {@code @link}.
+     * eg {@code @return}, or {@code @param}.
      */
     public String getTagName() {
         return tagName;

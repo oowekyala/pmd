@@ -31,7 +31,8 @@ import net.sourceforge.pmd.lang.document.TextDocument;
 
 
 /**
- * A node for the Javadoc language. The Javadoc AST is pretty simple:
+ * A node for the Javadoc language. The Javadoc AST is structured in
+ * the following way:
  * <ul>
  *     <li>The root node is always {@link JdocComment}.
  *     <li>Significant text of the comment is represented by {@link JdocCommentData}.

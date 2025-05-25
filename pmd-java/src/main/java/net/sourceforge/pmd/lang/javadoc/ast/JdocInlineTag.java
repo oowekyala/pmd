@@ -10,7 +10,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
 
 /**
  * An inline javadoc tag, eg {@code {@code }}.
- *
+ * <p>
  * Inline tags are mapped in the following way:
  * <ul>
  *     <li>{@code @code}, {@code @literal}: {@link JdocLiteral}</li>

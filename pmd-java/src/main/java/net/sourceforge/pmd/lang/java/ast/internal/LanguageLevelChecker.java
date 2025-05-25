@@ -642,7 +642,7 @@ public class LanguageLevelChecker<T> {
             if (IteratorUtil.count(node.iterator()) > 1) {
                 check(node, RegularLanguageFeature.COMPOSITE_CASE_LABEL, data);
             }
-            if (node.isDefault() && JavaTokenKinds.CASE == node.getFirstToken().getKind()) {
+            if (node.isDefault() && JavaTokenKinds.CASE == node.getFirstToken().kind) {
                 check(node, RegularLanguageFeature.PATTERNS_IN_SWITCH_STATEMENTS, data);
             }
             if (node.getFirstChild() instanceof ASTNullLiteral) {
