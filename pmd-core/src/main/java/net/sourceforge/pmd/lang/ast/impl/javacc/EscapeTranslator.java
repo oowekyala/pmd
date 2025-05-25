@@ -6,11 +6,14 @@ package net.sourceforge.pmd.lang.ast.impl.javacc;
 
 import static java.lang.Integer.min;
 
+import java.util.function.Function;
+
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.FragmentedDocBuilder;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * An object that can translate an input document into an output document,
@@ -150,6 +153,32 @@ public abstract class EscapeTranslator {
 
     protected FileLocation locationAt(int indexInInput) {
         return builder.toLocation(indexInInput);
+    }
+
+    /**
+     * The parameter is an *input* offset.
+     */
+    protected int getLine(int idxInInput) {
+        return StringUtil.lineNumberAt(input, idxInInput);
+    }
+
+    /**
+     * @see #getLine(int)
+     */
+    protected int getColumn(int idxInInput) {
+        return StringUtil.columnNumberAt(input, idxInInput);
+    }
+
+
+    public static Function<TextDocument, TextDocument> translatorFor(Function<TextDocument, EscapeTranslator> translatorMaker) {
+        return original -> {
+            EscapeTranslator translator = translatorMaker.apply(original);
+            try {
+                return translator.translateDocument();
+            } finally {
+                translator.close();
+            }
+        };
     }
 
 }

@@ -56,10 +56,7 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
 
         // Whether the fragment contains the offset we're looking for.
         // Will be true most of the time.
-        boolean containsOffset =
-            f.outStart() <= outOffset && outOffset < f.outEnd();
-
-        if (!containsOffset) {
+        if (!f.contains(outOffset)) {
             // Slow path, we must search for the fragment
             // This optimisation is important, otherwise we have
             // to search for very long times in some files
@@ -82,6 +79,7 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
             // it's not this one.
             do {
                 f = f.next;
+                lastAccessedFragment = f;
             } while (f.next != null && f.outLen() == 0);
         }
         return f.outToIn(outOffset);
@@ -151,6 +149,10 @@ final class FragmentedTextDocument extends BaseMappedDocument implements TextDoc
 
         int inToOut(int inOffset) {
             return inOffset - inStart() + outStart();
+        }
+
+        boolean contains(int outOffset) {
+            return outStart() <= outOffset && outEnd() > outOffset;
         }
 
         @Override

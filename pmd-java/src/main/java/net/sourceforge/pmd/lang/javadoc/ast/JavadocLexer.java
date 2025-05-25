@@ -148,15 +148,10 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 return null;
             } else if (MERGED_TOKENS.contains(tok)) {
                 // adjacent tokens of those kinds are merged together
-                StringBuilder imageBuilder = new StringBuilder();
-                int len = 0;
+                StringBuilder imageBuilder = new StringBuilder(lexer.yylength() * 2);
                 do {
-                    int yylength = lexer.yylength();
-                    for (int i = 0; i < yylength; i++) {
-                        imageBuilder.append(lexer.yycharat(i));
-                    }
-                    len += yylength;
-                } while (curOffset + len < maxOffset && (pendingTok = lexer.advance()) == tok);
+                    lexer.yyappendtext(imageBuilder);
+                } while (curOffset + imageBuilder.length() < maxOffset && (pendingTok = lexer.advance()) == tok);
                 image = imageBuilder.toString();
             } else {
                 image = tok.isConst() ? tok.getConstValue() : lexer.yytext();

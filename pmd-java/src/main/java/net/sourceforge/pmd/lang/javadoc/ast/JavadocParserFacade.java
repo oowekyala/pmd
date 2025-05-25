@@ -4,9 +4,13 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.io.IOException;
+
+import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.ast.impl.javacc.JavaccToken;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
 import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.util.document.TextFile;
 
 /**
  * Main entry point to parse javadoc comments.
@@ -30,13 +34,18 @@ public final class JavadocParserFacade {
     public static JdocComment parseJavadoc(JavaccToken token) {
         TextDocument baseDocument = token.getDocument().getTextDocument();
         // todo subdocuments
-        TextDocument textDocument =
-            TextDocument.readOnlyString(
-                token.getImage(),
-                baseDocument.getDisplayName(),
-                baseDocument.getLanguageVersion() // a java version
+        try {
+            TextDocument textDocument = TextDocument.create(
+                TextFile.forReader(
+                    baseDocument.getText().slice(token.getRegion()).newReader(),
+                    baseDocument.getDisplayName(),
+                    baseDocument.getLanguageVersion() // a java version
+                ).build()
             );
-        return parseJavadoc(textDocument);
+            return parseJavadoc(textDocument);
+        } catch (IOException e) {
+            throw AssertionUtil.shouldNotReachHere(e.getMessage());
+        }
     }
 
 }
