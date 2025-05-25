@@ -7,9 +7,11 @@ package net.sourceforge.pmd.lang.java.ast
 import io.kotlintest.*
 import io.kotlintest.specs.IntelliMarker
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.RootNode
-import net.sourceforge.pmd.lang.ast.test.*
-import net.sourceforge.pmd.lang.java.ast.ParserTestCtx.Companion.findFirstNodeOnStraightLine
+import net.sourceforge.pmd.lang.ast.ParseException
+import net.sourceforge.pmd.lang.ast.test.Assertions
+import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper
+import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
+import net.sourceforge.pmd.lang.ast.test.matchNode
 import io.kotlintest.TestContext as KotlinTestRunCtx
 import io.kotlintest.should as kotlintestShould
 
@@ -103,45 +105,16 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
         }
     }
 
-    abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val javaVersion: V) {
+    abstract class VersionedTestCtx<V : Ver<V>, T : VersionedTestCtx<V, T>>(val spec: AbstractParserTestSpec<V, T>, private val context: KotlinTestRunCtx, val version: V) {
+
+        abstract val parser: BaseParsingHelper<*, *>
 
 
-        /**
-         * Parse the string the context described by this object, and finds the first descendant of type [N].
-         * The descendant is searched for by [findFirstNodeOnStraightLine], to prevent accidental
-         * mis-selection of a node. In such a case, a [NoSuchElementException] is thrown, and you
-         * should fix your test case.
-         *
-         * @param construct The construct to parse
-         * @param N The type of node to find
-         *
-         * @return The first descendant of type [N] found in the parsed expression
-         *
-         * @throws NoSuchElementException If no node of type [N] is found by [findFirstNodeOnStraightLine]
-         * @throws ParseException If the argument is no valid construct of this kind
-         *
-         */
-        inline fun <reified N : Node> NodeParsingCtx<*, T>.parseAndFind(construct: String): N =
-                parseNode(construct, this as T).findFirstNodeOnStraightLine(N::class.java)
-                        ?: throw NoSuchElementException("No node of type ${N::class.java.simpleName} in the given $this:\n\t$construct")
-
-        infix fun <N : Node> NodeParsingCtx<N, T>.parse(construct: String): N = parseNode(construct, this as T)
-
-        fun V.rootParsingCtx(): NodeParsingCtx<RootNode, T> = object : NodeParsingCtx<RootNode, T> {
-            override fun parseNode(construct: String, ctx: T): RootNode = this@rootParsingCtx.parse(construct)
-        }
-
-        inline fun <reified N : JavaNode> makeMatcher(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
-                : Assertions<String> = makeMatcherImpl(nodeParsingCtx, ignoreChildren, nodeSpec)
-
-        // no idea why but there's a compiler bug when inlining matchExpr
-        inline fun <reified N : JavaNode> makeMatcherImpl(nodeParsingCtx: NodeParsingCtx<*, T>, ignoreChildren: Boolean, noinline nodeSpec: NodeSpec<N>)
-                : Assertions<String> = { nodeParsingCtx.parseAndFind<N>(it).shouldMatchNode(ignoreChildren, nodeSpec) }
-
-        fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>): Assertions<String> = {
-            shouldThrow<ParseException> {
+        fun notParseIn(nodeParsingCtx: NodeParsingCtx<*, T>, expected: (ParseException) -> Unit = {}): Assertions<String> = {
+            val e = shouldThrow<ParseException> {
                 nodeParsingCtx.parseNode(it, this as T)
             }
+            expected(e)
         }
 
         fun parseIn(nodeParsingCtx: NodeParsingCtx<*, T>) = object : Matcher<String> {
@@ -158,7 +131,12 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
                         "Expected '$value' to parse in $nodeParsingCtx, got $e",
                         "Expected '$value' not to parse in ${nodeParsingCtx.toString().addArticle()}"
                 )
+            }
+        }
 
+        fun doTest(name: String, assertions: T.() -> Unit) {
+            containedParserTestImpl(context, name) {
+                assertions()
             }
         }
 
@@ -199,14 +177,22 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
 
         inner class ImplicitNodeParsingCtx(private val nodeParsingCtx: NodeParsingCtx<*, T>) {
 
+
             /**
              * A matcher that succeeds if the string parses correctly.
              */
-            fun parse(): Matcher<String> = parseIn(nodeParsingCtx)
+            fun parse(): Matcher<String> = this@VersionedTestCtx.parseIn(nodeParsingCtx)
+
+            /**
+             * A matcher that succeeds if parsing throws a ParseException.
+             */
+            fun throwParseException(expected: (ParseException) -> Unit = {}): Assertions<String> =
+                    this@VersionedTestCtx.notParseIn(nodeParsingCtx, expected)
+
 
             fun parseAs(matcher: ValuedNodeSpec<Node, Any>): Assertions<String> = { str ->
                 val node = nodeParsingCtx.parseNode(str, this@VersionedTestCtx as T)
-                val idx = node.jjtGetChildIndex()
+                val idx = node.indexInParent
                 node.parent kotlintestShould matchNode<Node> {
                     if (idx > 0) {
                         unspecifiedChildren(idx)
@@ -220,4 +206,31 @@ abstract class AbstractParserTestSpec<V : Ver<V>, T : AbstractParserTestSpec.Ver
             }
         }
     }
+}
+
+
+
+interface Ver<T : Ver<T>> : Comparable<T> {
+
+    val ordinal: Int
+
+    val values: Array<T>
+
+    val displayName: String
+
+    val parser: BaseParsingHelper<*, *>
+
+    operator fun not(): List<T> = values.toList() - (this as T)
+
+
+    /**
+     * Overloads the range operator, e.g. (`J9..J11`).
+     * If both operands are the same, a singleton list is returned.
+     */
+    operator fun rangeTo(last: T): List<T> =
+            when {
+                last == this                -> listOf(this as T)
+                last.ordinal > this.ordinal -> values.filter { ver -> ver >= (this as T) && ver <= last }
+                else                        -> values.filter { ver -> ver <= (this as T) && ver >= last }
+            }
 }

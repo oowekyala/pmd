@@ -19,10 +19,11 @@ public enum JavadocTokenType {
      * Whitespace tokens are significant in {@code <pre>} HTML tags though.
      */
     WHITESPACE("<whitespace>", false),
+    LEADER("<line leader>", false),
 
     /**
-     * This also takes care of any following asterisk. Leading whitespace 
-     * after a line break (incl asterisk), and trailing whitespace before 
+     * This also takes care of any following asterisk. Leading whitespace
+     * after a line break (incl asterisk), and trailing whitespace before
      * the line break, is treated as {@link #WHITESPACE}.
      *
      * <p>Line break tokens are always insignificant. In a {@code <pre>} HTML tag,
@@ -84,7 +85,15 @@ public enum JavadocTokenType {
         this.isConst = isConst;
     }
 
-
+    /**
+     * <ul>
+     *     <li>
+     * OH1
+     *     @return foobar
+     *     <li>
+     * OHA
+     * </ul>
+     */
     public boolean isSignificant() {
         return this != WHITESPACE && this != LINE_BREAK;
     }

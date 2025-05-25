@@ -18,69 +18,38 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 %{
 
-
-  public boolean lookahead(char c) {
-    return lookahead(c, 0);
-  }
-
   // depth of paired braces (used in inline tags)
   private int braces;
-  // saved state after a line break
-  private int savedState;
 
-  public boolean lookahead(char c, int distance) {
-    if (zzMarkedPos + distance >= zzBuffer.length) return false;
-    return zzBuffer[zzMarkedPos + distance] == c;
-  }
-
-  public char fetchChar(int distance) {
-    if (zzMarkedPos + distance >= zzBuffer.length) return '\0';
-    return zzBuffer[zzMarkedPos + distance];
-  }
-
-  public void goTo(int offset) {
-    zzCurrentPos = zzMarkedPos = zzStartRead = offset;
-    zzAtEOF = false;
-  }
 %}
 
-%state COMMENT_DATA_START
-%state COMMENT_DATA
+%debug
 
+%state COMMENT_DATA_START, COMMENT_DATA
 %state INLINE_TAG_NAME
+%state BLOCK_TAG_SPACE, INLINE_TAG_SPACE
+%state IN_HTML, IN_HTML_COMMENT
+%state HTML_ATTRS, HTML_ATTR_VAL
+%state HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ, INSIDE_INLINE_TAG
 
-%state BLOCK_TAG_SPACE
-%state INLINE_TAG_SPACE
-
-%state INSIDE_INLINE_TAG
-
-%state LINE_HEAD
-
-%state IN_HTML
-%state IN_HTML_COMMENT
-
-%state HTML_ATTRS
-%state HTML_ATTR_VAL
-%state HTML_ATTR_VAL_DQ
-%state HTML_ATTR_VAL_SQ
-
-DIGIT=                  [0-9]
 HEX_DIGIT=              [0-9a-fA-F]
 ALPHA=                  [:jletter:]
 BLOCK_TAG_ID=           "@"[^\ \t\f\n\r]+
 INLINE_TAG_ID=          "@"[^\ \t\f\n\r\{\}]+
 
-WHITESPACE_CHAR=        [\ \t\f]
-// Uses the same convention as java.util.regex.Pattern#line-terminators
-LINE_TERM=              (\r\n | [\r\n\u0085\u2028\u2029])
+// whitespace
+WS_CHAR=                [ \t\f]
+LEADER=                 {WS_CHAR}* "*"
 
-ENTITY =                "&" [:jletter:]+ ";"
-                      | "&#" {DIGIT}+ ";"
+TEXT_CHAR=              [^&<>{*\s\R]
+
+ENTITY=                 "&" [:jletter:]+ ";"
+                      | "&#" [:digit:]+ ";"
                       | "&#" [xX] {HEX_DIGIT}+ ";"
 
-HTML_TAG_NAME=          [[:jletter:]&&[_:]][[:jletter:]&&[_:]]({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
-HTML_ATTR_NAME=         ([^ \n\r\t\f\"\'<>/=])+
-UNQUOTED_ATTR_VALUE=    ([^ \n\r\t\f\"\'<>/=])+
+HTML_TAG_NAME=          [^\s\"\'<>/=]+
+HTML_ATTR_NAME=         [^\s\"\'<>/=]+
+UNQUOTED_ATTR_VALUE=    [^\s\"\'<>/=]+
 
 %%
 
@@ -92,12 +61,11 @@ UNQUOTED_ATTR_VALUE=    ([^ \n\r\t\f\"\'<>/=])+
 <COMMENT_DATA,
  COMMENT_DATA_START>    "<!--"                 { yybegin(IN_HTML_COMMENT);   return JavadocTokenType.HTML_COMMENT_START; }
 <IN_HTML_COMMENT>       "-->"                  { yybegin(COMMENT_DATA);      return JavadocTokenType.HTML_COMMENT_END; }
-<IN_HTML_COMMENT>       "--"                   { yybegin(COMMENT_DATA);      return JavadocTokenType.BAD_CHAR; }
+<IN_HTML_COMMENT>       "<!--" | "--!>"        { yybegin(COMMENT_DATA);      return JavadocTokenType.BAD_CHAR; }
 <IN_HTML_COMMENT>       .                      {                             return JavadocTokenType.HTML_COMMENT_CONTENT; }
 
-
 <COMMENT_DATA,
- COMMENT_DATA_START>    [<] / {HTML_TAG_NAME}  { yybegin(IN_HTML);           return JavadocTokenType.HTML_LT; }
+ COMMENT_DATA_START>    "<" / {HTML_TAG_NAME}  { yybegin(IN_HTML);           return JavadocTokenType.HTML_LT; }
 <IN_HTML>               {HTML_TAG_NAME}        { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_IDENT; }
 <IN_HTML,
  HTML_ATTRS>            [\>]                   { yybegin(COMMENT_DATA);      return JavadocTokenType.HTML_GT; }
@@ -105,15 +73,15 @@ UNQUOTED_ATTR_VALUE=    ([^ \n\r\t\f\"\'<>/=])+
  HTML_ATTRS>            "/>"                   { yybegin(COMMENT_DATA);      return JavadocTokenType.HTML_RCLOSE; }
 
 <HTML_ATTRS>            {HTML_ATTR_NAME}       {                             return JavadocTokenType.HTML_IDENT; }
-<HTML_ATTRS>            [=]                    { yybegin(HTML_ATTR_VAL);     return JavadocTokenType.HTML_EQ; }
+<HTML_ATTRS>            "="                    { yybegin(HTML_ATTR_VAL);     return JavadocTokenType.HTML_EQ; }
 <HTML_ATTR_VAL>         [\"]                   { yybegin(HTML_ATTR_VAL_DQ);  return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL>         [\']                   { yybegin(HTML_ATTR_VAL_SQ);  return JavadocTokenType.HTML_SQUOTE; }
 <HTML_ATTR_VAL>         {UNQUOTED_ATTR_VALUE}  { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_ATTR_VAL; }
 
 <HTML_ATTR_VAL_DQ>      [\"]                   { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL_SQ>      [\']                   { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_SQUOTE; }
-<HTML_ATTR_VAL_DQ>      [^\"&]+                {                             return JavadocTokenType.HTML_ATTR_VAL; }
-<HTML_ATTR_VAL_SQ>      [^\'&]+                {                             return JavadocTokenType.HTML_ATTR_VAL; }
+<HTML_ATTR_VAL_DQ>      [^\"&\R]+              {                             return JavadocTokenType.HTML_ATTR_VAL; }
+<HTML_ATTR_VAL_SQ>      [^\'&\R]+              {                             return JavadocTokenType.HTML_ATTR_VAL; }
 
 <COMMENT_DATA_START,
  COMMENT_DATA>          "{" / {INLINE_TAG_ID}  { yybegin(INLINE_TAG_NAME);   return JavadocTokenType.INLINE_TAG_START; }
@@ -133,42 +101,56 @@ UNQUOTED_ATTR_VALUE=    ([^ \n\r\t\f\"\'<>/=])+
 <COMMENT_DATA_START>    {BLOCK_TAG_ID}         { yybegin(BLOCK_TAG_SPACE);              return JavadocTokenType.TAG_NAME; }
 
 
-// whitespace
+// whitespace and regular text
 
-<BLOCK_TAG_SPACE>       {WHITESPACE_CHAR}+     { yybegin(COMMENT_DATA);      return JavadocTokenType.WHITESPACE;   }
-<INLINE_TAG_SPACE>      {WHITESPACE_CHAR}+     { yybegin(INSIDE_INLINE_TAG); return JavadocTokenType.WHITESPACE;   }
+                        ^{WS_CHAR}+            { return JavadocTokenType.LEADER; }
 
-<INLINE_TAG_SPACE>      {WHITESPACE_CHAR}+     { yybegin(INSIDE_CODE_TAG);   return JavadocTokenType.WHITESPACE;   }
-<COMMENT_DATA_START,
- HTML_ATTRS,
- HTML_ATTR_VAL>         {WHITESPACE_CHAR}+     {                             return JavadocTokenType.WHITESPACE;   }
-<COMMENT_DATA>          {WHITESPACE_CHAR}+     {                             return JavadocTokenType.COMMENT_DATA; }
+
+<BLOCK_TAG_SPACE,
+ COMMENT_DATA_START>    {WS_CHAR}+             { yybegin(COMMENT_DATA);      return JavadocTokenType.WHITESPACE;   }
+<INLINE_TAG_SPACE>      {WS_CHAR}+             { yybegin(INSIDE_INLINE_TAG); return JavadocTokenType.WHITESPACE;   }
+
+<HTML_ATTRS,
+ HTML_ATTR_VAL>         {WS_CHAR}+             {                             return JavadocTokenType.WHITESPACE;   }
+
+<COMMENT_DATA>          {WS_CHAR}+             {                             return JavadocTokenType.COMMENT_DATA; }
 
 <COMMENT_DATA_START>    {ENTITY}               { yybegin(COMMENT_DATA);      return JavadocTokenType.HTML_ENTITY;  }
 <COMMENT_DATA,
  HTML_ATTR_VAL_DQ,
  HTML_ATTR_VAL_SQ>      {ENTITY}               {                             return JavadocTokenType.HTML_ENTITY;  }
-<COMMENT_DATA_START>    [^&<>]                 { yybegin(COMMENT_DATA);      return JavadocTokenType.COMMENT_DATA; }
-<COMMENT_DATA>          [^&<>]                 {                             return JavadocTokenType.COMMENT_DATA; }
-<INSIDE_INLINE_TAG>     .                      {                             return JavadocTokenType.COMMENT_DATA; }
+<COMMENT_DATA_START>    {TEXT_CHAR}+           { yybegin(COMMENT_DATA);      return JavadocTokenType.COMMENT_DATA; }
+<COMMENT_DATA>          {TEXT_CHAR}+           {                             return JavadocTokenType.COMMENT_DATA; }
+<INSIDE_INLINE_TAG>     [^\R}{*]               {                             return JavadocTokenType.COMMENT_DATA; }
+
+
 
 // ALL STATES
+
+// Line termination
+
+// those states preserve leading whitespace, after the leader,
+
+<HTML_ATTR_VAL_DQ,
+ HTML_ATTR_VAL_SQ,
+ INSIDE_INLINE_TAG>     ^{LEADER}                      {                              return JavadocTokenType.LEADER; }
+
+// start of a block tag, overrides any previous state
+
+                        ^{LEADER} {WS_CHAR}*
+                            / {BLOCK_TAG_ID}           { yybegin(COMMENT_DATA_START); return JavadocTokenType.LEADER; }
+                        ^{LEADER} {WS_CHAR}*
+                            / [^/]                     {                              return JavadocTokenType.LEADER; }
+                        ^{WS_CHAR}+                    {                              return JavadocTokenType.LEADER; }
+
 
 // Trailing spaces before the end marker, or a line break
 // If the comment is one one line, eg /** Foo */, that space shouldn't be lexed as COMMENT_DATA
 
-                        {WHITESPACE_CHAR}+ / ({LINE_TERM} | "*/")      { return JavadocTokenType.WHITESPACE; }
+                        {WS_CHAR}+
+                            / (\R | "*/")              { return JavadocTokenType.WHITESPACE; }
 
-// Line termination
+                        \R                             { return JavadocTokenType.LINE_BREAK; }
 
-// start of a block tag
-                        {LINE_TERM} ({WHITESPACE_CHAR}* "*")?
-                            / {WHITESPACE_CHAR}* {BLOCK_TAG_ID}        { yybegin(COMMENT_DATA_START); return JavadocTokenType.LINE_BREAK; }
-
-// the part / [^/]  avoids matching "*/"
-                        {LINE_TERM} {WHITESPACE_CHAR}* "*"
-                            / [^/]                                     { if (yystate() == INLINE_TAG_SPACE) yybegin(INSIDE_INLINE_TAG); return JavadocTokenType.LINE_BREAK; }
-                        {LINE_TERM}                                    { if (yystate() == INLINE_TAG_SPACE) yybegin(INSIDE_INLINE_TAG); return JavadocTokenType.LINE_BREAK; }
-
-                        "*/"                                           { return JavadocTokenType.COMMENT_END; }
-                        [^]                                            { return JavadocTokenType.BAD_CHAR; }
+                        "*/"                           { return JavadocTokenType.COMMENT_END; }
+                        [^]                            { return JavadocTokenType.BAD_CHAR; }
