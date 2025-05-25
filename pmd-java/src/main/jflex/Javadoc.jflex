@@ -1,5 +1,12 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+/*
+    Adapted from the lexer used by IntelliJ Community.
+    This lexer simplifies the treatment of tag values (we lex them as comment data),
+    whereas the original one has special tokens for eg "#", "(", ")", ",", etc., and
+    treated the @param tag specially.
+    Conversely, it has more sophisticated treatment of line breaks and HTML data.
+ */
 
 %%
 

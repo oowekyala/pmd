@@ -105,7 +105,7 @@ public class JavadocParser {
     /**
      * Parse the content of a tag depending on its name. After this exits,
      * {@link #tok} must be the last token of the tag (either {@link JavadocTokenType#INLINE_TAG_END}
-     * or another tag if the tag is unclosed.
+     * or another type if the tag is unclosed).
      */
     private void parseTagContent(JdocInlineTag tag) {
         // TODO parse depending on tag name
