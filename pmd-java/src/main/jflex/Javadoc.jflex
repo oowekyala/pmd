@@ -15,7 +15,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %unicode
 %function advance
 %type JdocTokenType
-
+%buffer 2048
 %{
 
   // depth of paired braces (used in inline tags)
