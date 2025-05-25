@@ -7,9 +7,9 @@
     <test-code>
         <description>Useless param tags</description>
         <expected-problems>1</expected-problems>
-        <expected-linenumbers>3</expected-linenumbers>
+        <expected-linenumbers>6</expected-linenumbers>
         <expected-messages>
-            <message>This comment contains low quality content (3 @param), eg line 6 (parameter description is just a type)</message>
+            <message>Parameter description is just a type (there are problems with 2 other @param in this comment)</message>
         </expected-messages>
         <code><![CDATA[
 public class Foo {
