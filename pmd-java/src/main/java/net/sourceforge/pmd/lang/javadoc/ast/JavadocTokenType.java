@@ -12,12 +12,12 @@ public enum JavadocTokenType {
 
     /** Name of an inline or block tag. */
     TAG_NAME("@<tag name>", false),
+    /** Whitespace ignored by javadoc. Significant whitespace is parsed as {@link #COMMENT_DATA}*/
     WHITESPACE("<whitespace>", false),
     /**
-     * A line break starts with a line terminator ({@code \n | \r\n}),
-     * contains the following whitespace chars
+     * This also takes care of the following asterisk.
      * <pre>
-     * lineBreak ::= ("\n" | "\r\n") {:whitespace:}* ("*" {:whitespace:}*)
+     * lineBreak ::= ("\n" | "\r\n") {:whitespace:}* "*"?
      * </pre>
      */
     LINE_BREAK("<line break>", false),

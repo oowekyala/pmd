@@ -26,6 +26,10 @@ public class JavadocLexerAdapter implements TokenManager<JavadocToken> {
     @Nullable
     private JavadocTokenType pendingTok;
 
+    public JavadocLexerAdapter(String fullText) {
+        this(fullText, 0, fullText.length());
+    }
+
     /**
      * @param fileText    Full file text
      * @param startOffset Start offset in the file text

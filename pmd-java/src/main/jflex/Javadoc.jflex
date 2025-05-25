@@ -16,8 +16,18 @@ package net.sourceforge.pmd.lang.javadoc.ast;
   public JavadocLexer() {}
 
   public boolean lookahead(char c) {
-    if (zzMarkedPos >= zzBuffer.length) return false;
-    return zzBuffer[zzMarkedPos] == c;
+    return lookahead(c, 0);
+  }
+
+  public boolean lookahead(char c, int distance) {
+    if (zzMarkedPos + distance >= zzBuffer.length) return false;
+    return zzBuffer[zzMarkedPos + distance] == c;
+  }
+
+  private void maybeBlockTagStart() {
+      if (zzLexicalState != INSIDE_CODE_TAG) {
+          yybegin(COMMENT_DATA_START);
+      }
   }
 
   public void goTo(int offset) {
@@ -32,6 +42,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %state INLINE_TAG_NAME
 %state INSIDE_CODE_TAG
 %state CODE_TAG_SPACE
+
+%state LINE_HEAD
 
 %state IN_HTML
 %state IN_HTML_COMMENT
@@ -99,15 +111,13 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
       }
 
 <INLINE_TAG_NAME> ("@code" | "@literal") { yybegin(CODE_TAG_SPACE); return JavadocTokenType.TAG_NAME; }
-<INLINE_TAG_NAME> "@"{INLINE_TAG_IDENTIFIER} { yybegin(TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
+<INLINE_TAG_NAME, COMMENT_DATA_START> "@"{INLINE_TAG_IDENTIFIER} { yybegin(TAG_DOC_SPACE); return JavadocTokenType.TAG_NAME; }
 // closing }
 <COMMENT_DATA_START, COMMENT_DATA, TAG_DOC_SPACE, CODE_TAG_SPACE> "}"
         { yybegin(COMMENT_DATA); return JavadocTokenType.INLINE_TAG_END; }
 
 // {@literal &identifier; } or {@literal &#digits; } or {@literal &#xhex-digits; }
 <COMMENT_DATA> "&" {IDENTIFIER} ";" {return JavadocTokenType.HTML_ENTITY;}
-
-<COMMENT_DATA_START> "@"{TAG_IDENTIFIER} { yybegin(COMMENT_DATA); return JavadocTokenType.TAG_NAME; }
 
 <TAG_DOC_SPACE> {WHITE_DOC_SPACE_CHAR}+ { yybegin(COMMENT_DATA); return JavadocTokenType.WHITESPACE; }
 
@@ -123,8 +133,9 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 <INSIDE_CODE_TAG> . { return JavadocTokenType.COMMENT_DATA; }
 
 // line termination (all states)
-{LINE_TERM} {WHITE_DOC_SPACE_CHAR}* ("*" {WHITE_DOC_SPACE_CHAR}*)? { return JavadocTokenType.LINE_BREAK; }
-
+// the part / [^/]  avoids matching "*/"
+{LINE_TERM} {WHITE_DOC_SPACE_CHAR}* "*" / [^/] { maybeBlockTagStart(); return JavadocTokenType.LINE_BREAK; }
+{LINE_TERM} {WHITE_DOC_SPACE_CHAR}*            { maybeBlockTagStart(); return JavadocTokenType.LINE_BREAK; }
 
 "*/" { return JavadocTokenType.COMMENT_END; }
 [^] { return JavadocTokenType.BAD_CHAR; }
