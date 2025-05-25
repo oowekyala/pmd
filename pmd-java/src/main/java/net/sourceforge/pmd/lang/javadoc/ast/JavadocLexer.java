@@ -15,13 +15,12 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.EnumSet;
 
-import org.apache.commons.io.input.CharSequenceReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
-import net.sourceforge.pmd.util.document.TextDocument;
-import net.sourceforge.pmd.util.document.TextRegion;
+import net.sourceforge.pmd.lang.ast.LexException;
+import net.sourceforge.pmd.lang.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextRegion;
 
 /**
  * Wraps the generated JFlex lexer into a {@link TokenManager}. The parsers
@@ -118,7 +117,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
                 if (this.curOffset >= maxOffset) {
                     return null;
                 }
-                reader = new CharSequenceReader(doc.getFullText());
+                reader = doc.getFullText().slice(curOffset, maxOffset - curOffset).newReader();
                 this.lexer = new JavadocFlexer(reader);
                 lexer.yybegin(initialState);
             }
@@ -174,7 +173,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw new TokenMgrError(-1, -1, null, "Error lexing Javadoc comment", e);
+            throw new LexException(-1, -1, null, "Error lexing Javadoc comment", e);
         }
     }
 }

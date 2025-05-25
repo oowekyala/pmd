@@ -151,8 +151,7 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
          * Returns the constant corresponding to the entity. Returns null
          * if it's unknown.
          */
-        @Nullable
-        public KnownHtmlEntity getConstant() {
+        public @Nullable KnownHtmlEntity getConstant() {
             return name != null ? KnownHtmlEntity.lookupByName(name)
                                 : KnownHtmlEntity.lookupByCode(getCodePoint());
         }

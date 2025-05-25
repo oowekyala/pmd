@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -53,10 +54,10 @@ public enum KnownHtmlEntity {
     PARAGRAPH('¶', 182, "&para;", "paragraph"),
     MIDDLEDOT('·', 183, "&middot;", "middle dot"),
     SPACING_CEDILLA('¸', 184, "&cedil;", "spacing cedilla"),
-    SUPERSCRIPT_1('¹', 185, "&sup1", "superscript 1"),
+    SUPERSCRIPT_1('¹', 185, "&sup1;", "superscript 1"),
     MASCULINE_ORGINAL_INDICATOR('º', 186, "&ordm;", "masculine ordinal indicator"),
     RIGHTANGLE_QUOTATIONMARK('»', 187, "&raquo;", "angle quotation mark (right)"),
-    FRACTION_QUARTER('¼', 188, "&frac14", "fraction 1/4"),
+    FRACTION_QUARTER('¼', 188, "&frac14;", "fraction 1/4"),
     FRACTION_HALF('½', 189, "&frac12;", "fraction 1/2"),
     FRACTION_THREEQUARTERS('¾', 190, "&frac34;", "fraction 3/4"),
     INVERETED_QUESTIONMARK('¿', 191, "&iquest;", "inverted question mark"),
@@ -275,7 +276,11 @@ public enum KnownHtmlEntity {
     DIAMOND('♦', 9830, "&diams;", "diamond");
 
     private static final Map<String, KnownHtmlEntity> BY_NAME =
-        Arrays.stream(values()).collect(Collectors.toMap(KnownHtmlEntity::getName, e -> e));
+        Arrays.stream(values()).collect(Collectors.toMap(e -> removeQuotes(e.getName()), e -> e));
+
+    private static String removeQuotes(String str) {
+        return str.substring(1, str.length() - 1);
+    }
 
     private static final Map<Integer, KnownHtmlEntity> BY_CODEPOINT =
         Arrays.stream(values()).collect(Collectors.toMap(KnownHtmlEntity::getCodePoint, e -> e));
@@ -291,6 +296,7 @@ public enum KnownHtmlEntity {
         this.number = number;
         this.name = name;
         this.description = description;
+        assert name.charAt(0) == '&' && name.charAt(name.length() - 1) == ';' : this;
     }
 
     /** Returns the character represented by the entity. */
@@ -324,7 +330,7 @@ public enum KnownHtmlEntity {
         return BY_CODEPOINT.get(number);
     }
 
-    /** Lookup an entity by name, the name must be eg {@code &amp;} and not {@code amp}. */
+    /** Lookup an entity by name, the name must be eg {@code amp} and not {@code &amp;}. */
     @Nullable
     public static KnownHtmlEntity lookupByName(String character) {
         return BY_NAME.get(character);
