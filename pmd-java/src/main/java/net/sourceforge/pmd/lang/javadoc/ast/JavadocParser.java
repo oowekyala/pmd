@@ -21,13 +21,14 @@ import java.util.Deque;
 import java.util.EnumSet;
 import java.util.Objects;
 
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdCommentData;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlComment;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlEnd;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlEnd;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdHtmlStart;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdInlineTag;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdMalformed;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdWhitespace;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocInlineTag;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocWhitespace;
 
 public class JavadocParser {
 
@@ -43,8 +44,8 @@ public class JavadocParser {
         lexer = new JavadocLexer(fileText, startOffset, maxOffset);
     }
 
-    public JavadocNode.JdComment parse() {
-        JavadocNode.JdComment comment = new JavadocNode.JdComment();
+    public JdocComment parse() {
+        JdocComment comment = new JdocComment();
 
         advance();
         if (tok == null) {
@@ -69,7 +70,7 @@ public class JavadocParser {
             growDataLeaf(tok, tok);
             break;
         case WHITESPACE:
-            linkLeaf(new JdWhitespace(tok));
+            linkLeaf(new JdocWhitespace(tok));
             break;
         case INLINE_TAG_START:
             inlineTag();
@@ -90,7 +91,7 @@ public class JavadocParser {
         JavadocToken start = tok;
         if (advance()) {
             if (tokIs(TAG_NAME)) {
-                JdInlineTag tag = new JdInlineTag(tok.getImage());
+                JdocInlineTag tag = new JdocInlineTag(tok.getImage());
                 tag.jjtSetFirstToken(start);
                 parseTagContent(tag);
                 tag.jjtSetLastToken(tokIs(INLINE_TAG_END) ? tok : tok.getPrevious());
@@ -106,12 +107,12 @@ public class JavadocParser {
      * {@link #tok} must be the last token of the tag (either {@link JavadocTokenType#INLINE_TAG_END}
      * or another tag if the tag is unclosed.
      */
-    private void parseTagContent(JdInlineTag tag) {
+    private void parseTagContent(JdocInlineTag tag) {
         // TODO parse depending on tag name
     }
 
     private AbstractJavadocNode htmlComment() {
-        JdHtmlComment comment = new JdHtmlComment();
+        JdocHtmlComment comment = new JdocHtmlComment();
         comment.jjtSetFirstToken(tok);
         while (advance() && !tokIs(HTML_COMMENT_END)) {
             comment.jjtSetLastToken(tok);
@@ -124,19 +125,19 @@ public class JavadocParser {
         advance();
         skipWhitespace();
         if (tokIs(HTML_IDENT)) {
-            JdHtmlEnd html = new JdHtmlEnd(tok.getImage());
+            JdocHtmlEnd html = new JdocHtmlEnd(tok.getImage());
             html.jjtSetFirstToken(start);
             advance();
             skipWhitespace();
             if (tokIs(HTML_GT)) {
                 html.jjtSetLastToken(tok);
             } else {
-                JdMalformed malformed = new JdMalformed(EnumSet.of(HTML_GT), tok);
+                JdocMalformed malformed = new JdocMalformed(EnumSet.of(HTML_GT), tok);
                 html.jjtAddChild(malformed, 0);
             }
             return html;
         }
-        return new JdMalformed(EnumSet.of(HTML_IDENT), tok);
+        return new JdocMalformed(EnumSet.of(HTML_IDENT), tok);
     }
 
     private AbstractJavadocNode htmlStart() {
@@ -156,12 +157,12 @@ public class JavadocParser {
                 html.jjtSetLastToken(tok);
                 break;
             default:
-                JdMalformed malformed = new JdMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), tok);
+                JdocMalformed malformed = new JdocMalformed(EnumSet.of(HTML_RCLOSE, HTML_GT), tok);
                 html.jjtAddChild(malformed, 0);
             }
             return html;
         }
-        return new JdMalformed(EnumSet.of(HTML_IDENT), tok);
+        return new JdocMalformed(EnumSet.of(HTML_IDENT), tok);
     }
 
     private void htmlAttrs(JdHtmlStart acc) {
@@ -214,10 +215,10 @@ public class JavadocParser {
     private void growDataLeaf(JavadocToken first, JavadocToken last) {
         AbstractJavadocNode top = this.nodes.getFirst();
         JavadocNode lastNode = top.jjtGetNumChildren() > 0 ? top.jjtGetChild(top.jjtGetNumChildren() - 1) : null;
-        if (lastNode instanceof JdCommentData) {
-            ((JdCommentData) lastNode).jjtSetLastToken(last);
+        if (lastNode instanceof JdocCommentData) {
+            ((JdocCommentData) lastNode).jjtSetLastToken(last);
         } else {
-            linkLeaf(new JdCommentData(first, last));
+            linkLeaf(new JdocCommentData(first, last));
         }
     }
 
