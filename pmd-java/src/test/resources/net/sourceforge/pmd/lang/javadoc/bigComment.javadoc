@@ -1,0 +1,105 @@
+/**
+ * A sequence of AST nodes. Conceptually similar to a {@link Stream},
+ * and exposes a specialized API to navigate abstract syntax trees.
+ * This API replaces the defunct {@link Node#findChildNodesWithXPath(String)}.
+ *
+ * <h1>API usage</h1>
+ *
+ * <p>The {@link Node} interface exposes methods like {@link Node#children()}
+ * or {@link Node#asStream()} to obtain new NodeStreams. Null-safe construction
+ * methods are available here, see {@link #of(Node)}, {@link #of(Node[])},
+ * {@link #fromIterable(Iterable)}.
+ *
+ * <p>Most functions have an equivalent in the {@link Stream} interface
+ * and their behaviour is similar. One important departure from the
+ * {@link Stream} contract is the absence of requirement on the laziness
+ * of pipeline operations. More on that in the details section below.
+ *
+ * <p>Some additional functions are provided to iterate the axes of the
+ * tree: {@link #children()}, {@link #descendants()}, {@link #descendantsOrSelf()},
+ * {@link #parents()}, {@link #ancestors()}, {@link #ancestorsOrSelf()},
+ * {@link #precedingSiblings()}, {@link #followingSiblings()}.
+ * Filtering and mapping nodes by type is possible through {@link #filterIs(Class)},
+ * and the specialized {@link #children(Class)}, {@link #descendants(Class)},
+ * and {@link #ancestors(Class)}.
+ *
+ * <p>Many complex predicates about nodes can be expressed by testing
+ * the emptiness of a node stream. E.g. the following tests if the node
+ * is a variable declarator id initialized to the value {@code 0}:
+ * <pre>
+ *     {@linkplain #of(Node) NodeStream.of}(someNode)                           <i>// the stream here is empty if the node is null</i>
+ *               {@linkplain #filterIs(Class) .filterIs}(ASTVariableDeclaratorId.class)<i>// the stream here is empty if the node was not a variable declarator id</i>
+ *               {@linkplain #followingSiblings() .followingSiblings}()                    <i>// the stream here contains only the siblings, not the original node</i>
+ *               {@linkplain #take(int) .take}(1)                                <i>// the stream here contains only the first sibling, if it exists</i>
+ *               {@linkplain #filterIs(Class) .filterIs}(ASTNumericLiteral.class)
+ *               {@linkplain #filter(Predicate) .filter}(it -> !it.isFloatingPoint() && it.getValueAsInt() == 0)
+ *               {@linkplain #nonEmpty() .nonEmpty}(); <i>// If the stream is non empty here, then all the pipeline matched</i>
+ * </pre>
+ *
+ * <p>Many existing operations from the node interface can be written with streams too:
+ * <ul>
+ * <li><tt>node.{@link Node#getFirstChildOfType(Class) getFirstChildOfType(t)} === node.{@link Node#children(Class) children(t)}.{@link #first()}</tt></li>
+ * <li><tt>node.{@link Node#getFirstDescendantOfType(Class) getFirstDescendantOfType(t)} === node.{@link Node#descendants(Class) descendants(t)}.{@link #first()}</tt></li>
+ * <li><tt>node.{@link Node#getFirstParentOfType(Class) getFirstParentOfType(t)} === node.{@link Node#ancestors(Class) ancestors(t)}.{@link #first()}</tt></li>
+ * <li><tt>node.{@link Node#findChildrenOfType(Class) findChildrenOfType(t)} === node.{@link Node#descendants(Class) children(t)}.{@link #toList()}</tt></li>
+ * <li><tt>node.{@link Node#findDescendantsOfType(Class) findDescendantsOfType(t)} === node.{@link Node#descendants(Class) descendants(t)}.{@link #toList()}</tt></li>
+ * <li><tt>node.{@link Node#getParentsOfType(Class) getParentsOfType(t)} === node.{@link Node#descendants(Class) ancestors(t)}.{@link #toList()}</tt></li>
+ * <li><tt>node.{@link Node#getNthParent(int) getNthParent(n)} === node.{@link Node#ancestors() ancestors()}.{@link #get(int) get(n - 1)}</tt></li>
+ * <li><tt>node.{@link Node#hasDescendantOfType(Class) hasDescendantOfType(t)} === node.{@link Node#descendants(Class) descendants(t)}.{@link #nonEmpty()}</tt></li>
+ * <li><tt>node.getFirstParentOfAnyType(c1, c2) ===  node.{@link Node#ancestors() ancestors()}.{@link #firstNonNull(Function) firstNonNull}({@link #asInstanceOf(Class, Class[]) asInstanceOf(c1, c2)})</tt></li>
+ * <li><tt>node.hasDescendantOfAnyType(c1, c2) ===  node.{@link Node#descendants() descendants()}.{@link #map(Function) map}({@link #asInstanceOf(Class, Class[]) asInstanceOf(c1, c2)}).{@link #nonEmpty()}</tt></li>
+ * </ul>
+ * The new way to write those is as efficient as the old way.
+ *
+ * <p>Unlike {@link Stream}s, NodeStreams can be iterated multiple times. That means, that the operations
+ * that are <i>terminal</i> in the Stream interface (i.e. consume the stream) don't consume NodeStreams.
+ * Be aware though, that node streams don't cache their results by default, so e.g. calling {@link #count()}
+ * followed by {@link #toList()} will execute the whole pipeline twice. The elements of a stream can
+ * however be {@linkplain #cached() cached} at an arbitrary point in the pipeline to evaluate the
+ * upstream only once. Some construction methods allow building a node stream from an external data
+ * source, e.g. {@link #fromIterable(Iterable) fromIterable}.
+ * Depending on how the data source is implemented, the built node streams may be iterable only once.
+ *
+ * <p>Node streams may contain duplicates, which can be pruned with {@link #distinct()}.
+ *
+ * <h1>Details</h1>
+ *
+ * <p>NodeStreams are not necessarily implemented with {@link Stream}, but
+ * when a method has an equivalent in the {@link Stream} API, their
+ * contract is similar. The only difference, is that node streams are not
+ * necessarily lazy, ie, a pipeline operation may be evaluated eagerly
+ * to improve performance. For this reason, relying on side-effects
+ * produced in the middle of the pipeline is a bad idea. {@link Stream}
+ * gives the same guideline about statefulness, but not for the same reason.
+ * Their justification is parallelism and operation reordering, once
+ * the pipeline is fully known.
+ *
+ * <p>Node streams are meant to be sequential streams, so there is no
+ * equivalent to {@link Stream#findAny()}. The method {@link #first()}
+ * is an equivalent to {@link Stream#findFirst()}. There is however a
+ * {@link #last()} method, which may be implemented efficiently on some
+ * streams (eg {@link #children()}). TODO maybe implement reverse
+ *
+ * <p>Node streams are most of the time ordered in document order (w.r.t. the XPath specification),
+ * a.k.a. prefix order. Some operations which explicitly manipulate the order of nodes, like
+ * {@link #union(NodeStream[]) union} or {@link #append(NodeStream) append}, may not preserve that ordering.
+ * {@link #map(Function) map} and {@link #flatMap(Function) flatMap} operations may not preserve the ordering
+ * if the stream has more than one element, since the mapping is applied in order to each element
+ * of the receiver stream. This extends to methods defined in terms of map or flatMap, e.g.
+ * {@link #descendants()} or {@link #children()}.
+ *
+ * @param <T> Type of nodes this stream contains. This parameter is
+ *           covariant, which means for maximum flexibility, methods
+ *           taking a node stream argument should declare it with an
+ *           "extends" wildcard.
+ *
+ * @author Clément Fournier
+ * @implNote Choosing to wrap a stream instead of extending the interface is to
+ * allow the functions to return NodeStreams, and to avoid the code bloat
+ * induced by delegation.
+ *
+ * <p>The default implementation relies on the iterator method. From benchmarking,
+ * that appears more efficient than streams.
+ *
+ * @since 7.0.0
+ */

@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.test.shouldBe
 import net.sourceforge.pmd.lang.ast.test.shouldHaveText
@@ -55,7 +56,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                     }
                 }
 
-                it::getLabel shouldBe "label label"
+                it.label.toString() shouldBe "label label"
                 data("label label")
             }
         }
@@ -80,7 +81,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                     }
                 }
 
-                it::getLabel shouldBe "label label"
+                it.label.toString() shouldBe "label label"
                 data("label label")
             }
         }
@@ -97,7 +98,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                 it shouldHaveText "{@link }" 
                 // TODO malformed?
                 it::getRef shouldBe null
-                it::getLabel shouldBe null
+                it.label.toString() shouldBe null
             }
         }
 
@@ -113,7 +114,7 @@ class JdocInlineTagParserTests : JdocParserTestSpec({
                 it shouldHaveText "{@link}" 
                 // TODO malformed?
                 it::getRef shouldBe null
-                it::getLabel shouldBe null
+                it.label.toString() shouldBe null
             }
         }
 

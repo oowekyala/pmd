@@ -132,7 +132,7 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
         /**
          * Returns the label text, or null if there is no label.
          */
-        public @Nullable String getLabel() {
+        public @Nullable CharSequence getLabel() {
             return children(JdocCommentData.class).firstOpt().map(JdocCommentData::getData).orElse(null);
         }
     }

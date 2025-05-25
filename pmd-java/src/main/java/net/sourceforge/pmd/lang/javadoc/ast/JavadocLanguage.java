@@ -13,10 +13,14 @@ import net.sourceforge.pmd.lang.ParserOptions;
  *
  */
 public class JavadocLanguage extends BaseLanguageModule {
+
+    public static final String NAME = "Javadoc";
+    public static final String TERSE_NAME = "javadoc";
+
     //todo unregistered
 
     public JavadocLanguage() {
-        super("Javadoc", "Javadoc", "javadoc", "javadoc");
+        super(NAME, "Javadoc", TERSE_NAME, "javadoc");
         addDefaultVersion("", new LanguageVersionHandler() {
             @Override
             public Parser getParser(ParserOptions parserOptions) {
