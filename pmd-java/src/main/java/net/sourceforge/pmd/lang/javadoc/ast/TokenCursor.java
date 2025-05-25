@@ -12,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.TokenManager;
 import net.sourceforge.pmd.lang.ast.PrevLinkedToken;
+import net.sourceforge.pmd.lang.ast.TokenMgrError;
 
 final class TokenCursor<T extends PrevLinkedToken<T>> {
 
@@ -33,6 +34,8 @@ final class TokenCursor<T extends PrevLinkedToken<T>> {
      * Returns true if we advanced for a token. Returns false if end of
      * input is reached. In the latter case, the cursor stays on the last
      * token.
+     *
+     * @throws TokenMgrError If the lexer throws
      */
     public boolean advance() {
         if (isEoi) {
@@ -47,12 +50,18 @@ final class TokenCursor<T extends PrevLinkedToken<T>> {
             return true;
         }
         T t = lexer.getNextToken();
-        if (t == null) {
+        if (t == null || lexer.isEof(t)) {
             isEoi = true;
             return false;
         }
         tok = t;
         return true;
+    }
+
+    public void reset(T newHead) {
+        tok = newHead;
+        offset = 0;
+        isEoi = newHead == null || lexer.isEof(newHead);
     }
 
     /**

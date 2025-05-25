@@ -4,10 +4,10 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import net.sourceforge.pmd.lang.java.ast.ASTAnyTypeDeclaration;
+import net.sourceforge.pmd.lang.java.metrics.JavaMetrics;
 
 /**
  * An inline javadoc tag, eg {@code {@code }}.
@@ -100,80 +100,43 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
     /**
      * A {@code {@link }} or {@code {@linkplain }} tag.
      * Whether this is one or the other can be queried with
-     * {@link #isLinkPlain()}, {@link #isLink()}. The only
+     * {@link #isPlain()}. The only
      * difference is that {@code {@link }} is rendered
      * with a monospace font, while {@code {@linkplain }} is
      * not.
+     *
+     * @see JavaMetrics#get(net.sourceforge.pmd.lang.metrics.MetricKey, ASTAnyTypeDeclaration)
      */
     public static class JdocLink extends JdocInlineTag {
 
-        // TODO make node for references to reuse it!
-
-        private static final Pattern FORMAT = Pattern.compile(
-            "((?:[\\w$]+\\.)*[\\w$]+)?"  // type name (g1), null if absent
-                + "(?:#"
-                + "([\\w$]+)"            // method or field name (g2), null if absent
-                + "("                    // params (g3), null if absent
-                + "\\([^)]*+\\)"
-                + ")?"
-                + ")?"
-                + "(\\s++(.*))?"            // label (g4), empty if absent
-        );
-        private final String tname;
-        private final String refname;
-        private final String args;
-        private final String label;
-
-        JdocLink(String tagName, String data) {
+        JdocLink(String tagName) {
             super(JavadocNodeId.LINK_TAG, tagName);
 
             assert tagName.equals("@link")
                 || tagName.equals("@linkplain");
 
-            if (data != null) {
-                Matcher matcher = FORMAT.matcher(data);
-                if (matcher.matches()) {
-                    tname = matcher.group(1);
-                    refname = matcher.group(2);
-                    args = matcher.group(3);
-                    label = matcher.group(4);
-                    return;
-                }
-            }
-            tname = null;
-            refname = null;
-            args = null;
-            label = null;
         }
 
-        /** Returns true if this is a {@code {@linkplain }} tag. */
-        public boolean isLinkPlain() {
+        /**
+         * Returns true if this is a {@code {@linkplain }} tag.
+         * Otherwise this is a {@code {@link }} tag.
+         */
+        public boolean isPlain() {
             return getTagName().endsWith("n");
         }
 
-        /** Returns true if this is a {@code {@link }} tag. */
-        public boolean isLink() {
-            return !getTagName().endsWith("n");
-        }
-
+        /**
+         * Returns the ref, or null if this node has none and is thus
+         * invalid wrt to javadoc spec.
+         */
         @Nullable
-        public String getTypeName() {
-            return tname == null || tname.isEmpty() ? null : tname;
-        }
-
-        @Nullable
-        public String getFieldName() {
-            return refname;
-        }
-
-        @Nullable
-        public String getArgs() {
-            return args;
+        JdocRef getRef() {
+            return children(JdocRef.class).first();
         }
 
         @Nullable
         public String getLabel() {
-            return label;
+            return children(JdocCommentData.class).firstOpt().map(JdocCommentData::getData).orElse(null);
         }
     }
 }

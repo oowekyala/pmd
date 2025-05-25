@@ -4,11 +4,18 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
+import io.kotlintest.matchers.string.shouldContain
+import io.kotlintest.matchers.types.shouldBeInstanceOf
 import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import io.kotlintest.specs.FunSpec
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocTokenType.*
+import net.sourceforge.pmd.lang.ast.TokenMgrError
+import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
+import java.io.EOFException
+import java.io.IOException
+import kotlin.test.assertEquals
 
 
 class JavadocLexerTest : FunSpec({
@@ -54,6 +61,77 @@ class JavadocLexerTest : FunSpec({
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
         lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = 12, end = 25, image = "some javadoc ")
         lexer.nextToken shouldBe null
+    }
+
+
+
+    test("Test java unicode escapes") {
+
+        val comment = """\u002F\u002a\u002a\u002a\u002F"""
+        val opening = """\u002F\u002a\u002a"""
+
+        val lexer = JavadocLexer(comment)
+
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = opening.length, end = comment.length, image = "*/")
+        lexer.nextToken shouldBe null
+
+    }
+
+
+    test("Test java escaped unicode escapes") {
+
+        val comment = """\u002F\u002a\u002a\\u002a\u002F"""
+        val opening = """\u002F\u002a\u002a"""
+
+        val lexer = JavadocLexer(comment)
+
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
+        lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = opening.length, end = comment.length, image = "\\\\u002a/")
+        lexer.nextToken shouldBe null
+
+    }
+
+    test("Test java invalid unicode escapes") {
+
+        val comment = """\u002F\u0k2a\u002a\u002a\u002F"""
+
+        val lexer = JavadocLexer(comment)
+
+        val tmgrError = shouldThrow<TokenMgrError> {
+            lexer.nextToken
+        }
+
+        val ioe = tmgrError.cause!!
+
+        ioe.shouldBeInstanceOf<IOException>()
+
+        ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
+        ioe.message!!.shouldContain("\\u0k2a")
+
+        ioe.cause.shouldBeInstanceOf<NumberFormatException>()
+
+        ioe.cause!!.message!!.shouldContain("valid hexadecimal digit")
+    }
+
+    test("Test incomplete unicode escape ") {
+
+        val comment = """\u00"""
+
+        val lexer = JavadocLexer(comment)
+
+        val tmgrError = shouldThrow<TokenMgrError> {
+            lexer.nextToken
+        }
+
+        val ioe = tmgrError.cause!!
+
+        ioe.shouldBeInstanceOf<IOException>()
+
+        ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
+        ioe.message!!.shouldContain("\\u00")
+
+        ioe.cause.shouldBeInstanceOf<EOFException>()
     }
 
     test("Test brace balancing") {
@@ -382,7 +460,7 @@ class JavadocLexerTest : FunSpec({
 
 })
 
-data class Tok(val k: JavadocTokenType, val im: String = k.constValue) {
+data class Tok(val k: JdocTokenType, val im: String = k.constValue) {
     override fun toString(): String {
         return if (k.isConst) "Tok(${k.name})" else "Tok(${k.name}, \"${im.addEscapes()}\")"
     }
@@ -390,13 +468,13 @@ data class Tok(val k: JavadocTokenType, val im: String = k.constValue) {
     private fun String.addEscapes() = replace("\n", "\\n").replace("\r", "\\r")
 }
 
-private fun JavadocLexer.consume(): List<JavadocToken> = generateSequence { nextToken }.toList()
+private fun JavadocLexer.consume(): List<JdocToken> = generateSequence { nextToken }.toList()
 
-private fun JavadocToken.assertMatches(ttype: JavadocTokenType, start: Int, end: Int, image: String) {
+private fun JdocToken.assertMatches(ttype: JdocTokenType, start: Int, end: Int, image: String) {
     kind shouldBe ttype
     this.image shouldBe image
-    startInDocument shouldBe start
-    endInDocument shouldBe end
+    assertEquals(start, startInDocument, "Wrong start offset")
+    assertEquals(end, endInDocument, "Wrong end offset")
 }
 
 

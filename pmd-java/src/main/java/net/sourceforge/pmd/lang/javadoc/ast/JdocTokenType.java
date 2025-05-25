@@ -7,7 +7,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 import java.util.EnumSet;
 
-public enum JavadocTokenType {
+public enum JdocTokenType {
     /** End of input. */
     COMMENT_START("/**", true),
     /** End of input. */
@@ -51,6 +51,14 @@ public enum JavadocTokenType {
     /** Significant text for the HTML output. */
     COMMENT_DATA("<comment data>", false),
 
+    /** A type reference. */
+    TYPE_REFERENCE("type reference", false),
+    MEMBER_REFERENCE("member reference", false),
+    REF_POUND("#", true),
+    REF_LPAREN("(", true),
+    REF_RPAREN(")", true),
+    REF_COMMA(",", true),
+
     /**
      * Catch all rule for things that don't match anything. Normally
      * should never occur anywhere, bad characters (like invalid usage
@@ -83,12 +91,13 @@ public enum JavadocTokenType {
     CHARACTER_REFERENCE("<HTML entity>", false),
     ;
 
-    static final EnumSet<JavadocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
+    static final EnumSet<JdocTokenType> ATTR_DELIMITERS = EnumSet.of(HTML_SQUOTE, HTML_DQUOTE);
+    static final EnumSet<JdocTokenType> EMPTY_SET = EnumSet.noneOf(JdocTokenType.class);
 
     private final boolean isConst;
     private String value;
 
-    JavadocTokenType(String value, boolean isConst) {
+    JdocTokenType(String value, boolean isConst) {
         this.value = value;
         this.isConst = isConst;
     }

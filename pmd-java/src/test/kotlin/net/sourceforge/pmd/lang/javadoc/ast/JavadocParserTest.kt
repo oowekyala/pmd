@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.javadoc.ast
 
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
 import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
+import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.shouldBe
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
@@ -24,10 +25,12 @@ class JavadocParserTest : JavadocParserSpec({
     /*
         TODO tests:
          - html comments
+         - method reference
+         - block tags
     */
 
+    parserTest("Test @link inline tags") {
 
-    parserTest("Test some inline tags") {
 
         """
         /**
@@ -38,9 +41,104 @@ class JavadocParserTest : JavadocParserSpec({
 
             data("See ")
             link {
-                it::getFieldName shouldBe "hey"
+                it::getText shouldBe "{@link #hey}"
+                it::getRef shouldBe fieldRef("hey") {
+                    it::getText shouldBe "#hey"
+                    classRef("") {
+                        it::getText shouldBe ""
+                        it::isImplicit shouldBe true
+                    }
+                }
             }
         }
+
+
+        """
+        /**
+         * See {@link Oha#hey label label}
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@link Oha#hey label label}\n */"
+
+            data("See ")
+            link {
+                it::getText shouldBe "{@link Oha#hey label label}"
+                it::getRef shouldBe fieldRef("hey") {
+                    it::getText shouldBe "Oha#hey"
+                    classRef("Oha") {
+                        it::getText shouldBe "Oha"
+                        it::isImplicit shouldBe false
+                    }
+                }
+
+                it::getLabel shouldBe "label label"
+                data("label label")
+            }
+        }
+
+        // malformed
+
+        """
+        /**
+         * See {@link Oha# label label}
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@link Oha# label label}\n */"
+
+            data("See ")
+            link {
+                it::getText shouldBe "{@link Oha# label label}"
+                it::getRef shouldBe classRef("Oha") {
+                    it::getText shouldBe "Oha#"
+                    it::isImplicit shouldBe false
+
+                    malformed {
+                        it.message.shouldContain("Unexpected token #")
+                    }
+                }
+
+                it::getLabel shouldBe "label label"
+                data("label label")
+            }
+        }
+
+        """
+        /**
+         * See {@link }
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@link }\n */"
+
+            data("See ")
+            link {
+                it::getText shouldBe "{@link }"
+                // TODO malformed?
+                it::getRef shouldBe null
+                it::getLabel shouldBe null
+            }
+        }
+
+        """
+        /**
+         * See {@link}
+         */
+        """.trimIndent() should parseAs {
+            it::getText shouldBe "/**\n * See {@link}\n */"
+
+            data("See ")
+            link {
+                it::getText shouldBe "{@link}"
+                // TODO malformed?
+                it::getRef shouldBe null
+                it::getLabel shouldBe null
+            }
+        }
+
+
+    }
+
+
+    parserTest("Test some inline tags") {
 
 
         """
@@ -445,6 +543,18 @@ fun TreeNodeWrapper<Node, out JavadocNode>.link(plain: Boolean = false, spec: No
             spec()
         }
 
+fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec<JdocClassRef> = EmptyAssertions) =
+        child<JdocClassRef> {
+            it::getSimpleRef shouldBe name
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, out JavadocNode>.fieldRef(name: String, spec: NodeSpec<JdocFieldRef> = EmptyAssertions) =
+        child<JdocFieldRef> {
+            it::getName shouldBe name
+            spec()
+        }
+
 fun TreeNodeWrapper<Node, out JavadocNode>.unknownInline(name: String, spec: NodeSpec<JdocUnknownInlineTag> = EmptyAssertions) =
         child<JdocUnknownInlineTag> {
             it::getTagName shouldBe name
@@ -495,11 +605,9 @@ fun TreeNodeWrapper<Node, out JavadocNode>.decCharReference(point: Int, spec: No
 
 fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean = false, spec: NodeSpec<JdocLink> = EmptyAssertions) =
         link(plain) {
-            it::getTypeName shouldBe name
-            it::getFieldName shouldBe null
-            it::getArgs shouldBe null
+            it::getRef shouldBe classRef(name)
             spec()
         }
 
 
-val JavadocNode.tokens: List<JavadocToken> get() = firstToken.rangeTo(lastToken).toList()
+val JavadocNode.tokens: List<JdocToken> get() = firstToken.rangeTo(lastToken).toList()

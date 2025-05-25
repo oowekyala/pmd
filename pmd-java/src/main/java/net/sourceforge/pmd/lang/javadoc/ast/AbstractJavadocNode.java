@@ -14,8 +14,8 @@ class AbstractJavadocNode implements JavadocNode {
     private static final AbstractJavadocNode[] EMPTY_ARRAY = new AbstractJavadocNode[0];
     private final JavadocNodeId id;
 
-    private JavadocToken firstToken;
-    private JavadocToken lastToken;
+    private JdocToken firstToken;
+    private JdocToken lastToken;
 
     private AbstractJavadocNode[] children = EMPTY_ARRAY;
     private int childIndex;
@@ -44,6 +44,11 @@ class AbstractJavadocNode implements JavadocNode {
         child.jjtSetParent(this);
     }
 
+
+    public void pushChild(JavadocNode child) {
+        jjtAddChild(child, jjtGetNumChildren());
+    }
+
     @Override
     public void jjtSetChildIndex(int index) {
         this.childIndex = index;
@@ -70,26 +75,26 @@ class AbstractJavadocNode implements JavadocNode {
     }
 
     @Override
-    public JavadocToken getFirstToken() {
+    public JdocToken getFirstToken() {
         return firstToken;
     }
 
     @Override
-    public JavadocToken getLastToken() {
+    public JdocToken getLastToken() {
         return lastToken;
     }
 
-    void setFirstToken(JavadocToken token) {
+    void setFirstToken(JdocToken token) {
         firstToken = token;
     }
 
-    void setLastToken(JavadocToken token) {
+    void setLastToken(JdocToken token) {
         lastToken = token;
     }
 
     @Override
     public String getText() {
-        return getFirstToken().rangeTo(getLastToken()).map(JavadocToken::getImage).collect(Collectors.joining());
+        return getFirstToken().rangeTo(getLastToken()).map(JdocToken::getImage).collect(Collectors.joining());
     }
 
     @Override

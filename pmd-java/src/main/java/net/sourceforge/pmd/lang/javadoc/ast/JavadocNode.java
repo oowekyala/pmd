@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,8 +16,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
+import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 
 
 /**
@@ -30,7 +33,7 @@ import net.sourceforge.pmd.lang.ast.TextAvailableNode;
  *     <li>HTML comments are represented by {@link JdocHtmlComment}.
  *     <li>Malformed HTML is represented by {@link JdocMalformed}.
  *     <li>Whitespace characters, and leading asterisks are only available
- *     in the tokens (see {@link JavadocTokenType#LINE_BREAK} and {@link JavadocTokenType#WHITESPACE}).
+ *     in the tokens (see {@link JdocTokenType#LINE_BREAK} and {@link JdocTokenType#WHITESPACE}).
  * </ul>
  */
 public interface JavadocNode extends TextAvailableNode {
@@ -39,12 +42,24 @@ public interface JavadocNode extends TextAvailableNode {
     @Override
     @Nullable
     JavadocNode jjtGetParent();
+
+
     @Override
     JavadocNode jjtGetChild(int index);
 
 
-    JavadocToken getFirstToken();
-    JavadocToken getLastToken();
+    JdocToken getFirstToken();
+
+
+    JdocToken getLastToken();
+
+
+    /**
+     * Returns true if this node is implied by context.
+     */
+    default boolean isImplicit() {
+        return false;
+    }
 
 
     /**
@@ -70,11 +85,11 @@ public interface JavadocNode extends TextAvailableNode {
     /** Some text payload for the comment */
     class JdocCommentData extends AbstractJavadocNode {
 
-        JdocCommentData(JavadocToken tok) {
+        JdocCommentData(JdocToken tok) {
             this(tok, tok);
         }
 
-        JdocCommentData(JavadocToken first, JavadocToken last) {
+        JdocCommentData(JdocToken first, JdocToken last) {
             super(JavadocNodeId.COMMENT_DATA);
             setFirstToken(first);
             setLastToken(last);
@@ -83,8 +98,8 @@ public interface JavadocNode extends TextAvailableNode {
         /** Returns the significant text of this comment. */
         public String getData() {
             return getFirstToken().rangeTo(getLastToken())
-                                  .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
-                                  .map(JavadocToken::getImage)
+                                  .filter(it -> it.getKind() == JdocTokenType.COMMENT_DATA)
+                                  .map(JdocToken::getImage)
                                   .collect(Collectors.joining(" "));
         }
 
@@ -107,9 +122,9 @@ public interface JavadocNode extends TextAvailableNode {
         private final int point;
         private final int base;
 
-        JdocCharacterReference(JavadocToken tok) {
+        JdocCharacterReference(JdocToken tok) {
             super(JavadocNodeId.CHARACTER_REFERENCE);
-            assert tok.getKind() == JavadocTokenType.CHARACTER_REFERENCE;
+            assert tok.getKind() == JdocTokenType.CHARACTER_REFERENCE;
             setFirstToken(tok);
             setLastToken(tok);
 
@@ -177,11 +192,11 @@ public interface JavadocNode extends TextAvailableNode {
     /** Unexpected token tag. */
     class JdocMalformed extends AbstractJavadocNode {
 
-        private final Set<JavadocTokenType> expected;
-        private final @Nullable JavadocToken actual;
+        private final Set<JdocTokenType> expected;
+        private final @Nullable JdocToken actual;
 
-        JdocMalformed(Set<JavadocTokenType> expected,
-                      @Nullable JavadocToken actual) {
+        JdocMalformed(EnumSet<JdocTokenType> expected,
+                      @Nullable JdocToken actual) {
             super(JavadocNodeId.MALFORMED);
             this.expected = expected;
             this.actual = actual;
@@ -191,11 +206,11 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Null if EOF. */
         @Nullable
-        public JavadocToken getActual() {
+        public JdocToken getActual() {
             return actual;
         }
 
-        public Set<JavadocTokenType> getExpected() {
+        public Set<JdocTokenType> getExpected() {
             return expected;
         }
 
@@ -203,7 +218,9 @@ public interface JavadocNode extends TextAvailableNode {
             if (actual == null) {
                 return "Unexpected end of input, expecting " + format(expected);
             }
-            String message = "Unexpected token " + actual.getKind() + " at " + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
+            String message = "Unexpected token " + actual.getImage()
+                + " (" + actual.getKind() + ") at "
+                + this.actual.getBeginLine() + ":" + this.actual.getBeginColumn();
             if (!expected.isEmpty()) {
                 return message + " expecting " + format(expected);
             } else {
@@ -216,11 +233,11 @@ public interface JavadocNode extends TextAvailableNode {
             return getMessage();
         }
 
-        private static String format(Set<JavadocTokenType> types) {
+        private static String format(Set<JdocTokenType> types) {
             if (types.size() == 1) {
                 return types.iterator().next().toString();
             }
-            return types.stream().map(JavadocTokenType::toString).collect(Collectors.joining(", ", "one of ", ""));
+            return types.stream().map(JdocTokenType::toString).collect(Collectors.joining(", ", "one of ", ""));
         }
     }
 
@@ -305,10 +322,10 @@ public interface JavadocNode extends TextAvailableNode {
      */
     class JdocHtmlAttr extends AbstractJavadocNode {
 
-        private final @Nullable JavadocToken valueToken;
+        private final @Nullable JdocToken valueToken;
         private final HtmlAttrSyntax syntax;
 
-        JdocHtmlAttr(@Nullable JavadocToken valueToken, HtmlAttrSyntax syntax) {
+        JdocHtmlAttr(@Nullable JdocToken valueToken, HtmlAttrSyntax syntax) {
             super(JavadocNodeId.HTML_ATTR);
             this.valueToken = valueToken;
             this.syntax = syntax;
@@ -336,7 +353,7 @@ public interface JavadocNode extends TextAvailableNode {
 
         /** Returns the identifier token. */
         @NonNull
-        public JavadocToken getIdentifierToken() {
+        public JdocToken getIdentifierToken() {
             return getFirstToken();
         }
 
@@ -346,7 +363,7 @@ public interface JavadocNode extends TextAvailableNode {
          * or if the value is the empty string.
          */
         @Nullable
-        public JavadocToken getValueToken() {
+        public JdocToken getValueToken() {
             return valueToken;
         }
 
@@ -401,9 +418,97 @@ public interface JavadocNode extends TextAvailableNode {
         /** Returns the significant text of this comment. */
         public String getData() {
             return getFirstToken().rangeTo(getLastToken())
-                                  .filter(it -> it.getKind() == JavadocTokenType.HTML_COMMENT_CONTENT)
-                                  .map(JavadocToken::getImage)
+                                  .filter(it -> it.getKind() == JdocTokenType.HTML_COMMENT_CONTENT)
+                                  .map(JdocToken::getImage)
                                   .collect(Collectors.joining());
+        }
+    }
+
+    interface JdocRef extends JavadocNode {
+
+    }
+
+    /**
+     * A reference to a {@linkplain JdocFieldRef field} or {@linkplain JdocExecutableRef method or constructor}.
+     */
+    interface JdocMemberRef extends JdocRef {
+
+        /**
+         * Returns the reference to the owner class.
+         */
+        default JdocClassRef getOwnerClassRef() {
+            return (JdocClassRef) jjtGetChild(0);
+        }
+    }
+
+    /**
+     * A reference to a java class in javadoc.
+     */
+    class JdocClassRef extends AbstractJavadocNode implements JdocRef {
+
+        JdocClassRef(@Nullable JdocToken tok) {
+            super(JavadocNodeId.CLASS_REF);
+            setFirstToken(tok);
+            setLastToken(tok);
+        }
+
+        /**
+         * Returns the name of the class. This may be a simple name,
+         * which needs to be resolved with a {@link JSymbolTable}.
+         * This may also be empty, in which case the enclosing class
+         * is implied.
+         */
+        public String getSimpleRef() {
+            return getFirstToken().getImage();
+        }
+
+        @Override
+        public boolean isImplicit() {
+            return getFirstToken().isImplicit();
+        }
+    }
+
+    /**
+     * A reference to a field of a class in javadoc.
+     */
+    class JdocFieldRef extends AbstractJavadocNode implements JdocMemberRef {
+
+        JdocFieldRef(JdocClassRef classRef, JdocToken fieldName) {
+            super(JavadocNodeId.FIELD_REF);
+            jjtAddChild(classRef, 0);
+            setFirstToken(classRef.getFirstToken());
+            setLastToken(fieldName);
+        }
+
+        /**
+         * Returns the name of the field.
+         */
+        public String getName() {
+            return getLastToken().getImage();
+        }
+    }
+
+    /**
+     * A reference to a method or constructor of a class in javadoc.
+     */
+    class JdocExecutableRef extends AbstractJavadocNode implements JdocMemberRef {
+
+        private final String name;
+
+        public JdocExecutableRef(JdocClassRef classRef, JdocToken nametok) {
+            super(JavadocNodeId.EXECUTABLE_REF);
+            jjtAddChild(classRef, 0);
+            setFirstToken(classRef.getFirstToken());
+            name = nametok.getImage();
+        }
+
+        public NodeStream<JdocClassRef> getParamRefs() {
+            return children(JdocClassRef.class).drop(1);
+        }
+
+
+        public String getName() {
+            return name;
         }
     }
 
