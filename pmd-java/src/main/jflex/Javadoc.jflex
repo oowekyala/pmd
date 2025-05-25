@@ -64,21 +64,23 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 %state HTML_ATTR_VAL_DQ
 %state HTML_ATTR_VAL_SQ
 
-WHITESPACE_CHAR=        [\ \t\f]
 DIGIT=                  [0-9]
 HEX_DIGIT=              [0-9a-fA-F]
 ALPHA=                  [:jletter:]
 BLOCK_TAG_ID=           "@"[^\ \t\f\n\r]+
 INLINE_TAG_ID=          "@"[^\ \t\f\n\r\{\}]+
+
+WHITESPACE_CHAR=        [\ \t\f]
 // Uses the same convention as java.util.regex.Pattern#line-terminators
 LINE_TERM=              (\r\n | [\r\n\u0085\u2028\u2029])
 
-ENTITY =                "&" {ALPHA}+ ";"
+ENTITY =                "&" [:jletter:]+ ";"
                       | "&#" {DIGIT}+ ";"
                       | "&#" [xX] {HEX_DIGIT}+ ";"
 
-HTML_TAG_NAME=          ({ALPHA}|"_"|":")({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
+HTML_TAG_NAME=          [[:jletter:]&&[_:]][[:jletter:]&&[_:]]({ALPHA}|{DIGIT}|"_"|":"|"."|"-")*
 HTML_ATTR_NAME=         ([^ \n\r\t\f\"\'<>/=])+
+UNQUOTED_ATTR_VALUE=    ([^ \n\r\t\f\"\'<>/=])+
 
 %%
 
@@ -106,8 +108,7 @@ HTML_ATTR_NAME=         ([^ \n\r\t\f\"\'<>/=])+
 <HTML_ATTRS>            [=]                    { yybegin(HTML_ATTR_VAL);     return JavadocTokenType.HTML_EQ; }
 <HTML_ATTR_VAL>         [\"]                   { yybegin(HTML_ATTR_VAL_DQ);  return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL>         [\']                   { yybegin(HTML_ATTR_VAL_SQ);  return JavadocTokenType.HTML_SQUOTE; }
-// unquoted
-<HTML_ATTR_VAL>         {HTML_ATTR_NAME}       { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_ATTR_VAL; }
+<HTML_ATTR_VAL>         {UNQUOTED_ATTR_VALUE}  { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_ATTR_VAL; }
 
 <HTML_ATTR_VAL_DQ>      [\"]                   { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_DQUOTE; }
 <HTML_ATTR_VAL_SQ>      [\']                   { yybegin(HTML_ATTRS);        return JavadocTokenType.HTML_SQUOTE; }
