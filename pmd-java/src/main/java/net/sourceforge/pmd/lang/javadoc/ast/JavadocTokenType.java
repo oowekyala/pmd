@@ -8,7 +8,9 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import java.util.EnumSet;
 
 public enum JavadocTokenType {
+    /** End of input. */
     COMMENT_START("/**", true),
+    /** End of input. */
     COMMENT_END("*/", true),
 
     /** Name of an inline or block tag. */
@@ -25,8 +27,9 @@ public enum JavadocTokenType {
      * after a line break (incl asterisk), and trailing whitespace before
      * the line break, is treated as {@link #WHITESPACE}.
      *
-     * <p>Line break tokens are always insignificant. In a {@code <pre>} HTML tag,
-     * it's rendered as a line terminator. Outside, it's rendered as a single space.
+     * <p>Line break tokens are always insignificant for parsing. In a
+     * {@code <pre>} HTML tag, it's rendered as a line terminator. Outside,
+     * it's rendered as a single space.
      * <pre>
      * lineBreak ::= ("\n" | "\r\n") ({:whitespace:}* "*")?
      * </pre>
@@ -84,16 +87,7 @@ public enum JavadocTokenType {
         this.isConst = isConst;
     }
 
-    /**
-     * <ul>
-     *     <li>
-     * OH1
-     *     @return foobar
-     *     <li>
-     * OHA
-     * </ul>
-     */
-    public boolean isSignificant() {
+    boolean isSignificant() {
         return this != WHITESPACE && this != LINE_BREAK;
     }
 
