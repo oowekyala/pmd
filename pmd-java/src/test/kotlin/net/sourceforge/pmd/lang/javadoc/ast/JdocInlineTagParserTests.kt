@@ -4,13 +4,12 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotest.matchers.should
 import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.java.ast.ProcessorTestSpec
+import net.sourceforge.pmd.lang.ast.test.shouldHaveText
 
 
-class JdocInlineTagParserTests : ProcessorTestSpec({
+class JdocInlineTagParserTests : JdocParserTestSpec({
     /*
         TODO tests:
          - html comments
@@ -18,7 +17,7 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          - block tags
     */
 
-    jdocParserTest("Test @link inline tags") {
+    parserTest("Test @link inline tags") {
 
 
         """
@@ -26,13 +25,13 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@link #hey}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@link #hey}\n */"
+            it shouldHaveText "/**\n * See {@link #hey}\n */" 
 
             data("See ")
             link {
-                it::getText shouldBe "{@link #hey}"
+                it shouldHaveText "{@link #hey}" 
                 it::getRef shouldBe fieldRef("hey") {
-                    it::getText shouldBe "#hey"
+                    it shouldHaveText "#hey" 
                     emptyClassRef()
                 }
             }
@@ -44,15 +43,15 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@link Oha#hey label label}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@link Oha#hey label label}\n */"
+            it shouldHaveText "/**\n * See {@link Oha#hey label label}\n */" 
 
             data("See ")
             link {
-                it::getText shouldBe "{@link Oha#hey label label}"
+                it shouldHaveText "{@link Oha#hey label label}" 
                 it::getRef shouldBe fieldRef("hey") {
-                    it::getText shouldBe "Oha#hey"
+                    it shouldHaveText "Oha#hey" 
                     classRef("Oha") {
-                        it::getText shouldBe "Oha"
+                        it shouldHaveText "Oha" 
                     }
                 }
 
@@ -68,13 +67,13 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@link Oha# label label}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@link Oha# label label}\n */"
+            it shouldHaveText "/**\n * See {@link Oha# label label}\n */" 
 
             data("See ")
             link {
-                it::getText shouldBe "{@link Oha# label label}"
+                it shouldHaveText "{@link Oha# label label}" 
                 it::getRef shouldBe classRef("Oha") {
-                    it::getText shouldBe "Oha#"
+                    it shouldHaveText "Oha#" 
 
                     malformed {
                         it.message.shouldContain("Unexpected token #")
@@ -91,11 +90,11 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@link }
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@link }\n */"
+            it shouldHaveText "/**\n * See {@link }\n */" 
 
             data("See ")
             link {
-                it::getText shouldBe "{@link }"
+                it shouldHaveText "{@link }" 
                 // TODO malformed?
                 it::getRef shouldBe null
                 it::getLabel shouldBe null
@@ -107,11 +106,11 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@link}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@link}\n */"
+            it shouldHaveText "/**\n * See {@link}\n */" 
 
             data("See ")
             link {
-                it::getText shouldBe "{@link}"
+                it shouldHaveText "{@link}" 
                 // TODO malformed?
                 it::getRef shouldBe null
                 it::getLabel shouldBe null
@@ -122,20 +121,20 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
     }
 
 
-    jdocParserTest("Test @value inline tags") {
+    parserTest("Test @value inline tags") {
 
         """
         /**
          * See {@value #hey}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@value #hey}\n */"
+            it shouldHaveText "/**\n * See {@value #hey}\n */" 
 
             data("See ")
             value {
-                it::getText shouldBe "{@value #hey}"
+                it shouldHaveText "{@value #hey}" 
                 it::getRef shouldBe fieldRef("hey") {
-                    it::getText shouldBe "#hey"
+                    it shouldHaveText "#hey" 
                     emptyClassRef()
                 }
             }
@@ -149,20 +148,20 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@value Oha#hey label label}
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@value Oha#hey label label}\n */"
+            it shouldHaveText "/**\n * See {@value Oha#hey label label}\n */" 
 
             data("See ")
             value {
-                it::getText shouldBe "{@value Oha#hey label label}"
+                it shouldHaveText "{@value Oha#hey label label}" 
                 it::getRef shouldBe fieldRef("hey") {
-                    it::getText shouldBe "Oha#hey"
+                    it shouldHaveText "Oha#hey" 
                     classRef("Oha") {
-                        it::getText shouldBe "Oha"
+                        it shouldHaveText "Oha" 
                     }
                 }
 
                 malformed {
-                    it::getText shouldBe "label"
+                    it shouldHaveText "label" 
                 }
             }
         }
@@ -173,11 +172,11 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
          * See {@value }
          */
         """.trimIndent() should parseAsJdoc {
-            it::getText shouldBe "/**\n * See {@value }\n */"
+            it shouldHaveText "/**\n * See {@value }\n */" 
 
             data("See ")
             value {
-                it::getText shouldBe "{@value }"
+                it shouldHaveText "{@value }" 
                 // TODO malformed?
                 it::getRef shouldBe null
             }
@@ -187,7 +186,7 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
     }
 
 
-    jdocParserTest("Test @code inline tag") {
+    parserTest("Test @code inline tag") {
 
 
         """
@@ -208,7 +207,7 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
     }
 
 
-    jdocParserTest("Test unknown inline tags") {
+    parserTest("Test unknown inline tags") {
 
         """
         /**
@@ -217,7 +216,7 @@ class JdocInlineTagParserTests : ProcessorTestSpec({
         """.trimIndent() should parseAsJdoc {
             data("See ")
             unknownInline("@cobalt") {
-                it::getText shouldBe "{@cobalt #hey}"
+                it shouldHaveText "{@cobalt #hey}" 
                 it::getData shouldBe "#hey"
             }
         }

@@ -6,30 +6,23 @@ package net.sourceforge.pmd.lang.javadoc.ast
 
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
 import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
+import io.kotest.matchers.shouldBe
 import net.sourceforge.pmd.internal.util.IteratorUtil
 import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.shouldBe
+import net.sourceforge.pmd.lang.ast.test.textStr
 import net.sourceforge.pmd.lang.java.ast.*
-import kotlin.collections.*
-import kotlin.collections.toList
+import net.sourceforge.pmd.lang.java.ast.ParserTestSpec.GroupTestCtx.VersionedTestCtx
 
-fun ParserTestSpec.jdocParserTest(name: String,
-                                  javaVersion: JavaVersion = JavaVersion.Latest,
-                                  spec: suspend ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx<JavadocNode.JdocComment>.() -> Unit) =
-        parserTest(name, javaVersion) {
-            inContext(JavadocParsingCtx) {
-                spec()
-            }
-        }
+abstract class JdocParserTestSpec(body: ParserTestSpec.() -> Unit)
+    : ProcessorTestSpec(body)
 
 
-fun <T : Node> ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx<T>.parseAsJdoc(matcher: NodeSpec<JavadocNode.JdocComment>) =
-        parseAs {
-            jdoc {
-                matcher()
-            }
+fun VersionedTestCtx.parseAsJdoc(matcher: NodeSpec<JavadocNode.JdocComment>)
+        : (String) -> Unit =
+        { str ->
+            JavadocParsingCtx.parseNode(str, this).shouldMatchComment(matcher)
         }
 
 
@@ -97,7 +90,7 @@ fun TreeNodeWrapper<Node, out JavadocNode>.classRef(name: String, spec: NodeSpec
 fun TreeNodeWrapper<Node, out JavadocNode>.emptyClassRef(spec: NodeSpec<JdocRef.JdocClassRef> = EmptyAssertions) =
         child<JdocRef.JdocClassRef> {
             it::getSimpleRef shouldBe ""
-            it::getText shouldBe ""
+            it.textStr shouldBe ""
             it::isImplicit shouldBe true
             spec()
         }

@@ -55,7 +55,7 @@ class MainJdocParser extends BaseJavadocParser {
      * Root production.
      */
     public JdocComment parse() {
-        JdocComment comment = new JdocComment();
+        JdocComment comment = new JdocComment(lexer.getDoc().getTextDocument());
 
         advance();
         if (head() == null) {
