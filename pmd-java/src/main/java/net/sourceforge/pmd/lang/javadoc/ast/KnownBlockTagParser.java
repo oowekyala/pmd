@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.COMMENT_DATA;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.PARAM_NAME;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.javadoc.ast.InlineTagParser.BlockTagParser;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocSimpleBlockTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocUnknownBlockTag;
 
 /**
@@ -22,6 +22,9 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocUnknownBlockTag;
  * @author Clément Fournier
  */
 enum KnownBlockTagParser implements BlockTagParser {
+    // refs
+    // https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javadoc.html
+
     // those are only followed by regular comment data
     RETURN("@return"),
     AUTHOR("@author"),
@@ -33,7 +36,7 @@ enum KnownBlockTagParser implements BlockTagParser {
     SEE("@see") {
         @Override
         public JdocBlockTag parse(String name, MainJdocParser parser) {
-            JdocSimpleBlockTag tag = new JdocSimpleBlockTag(name);
+            JdocBlockTag tag = new JdocBlockTag(name);
             JdocToken tokBeforeRef = parser.head();
             if (parser.nextNonWs() && parser.tokIs(COMMENT_DATA) && !parser.head().getImageCs().startsWith('"', 0)) {
                 parser.parseReference(tokBeforeRef, tag);
@@ -43,13 +46,24 @@ enum KnownBlockTagParser implements BlockTagParser {
     },
 
     // +1 name + comment data
-    PARAM("@param"), // todo
+    PARAM("@param") {
+        @Override
+        public JdocBlockTag parse(String name, MainJdocParser parser) {
+            JdocBlockTag tag = new JdocBlockTag(name);
+            // todo store the name somewhere
+            if (parser.nextNonWs() && parser.tokIs(PARAM_NAME)) {
+                tag.setParamName(parser.head());
+                parser.nextNonWs(); // put the parser on the next data token
+            }
+            return tag;
+        }
+    },
 
     // +1 class ref + comment data
     EXCEPTION("@exception") {
         @Override
         public JdocBlockTag parse(String name, MainJdocParser parser) {
-            JdocSimpleBlockTag tag = new JdocSimpleBlockTag(name);
+            JdocBlockTag tag = new JdocBlockTag(name);
             JdocToken tokBeforeRef = parser.head();
             if (parser.nextNonWs()) {
                 parser.parseReference(tokBeforeRef, tag);
@@ -96,7 +110,7 @@ enum KnownBlockTagParser implements BlockTagParser {
     @Override
     public JdocBlockTag parse(String name, MainJdocParser parser) {
         parser.nextNonWs();
-        return new JdocSimpleBlockTag(JavadocNodeId.SIMPLE_BLOCK_TAG, name);
+        return new JdocBlockTag(name);
     }
 
     static @NonNull JdocBlockTag selectAndParse(String name, MainJdocParser parser) {

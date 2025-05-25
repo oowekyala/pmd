@@ -15,6 +15,8 @@ import net.sourceforge.pmd.lang.ast.test.BaseTreeDumpTest;
 import net.sourceforge.pmd.lang.ast.test.RelevantAttributePrinter;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag;
+import net.sourceforge.pmd.lang.rule.xpath.Attribute;
 
 /**
  *
@@ -36,6 +38,17 @@ public class JavadocTreeDumpTest extends BaseTreeDumpTest {
                 result.add(new AttributeInfo("TextData", ((JdocHtmlComment) node).getData().toString()));
             }
         }
+
+        @Override
+        protected boolean ignoreAttribute(@NonNull Node node, @NonNull Attribute attribute) {
+            if (super.ignoreAttribute(node, attribute)) {
+                return true;
+            }
+            if (attribute.getName().equals("ParamName") && node instanceof JdocBlockTag) {
+                return !"@param".equals(((JdocBlockTag) node).getTagName());
+            }
+            return false;
+        }
     }
 
 
@@ -52,5 +65,10 @@ public class JavadocTreeDumpTest extends BaseTreeDumpTest {
     @Test
     public void testMethodComment() {
         doTest("methodComment");
+    }
+
+    @Test
+    public void testParamTag() {
+        doTest("paramTag");
     }
 }

@@ -4,7 +4,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
     Adapted from the lexer used by IntelliJ Community.
     This lexer simplifies the treatment of tag values (we lex them as comment data),
     whereas the original one has special tokens for eg "#", "(", ")", ",", etc., and
-    treats @param, {@code}, {@literal}  specially.
+    treats {@code}, {@literal}  specially.
     Conversely, it has more sophisticated treatment of line breaks and HTML data.
  */
 
@@ -33,6 +33,10 @@ package net.sourceforge.pmd.lang.javadoc.ast;
         }
     }
 
+    void whitespaceStateSwitch() {
+        if (yystate() == IGNORED_WS) yybegin(COMMENT_DATA);
+    }
+
     public void yyappendtext(StringBuilder sb) {
         sb.append(zzBuffer, zzStartRead, zzMarkedPos-zzStartRead);
     }
@@ -41,7 +45,7 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 %state COMMENT_DATA_START, COMMENT_DATA
 %state INLINE_TAG_NAME
-%state COMMENT_DATA_START, INLINE_TAG_START
+%state COMMENT_DATA_START, INLINE_TAG_START, PARAM_TAG_START, IGNORED_WS
 %state IN_HTML, IN_HTML_COMMENT
 %state HTML_ATTRS, HTML_ATTR_VAL
 %state HTML_ATTR_VAL_DQ, HTML_ATTR_VAL_SQ, INLINE_TAG
@@ -65,7 +69,9 @@ HTML_TAG_NAME=          [^\s\"\'<>/=]+
 HTML_ATTR_NAME=         [^\s\"\'<>/=]+
 UNQUOTED_ATTR_VALUE=    [^\s\"\'`<>/=]+
 
-JAVA_IDENT=[.[:jletter:]]+
+JAVA_NAME=[.[:jletter:]]+
+JAVA_IDENT=[:jletter:]+
+TYPE_PARAM_IDENT=("<" {JAVA_IDENT} ">")
 IDENT_START=[:jletter:]
 
 %%
@@ -113,12 +119,17 @@ IDENT_START=[:jletter:]
 <INLINE_TAG,
  INLINE_TAG_START>      "}"                    { if (--braces >= 0)             return JdocTokenType.COMMENT_DATA;
                                                   else { yybegin(COMMENT_DATA);  return JdocTokenType.INLINE_TAG_END; }
-                                                }
+                                               }
 
 
 <INLINE_TAG_NAME>       {INLINE_TAG_ID}        { yybegin(INLINE_TAG_START); braces = 0; return JdocTokenType.TAG_NAME; }
 <COMMENT_DATA_START,
+ INLINE_TAG_START>      "@param"               { yybegin(PARAM_TAG_START);              return JdocTokenType.TAG_NAME; }
+<COMMENT_DATA_START,
  INLINE_TAG_START>      {BLOCK_TAG_ID}         { yybegin(COMMENT_DATA_START);           return JdocTokenType.TAG_NAME; }
+
+<PARAM_TAG_START>       {JAVA_IDENT}
+                      | {TYPE_PARAM_IDENT}     { yybegin(IGNORED_WS);                   return JdocTokenType.PARAM_NAME; }
 
 
 // this is for whitespace either trailing a line or the whole input
@@ -130,7 +141,9 @@ IDENT_START=[:jletter:]
 <COMMENT_DATA_START,
  INLINE_TAG_START,
  HTML_ATTRS,
- HTML_ATTR_VAL>         {WS_CHAR}+             {                             return JdocTokenType.WHITESPACE;   }
+ PARAM_TAG_START,
+ IGNORED_WS,
+ HTML_ATTR_VAL>         {WS_CHAR}+             { whitespaceStateSwitch();    return JdocTokenType.WHITESPACE;   }
 
 <COMMENT_DATA_START>    {ENTITY}               { yybegin(COMMENT_DATA);      return JdocTokenType.CHARACTER_REFERENCE;  }
 <COMMENT_DATA,
@@ -139,9 +152,6 @@ IDENT_START=[:jletter:]
 
 <COMMENT_DATA_START>    .                      { yybegin(COMMENT_DATA);      return JdocTokenType.COMMENT_DATA; }
 <INLINE_TAG_START>      .                      { yybegin(INLINE_TAG);        return JdocTokenType.COMMENT_DATA; }
-// this is an optimisation, parsing words when possible
-//<COMMENT_DATA,
-// INLINE_TAG>            [:alphanum:]+          {                             return JdocTokenType.COMMENT_DATA; }
 
 <COMMENT_DATA,
  INLINE_TAG>            .                      {                             return JdocTokenType.COMMENT_DATA; }
@@ -173,14 +183,14 @@ IDENT_START=[:jletter:]
 // Special part about references
 
 <REF_START> {
-                        {JAVA_IDENT}           {                              return JdocTokenType.TYPE_REFERENCE; }
+                        {JAVA_NAME}            {                              return JdocTokenType.TYPE_REFERENCE; }
                         "#" / {IDENT_START}    { yybegin(REF_MEMBER);         return JdocTokenType.REF_POUND;      }
                         {WS_CHAR}+             { yybegin(REF_REST);           return JdocTokenType.WHITESPACE;     }
                         [^]                    { yybegin(REF_REST_WS);        return JdocTokenType.BAD_CHAR;       }
 }
 
 <REF_MEMBER> {
-                        {JAVA_IDENT}           { yybegin(REF_PARAMS_START);   return JdocTokenType.MEMBER_REFERENCE; }
+                        {JAVA_NAME}            { yybegin(REF_PARAMS_START);   return JdocTokenType.MEMBER_REFERENCE; }
                         [^]                    { yybegin(REF_REST);           return JdocTokenType.BAD_CHAR;       }
 }
 
@@ -191,7 +201,7 @@ IDENT_START=[:jletter:]
 }
 
 <REF_PARAMS> {
-                        {JAVA_IDENT}           {                              return JdocTokenType.TYPE_REFERENCE; }
+                        {JAVA_NAME}            {                              return JdocTokenType.TYPE_REFERENCE; }
                         {WS_CHAR}+             {                              return JdocTokenType.WHITESPACE;     }
                         ","                    {                              return JdocTokenType.REF_COMMA;      }
                         ")"                    { yybegin(REF_REST_WS);        return JdocTokenType.REF_RPAREN;     }
