@@ -477,7 +477,7 @@ $delim
         }
     }
 
-    parserTestContainer("Binary numeric literals - pre java1.7", javaVersions = Earliest..J1_6) {
+    parserTestContainer("Binary numeric literals - pre java1.7", javaVersions = Earliest..JavaVersion.J1_6) {
         // binary literals were introduced in 1.7
 
         inContext(ExpressionParsingCtx) {
