@@ -10,7 +10,7 @@ import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.GenericToken;
 import net.sourceforge.pmd.lang.ast.TextAvailableNode;
 
-abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode, TextAvailableNode {
+abstract class AbstractJavadocNode extends AbstractNode implements JavadocNode {
 
     private final JavadocNodeId id;
 
