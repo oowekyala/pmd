@@ -84,10 +84,6 @@ public interface JavadocNode extends TextAvailableNode, GenericNode<JavadocNode>
     /** Some text payload for the comment. */
     class JdocCommentData extends AbstractJavadocNode {
 
-        JdocCommentData(JdocToken tok) {
-            this(tok, tok);
-        }
-
         JdocCommentData(JdocToken first, JdocToken last) {
             super(JavadocNodeId.COMMENT_DATA);
             setFirstToken(first);

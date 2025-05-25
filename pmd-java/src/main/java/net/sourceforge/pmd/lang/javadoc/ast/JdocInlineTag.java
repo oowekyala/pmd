@@ -117,7 +117,7 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
          * Otherwise this is a {@code {@link }} tag.
          */
         public boolean isPlain() {
-            return getTagName().endsWith("n");
+            return getTagName().charAt(getTagName().length() - 1) == 'n';
         }
 
         /**
@@ -129,8 +129,10 @@ public abstract class JdocInlineTag extends AbstractJavadocNode {
             return children(JdocRef.class).first();
         }
 
-        @Nullable
-        public String getLabel() {
+        /**
+         * Returns the label text, or null if there is no label.
+         */
+        public @Nullable String getLabel() {
             return children(JdocCommentData.class).firstOpt().map(JdocCommentData::getData).orElse(null);
         }
     }
