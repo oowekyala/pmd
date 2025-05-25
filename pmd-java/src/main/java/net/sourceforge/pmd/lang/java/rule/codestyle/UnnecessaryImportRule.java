@@ -37,6 +37,7 @@ import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.table.ScopeInfo;
 import net.sourceforge.pmd.lang.java.symbols.table.coreimpl.ShadowChainIterator;
+import net.sourceforge.pmd.lang.java.types.JArrayType;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
@@ -44,6 +45,9 @@ import net.sourceforge.pmd.lang.java.types.JVariableSig;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
@@ -196,32 +200,30 @@ public class UnnecessaryImportRule extends AbstractJavaRule {
     }
 
     private void visitComments(ASTCompilationUnit node) {
-        // todo improve that when we have a javadoc parser
         for (JavaComment comment : node.getComments()) {
             if (!(comment instanceof JavadocComment)) {
                 continue;
             }
-            for (Pattern p : PATTERNS) {
-                Matcher m = p.matcher(comment.getText());
-                while (m.find()) {
-                    String fullname = m.group(1);
-
-                    if (fullname != null) { // may be null for "@see #" and "@link #"
-                        removeReferenceSingleImport(fullname);
+          JavadocNode.JdocComment jdocTree = ((JavadocComment) comment).getJdocTree();
+            for (JdocRef jdocRef : jdocTree.descendants(JdocRef.class)) {
+                if (jdocRef instanceof JdocClassRef) {
+                    String simpleRef = ((JdocClassRef) jdocRef).getSimpleRef();
+                    if (simpleRef.isEmpty()) {
+                        continue;
                     }
-
-                    if (m.groupCount() > 1) {
-                        fullname = m.group(2);
-                        if (fullname != null) {
-                            for (String param : fullname.split("\\s*,\\s*")) {
-                                removeReferenceSingleImport(param);
-                            }
-                        }
+                    JTypeMirror resolved = ((JdocClassRef) jdocRef).resolveRef();
+                    if (resolved == null) {
+                        removeReferenceSingleImport(simpleRef);
+                        continue;
                     }
-
-                    if (allSingleNameImports.isEmpty()) {
-                        return;
+                    if (resolved instanceof JArrayType) {
+                        resolved = ((JArrayType) resolved).getElementType();
                     }
+                    JTypeDeclSymbol symbol = resolved.getSymbol();
+                    ShadowChainIterator<JTypeMirror, ScopeInfo> scopeIter =
+                        jdocTree.getJavaSymbolTable().types()
+                                .iterateResults(symbol.getSimpleName());
+                    checkScopeChain(false, symbol, scopeIter, ts -> true, false);
                 }
             }
         }
