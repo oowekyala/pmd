@@ -164,4 +164,4 @@ fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean
 
 
 val JavadocNode.tokens: List<JdocToken>
-    get() = IteratorUtil.toList(GenericToken.range(firstToken, lastToken))
+    get() = GenericToken.range(firstToken, lastToken).toList()
