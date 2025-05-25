@@ -16,6 +16,7 @@ import net.sourceforge.pmd.lang.ast.test.RelevantAttributePrinter;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocCommentData;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlComment;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
 
 /**
@@ -45,7 +46,14 @@ public class JavadocTreeDumpTest extends BaseTreeDumpTest {
                 return true;
             }
             if (attribute.getName().equals("ParamName") && node instanceof JdocBlockTag) {
-                return !"@param".equals(((JdocBlockTag) node).getTagName());
+                return !((JdocBlockTag) node).isA("@param");
+            }
+            if (attribute.getName().equals("TypeParamRef") && node instanceof JdocBlockTag) {
+                return !((JdocBlockTag) node).isA("@param")
+                    || attribute.getStringValue().equals("false");
+            }
+            if (attribute.getName().equals("ArrayDimensions") && node instanceof JdocClassRef) {
+                return "0".equals(attribute.getStringValue());
             }
             return false;
         }

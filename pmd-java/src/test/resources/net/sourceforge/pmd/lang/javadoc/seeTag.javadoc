@@ -4,6 +4,9 @@
  * @see      srcBegin
 
  @see some#ref()
+ @see String[]#clone()
+ @see #method(int,String[])
+ @see #method(int,String...)
  @see some#field
 * @see #field kxxe
 @param

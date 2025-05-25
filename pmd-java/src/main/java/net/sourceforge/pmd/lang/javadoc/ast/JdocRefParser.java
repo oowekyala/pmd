@@ -8,9 +8,12 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.BAD_CHAR;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.MEMBER_REFERENCE;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_COMMA;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_LBRACKET;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_LPAREN;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_POUND;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_RBRACKET;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_RPAREN;
+import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.REF_VARARGS;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.TYPE_REFERENCE;
 import static net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.WHITESPACE;
 
@@ -18,10 +21,10 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocClassRef;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocExecutableRef;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocRef.JdocFieldRef;
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
 
 /**
  * Parses references. At the time the tokens come out those are COMMENT_DATA.
@@ -29,7 +32,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocMalformed;
  */
 class JdocRefParser extends BaseJavadocParser {
 
-    private static final EnumSet<JdocTokenType> SKIPPED = EnumSet.of(WHITESPACE, REF_COMMA, BAD_CHAR);
+    private static final EnumSet<JdocTokenType> PARAM_CLOSERS = EnumSet.of(WHITESPACE, REF_RPAREN);
 
     JdocRefParser(JdocToken tokenToSplit) {
         super(new JavadocLexer(tokenToSplit, JavadocFlexer.REF_START));
@@ -61,7 +64,7 @@ class JdocRefParser extends BaseJavadocParser {
             return null; // wtf?
         } else if (tokIs(TYPE_REFERENCE)) {
             classRef = new JdocClassRef(head());
-            advance();
+            parseArrayDims(classRef); // advances at least 1
         } else {
             classRef = new JdocClassRef(JdocToken.implicitBefore(TYPE_REFERENCE, head()));
         }
@@ -88,24 +91,44 @@ class JdocRefParser extends BaseJavadocParser {
         return classRef;
     }
 
-
     private void parseParams(JdocExecutableRef method) {
+        advance();
 
-        while (advance()) {
-            while (tokIsAny(SKIPPED) && advance()) {
-                // skip
-            }
+        while (tokIs(TYPE_REFERENCE)) {
+            JdocClassRef klass = new JdocClassRef(head());
+            method.appendChild(klass);
+            parseArrayDims(klass); // advances at least 1
 
-            if (tokIs(TYPE_REFERENCE)) {
-                method.appendChild(new JdocClassRef(head()));
+            if (tokIs(REF_COMMA)) {
+                advance();
+            } else {
+                break;
             }
+        }
+
+        while (!tokIsAny(PARAM_CLOSERS) && advance()) {
+            // skip it
+        }
+    }
+
+    private void parseArrayDims(JdocClassRef owner) {
+        // note: this leaves trailing unmatched closing brackets the token stream
+        // this also allows the varargs anywhere
+
+        int numDims = 0;
+        while (advance() && tokIs(REF_LBRACKET)
+            && advance() && tokIs(REF_RBRACKET)) {
+            numDims++;
+        }
+
+        if (tokIs(REF_VARARGS)) {
+            numDims++;
             advance();
-            while (tokIsAny(SKIPPED) && advance()) {
-                // skip
-            }
-            if (tokIs(REF_RPAREN)) {
-                return;
-            }
+        }
+
+        if (numDims > 0) {
+            owner.setLastToken(head().getPrevious());
+            owner.setArrayDims(numDims);
         }
     }
 

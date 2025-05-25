@@ -27,6 +27,13 @@ public class JdocBlockTag extends AbstractJavadocNode {
     }
 
     /**
+     * Tests the name of this tag.
+     */
+    public boolean isA(String tagName){
+        return tagName.equals(getTagName());
+    }
+
+    /**
      * Returns the tag name. This contains an {@code '@'} character,
      * eg {@code @code}, or {@code @link}.
      */
@@ -47,19 +54,30 @@ public class JdocBlockTag extends AbstractJavadocNode {
         assert paramToken.getKind() == JdocTokenType.PARAM_NAME;
         Chars image = paramToken.getImageCs();
         if (image.startsWith('<', 0)) {
-            this.paramName = image.substring(1, image.length() - 2);
+            // keep the '<' to be able to interpret it later, but remove the '>'
+            this.paramName = image.substring(0, image.length() - 1);
         } else {
             this.paramName = paramToken.getImage();
         }
     }
 
     /**
-     * If this is an {@code @param} tag and a name was mentioned, returns
+     * If this is a {@code @param} tag and a name was mentioned, returns
      * the identifier for the parameter. For a type parameter, returns the
      * simple name, not {@code <T>}.
      */
     public @Nullable String getParamName() {
+        if (isTypeParamRef()) {
+            return paramName.substring(1);
+        }
         return paramName;
+    }
+
+    /**
+     * Returns true if this is a {@code @param} tag for some type parameter.
+     */
+    public boolean isTypeParamRef() {
+        return paramName != null && paramName.startsWith("<");
     }
 
     /** Any known block tag. */
