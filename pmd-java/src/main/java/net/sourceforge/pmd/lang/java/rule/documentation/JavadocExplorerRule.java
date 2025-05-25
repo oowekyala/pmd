@@ -10,7 +10,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
-import net.sourceforge.pmd.lang.java.ast.FormalComment;
+import net.sourceforge.pmd.lang.java.ast.JavadocComment;
 import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode;
@@ -64,7 +64,7 @@ public class JavadocExplorerRule extends AbstractJavaRule {
         total++;
         JdocComment comment;
         try {
-            final FormalComment formal = commentOwner.getJavadocComment();
+            final JavadocComment formal = commentOwner.getJavadocComment();
             comment = formal != null ? formal.getJdocTree() : null;
         } catch (Throwable e) {
             e.printStackTrace();

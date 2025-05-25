@@ -26,7 +26,7 @@ public interface JavadocCommentOwner extends JavaNode {
      * Returns the root of the javadoc tree, if there is a comment.
      */
     default @Nullable JdocComment getJavadocTree() {
-        FormalComment comment = getJavadocComment();
+        JavadocComment comment = getJavadocComment();
         if (comment != null) {
             return comment.getJdocTree();
         }

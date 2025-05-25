@@ -26,8 +26,8 @@ import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner;
 import net.sourceforge.pmd.lang.java.symbols.table.JSymbolTable;
 import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocHtmlAttr.HtmlAttrSyntax;
 import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
-import net.sourceforge.pmd.util.document.Chars;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 
 /**

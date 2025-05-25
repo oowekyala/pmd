@@ -12,8 +12,8 @@ import net.sourceforge.pmd.lang.ast.TokenMgrError
 import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
-import net.sourceforge.pmd.util.document.TextDocument
-import net.sourceforge.pmd.util.document.TextRegion
+import net.sourceforge.pmd.lang.document.TextDocument
+import net.sourceforge.pmd.lang.document.TextRegion
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
 import java.io.EOFException

@@ -11,10 +11,6 @@ import net.sourceforge.pmd.lang.ast.test.shouldHaveText
 
 
 class JdocInlineTagParserTests : JdocParserTestSpec({
-    /*
-        TODO tests:
-         - html comments
-    */
 
     parserTest("Test @link inline tags") {
 

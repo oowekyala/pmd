@@ -17,11 +17,11 @@ import java.util.EnumSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.internal.util.AssertionUtil;
 import net.sourceforge.pmd.lang.TokenManager;
+import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextRegion;
-import net.sourceforge.pmd.util.document.Chars;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 import com.sun.tools.example.debug.expr.TokenMgrError;
 
@@ -155,7 +155,7 @@ class JavadocLexer implements TokenManager<JdocToken> {
             prevToken = next;
             return next;
         } catch (IOException e) {
-            throw AssertionUtil.shouldNeverBeThrown(e, "We're reading from an in-memory char slice");
+            throw AssertionUtil.shouldNotReachHere("We're reading from an in-memory char slice", e);
         }
     }
 

@@ -5,7 +5,7 @@
 package net.sourceforge.pmd.lang.javadoc.ast;
 
 import net.sourceforge.pmd.lang.ast.impl.TokenDocument;
-import net.sourceforge.pmd.util.document.TextDocument;
+import net.sourceforge.pmd.lang.document.TextDocument;
 
 /**
  * Token document for Javadoc.
