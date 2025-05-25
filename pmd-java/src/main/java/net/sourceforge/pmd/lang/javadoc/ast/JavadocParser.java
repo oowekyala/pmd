@@ -254,6 +254,7 @@ public class JavadocParser {
         }
     }
 
+    // TODO error recovery
     private void htmlAttrs(JdocHtml html) {
         // name=
         //    ^
@@ -321,8 +322,9 @@ public class JavadocParser {
             }
             html.addAttribute(attr);
             if (syntax != EMPTY) {
-                nextNonWs();
+                advance();
             }
+            skipWhitespace();
         }
     }
 

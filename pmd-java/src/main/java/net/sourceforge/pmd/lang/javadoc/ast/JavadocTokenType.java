@@ -21,10 +21,12 @@ public enum JavadocTokenType {
     WHITESPACE("<whitespace>", false),
 
     /**
-     * This also takes care of the following asterisk. Leading whitespace
-     * is treated as {@link #WHITESPACE} if there is no asterisk, in any
-     * case spaces after the asterisk are {@link #WHITESPACE}. Line break
-     * tokens are always insignificant.
+     * This also takes care of any following asterisk. Leading whitespace 
+     * after a line break (incl asterisk), and trailing whitespace before 
+     * the line break, is treated as {@link #WHITESPACE}.
+     *
+     * <p>Line break tokens are always insignificant. In a {@code <pre>} HTML tag,
+     * it's rendered as a line terminator. Outside, it's rendered as a single space.
      * <pre>
      * lineBreak ::= ("\n" | "\r\n") ({:whitespace:}* "*")?
      * </pre>

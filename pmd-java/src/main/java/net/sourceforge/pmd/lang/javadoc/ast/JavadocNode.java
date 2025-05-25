@@ -80,7 +80,7 @@ public interface JavadocNode extends TextAvailableNode {
             return jjtGetFirstToken().rangeTo(jjtGetLastToken())
                                      .filter(it -> it.getKind() == JavadocTokenType.COMMENT_DATA)
                                      .map(JavadocToken::getImage)
-                                     .collect(Collectors.joining());
+                                     .collect(Collectors.joining(" "));
         }
 
     }
@@ -124,11 +124,6 @@ public interface JavadocNode extends TextAvailableNode {
      */
     class JdocHtml extends AbstractJavadocNode {
 
-        /**
-         * Empty-attribute syntax for boolean attribute, eg {@code <option selected>},
-         * equivalent to {@code <option selected="true">}
-         */
-        static final String UNATTRIBUTED = "true";
         private final Map<String, JdocHtmlAttr> attributes = new HashMap<>(0);
         private final String tagName;
         private boolean autoclose;
