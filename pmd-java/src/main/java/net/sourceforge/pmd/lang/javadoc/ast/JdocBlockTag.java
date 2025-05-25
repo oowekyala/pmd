@@ -26,34 +26,16 @@ public abstract class JdocBlockTag extends AbstractJavadocNode {
 
     /** An unknown block tag. */
     public static class JdocUnknownBlockTag extends JdocBlockTag {
-
         JdocUnknownBlockTag(String tagName) {
             super(JavadocNodeId.UNKNOWN_BLOCK_TAG, tagName);
         }
-
     }
 
     /** A {@code @return}. */
-    public static class JdocReturnTag extends JdocBlockTag {
+    static class JdocSimpleBlockTag extends JdocBlockTag {
 
-        JdocReturnTag(String tagName) {
-            super(JavadocNodeId.RETURN_TAG, tagName);
+        JdocSimpleBlockTag(JavadocNodeId id, String tagName) {
+            super(id, tagName);
         }
     }
-
-    /** An {@code @author}. */
-    public static class JdocAuthorTag extends JdocBlockTag {
-
-        JdocAuthorTag(String tagName) {
-            super(JavadocNodeId.AUTHOR_TAG, tagName);
-        }
-    }
-    /** An {@code @since}. */
-    public static class JdocSinceTag extends JdocBlockTag {
-
-        JdocSinceTag(String tagName) {
-            super(JavadocNodeId.SINCE_TAG, tagName);
-        }
-    }
-
 }

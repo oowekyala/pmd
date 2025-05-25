@@ -11,9 +11,7 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import net.sourceforge.pmd.lang.javadoc.ast.InlineTagParser.BlockTagParser;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocAuthorTag;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocReturnTag;
-import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocSinceTag;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocSimpleBlockTag;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocUnknownBlockTag;
 
 /**
@@ -22,31 +20,10 @@ import net.sourceforge.pmd.lang.javadoc.ast.JdocBlockTag.JdocUnknownBlockTag;
  * @author Clément Fournier
  */
 enum KnownBlockTagParser implements BlockTagParser {
-    RETURN("@return") {
-        @Override
-        public JdocBlockTag parse(String name, MainJdocParser parser) {
-            JdocReturnTag tag = new JdocReturnTag(name);
-            parser.nextNonWs();
-            return tag;
-        }
-    },
-    AUTHOR("@author") {
-        @Override
-        public JdocBlockTag parse(String name, MainJdocParser parser) {
-            JdocAuthorTag tag = new JdocAuthorTag(name);
-            parser.nextNonWs();
-            return tag;
-        }
-    },
-    SINCE("@since") {
-        @Override
-        public JdocBlockTag parse(String name, MainJdocParser parser) {
-            JdocSinceTag tag = new JdocSinceTag(name);
-            parser.nextNonWs();
-            return tag;
-        }
-    },
-
+    RETURN("@return"),
+    AUTHOR("@author"),
+    SINCE("@since"),
+    DEPRECATED("@deprecated"),
     ;
 
     static final BlockTagParser UNKNOWN_PARSER = new BlockTagParser() {
@@ -75,6 +52,11 @@ enum KnownBlockTagParser implements BlockTagParser {
         return name;
     }
 
+    @Override
+    public JdocBlockTag parse(String name, MainJdocParser parser) {
+        parser.nextNonWs();
+        return new JdocSimpleBlockTag(JavadocNodeId.SIMPLE_BLOCK_TAG, name);
+    }
 
     @NonNull
     static JdocBlockTag selectAndParse(String name, MainJdocParser parser) {
