@@ -6,81 +6,40 @@ package net.sourceforge.pmd.lang.javadoc.ast
 
 import com.github.oowekyala.treeutils.matchers.TreeNodeWrapper
 import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
-import io.kotlintest.TestContext
+import net.sourceforge.pmd.internal.util.IteratorUtil
+import net.sourceforge.pmd.lang.ast.GenericToken
 import net.sourceforge.pmd.lang.ast.Node
-import net.sourceforge.pmd.lang.ast.RootNode
-import net.sourceforge.pmd.lang.ast.test.Assertions
 import net.sourceforge.pmd.lang.ast.test.NodeSpec
-import net.sourceforge.pmd.lang.ast.test.BaseParsingHelper
-import net.sourceforge.pmd.lang.ast.test.ValuedNodeSpec
 import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.java.ast.AbstractParserTestSpec
-import net.sourceforge.pmd.lang.java.ast.EmptyAssertions
-import net.sourceforge.pmd.lang.java.ast.JavaMatchingConfig
-import net.sourceforge.pmd.lang.java.ast.Ver
-import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocComment
-import kotlin.streams.toList
+import net.sourceforge.pmd.lang.java.ast.*
+import kotlin.collections.*
+import kotlin.collections.toList
 
-
-abstract class JavadocParserSpec(body: JavadocParserSpec.() -> Unit) : AbstractParserTestSpec<JavadocVer, JdocParserTestCtx>() {
-
-    init {
-        body()
-    }
-
-    override fun makeCtx(testCtx: TestContext, ver: JavadocVer): JdocParserTestCtx =
-            JdocParserTestCtx(this, testCtx, ver)
-
-    override val defaultVer: JavadocVer get() = JavadocVer.JAVADOC
-}
-
-class JdocParserTestCtx(spec: JavadocParserSpec, ktCtx: TestContext, version: JavadocVer) : AbstractParserTestSpec.VersionedTestCtx<JavadocVer, JdocParserTestCtx>(spec, ktCtx, version) {
-
-    override val parser: JavadocParsingHelper
-        get() = version.parser
-
-    fun parseAs(matcher: ValuedNodeSpec<JdocComment, Any>): Assertions<String> = {
-        version.parser.parse(it).shouldMatchComment {
-            matcher()
+fun ParserTestSpec.jdocParserTest(name: String,
+                                  javaVersion: JavaVersion = JavaVersion.Latest,
+                                  spec: suspend ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx<JavadocNode.JdocComment>.() -> Unit) =
+        parserTest(name, javaVersion) {
+            inContext(JavadocParsingCtx) {
+                spec()
+            }
         }
-    }
-
-}
 
 
-enum class JavadocVer : Ver<JavadocVer> {
-    JAVADOC;
-
-    override val parser: JavadocParsingHelper
-        get() = JavadocParsingHelper.Default
-
-    override val values: Array<JavadocVer> get() = values()
-    override val displayName: String get() = "Javadoc"
-
-}
-
-class JavadocParsingHelper(params: Params)
-    : BaseParsingHelper<JavadocParsingHelper, JdocComment>("Javadoc", JdocComment::class.java, params) {
-
-    override fun clone(params: Params): JavadocParsingHelper = JavadocParsingHelper(params)
-
-
-    override fun parse(sourceCode: String, version: String?): JdocComment =
-            MainJdocParser(JavadocLexer(sourceCode)).parse()
-
-
-    companion object {
-
-        val Default = JavadocParsingHelper(Params.defaultProcess)
-
-    }
-
-}
-
+fun <T : Node> ParserTestSpec.GroupTestCtx.VersionedTestCtx.ImplicitNodeParsingCtx<T>.parseAsJdoc(matcher: NodeSpec<JavadocNode.JdocComment>) =
+        parseAs {
+            jdoc {
+                matcher()
+            }
+        }
 
 
 fun JavadocNode.JdocComment?.shouldMatchComment(spec: NodeSpec<JavadocNode.JdocComment>) =
         this.baseShouldMatchSubtree<Node, JavadocNode.JdocComment>(JavaMatchingConfig, false) {
+            spec()
+        }
+
+fun TreeNodeWrapper<Node, *>.jdoc(spec: NodeSpec<JavadocNode.JdocComment>) =
+        child<JavadocNode.JdocComment> {
             spec()
         }
 
@@ -210,4 +169,5 @@ fun TreeNodeWrapper<Node, out JavadocNode>.typeLink(name: String, plain: Boolean
         }
 
 
-val JavadocNode.tokens: List<JdocToken> get() = firstToken.rangeTo(lastToken).toList()
+val JavadocNode.tokens: List<JdocToken>
+    get() = IteratorUtil.toList(GenericToken.range(firstToken, lastToken))

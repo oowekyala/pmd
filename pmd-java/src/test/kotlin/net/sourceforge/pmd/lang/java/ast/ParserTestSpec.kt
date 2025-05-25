@@ -112,7 +112,7 @@ abstract class ParserTestSpec(body: ParserTestSpec.() -> Unit) : DslDrivenSpec()
 
     fun parserTest(name: String,
                    javaVersion: JavaVersion = JavaVersion.Latest,
-                   spec: suspend GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   spec: suspend VersionedTestCtx.() -> Unit) =
         parserTest(name, listOf(javaVersion), spec)
 
     /**
@@ -164,7 +164,7 @@ abstract class ParserTestSpec(body: ParserTestSpec.() -> Unit) : DslDrivenSpec()
      */
     fun parserTestContainer(name: String,
                    javaVersions: List<JavaVersion>,
-                   spec: suspend GroupTestCtx.VersionedTestCtx.() -> Unit) =
+                   spec: suspend VersionedTestCtx.() -> Unit) =
             parserTestGroup(name) {
                 onVersions(javaVersions) {
                     spec()

@@ -4,19 +4,26 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotlintest.matchers.string.shouldContain
-import io.kotlintest.matchers.types.shouldBeInstanceOf
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldThrow
-import io.kotlintest.specs.FunSpec
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.TokenMgrError
+import net.sourceforge.pmd.lang.ast.test.shouldBeA
+import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.javadoc.ast.JdocTokenType.*
+import net.sourceforge.pmd.util.document.TextDocument
+import net.sourceforge.pmd.util.document.TextRegion
 import org.assertj.core.util.diff.DiffUtils
 import org.junit.ComparisonFailure
 import java.io.EOFException
 import java.io.IOException
 import kotlin.test.assertEquals
 
+
+fun newLexer(code: String, start: Int = 0, end: Int = code.length) =
+        JavadocLexer(TextDocument.readOnlyString(code.substring(start, end),
+                JavaParsingHelper.JUST_PARSE.defaultVersion))
 
 class JavadocLexerTest : FunSpec({
 
@@ -26,7 +33,7 @@ class JavadocLexerTest : FunSpec({
         val code = "01234567/** some javadoc */"
         //                  ^
 
-        val lexer = JavadocLexer(code, 8, code.length + 10)
+        val lexer = newLexer(code, 8, code.length + 10)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -41,7 +48,7 @@ class JavadocLexerTest : FunSpec({
         val comment = "/** some javadoc */"
         val code = "01234567${comment}public void foo()"
         //                  ^
-        val lexer = JavadocLexer(code, 8, 8 + comment.length + 3)
+        val lexer = newLexer(code, 8, 8 + comment.length + 3)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -55,7 +62,7 @@ class JavadocLexerTest : FunSpec({
 
         val code = "01234567/** some javadoc "
         //                  ^
-        val lexer = JavadocLexer(code, 8, 100)
+        val lexer = newLexer(code, 8, 100)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 8, end = 11, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = WHITESPACE, start = 11, end = 12, image = " ")
@@ -70,7 +77,7 @@ class JavadocLexerTest : FunSpec({
         val comment = """\u002F\u002a\u002a\u002a\u002F"""
         val opening = """\u002F\u002a\u002a"""
 
-        val lexer = JavadocLexer(comment)
+        val lexer = newLexer(comment)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = COMMENT_END, start = opening.length, end = comment.length, image = "*/")
@@ -84,7 +91,7 @@ class JavadocLexerTest : FunSpec({
         val comment = """\u002F\u002a\u002a\\u002a\u002F"""
         val opening = """\u002F\u002a\u002a"""
 
-        val lexer = JavadocLexer(comment)
+        val lexer = newLexer(comment)
 
         lexer.nextToken!!.assertMatches(ttype = COMMENT_START, start = 0, end = opening.length, image = "/**")
         lexer.nextToken!!.assertMatches(ttype = COMMENT_DATA, start = opening.length, end = comment.length, image = "\\\\u002a/")
@@ -96,7 +103,7 @@ class JavadocLexerTest : FunSpec({
 
         val comment = """\u002F\u0k2a\u002a\u002a\u002F"""
 
-        val lexer = JavadocLexer(comment)
+        val lexer = newLexer(comment)
 
         val tmgrError = shouldThrow<TokenMgrError> {
             lexer.nextToken
@@ -104,12 +111,12 @@ class JavadocLexerTest : FunSpec({
 
         val ioe = tmgrError.cause!!
 
-        ioe.shouldBeInstanceOf<IOException>()
+        ioe.shouldBeA<IOException>()
 
         ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
         ioe.message!!.shouldContain("\\u0k2a")
 
-        ioe.cause.shouldBeInstanceOf<NumberFormatException>()
+        ioe.cause.shouldBeA<NumberFormatException>()
 
         ioe.cause!!.message!!.shouldContain("valid hexadecimal digit")
     }
@@ -118,7 +125,7 @@ class JavadocLexerTest : FunSpec({
 
         val comment = """\u00"""
 
-        val lexer = JavadocLexer(comment)
+        val lexer = newLexer(comment)
 
         val tmgrError = shouldThrow<TokenMgrError> {
             lexer.nextToken
@@ -126,12 +133,12 @@ class JavadocLexerTest : FunSpec({
 
         val ioe = tmgrError.cause!!
 
-        ioe.shouldBeInstanceOf<IOException>()
+        ioe.shouldBeA<IOException>()
 
         ioe.message!!.shouldContain(Regex("line \\d+, column \\d+"))
         ioe.message!!.shouldContain("\\u00")
 
-        ioe.cause.shouldBeInstanceOf<EOFException>()
+        ioe.cause.shouldBeA<EOFException>()
     }
 
     test("Test brace balancing") {
@@ -473,13 +480,12 @@ private fun JavadocLexer.consume(): List<JdocToken> = generateSequence { nextTok
 private fun JdocToken.assertMatches(ttype: JdocTokenType, start: Int, end: Int, image: String) {
     kind shouldBe ttype
     this.image shouldBe image
-    assertEquals(start, startInDocument, "Wrong start offset")
-    assertEquals(end, endInDocument, "Wrong end offset")
+    assertEquals(TextRegion.fromBothOffsets(start, end), region)
 }
 
 
 private fun String.shouldHaveTokens(vararg tokens: Tok) {
-    val actual = JavadocLexer(this).consume().map { Tok(it.kind, it.image) }
+    val actual = newLexer(this).consume().map { Tok(it.kind, it.image) }
 
     val diff = DiffUtils.diff(tokens.toList(), actual)
     if (diff.deltas.isEmpty()) {
