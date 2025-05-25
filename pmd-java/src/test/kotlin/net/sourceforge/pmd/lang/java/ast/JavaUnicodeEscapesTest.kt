@@ -8,17 +8,17 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContain
 import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException
+import net.sourceforge.pmd.lang.document.TextDocument
+import net.sourceforge.pmd.lang.javadoc.JavadocParsingHelper
 import net.sourceforge.pmd.lang.test.ast.IntelliMarker
 import net.sourceforge.pmd.lang.test.ast.shouldBeA
-import net.sourceforge.pmd.lang.document.TextDocument
-import net.sourceforge.pmd.lang.java.JavaParsingHelper
 
 fun makeJavaTranslatedDocument(
     code: String,
 ): TextDocument {
     val base = TextDocument.readOnlyString(
         code,
-        JavaParsingHelper.DEFAULT.defaultVersion
+        JavadocParsingHelper.DEFAULT.defaultVersion
     )
     return InternalApiBridge.javaTokenDoc().translate(base)
 }
