@@ -17,6 +17,7 @@ enum JavadocNodeId {
     INLINE_TAG("InlineTag"),
     LITERAL_TAG("InlineLiteralTag"),
     LINK_TAG("InlineLinkTag"),
+    VALUE_TAG("InlineValueTag"),
     UNKNOWN_INLINE_TAG("UnknownInlineTag"),
 
     CLASS_REF("ClassRef"),

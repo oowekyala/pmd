@@ -47,6 +47,7 @@ import net.sourceforge.pmd.lang.javadoc.ast.JavadocNode.JdocRef;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLink;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocLiteral;
 import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocUnknownInlineTag;
+import net.sourceforge.pmd.lang.javadoc.ast.JdocInlineTag.JdocValue;
 
 class JavadocParser extends BaseJavadocParser {
 
@@ -382,6 +383,44 @@ class JavadocParser extends BaseJavadocParser {
         }
     }
 
+    /**
+     * Parse a class/field/method reference from the head(). The head
+     * must be a {@link JdocTokenType#COMMENT_DATA}, it will be split
+     * into more tokens and those will be reincorporated into the token
+     * stream.
+     *
+     * <p>If this succeeds this adds a {@link JdocRef} child to the [parent],
+     * and returns the first comment-data node after the reference (the rest
+     * of the head after removing the reference).
+     *
+     * @param tokBeforeRef Token to be linked before the ref
+     * @param parent       Parent on which the reference should be set
+     *
+     * @return First {@link JdocTokenType#COMMENT_DATA} token after the reference,
+     *     or null if there is none
+     */
+    @Nullable
+    private JdocToken parseReference(JdocToken tokBeforeRef, AbstractJavadocNode parent) {
+        JdocToken firstLabelTok = null;
+        if (tokIs(COMMENT_DATA)) {
+            JdocToken cdata = head();
+
+            JdocRefParser refParser = new JdocRefParser(cdata);
+            JdocRef ref = refParser.parse();
+            if (ref != null) {
+                assert ref.getFirstToken() != null : "RefParser should have set first token on " + ref;
+                assert ref.getLastToken() != null : "RefParser should have set last token on " + ref;
+                lexer.replaceLastWith(tokBeforeRef, ref.getFirstToken(), ref.getLastToken());
+                tokens.reset(ref.getLastToken());
+                parent.pushChild(ref);
+                firstLabelTok = nextNonWs() && tokIs(COMMENT_DATA) ? head() : null;
+            }
+            // otherwise, link is unparsable
+            // doesn't matter, we'll just consume until the closing brace
+        }
+        return firstLabelTok;
+    }
+
     enum KnownInlineTagParser implements TagParser {
         LINK("@link") {
             @Override
@@ -392,24 +431,7 @@ class JavadocParser extends BaseJavadocParser {
                 assert firstTok != null;
 
                 JdocLink tag = new JdocLink(name);
-                JdocToken firstLabelTok = null;
-                if (parser.tokIs(COMMENT_DATA)) {
-                    JdocToken cdata = parser.head();
-
-                    JdocRefParser refParser = new JdocRefParser(cdata);
-                    JdocRef ref = refParser.parse();
-                    if (ref != null) {
-                        assert ref.getFirstToken() != null : "RefParser should have set first token on " + ref;
-                        assert ref.getLastToken() != null : "RefParser should have set last token on " + ref;
-                        parser.lexer.replaceLastWith(firstTok, ref.getFirstToken(), ref.getLastToken());
-                        parser.tokens.reset(ref.getLastToken());
-                        tag.pushChild(ref);
-                        firstLabelTok = parser.nextNonWs() && parser.tokIs(COMMENT_DATA) ? parser.head() : null;
-                    }
-                    // otherwise, link is unparsable
-                    // doesn't matter, we'll just consume until the closing brace
-                }
-
+                JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
                 if (firstLabelTok != null) {
                     while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
                         // skip
@@ -444,6 +466,27 @@ class JavadocParser extends BaseJavadocParser {
                 return CODE.parse(name, parser);
             }
         },
+
+        VALUE("@value") {
+            @Override
+            public AbstractJavadocNode parse(String name, JavadocParser parser) {
+                parser.advance();
+                parser.skipWhitespace();
+                JdocToken firstTok = parser.head().getPrevious();
+                assert firstTok != null;
+
+                JdocValue tag = new JdocValue(name);
+                JdocToken firstLabelTok = parser.parseReference(firstTok, tag);
+                if (firstLabelTok != null) {
+                    JdocMalformed label = new JdocMalformed(JdocTokenType.EMPTY_SET, firstLabelTok);
+                    tag.pushChild(label);
+                    while (!parser.tokIs(INLINE_TAG_ENDERS) && parser.advance()) {
+                        // skip
+                    }
+                }
+                return tag;
+            }
+        }
 
         // TODO @value
         ;
