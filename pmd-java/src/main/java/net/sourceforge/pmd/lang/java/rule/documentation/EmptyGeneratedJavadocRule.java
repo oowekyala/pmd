@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
@@ -90,7 +92,7 @@ public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
 
             JdocCommentData description = param.firstChild(JdocCommentData.class);
             if (description == null) {
-                collector.addProblem(param, "This @param tag has no description", "@param");
+                collector.addProblem(param, "@param", "Missing @param description");
             } else {
                 JdocToken data = description.getSingleDataToken();
                 if (data == null) {
@@ -101,7 +103,7 @@ public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
                 String signature = TypePrettyPrint.prettyPrintWithSimpleNames(type);
                 if (data.getImageCs().contentEquals(signature)
                     || data.getImageCs().contentEquals(TypePrettyPrint.prettyPrintWithSimpleNames(type.getErasure()))) {
-                    collector.addProblem(param, "Type signatures should not be used as description", "@param");
+                    collector.addProblem(param, "@param", "Parameter description is just a type");
                 }
             }
         }
@@ -138,7 +140,7 @@ public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
         String longMessage;
 
 
-        void addProblem(JavadocNode node, String longMessage, String shortMessage) {
+        void addProblem(JavadocNode node, String key, String longMessage) {
             size++;
             if (size == 1) {
                 reportNode = node;
@@ -146,10 +148,12 @@ public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
                 shortProblems = new ArrayList<>();
             } else if (size == 2) {
                 // second message, fallback to aggregate report
-                reportNode = node.getRoot();
-                this.longMessage = null;
+                if (node.compareLocation(reportNode) <= 0) {
+                    reportNode = node;
+                    this.longMessage = longMessage;
+                }
             }
-            shortProblems.add(shortMessage);
+            shortProblems.add(key);
         }
 
         void report(RuleContext ctx) {
@@ -162,8 +166,13 @@ public class EmptyGeneratedJavadocRule extends AbstractJavaRulechainRule {
                 StringBuilder stringBuilder = new StringBuilder("This comment contains low quality content (");
                 Map<String, Long> summary = shortProblems.stream().collect(Collectors.groupingBy(it -> it, Collectors.counting()));
                 summary.forEach((type, count) -> stringBuilder.append(count).append(' ').append(type));
-                stringBuilder.append(')');
-                ctx.addViolationWithMessage(reportNode, stringBuilder.toString());
+                stringBuilder.append(')')
+                             .append(", eg line ")
+                             .append(reportNode.getReportLocation().getBeginLine())
+                             .append(" (")
+                             .append(StringUtils.uncapitalize(longMessage))
+                             .append(')');
+                ctx.addViolationWithMessage(reportNode.getRoot(), stringBuilder.toString());
             }
         }
     }
