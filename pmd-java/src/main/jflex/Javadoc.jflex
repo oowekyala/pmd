@@ -69,7 +69,7 @@ HTML_TAG_NAME=          [^\s\"\'<>/=]+
 HTML_ATTR_NAME=         [^\s\"\'<>/=]+
 UNQUOTED_ATTR_VALUE=    [^\s\"\'`<>/=]+
 
-JAVA_NAME=[:jletter:] [.[:jletter:]]+
+JAVA_NAME=[:jletter:] [.[:jletter:]]*
 JAVA_NAME_STRICT={JAVA_IDENT} ('.' {JAVA_IDENT})*
 JAVA_IDENT=[:jletter:]+
 TYPE_PARAM_IDENT=("<" {JAVA_IDENT} ">")

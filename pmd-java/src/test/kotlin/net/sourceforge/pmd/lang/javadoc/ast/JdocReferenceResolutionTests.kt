@@ -4,21 +4,17 @@
 
 package net.sourceforge.pmd.lang.javadoc.ast
 
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import net.sourceforge.pmd.lang.ast.test.shouldBe
-import net.sourceforge.pmd.lang.ast.test.shouldHaveText
-import net.sourceforge.pmd.lang.java.ast.JavadocComment
-import net.sourceforge.pmd.lang.java.ast.JavadocCommentOwner
+import net.sourceforge.pmd.lang.ast.test.shouldBeA
 import net.sourceforge.pmd.lang.java.ast.ParserTestSpec
+import net.sourceforge.pmd.lang.java.types.JClassType
 
 
 class JdocReferenceResolutionTests : ParserTestSpec({
 
     parserTest("Test class reference resolve") {
 
-        val acu = parser.parse(
+        val acu = parser.withProcessing().parse(
             """
                 package here;
                 import a.b.X;
@@ -26,27 +22,108 @@ class JdocReferenceResolutionTests : ParserTestSpec({
                 /**
                  * {@link Foo}
                  * {@link here.Foo}
-                 * {@link X}
-                 * {@link a.b.X}
-                 * {@link b.X}
                  */
                 class Foo { }
             """.trimIndent()
         )
 
-        val comment = acu.descendants(JavadocCommentOwner::class.java).firstOrThrow().javadocComment!!
         val fooClass = acu.typeDeclarations.firstOrThrow()
+        val comment = fooClass.javadocComment!!
 
         comment.jdocTree.shouldMatchComment {
-            jdoc {
-                link {
-                    classRef("Foo") {
-                        it.resolveRef() shouldBe fooClass.typeMirror
-                    }
+            link {
+                classRef("Foo") {
+                    it.resolveRef() shouldBe fooClass.typeMirror
+                }
+            }
+            link {
+                classRef("here.Foo") {
+                    it.resolveRef() shouldBe fooClass.typeMirror
                 }
             }
         }
 
     }
 
+    parserTest("Test class reference unresolved imported") {
+
+        val acu = parser.withProcessing().parse(
+            """
+                package here;
+                import a.b.X;
+
+                /**
+                 * {@link a.b.X}
+                 */
+                class Foo { }
+            """.trimIndent()
+        )
+
+        val fooClass = acu.typeDeclarations.firstOrThrow()
+        val comment = fooClass.javadocComment!!
+
+        comment.jdocTree.shouldMatchComment {
+            link {
+                classRef("a.b.X") {
+                    it.resolveRef().shouldBeA<JClassType> {
+                        it.symbol.canonicalName.shouldBe("a.b.X")
+                    }
+                }
+            }
+        }
+
+    }
+    parserTest("Test class reference single char identifier") {
+
+        val acu = parser.withProcessing().parse(
+            """
+                package here;
+                import a.b.X;
+
+                /**
+                 * {@link X}
+                 */
+                class Foo { }
+            """.trimIndent()
+        )
+
+        val fooClass = acu.typeDeclarations.firstOrThrow()
+        val comment = fooClass.javadocComment!!
+
+        comment.jdocTree.shouldMatchComment {
+            link {
+                classRef("a.b.X") {
+                    it.resolveRef().shouldBeA<JClassType> {
+                        it.symbol.canonicalName.shouldBe("a.b.X")
+                    }
+                }
+            }
+        }
+
+    }
+    parserTest("Test class reference unresolved") {
+
+        val acu = parser.withProcessing().parse(
+            """
+                package here;
+                import a.b.X;
+
+                /**
+                 * {@link b.X}
+                 */
+                class Foo { }
+            """.trimIndent()
+        )
+
+        val fooClass = acu.typeDeclarations.firstOrThrow()
+        val comment = fooClass.javadocComment!!
+
+        comment.jdocTree.shouldMatchComment {
+            link {
+                classRef("b.X") {
+                    it.resolveRef() shouldBe null
+                }
+            }
+        }
+    }
 })
