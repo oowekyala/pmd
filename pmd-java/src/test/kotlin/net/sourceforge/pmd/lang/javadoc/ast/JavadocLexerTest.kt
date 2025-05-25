@@ -61,7 +61,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
-                Tok(LINE_BREAK, "\n                "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE,"                "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),
@@ -102,7 +103,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(TAG_NAME, "@param"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "startOffset Start offset in the file text"),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
 
@@ -135,7 +137,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, "          "),
                 Tok(COMMENT_DATA, "Start offset in the file text"),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
     }
@@ -167,7 +170,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
 
@@ -199,7 +203,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
 
@@ -220,7 +225,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(INLINE_TAG_START),
                 Tok(TAG_NAME, "@inheritDoc"),
                 Tok(INLINE_TAG_END),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
 
@@ -252,7 +258,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(LINE_BREAK, "\n *"),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "}"),
-                Tok(LINE_BREAK, "\n "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, " "),
                 Tok(COMMENT_END)
         )
     }
@@ -266,7 +273,8 @@ class JavadocLexerTest : FunSpec({
                 Tok(COMMENT_START),
                 Tok(WHITESPACE, " "),
                 Tok(COMMENT_DATA, "some javadoc "),
-                Tok(LINE_BREAK, "\n                "),
+                Tok(LINE_BREAK, "\n"),
+                Tok(WHITESPACE, "                "),
                 Tok(HTML_LT),
                 Tok(HTML_IDENT, "pre"),
                 Tok(HTML_GT),

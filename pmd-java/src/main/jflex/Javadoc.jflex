@@ -11,7 +11,6 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
 %{
 
-  private int braces;
 
   public boolean lookahead(char c) {
     return lookahead(c, 0);
@@ -19,6 +18,8 @@ package net.sourceforge.pmd.lang.javadoc.ast;
 
   // when true we're sensitive to "}" as they would close the tag
   private boolean inInlineTag;
+  // depth of paired braces (used only in {@code} and {@literal})
+  private int braces;
   private boolean inHtmlPre;
 
   public boolean lookahead(char c, int distance) {
@@ -157,7 +158,7 @@ HTML_ATTR_NAME=([^ \n\r\t\f\"\'<>/=])+
 // line termination (all states)
 // the part / [^/]  avoids matching "*/"
 {LINE_TERM} {WHITE_DOC_SPACE_CHAR}* "*" / [^/] { maybeBlockTagStart(); return JavadocTokenType.LINE_BREAK; }
-{LINE_TERM} {WHITE_DOC_SPACE_CHAR}*            { maybeBlockTagStart(); return JavadocTokenType.LINE_BREAK; }
+{LINE_TERM}                                    { maybeBlockTagStart(); return JavadocTokenType.LINE_BREAK; }
 
 "*/" { return JavadocTokenType.COMMENT_END; }
 [^] { return JavadocTokenType.BAD_CHAR; }
