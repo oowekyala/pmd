@@ -294,6 +294,7 @@ public final class ImplicitMemberSymbols {
             super(owner, JConstructorSymbol.CTOR_NAME, modifiers, formals);
         }
 
+
         @Override
         public boolean equals(Object o) {
             return SymbolEquality.CONSTRUCTOR.equals(this, o);

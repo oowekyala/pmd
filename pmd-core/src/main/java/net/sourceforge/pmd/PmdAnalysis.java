@@ -1,4 +1,4 @@
-/**
+/*
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
@@ -385,6 +385,9 @@ public final class PmdAnalysis implements AutoCloseable {
     }
 
     void performAnalysisImpl(List<? extends GlobalReportBuilderListener> extraListeners, List<TextFile> textFiles) {
+        if (textFiles.isEmpty()) {
+            reporter.warn("No files to analyze. Check input paths and exclude parameters, use --debug to see file collection traces.");
+        }
 
         try {
             configuration.getCacheDirectory().initCache();
