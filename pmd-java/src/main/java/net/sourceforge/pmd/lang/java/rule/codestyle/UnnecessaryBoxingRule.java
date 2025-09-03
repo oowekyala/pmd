@@ -211,19 +211,18 @@ public class UnnecessaryBoxingRule extends AbstractJavaRulechainRule {
         }
         
         // Get the method and validate we have a boxed->primitive conversion
-        JMethodSig currentMethod;
-        try {
-            currentMethod = invocation.getMethodType();
-        } catch (Exception e) {
-            return false;
-        }
-        
         if (!convertedExpr.getTypeMirror().isBoxedPrimitive() || !conversionExpr.getTypeMirror().isPrimitive()) {
             return false;
         }
-        
+
+        OverloadSelectionResult selectionResult = invocation.getOverloadSelectionInfo();
+        if (selectionResult.isFailed()) {
+            return false;
+        }
+
         // Check if there are overloads that would accept the boxed type differently
-        return hasObjectOverloadAtPosition(currentMethod, argIndex, invocation instanceof ASTConstructorCall);
+        return hasObjectOverloadAtPosition(selectionResult.getMethodType(),
+            argIndex, invocation instanceof ASTConstructorCall);
     }
     
     /**
