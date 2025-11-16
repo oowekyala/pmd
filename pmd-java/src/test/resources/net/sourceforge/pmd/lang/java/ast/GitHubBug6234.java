@@ -7,9 +7,10 @@ class A {
 class B extends A {
   B() {
     super(
-        () -> switch X():
-          case true -> True;
-          default -> False;
+        () -> switch (x) {
+            case true -> true;
+            default -> false;
+        }
     );
   }
 

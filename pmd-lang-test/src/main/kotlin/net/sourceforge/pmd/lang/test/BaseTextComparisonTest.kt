@@ -5,6 +5,7 @@
 package net.sourceforge.pmd.lang.test
 
 import net.sourceforge.pmd.lang.document.FileId
+import net.sourceforge.pmd.lang.test.BaseTextComparisonTest.Companion.EXPECTED_EXTENSION
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.test.assertEquals
@@ -56,7 +57,11 @@ abstract class BaseTextComparisonTest {
 
         val expected = expectedFile.readText()
 
-        assertEquals(expected.normalize(), actual.normalize(), "File comparison failed, see the reference: $expectedFile")
+        assertEquals(
+            expected = expected.normalize(),
+            actual = actual.normalize(),
+            message = "File comparison failed, see the reference: $expectedFile"
+        )
     }
 
     protected fun sourceText(fileBaseName: String): FileData {
