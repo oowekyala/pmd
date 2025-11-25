@@ -432,8 +432,8 @@ fun TreeNodeWrapper<Node, *>.primitiveType(type: PrimitiveTypeKind, assertions: 
         }
 
 
-fun TreeNodeWrapper<Node, *>.castExpr(contents: NodeSpec<ASTCastExpression>) =
-        child<ASTCastExpression> {
+fun TreeNodeWrapper<Node, *>.castExpr(contents: NodeSpec<ASTCastExpression> = EmptyAssertions) =
+        child<ASTCastExpression>(ignoreChildren = contents == EmptyAssertions) {
             contents()
         }
 

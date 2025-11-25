@@ -442,4 +442,33 @@ class Scratch {
             }
         }
     }
+
+    parserTestContainer("Test switch with lambda branches") {
+        asIfIn(TypeInferenceTestCases::class.java)
+
+        inContext(ExpressionParsingCtx) {
+            "makeThree(switch(24) { case 1 -> () -> (long) aByte; case 2 -> () -> (long) other; })" should parseAs {
+                methodCall("makeThree") {
+                    argList {
+                        switchExpr {
+                            int(24)
+                            switchArrow {
+                                switchLabel()
+                                exprLambda {
+                                    lambdaFormals(0)
+                                    castExpr()
+                                }
+                            }
+                            switchArrow()
+
+                            it shouldHaveType with(it.typeDsl) {
+                                java.util.function.Supplier::class[long.box()]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 })
