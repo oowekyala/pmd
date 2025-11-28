@@ -1303,4 +1303,45 @@ public class BinaryTree<E extends Comparable<E>> implements Tree<E> {
             }
             ]]></code>
     </test-code>
+
+    <test-code>
+        <description>#6271 conflicting enums</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            // this one has the other enum unresolved
+            enum SoundsThatStartsWithF {
+                Fee,
+                Fi,
+                Fo,
+                Fum;
+
+                public static GiantSounds convertSound(SoundsThatStartsWithF fSounds) {
+                    return switch (fSounds) {
+                        case Fee -> GiantSounds.Fee;
+                        case Fi -> GiantSounds.Fi;
+                        case Fo -> GiantSounds.Fo;
+                        case Fum -> GiantSounds.Fum;
+                    };
+                }
+            }
+
+            // this one has all necessary types
+            enum SoundsThatStartsWithF2 {
+                Fee,
+                Fi,
+                Fo,
+                Fum;
+
+                public static SoundsThatStartsWithF convertSound(SoundsThatStartsWithF2 fSounds) {
+                    return switch (fSounds) {
+                        case Fee -> SoundsThatStartsWithF.Fee;
+                        case Fi -> SoundsThatStartsWithF.Fi;
+                        case Fo -> SoundsThatStartsWithF.Fo;
+                        case Fum -> SoundsThatStartsWithF.Fum;
+                    };
+                }
+            }
+            ]]></code>
+    </test-code>
+
 </test-data>
