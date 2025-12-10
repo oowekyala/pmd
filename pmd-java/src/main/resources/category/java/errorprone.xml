@@ -596,7 +596,7 @@ the property ignoreMagicNumbers is not taken into account, if there are multiple
         <properties>
             <property name="ignoreMagicNumbers"
                       description="Comma-separated list of magic numbers, that should be ignored"
-                      type="List[Double]" value="-1,0" min="-Infinity" max="Infinity"/>
+                      type="List[Double]" value="-1,0" />
             <property name="ignoreExpressions"
                       description="If true, only literals in simple if conditions are considered. Otherwise literals in expressions are checked, too."
                       type="Boolean" value="true"/>
