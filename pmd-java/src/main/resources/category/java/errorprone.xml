@@ -552,7 +552,7 @@ Each caught exception type should be handled in its own catch clause.
                 <value>
 <![CDATA[
 //InfixExpression[@Operator = 'instanceof'
-              and *[1]/self::VariableAccess[pmd-java:declaratorId()[@ExceptionBlockParameter=true()]]
+              and *[1]/self::VariableAccess[pmd-java:declaringNode()[@ExceptionBlockParameter=true()]]
               ]/*[2]/self::TypeExpression/*
 ]]>
                 </value>
@@ -2653,8 +2653,8 @@ with the restriction that the logger needs to be passed into the constructor.
             and not(pmd-java:modifiers() = 'static')
             and not(ancestor::ClassBody/ConstructorDeclaration
                 //AssignmentExpression[@Operator = '=']
-                    [*[1][pmd-java:declaratorId()[@Name = $loggerName]]]
-                    [*[2][pmd-java:declaratorId()[@FormalParameter = true()]]])
+                    [*[1][pmd-java:declaringNode()[@Name = $loggerName]]]
+                    [*[2][pmd-java:declaringNode()[@FormalParameter = true()]]])
         )
     ]
 ]]>

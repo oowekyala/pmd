@@ -8,13 +8,15 @@ import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 
 /**
- * The function "declaratorId".
+ * The function "declaringNode". For now it is only implemented for
+ * {@link ASTNamedReferenceExpr#getReferencedSym()}. We could also
+ * extend this to {@link net.sourceforge.pmd.lang.java.ast.MethodUsage}.
  */
 public final class GetDeclarationFun extends BaseJavaXPathFunction {
 
     private static final Type[] ARGTYPES = {};
 
-    public static final GetDeclarationFun INSTANCE = new GetDeclarationFun("declaratorId");
+    public static final GetDeclarationFun INSTANCE = new GetDeclarationFun("declaringNode");
 
     private GetDeclarationFun(String localName) {
         super(localName);

@@ -84,13 +84,13 @@ If you want to copy/move elements inside the _same_ array (e.g. shift the elemen
                                             (: don't consider array length accesses :)
                                             [not(parent::FieldAccess[@Name='length'])]
                                             (: exclude referenced constants :)
-                                            [not(pmd-java:declaratorId()[../NumericLiteral and @Final = true()])]
+                                            [not(pmd-java:declaringNode()[../NumericLiteral and @Final = true()])]
                                             /@Name)),
                                         sort(distinct-values(ArrayAccess[2]/(VariableAccess[2]|InfixExpression//VariableAccess)
                                             (: don't consider array length accesses :)
                                             [not(parent::FieldAccess[@Name='length'])]
                                             (: exclude referenced constants :)
-                                            [not(pmd-java:declaratorId()[../NumericLiteral and @Final = true()])]
+                                            [not(pmd-java:declaringNode()[../NumericLiteral and @Final = true()])]
                                             /@Name))
                                       )]
      )=1]
@@ -168,7 +168,7 @@ Solution: Use `new Date()`, Java 8+ `java.time.LocalDateTime.now()` or `ZonedDat
 |
 //MethodCall[pmd-java:matchesSig("java.util.Calendar#getTime()") or pmd-java:matchesSig("java.util.Calendar#getTimeInMillis()")]
   [VariableAccess[
-    let $decl := pmd-java:declaratorId() return
+    let $decl := pmd-java:declaringNode() return
     (: ignore if .set* or .add or .clear or .roll is called on the variable :)
     (
     every $usage in $decl ! pmd-java:localUsages()
@@ -897,7 +897,7 @@ or StringBuffer.toString().length() == ...
 (: finds sb.toString().equals(someVar) where var is a final variable initialized with literal "" :)
 //MethodCall[pmd-java:matchesSig('_#equals(_)')
   and MethodCall[pmd-java:matchesSig('java.lang.AbstractStringBuilder#toString()')]
-  and ArgumentList/VariableAccess[pmd-java:declaratorId()[pmd-java:modifiers() = 'final' and ../StringLiteral[@Empty = true()]]]]
+  and ArgumentList/VariableAccess[pmd-java:declaringNode()[pmd-java:modifiers() = 'final' and ../StringLiteral[@Empty = true()]]]]
 |
 (: finds sb.toString().equals("") :)
 //MethodCall[pmd-java:matchesSig('_#equals(_)')

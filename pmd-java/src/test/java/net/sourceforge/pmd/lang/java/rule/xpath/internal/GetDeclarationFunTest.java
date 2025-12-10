@@ -17,7 +17,7 @@ class GetDeclarationFunTest extends BaseXPathFunctionTest {
 
     @Test
     void testFetchVarDeclarations() {
-        Rule rule = makeXpathRuleFromXPath("//VariableAccess ! pmd-java:declaratorId()");
+        Rule rule = makeXpathRuleFromXPath("//VariableAccess ! pmd-java:declaringNode()");
         String code = "interface O { class Foo { int i = 0; {i++;i++;} } }";
 
         assertFinds(rule, 1, code);
@@ -25,7 +25,7 @@ class GetDeclarationFunTest extends BaseXPathFunctionTest {
 
     @Test
     void testFetchVarDeclarations2() {
-        Rule rule = makeXpathRuleFromXPath("//VariableAccess ! pmd-java:declaratorId()");
+        Rule rule = makeXpathRuleFromXPath("//VariableAccess ! pmd-java:declaringNode()");
         String code = "interface O { class Foo { int i = 0, j = 1; {i++;j++;} } }";
 
         assertFinds(rule, 2, code);
