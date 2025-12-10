@@ -104,6 +104,10 @@ public abstract class XPathFunctionDefinition {
         OPTIONAL_STRING,
         /** Represents a {@link java.util.Optional} {@link Double}. */
         OPTIONAL_DECIMAL,
+        /** Represents a nullable or {@link java.util.Optional} {@link Node}. */
+        OPTIONAL_ELEMENT,
+        /** Represents a (possibly empty) list of {@link Node}s. */
+        ELEMENT_SEQUENCE
     }
 
     /**
