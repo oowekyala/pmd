@@ -370,7 +370,7 @@ class RuleFactory {
 
     private static <T> PropertyDescriptor<T> propertyDefCapture(Element propertyElement,
                                                                 PmdXmlReporter err,
-                                                                BuilderAndMapper<T> factory) {
+                                                                BuilderAndMapper<T, ?> factory) {
 
         String name = NAME.getNonBlankAttributeOrThrow(propertyElement, err);
         String description = DESCRIPTION.getNonBlankAttributeOrThrow(propertyElement, err);
@@ -393,29 +393,29 @@ class RuleFactory {
         }
     }
 
-    private static <T> void parseConstraints(Element propertyElement, BuilderAndMapper<T> factory, PropertyBuilder<?, T> builder, PmdXmlReporter err) {
-        Optional<Comparable<T>> min = parseIntoComparable(propertyElement, factory, err, PROPERTY_MIN);
-        Optional<Comparable<T>> max = parseIntoComparable(propertyElement, factory, err, PROPERTY_MAX);
+    private static <T, I> void parseConstraints(Element propertyElement, BuilderAndMapper<T, I> factory, PropertyBuilder<?, T> builder, PmdXmlReporter err) {
+        Optional<Comparable<I>> min = parseIntoComparable(propertyElement, factory.scalarMapper(), err, PROPERTY_MIN);
+        Optional<Comparable<I>> max = parseIntoComparable(propertyElement, factory.scalarMapper(), err, PROPERTY_MAX);
 
         if (min.isPresent() && max.isPresent()) {
-            if (min.get().compareTo((T) max.get()) > 0) {
+            if (min.get().compareTo((I) max.get()) > 0) {
                 throw err.at(PROPERTY_MIN.getAttributeNode(propertyElement))
                          .error(XmlErrorMessages.ERR__INVALID_VALUE_RANGE);
             }
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            PropertyConstraint<T> constraint = NumericConstraints.inRange((Comparable) min.get(), (Comparable) max.get());
-            builder.require(constraint);
+            PropertyConstraint<I> constraint = NumericConstraints.inRange((Comparable) min.get(), (Comparable) max.get());
+            factory.acceptConstraint(builder, constraint);
         } else if (min.isPresent() || max.isPresent()) {
-            Comparable<T> minOrMax = min.orElse(max.orElse(null));
+            Comparable<I> minOrMax = min.orElse(max.orElse(null));
 
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            PropertyConstraint<T> constraint = min.isPresent() ? NumericConstraints.above((Comparable) minOrMax)
+            PropertyConstraint<I> constraint = min.isPresent() ? NumericConstraints.above((Comparable) minOrMax)
                                                                : NumericConstraints.below((Comparable) minOrMax);
-            builder.require(constraint);
+            factory.acceptConstraint(builder, constraint);
         }
     }
 
-    private static <T> Optional<Comparable<T>> parseIntoComparable(Element propertyElement, BuilderAndMapper<T> factory, PmdXmlReporter err, SchemaConstant schemaConstant) {
+    private static <T> Optional<Comparable<T>> parseIntoComparable(Element propertyElement, BuilderAndMapper<T, T> factory, PmdXmlReporter err, SchemaConstant schemaConstant) {
         return schemaConstant
             .getAttributeOpt(propertyElement)
             .map(s -> tryParsePropertyValue(factory, s, err.at(schemaConstant.getAttributeNode(propertyElement))))
@@ -423,7 +423,7 @@ class RuleFactory {
     }
 
 
-    private static <T> @Nullable T tryParsePropertyValue(BuilderAndMapper<T> factory, String value, PmdReporter err) {
+    private static <T> @Nullable T tryParsePropertyValue(BuilderAndMapper<T, ?> factory, String value, PmdReporter err) {
         try {
             return factory.getXmlMapper().fromString(value);
         } catch (IllegalArgumentException e) {

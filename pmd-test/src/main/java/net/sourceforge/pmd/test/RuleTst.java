@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+import org.slf4j.event.Level;
 import org.xml.sax.InputSource;
 
 import net.sourceforge.pmd.PMDConfiguration;
@@ -35,6 +36,7 @@ import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
+import net.sourceforge.pmd.lang.rule.InternalApiBridge;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.lang.rule.RuleSet;
 import net.sourceforge.pmd.lang.rule.RuleSetLoadException;
@@ -47,6 +49,7 @@ import net.sourceforge.pmd.reporting.RuleViolation;
 import net.sourceforge.pmd.test.schema.RuleTestCollection;
 import net.sourceforge.pmd.test.schema.RuleTestDescriptor;
 import net.sourceforge.pmd.test.schema.TestSchemaParser;
+import net.sourceforge.pmd.util.log.internal.MessageReporterBase;
 
 /**
  * Advanced methods for test cases
@@ -75,7 +78,14 @@ public abstract class RuleTst {
      */
     public static Rule findRule(String ruleSet, String ruleName) {
         try {
-            RuleSet parsedRset = new RuleSetLoader().warnDeprecated(false).loadFromResource(ruleSet);
+            RuleSetLoader loader = new RuleSetLoader();
+            InternalApiBridge.withReporter(loader, new MessageReporterBase() {
+                @Override
+                protected void logImpl(Level level, String message) {
+                    System.err.println(level + ": " + message);
+                }
+            });
+            RuleSet parsedRset = loader.warnDeprecated(false).loadFromResource(ruleSet);
             Rule rule = parsedRset.getRuleByName(ruleName);
             if (rule == null) {
                 fail("Rule " + ruleName + " not found in ruleset " + ruleSet);

@@ -11,8 +11,10 @@ import java.util.function.Function;
 
 import net.sourceforge.pmd.properties.InternalApiBridge;
 import net.sourceforge.pmd.properties.PropertyBuilder;
+import net.sourceforge.pmd.properties.PropertyConstraint;
 import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.properties.PropertySerializer;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 
 /**
@@ -80,12 +82,17 @@ public enum PropertyTypeId {
      * capture works well.
      *
      * @param <T> Type of values of the property.
+     * @param <I> Type of items of the property, if it is a list property. Otherwise, same as T.
      */
-    public interface BuilderAndMapper<T> {
+    public interface BuilderAndMapper<T, I> {
 
         PropertySerializer<T> getXmlMapper();
 
         PropertyBuilder<?, T> newBuilder(String name);
+
+        BuilderAndMapper<I, I> scalarMapper();
+
+        void acceptConstraint(PropertyBuilder<?, T> builder, PropertyConstraint<I> constraint);
     }
 
     /**
@@ -93,8 +100,56 @@ public enum PropertyTypeId {
      * of this constant.
      */
     @SuppressWarnings("rawtypes")
-    public BuilderAndMapper<?> getBuilderUtils() {
+    public BuilderAndMapper<?, ?> getBuilderUtils() {
         return new BuilderAndMapper() {
+            @Override
+            public BuilderAndMapper<?, ?> scalarMapper() {
+                switch (PropertyTypeId.this) {
+                case BOOLEAN:
+                case STRING:
+                case CHARACTER:
+                case REGEX:
+                case LONG:
+                case INTEGER:
+                case DOUBLE:
+                    return this;
+                case STRING_LIST:
+                    return STRING.getBuilderUtils();
+                case CHARACTER_LIST:
+                    return CHARACTER.getBuilderUtils();
+                case INTEGER_LIST:
+                    return INTEGER.getBuilderUtils();
+                case LONG_LIST:
+                    return LONG.getBuilderUtils();
+                case DOUBLE_LIST:
+                    return DOUBLE.getBuilderUtils();
+                }
+                throw AssertionUtil.shouldNotReachHere("exhaustive switch");
+            }
+
+            @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            public void acceptConstraint(PropertyBuilder builder, PropertyConstraint constraint) {
+                switch (PropertyTypeId.this) {
+                case BOOLEAN:
+                case STRING:
+                case CHARACTER:
+                case REGEX:
+                case LONG:
+                case INTEGER:
+                case DOUBLE:
+                    builder.require(constraint);
+                    return;
+                case STRING_LIST:
+                case CHARACTER_LIST:
+                case INTEGER_LIST:
+                case LONG_LIST:
+                case DOUBLE_LIST:
+                    ((PropertyBuilder.GenericCollectionPropertyBuilder) builder).requireEach(constraint);
+                    return;
+                }
+            }
+
             @Override
             public PropertySerializer<?> getXmlMapper() {
                 return propertySerializer;
