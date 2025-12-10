@@ -327,7 +327,7 @@ public class RuleSetWriter {
             Map<String, String> attributes = constraint.getXmlConstraint();
 
             if (attributes == null || attributes.isEmpty()) {
-                throw new IllegalArgumentException("Unsupported property constraint in XML: " + constraint);
+                throw new IllegalArgumentException("Unsupported property constraint in XML: " + constraint.getConstraintDescription());
             }
 
             for (Map.Entry<String, String> attribute : attributes.entrySet()) {
@@ -336,7 +336,7 @@ public class RuleSetWriter {
                 } else if (SchemaConstants.PROPERTY_MIN.xmlName().equals(attribute.getKey())) {
                     SchemaConstants.PROPERTY_MIN.setOn(element, attribute.getValue());
                 } else {
-                    throw new IllegalArgumentException("Unsupported property constraint in XML: " + constraint
+                    throw new IllegalArgumentException("Unsupported property constraint in XML: " + constraint.getConstraintDescription()
                             + ". There is no attribute " + attribute.getKey());
                 }
             }

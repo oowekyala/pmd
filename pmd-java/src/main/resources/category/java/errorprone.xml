@@ -551,8 +551,9 @@ Each caught exception type should be handled in its own catch clause.
             <property name="xpath">
                 <value>
 <![CDATA[
-//InfixExpression[@Operator = 'instanceof' and VariableAccess[pmd-java:declaratorId()[@ExceptionBlockParameter=true()]]]
-            /following-sibling::TypeExpression/*
+//InfixExpression[@Operator = 'instanceof'
+              and *[1]/self::VariableAccess[pmd-java:declaratorId()[@ExceptionBlockParameter=true()]]
+              ]/*[2]/self::TypeExpression/*
 ]]>
                 </value>
             </property>
@@ -605,7 +606,7 @@ the property ignoreMagicNumbers is not taken into account, if there are multiple
 (: simple case - no deep expressions - this is always executed :)
 //IfStatement/*[1]/*
     [self::CharLiteral or self::StringLiteral or self::NumericLiteral]
-    [not(self::NumericLiteral and (some $number in $ignoreMagicNumbers satisfies @ConstValue = $number))]
+    [not(self::NumericLiteral and (some $number in $ignoreMagicNumbers satisfies @ValueAsDouble = $number))]
 |
 (: consider also deeper expressions :)
 //IfStatement[$ignoreExpressions = false()]/*[1]//*
@@ -613,9 +614,9 @@ the property ignoreMagicNumbers is not taken into account, if there are multiple
     [not(self::NumericLiteral and (
         if (parent::UnaryExpression[@Operator='-']) then
             (: consider negated literals :)
-            (some $number in $ignoreMagicNumbers satisfies @ConstValue = -$number)
+            (some $number in $ignoreMagicNumbers satisfies @ValueAsDouble = -$number)
         else
-            (some $number in $ignoreMagicNumbers satisfies @ConstValue = $number)
+            (some $number in $ignoreMagicNumbers satisfies @ValueAsDouble = $number)
     ))]
 |
 (: consider multiple literals in expressions :)
