@@ -182,6 +182,19 @@ langs:
             outcome: "Matches (unqualified) variable accesses on a final variable or field."
           - code: '//InfixExpression[*[pmd-java:declaringNode()[../StringLiteral[@Empty=true()]]]]'
             outcome: "Matches infix expressions that involve a variable access to a variable initialized with an empty string."
+      - name: localUsages
+        returnType: "xs:node*"
+        shortDescription: "Return the usages of the node, if the context node is a variable id."
+        description: >-
+          Fetch the local usages (only those in this file) of the context node, if it is a variable id.
+          See {% jdoc jast::ASTVariableId#getLocalUsages() %}.
+
+          The returned nodes implement {% jdoc jast::ASTNamedReferenceExpr %}.
+
+        notes: "The context node must be an {% jdoc jast::ASTVariableId %}, otherwise this returns an empty sequence."
+        examples:
+          - code: '//FieldDeclaration/*/VariableId[every $usage in pmd-java:localUsages() satisfies $usage/ancestor::SynchronizedStatement]'
+            outcome: "Matches fields which are always used within synchronized statements"
       - name: hasAnnotation
         returnType: "xs:boolean"
         shortDescription: "Tests whether an annotation is present on the node"
