@@ -101,6 +101,11 @@ public interface PropertyConstraint<T> {
             public String getConstraintDescription() {
                 return "Components " + StringUtils.uncapitalize(PropertyConstraint.this.getConstraintDescription());
             }
+
+            @Override
+            public Map<String, String> getXmlConstraint() {
+                return PropertyConstraint.this.getXmlConstraint();
+            }
         };
     }
 
