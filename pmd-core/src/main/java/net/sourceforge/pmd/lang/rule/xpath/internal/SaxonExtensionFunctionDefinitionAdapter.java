@@ -50,15 +50,24 @@ public class SaxonExtensionFunctionDefinitionAdapter extends ExtensionFunctionDe
 
     private SequenceType convertToSequenceType(XPathFunctionDefinition.Type type) {
         switch (type) {
-        case SINGLE_STRING: return SequenceType.SINGLE_STRING;
-        case SINGLE_BOOLEAN: return SequenceType.SINGLE_BOOLEAN;
-        case SINGLE_ELEMENT: return SINGLE_ELEMENT_SEQUENCE_TYPE;
-        case SINGLE_INTEGER: return SequenceType.SINGLE_INTEGER;
-        case STRING_SEQUENCE: return SequenceType.STRING_SEQUENCE;
-        case OPTIONAL_STRING: return SequenceType.OPTIONAL_STRING;
-        case OPTIONAL_DECIMAL: return SequenceType.OPTIONAL_DECIMAL;
-        case OPTIONAL_ELEMENT: return OPTIONAL_ELEMENT_SEQUENCE_TYPE;
-        case ELEMENT_SEQUENCE: return ELEMENT_SEQUENCE_SEQUENCE_TYPE;
+        case SINGLE_STRING:
+            return SequenceType.SINGLE_STRING;
+        case SINGLE_BOOLEAN:
+            return SequenceType.SINGLE_BOOLEAN;
+        case SINGLE_ELEMENT:
+            return SINGLE_ELEMENT_SEQUENCE_TYPE;
+        case SINGLE_INTEGER:
+            return SequenceType.SINGLE_INTEGER;
+        case STRING_SEQUENCE:
+            return SequenceType.STRING_SEQUENCE;
+        case OPTIONAL_STRING:
+            return SequenceType.OPTIONAL_STRING;
+        case OPTIONAL_DECIMAL:
+            return SequenceType.OPTIONAL_DECIMAL;
+        case OPTIONAL_ELEMENT:
+            return OPTIONAL_ELEMENT_SEQUENCE_TYPE;
+        case ELEMENT_SEQUENCE:
+            return ELEMENT_SEQUENCE_SEQUENCE_TYPE;
         }
         // should not occur, above switch is exhaustive
         throw AssertionUtil.shouldNotReachHere("Type " + type + " is not supported");
@@ -140,10 +149,12 @@ public class SaxonExtensionFunctionDefinitionAdapter extends ExtensionFunctionDe
 
     private Object convertSaxonToJava(Sequence o, XPathFunctionDefinition.Type argTy) throws XPathException {
         switch (argTy) {
-            case SINGLE_STRING:
-                return o.head().getStringValue();
-            case SINGLE_ELEMENT:
-                return o.head();
+        case SINGLE_STRING:
+            return o.head().getStringValue();
+        case SINGLE_ELEMENT:
+            return o.head();
+        default:
+            break;
         }
         throw new UnsupportedOperationException(
             "Don't know how to convert sequence " + o + " to " + argTy);
@@ -151,67 +162,64 @@ public class SaxonExtensionFunctionDefinitionAdapter extends ExtensionFunctionDe
 
     private Sequence convertJavaToSaxon(XPathContext context, Object o) throws ValidationException {
         switch (definition.getResultType()) {
-            case SINGLE_BOOLEAN:
-                return BooleanValue.get((Boolean) o);
-            case SINGLE_INTEGER:
-                return Int64Value.makeIntegerValue((Integer) o);
-            case SINGLE_STRING:
-                return new StringValue((String) o);
-            case OPTIONAL_STRING:
-                return o instanceof Optional && ((Optional<?>) o).isPresent()
-                       ? new StringValue(((Optional<String>) o).get())
-                       : EmptyAtomicSequence.getInstance();
-            case STRING_SEQUENCE:
-                if (o instanceof Collection) {
-                    return SequenceExtent.makeSequenceExtent(CollectionUtil.map((Collection<String>) o, StringValue::new));
-                }
-                break;
-            case OPTIONAL_DECIMAL:
-                return o instanceof Optional && ((Optional<?>) o).isPresent()
-                       ? new BigDecimalValue(((Optional<Double>) o).get())
-                       : EmptySequence.getInstance();
-            case OPTIONAL_ELEMENT:
-                // Recognize Optional<Node> and @Nullable Node.
-                Node node;
-                if (o instanceof Optional) {
-                    if (((Optional<?>) o).isPresent()) {
-                        Object obj = ((Optional<?>) o).get();
-                        if (obj instanceof Node) {
-                            node = (Node) obj;
-                        } else {
-                            break;
-                        }
+        case SINGLE_BOOLEAN:
+            return BooleanValue.get((Boolean) o);
+        case SINGLE_INTEGER:
+            return Int64Value.makeIntegerValue((Integer) o);
+        case SINGLE_STRING:
+            return new StringValue((String) o);
+        case OPTIONAL_STRING:
+            return o instanceof Optional && ((Optional<?>) o).isPresent()
+                   ? new StringValue(((Optional<String>) o).get())
+                   : EmptyAtomicSequence.getInstance();
+        case STRING_SEQUENCE:
+            if (o instanceof Collection) {
+                return SequenceExtent.makeSequenceExtent(CollectionUtil.map((Collection<String>) o, StringValue::new));
+            }
+            break;
+        case OPTIONAL_DECIMAL:
+            return o instanceof Optional && ((Optional<?>) o).isPresent()
+                   ? new BigDecimalValue(((Optional<Double>) o).get())
+                   : EmptySequence.getInstance();
+        case OPTIONAL_ELEMENT:
+            // Recognize Optional<Node> and @Nullable Node.
+            Node node;
+            if (o instanceof Optional) {
+                if (((Optional<?>) o).isPresent()) {
+                    Object obj = ((Optional<?>) o).get();
+                    if (obj instanceof Node) {
+                        node = (Node) obj;
                     } else {
-                        node = null;
+                        break;
                     }
-                } else if (o == null || o instanceof Node) {
-                    node = (Node) o;
                 } else {
-                    break;
+                    node = null;
                 }
-                if (node == null) {
-                    return EmptySequence.getInstance();
-                }
-                {
-                    AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
-                    return tree.findWrapperFor(node);
-                }
-            case SINGLE_ELEMENT:
-                if (o instanceof Node) {
-                    AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
-                    return tree.findWrapperFor((Node) o);
-                } else if (o == null) {
-                    return EmptySequence.getInstance();
-                }
+            } else if (o == null || o instanceof Node) {
+                node = (Node) o;
+            } else {
                 break;
-            case ELEMENT_SEQUENCE:
-                if (o instanceof Collection) {
-                    AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
-                    return SequenceExtent.makeSequenceExtent(CollectionUtil.map((Collection<Node>) o, tree::findWrapperFor));
-                }
-                break;
-            default:
-                break;
+            }
+            if (node == null) {
+                return EmptySequence.getInstance();
+            } else {
+                AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
+                return tree.findWrapperFor(node);
+            }
+        case SINGLE_ELEMENT:
+            if (o instanceof Node) {
+                AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
+                return tree.findWrapperFor((Node) o);
+            } else if (o == null) {
+                return EmptySequence.getInstance();
+            }
+            break;
+        case ELEMENT_SEQUENCE:
+            if (o instanceof Collection) {
+                AstTreeInfo tree = ((AstElementNode) context.getContextItem()).getTreeInfo();
+                return SequenceExtent.makeSequenceExtent(CollectionUtil.map((Collection<Node>) o, tree::findWrapperFor));
+            }
+            break;
         }
         String resultClass = o == null ? "" : " (" + o.getClass() + ")";
         throw new UnsupportedOperationException(

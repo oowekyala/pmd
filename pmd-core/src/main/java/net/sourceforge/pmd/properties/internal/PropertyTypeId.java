@@ -29,8 +29,8 @@ import net.sourceforge.pmd.util.AssertionUtil;
  * changed.
  *
  * @author Clément Fournier
- * @since 6.0.0
  * @apiNote Internal API
+ * @since 6.0.0
  */
 public enum PropertyTypeId {
     // These are exclusively used for XPath rules. It would make more sense to model the supported
@@ -146,7 +146,6 @@ public enum PropertyTypeId {
                 case LONG_LIST:
                 case DOUBLE_LIST:
                     ((PropertyBuilder.GenericCollectionPropertyBuilder) builder).requireEach(constraint);
-                    return;
                 }
             }
 
@@ -189,7 +188,6 @@ public enum PropertyTypeId {
      * Gets the enum constant corresponding to the given mnemonic.
      *
      * @param stringId A mnemonic for the property type
-     *
      * @return A PropertyTypeId
      */
     public static PropertyTypeId lookupMnemonic(String stringId) {
