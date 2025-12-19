@@ -96,6 +96,7 @@ import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.Substitution;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.DataMap;
 import net.sourceforge.pmd.util.DataMap.SimpleDataKey;
@@ -1694,6 +1695,10 @@ public final class DataflowPass {
             return isBlankDeclaration() && isField();
         }
 
+        public boolean isFormalParameterInitialValue() {
+            return isBlankDeclaration() && ((ASTVariableId) rhs).isFormalParameter();
+        }
+
         /**
          * A blank local that has no value (ie not a catch param or formal).
          */
@@ -1730,6 +1735,16 @@ public final class DataflowPass {
 
         public JavaNode getLocation() {
             return rhs;
+        }
+
+        /**
+         * Return the static type of the declaration of this variable.
+         * This may be a type different from the RHS type.
+         *
+         * @see #getRhsType()
+         */
+        public JTypeMirror getDeclaredType() {
+            return var.getTypeMirror(Substitution.EMPTY);
         }
 
         // todo i'm probably missing some

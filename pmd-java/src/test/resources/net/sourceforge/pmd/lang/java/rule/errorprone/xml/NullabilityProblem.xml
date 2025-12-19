@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-data
+    xmlns="http://pmd.sourceforge.net/rule-tests"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+
+    <test-code>
+        <description>initial assignment</description>
+        <expected-problems>2</expected-problems>
+        <expected-linenumbers>4,5</expected-linenumbers>
+        <expected-messages>
+            <message>Variable `x` is always null</message>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+public class Foo {
+    public Object foo() {
+        Object x = null; // OK
+        System.out.println(x); // report: value is null
+        return x; // report: return null
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Ok, control flow join with if</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public Object foo() {
+        Object x = null;
+        if (bar()) {
+            x = new Object();
+        }
+        System.out.println(x);
+        return x;
+    }
+    private boolean bar() { }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Not ok, control flow join with if, and both branches set null</description>
+        <expected-problems>2</expected-problems>
+        <expected-linenumbers>9,10</expected-linenumbers>
+        <expected-messages>
+            <message>Variable `x` is always null</message>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo() {
+                    Object x;
+                    if (bar()) {
+                        x = null;
+                    } else {
+                        x = null;
+                    }
+                    System.out.println(x);
+                    return x;
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+
+
+    <test-code>
+        <description>Comparison</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public void foo() {
+        Object x;
+        if (x == null) { // This is OK
+            return;
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>null param on right hand side</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public void foo() {
+        String x = null;
+        x = new String(null);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>null assignment in ternary - initialization</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public void foo() {
+        String x = bar() ? "fiz" : null;
+    }
+    private boolean bar() { return false; }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>null assignment in ternary</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public void foo() {
+        String x;
+        x = bar() ? "fiz" : null;
+        System.out.println(x); // fine, x is nullable
+    }
+    private boolean bar() { return false; }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>comparison is not assignment</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Foo {
+    public String foo(String x) {
+        return x == null ? "42" : x;
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>final fields must be assigned</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>8</expected-linenumbers>
+        <expected-messages>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+public class Foo {
+    private final String x;
+    public Foo(String y) {
+        x = null;
+    }
+
+    void foo() {
+        System.out.println(x); // report: variable is always null
+    }
+}
+        ]]></code>
+    </test-code>
+
+</test-data>

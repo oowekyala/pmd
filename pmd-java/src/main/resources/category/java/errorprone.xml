@@ -2468,6 +2468,27 @@ public class MyClass {
         </example>
     </rule>
 
+    <rule name="NullabilityProblem"
+          language="java"
+          since="7.TODO"
+          message="{0}"
+          class="net.sourceforge.pmd.lang.java.rule.errorprone.NullabilityProblemRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_errorprone.html#nullabilityproblem">
+        <description>
+            TODO
+        </description>
+        <priority>3</priority>
+        <example>
+ <![CDATA[
+            public void bar() {
+                Object x = null; // this is OK
+                if (x.equals("au")) { // expression will NPE at runtime
+
+                }
+            }
+            ]]>
+        </example>
+    </rule>
     <rule name="NullAssignment"
           language="java"
           since="1.02"
