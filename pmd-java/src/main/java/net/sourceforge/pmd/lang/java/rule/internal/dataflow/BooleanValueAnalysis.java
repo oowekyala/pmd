@@ -7,8 +7,6 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.EMPTY;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.FALSE;
-import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.NONNULL;
-import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.NULL;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.TRUE;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.UNKNOWN;
 
@@ -16,25 +14,16 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.java.ast.ASTArrayAccess;
-import net.sourceforge.pmd.lang.java.ast.ASTArrayAllocation;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTBlock;
 import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTClassLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTConstructorCall;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
-import net.sourceforge.pmd.lang.java.ast.ASTMethodReference;
-import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
-import net.sourceforge.pmd.lang.java.ast.ASTSuperExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
@@ -146,8 +135,44 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
 
         @Override
         public BooleanModel visit(ASTInfixExpression node, BooleanValueAnalysis data) {
-            // todo
-            return NONNULL;
+            // todo this is actually not flexible enough I think.
+            //  Because conditional expressions have their own control flow,
+            //  in a || b, if you're executing b then you can assume !a.
+            //
+
+            BooleanModel left = data.getBooleanModel(node.getLeftOperand());
+            BooleanModel right = data.getBooleanModel(node.getRightOperand());
+
+            switch (node.getOperator()) {
+            case OR:
+            case CONDITIONAL_OR:
+                if (left == TRUE || right == TRUE) {
+                    return TRUE;
+                } else if (left == FALSE && right == FALSE) {
+                    return FALSE;
+                }
+                return UNKNOWN;
+            case CONDITIONAL_AND:
+            case AND:
+                if (left == FALSE || right == FALSE) {
+                    return FALSE;
+                } else if (left == TRUE && right == TRUE) {
+                    return TRUE;
+                }
+                return UNKNOWN;
+
+            case XOR:
+                if (left == UNKNOWN || right == UNKNOWN
+                    || left == EMPTY || right == EMPTY) {
+                    return UNKNOWN;
+                }
+                return left != right ? TRUE : FALSE;
+            case EQ:
+            case NE:
+                // todo
+                return UNKNOWN;
+            }
+            return UNKNOWN;
         }
 
 

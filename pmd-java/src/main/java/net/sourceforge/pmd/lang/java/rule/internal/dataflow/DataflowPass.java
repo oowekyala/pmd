@@ -1617,10 +1617,7 @@ public final class DataflowPass {
         }
 
         static OptionalBool mergeCertitude(OptionalBool first, OptionalBool other) {
-            if (first.isKnown() && other.isKnown()) {
-                return first == other ? first : OptionalBool.UNKNOWN;
-            }
-            return OptionalBool.UNKNOWN;
+            return first == other ? first : OptionalBool.UNKNOWN;
         }
 
 
