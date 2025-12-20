@@ -43,25 +43,6 @@ public interface ValueModel<T extends ValueModel<T>> {
     }
 
     /**
-     * Model for a boolean value.
-     */
-    enum BooleanModel implements ValueModel<BooleanModel> {
-        EMPTY,
-        FALSE,
-        TRUE,
-        UNKNOWN;
-
-        @Override
-        public BooleanModel join(BooleanModel other) {
-            if (this == FALSE && other == TRUE
-                || this == TRUE && other == FALSE) {
-                return UNKNOWN;
-            }
-            return this.compareTo(other) < 0 ? other : this;
-        }
-    }
-
-    /**
      * Model for any primitive integer value (excluding boolean).
      */
     class IntegerModel implements ValueModel<IntegerModel> {

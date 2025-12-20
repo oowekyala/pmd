@@ -2,7 +2,7 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang.java.rule.internal;
+package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -18,9 +18,9 @@ import net.sourceforge.pmd.lang.java.BaseParserTest;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
 
 /**
  * @author Clément Fournier

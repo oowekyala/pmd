@@ -2,7 +2,7 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang.java.rule.internal;
+package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import static java.util.Collections.emptySet;
 import static net.sourceforge.pmd.util.CollectionUtil.asSingle;
@@ -132,6 +132,11 @@ public final class DataflowPass {
      */
     public static DataflowResult getDataflowResult(ASTCompilationUnit acu) {
         return acu.getUserMap().computeIfAbsent(DATAFLOW_RESULT_K, () -> process(acu));
+    }
+
+    public static AnalysisEngine newAnalysisEngine(ASTCompilationUnit acu) {
+        DataflowResult dataflow = getDataflowResult(acu);
+        return new AnalysisEngine(dataflow);
     }
 
     /**

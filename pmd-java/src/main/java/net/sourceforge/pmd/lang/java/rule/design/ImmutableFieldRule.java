@@ -22,9 +22,9 @@ import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 public class ImmutableFieldRule extends AbstractJavaRulechainRule {

@@ -27,9 +27,9 @@ import net.sourceforge.pmd.lang.java.ast.ModifierOwner;
 import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaPropertyUtil;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 

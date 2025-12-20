@@ -4,7 +4,10 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
+import static java.util.Collections.emptyList;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,8 +18,6 @@ import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTForeachStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass.DataflowResult;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 
 /**
@@ -27,10 +28,26 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 public abstract class DfAnalysis<T extends ValueModel<T>> {
 
     private final Map<ASTExpression, Optional<T>> exprCache = new HashMap<>();
-    private final DataflowResult dataflow;
+    private AnalysisEngine engine;
 
-    protected DfAnalysis(DataflowResult dataflow) {
-        this.dataflow = dataflow;
+
+    void setEngine(AnalysisEngine engine) {
+        this.engine = engine;
+    }
+
+    private AnalysisEngine getEngine() {
+        if (engine == null) {
+            throw new IllegalStateException("AnalysisEngine has not been set");
+        }
+        return engine;
+    }
+
+    List<Class<? extends DfAnalysis<?>>> dependentAnalyses() {
+        return emptyList();
+    }
+
+    protected <X extends ValueModel<X>, A extends DfAnalysis<X>> A getAnalysis(Class<A> analysisClass) {
+        return getEngine().getAnalysis(analysisClass);
     }
 
     /**
@@ -94,7 +111,7 @@ public abstract class DfAnalysis<T extends ValueModel<T>> {
 
 
     protected T getModelOfReachingDefinitions(ASTNamedReferenceExpr node) {
-        DataflowPass.ReachingDefinitionSet reaching = dataflow.getReachingDefinitions(node);
+        DataflowPass.ReachingDefinitionSet reaching = getEngine().getDataflow().getReachingDefinitions(node);
         if (reaching.isNotFullyKnown()) {
             return unknown();
         }
@@ -108,7 +125,7 @@ public abstract class DfAnalysis<T extends ValueModel<T>> {
         return result;
     }
 
-    private final @Nullable T createModel(DataflowPass.AssignmentEntry value) {
+    private @Nullable T createModel(DataflowPass.AssignmentEntry value) {
         ASTExpression rhs = value.getRhsAsExpression();
         if (rhs != null) {
             return getModel(rhs);
