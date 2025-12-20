@@ -4,15 +4,18 @@
 
 package net.sourceforge.pmd.lang.java.rule.errorprone;
 
-import static net.sourceforge.pmd.lang.java.rule.errorprone.NullabilityProblemRule.NullabilityKind.NULL;
-
-import java.util.HashMap;
-import java.util.Map;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueModel.Nullability.EMPTY;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueModel.Nullability.NONNULL;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueModel.Nullability.NULL;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueModel.Nullability.UNKNOWN;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.java.ast.ASTArrayAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTArrayAllocation;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTClassLiteral;
@@ -28,15 +31,19 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodReference;
 import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType;
 import net.sourceforge.pmd.lang.java.ast.ASTSuperExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.java.rule.internal.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DfAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueModel.Nullability;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 
 public class NullabilityProblemRule extends AbstractJavaRule {
@@ -72,119 +79,107 @@ public class NullabilityProblemRule extends AbstractJavaRule {
         return false;
     }
 
-    static class NullabilityAnalysis {
-        final DataflowPass.DataflowResult dataflow;
-        final Map<ASTExpression, NullabilityKind> exprToNullability = new HashMap<>();
+    static class NullabilityAnalysis extends DfAnalysis<Nullability> {
 
         NullabilityAnalysis(DataflowPass.DataflowResult dataflow) {
-            this.dataflow = dataflow;
+            super(dataflow);
         }
 
-        NullabilityKind getNullability(ASTExpression e) {
-            // cannot use computeifabsent because of ooncurrent modification
-            NullabilityKind nullability = exprToNullability.get(e);
-            if (nullability == null) {
-                nullability = e.acceptVisitor(NullabilityVisitor.INSTANCE, this);
-                exprToNullability.put(e, nullability);
-            }
-            return nullability;
+        Nullability getNullability(ASTExpression e) {
+            return getModel(e);
         }
 
-        NullabilityKind getNullabilityOfSymbolHere(ASTVariableAccess node) {
-            if (dataflow.getReachingDefinitions(node).isNotFullyKnown()) {
-                return NullabilityKind.UNKNOWN;
-            }
-            // todo flow sensitivity is really important if we want to
-            //  report something else than EMPTY
-            NullabilityKind result = NullabilityKind.EMPTY;
-            for (DataflowPass.AssignmentEntry a : dataflow.getReachingDefinitions(node).getReaching()) {
-                NullabilityKind nullability = getNullabilityOfAssignment(a);
-                result = result.join(nullability);
-            }
-            return result;
+        @Override
+        protected @NonNull Nullability unknown() {
+            return UNKNOWN;
         }
 
-        NullabilityKind getNullabilityOfType(JTypeMirror ty) {
-            return NullabilityKind.UNKNOWN; // todo use annotations
+        @Override
+        protected @NonNull Nullability empty() {
+            return EMPTY;
         }
 
-        private NullabilityKind getNullabilityOfAssignment(DataflowPass.AssignmentEntry a) {
-            ASTExpression rhs = a.getRhsAsExpression();
-            if (rhs != null) {
-                return getNullability(rhs);
-            }
-            if (a.isFieldDefaultValue()) {
-                return a.getDeclaredType().isPrimitive() ? NullabilityKind.NONNULL
-                                                         : NULL;
-            } else if (a.isFormalParameterInitialValue()) {
-                return getNullabilityOfType(a.getDeclaredType());
-            } else if (a.isUnbound()) {
-                return NullabilityKind.UNKNOWN;
-            } else if (a.isForeachVar()) {
-                // todo type may not have explicit annotation but the
-                //  annotation may be in the iterable type
-                return getNullabilityOfType(a.getDeclaredType());
-            } else if (a.isBlankDeclaration()) {
-                return NullabilityKind.EMPTY;
-            }
-            return NullabilityKind.UNKNOWN;
+        @Override
+        public @Nullable Nullability createModel(@NonNull ASTExpression expr) {
+            return expr.acceptVisitor(NullabilityVisitor.INSTANCE, this);
+        }
+
+        @Override
+        protected @Nullable Nullability createFieldDefaultModel(ASTVariableId varId) {
+            return varId.getTypeNode() instanceof ASTPrimitiveType ? null : NULL;
+        }
+
+        @Override
+        protected @NonNull Nullability createModelBasedOnType(JTypeMirror type) {
+            return UNKNOWN; // todo use annotations
+        }
+
+        @Override
+        protected Nullability createForeachVarModel(ASTVariableId varId, JTypeMirror varType, ASTExpression iterableExpr) {
+            // todo look at the iterable for annotations
+            return createModelBasedOnType(varType);
+        }
+
+        @Override
+        protected Nullability getModelOfReachingDefinitions(ASTNamedReferenceExpr node) {
+            return super.getModelOfReachingDefinitions(node);
         }
     }
 
-    static class NullabilityVisitor extends JavaVisitorBase<NullabilityAnalysis, NullabilityKind> {
+    static class NullabilityVisitor extends JavaVisitorBase<NullabilityAnalysis, Nullability> {
 
         static final NullabilityVisitor INSTANCE = new NullabilityVisitor();
 
 
         @Override
-        public NullabilityKind visitExpression(ASTExpression node, NullabilityAnalysis data) {
+        public Nullability visitExpression(ASTExpression node, NullabilityAnalysis data) {
             throw new NotImplementedException("there should be an override here for " + node.getXPathNodeName());
         }
 
         @Override
-        public NullabilityKind visit(ASTLambdaExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTLambdaExpression node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTAssignmentExpression node, NullabilityAnalysis data) {
+        public Nullability visit(ASTAssignmentExpression node, NullabilityAnalysis data) {
             return data.getNullability(node.getRightOperand());
         }
 
         @Override
-        public NullabilityKind visit(ASTConditionalExpression node, NullabilityAnalysis data) {
+        public Nullability visit(ASTConditionalExpression node, NullabilityAnalysis data) {
             if (JavaAstUtils.isBooleanLiteral(node)) {
                 if (JavaAstUtils.isBooleanLiteral(node, true)) {
                     return data.getNullability(node.getThenBranch());
                 }
                 return data.getNullability(node.getElseBranch());
             }
-            NullabilityKind thenNull = data.getNullability(node.getThenBranch());
-            NullabilityKind elseNull = data.getNullability(node.getElseBranch());
+            Nullability thenNull = data.getNullability(node.getThenBranch());
+            Nullability elseNull = data.getNullability(node.getElseBranch());
             return thenNull.join(elseNull);
         }
 
 
         @Override
-        public NullabilityKind visit(ASTInfixExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTInfixExpression node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
 
         @Override
-        public NullabilityKind visit(ASTUnaryExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTUnaryExpression node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTCastExpression node, NullabilityAnalysis data) {
+        public Nullability visit(ASTCastExpression node, NullabilityAnalysis data) {
             return data.getNullability(node.getOperand());
         }
 
 
         @Override
-        public NullabilityKind visit(ASTSwitchExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.UNKNOWN; // TODO
+        public Nullability visit(ASTSwitchExpression node, NullabilityAnalysis data) {
+            return UNKNOWN; // TODO
         }
 
 
@@ -193,87 +188,66 @@ public class NullabilityProblemRule extends AbstractJavaRule {
      */
 
         @Override
-        public NullabilityKind visit(ASTMethodCall node, NullabilityAnalysis data) {
+        public Nullability visit(ASTMethodCall node, NullabilityAnalysis data) {
             return visitPrimaryExpr(node, data);
         }
 
         @Override
-        public NullabilityKind visit(ASTConstructorCall node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTConstructorCall node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTArrayAllocation node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTArrayAllocation node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTArrayAccess node, NullabilityAnalysis data) {
-            return NullabilityKind.UNKNOWN; // todo
+        public Nullability visit(ASTArrayAccess node, NullabilityAnalysis data) {
+            return UNKNOWN; // todo
         }
 
         @Override
-        public NullabilityKind visit(ASTVariableAccess node, NullabilityAnalysis data) {
-            return data.getNullabilityOfSymbolHere(node);
+        public Nullability visit(ASTVariableAccess node, NullabilityAnalysis data) {
+            return data.getModelOfReachingDefinitions(node);
         }
 
         @Override
-        public NullabilityKind visit(ASTFieldAccess node, NullabilityAnalysis data) {
-            return NullabilityKind.UNKNOWN; // todo
-        }
-
-
-        @Override
-        public NullabilityKind visit(ASTMethodReference node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTFieldAccess node, NullabilityAnalysis data) {
+            return data.getModelOfReachingDefinitions(node);
         }
 
 
         @Override
-        public NullabilityKind visit(ASTThisExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTMethodReference node, NullabilityAnalysis data) {
+            return NONNULL;
+        }
+
+
+        @Override
+        public Nullability visit(ASTThisExpression node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTSuperExpression node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTSuperExpression node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTClassLiteral node, NullabilityAnalysis data) {
-            return NullabilityKind.NONNULL;
+        public Nullability visit(ASTClassLiteral node, NullabilityAnalysis data) {
+            return NONNULL;
         }
 
-        public NullabilityKind visitLiteral(ASTLiteral node, NullabilityAnalysis data) {
+        public Nullability visitLiteral(ASTLiteral node, NullabilityAnalysis data) {
             // Other literals delegate here
-            return NullabilityKind.NONNULL;
+            return NONNULL;
         }
 
         @Override
-        public NullabilityKind visit(ASTNullLiteral node, NullabilityAnalysis data) {
+        public Nullability visit(ASTNullLiteral node, NullabilityAnalysis data) {
             return NULL;
         }
     }
 
-    enum NullabilityKind {
-        EMPTY,
-        NULL,
-        NONNULL,
-        NULLABLE,
-        UNKNOWN;
-
-        NullabilityKind join(NullabilityKind other) {
-            if (this == NULL && other == NONNULL
-                || this == NONNULL && other == NULL) {
-                return NULLABLE;
-            }
-            return this.compareTo(other) < 0 ? other : this;
-        }
-    }
-
-    static class NullabilityStatus {
-        NullabilityKind kind;
-        DataflowPass.ReachingDefinitionSet reaching;
-
-    }
 }
