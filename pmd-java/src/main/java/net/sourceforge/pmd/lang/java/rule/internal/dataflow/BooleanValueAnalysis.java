@@ -70,8 +70,8 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
     }
 
     @Override
-    protected BooleanModel getModelOfReachingDefinitions(ASTAssignableExpr.ASTNamedReferenceExpr node) {
-        return super.getModelOfReachingDefinitions(node);
+    protected BooleanModel computeModelOfReachingDefinitions(ASTAssignableExpr.ASTNamedReferenceExpr node) {
+        return super.computeModelOfReachingDefinitions(node);
     }
 
     /**
@@ -215,12 +215,12 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
 
         @Override
         public BooleanModel visit(ASTVariableAccess node, BooleanValueAnalysis data) {
-            return data.getModelOfReachingDefinitions(node); // todo same here actually
+            return data.computeModelOfReachingDefinitions(node); // todo same here actually
         }
 
         @Override
         public BooleanModel visit(ASTFieldAccess node, BooleanValueAnalysis data) {
-            return data.getModelOfReachingDefinitions(node);
+            return data.computeModelOfReachingDefinitions(node);
         }
 
         @Override

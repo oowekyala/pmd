@@ -86,8 +86,8 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
     }
 
     @Override
-    protected Nullability getModelOfReachingDefinitions(ASTAssignableExpr.ASTNamedReferenceExpr node) {
-        return super.getModelOfReachingDefinitions(node);
+    protected Nullability computeModelOfReachingDefinitions(ASTAssignableExpr.ASTNamedReferenceExpr node) {
+        return super.computeModelOfReachingDefinitions(node);
     }
 
     static class NullabilityVisitor extends JavaVisitorBase<NullabilityAnalysis, Nullability> {
@@ -176,12 +176,12 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
 
         @Override
         public Nullability visit(ASTVariableAccess node, NullabilityAnalysis data) {
-            return data.getModelOfReachingDefinitions(node); // todo same here actually
+            return data.computeModelOfReachingDefinitions(node); // todo we need to get control-flow sensitive facts about the variable
         }
 
         @Override
         public Nullability visit(ASTFieldAccess node, NullabilityAnalysis data) {
-            return data.getModelOfReachingDefinitions(node);
+            return data.computeModelOfReachingDefinitions(node);
         }
 
 

@@ -110,7 +110,7 @@ public abstract class DfAnalysis<T extends ValueModel<T>> {
     }
 
 
-    protected T getModelOfReachingDefinitions(ASTNamedReferenceExpr node) {
+    protected T computeModelOfReachingDefinitions(ASTNamedReferenceExpr node) {
         DataflowPass.ReachingDefinitionSet reaching = getEngine().getDataflow().getReachingDefinitions(node);
         if (reaching.isNotFullyKnown()) {
             return unknown();
