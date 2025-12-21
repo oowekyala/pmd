@@ -10,33 +10,27 @@ import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueA
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.TRUE;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel.UNKNOWN;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.EnumSet;
 
-import net.sourceforge.pmd.lang.java.ast.ASTArrayAccess;
-import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr;
-import net.sourceforge.pmd.lang.java.ast.ASTAssignmentExpression;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
-import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTInfixExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
-import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
-import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
+import net.sourceforge.pmd.lang.java.ast.BinaryOp;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.util.AssertionUtil;
 
 public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
 
-    public BooleanModel getBooleanModel(ASTExpression e) {
-        return getModel(e);
-    }
+    public static final EnumSet<BinaryOp> BOOLEAN_OPS =
+        EnumSet.of(BinaryOp.OR, BinaryOp.CONDITIONAL_OR, BinaryOp.AND, BinaryOp.CONDITIONAL_AND, BinaryOp.XOR);
 
     @Override
     protected @NonNull BooleanModel unknown() {
@@ -48,30 +42,21 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
         return EMPTY;
     }
 
+
     @Override
-    public @Nullable BooleanModel createModel(@NonNull ASTExpression expr) {
-        return expr.acceptVisitor(BooleanVisitor.INSTANCE, this);
+    protected @NonNull BooleanModel createFieldDefaultModel(ASTVariableId varId) {
+        return varId.getTypeMirror().isPrimitive(PrimitiveTypeKind.BOOLEAN) ? FALSE : UNKNOWN;
     }
 
     @Override
-    protected @Nullable BooleanModel createFieldDefaultModel(ASTVariableId varId) {
-        return varId.getTypeMirror().isPrimitive(PrimitiveTypeKind.BOOLEAN) ? FALSE : null;
-    }
-
-    @Override
-    protected @NonNull BooleanModel createModelBasedOnType(JTypeMirror type) {
-        return UNKNOWN; // todo use annotations
-    }
-
-    @Override
-    protected BooleanModel createForeachVarModel(ASTVariableId varId, JTypeMirror varType, ASTExpression iterableExpr) {
+    protected BooleanModel createForeachVarModel(ASTVariableId varId, JTypeMirror varType, ASTExpression iterableExpr, DataflowScope scope) {
         // todo look at the iterable for annotations
         return createModelBasedOnType(varType);
     }
 
     @Override
-    protected BooleanModel computeModelOfReachingDefinitions(ASTAssignableExpr.ASTNamedReferenceExpr node) {
-        return super.computeModelOfReachingDefinitions(node);
+    protected DfAnalysis<BooleanModel>.CreateExprModelVisitor createModelForSimpleExprVisitor() {
+        return new BooleanVisitor();
     }
 
     /**
@@ -104,72 +89,77 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
         }
     }
 
-    static class BooleanVisitor extends JavaVisitorBase<BooleanValueAnalysis, BooleanModel> {
-
-        static final BooleanVisitor INSTANCE = new BooleanVisitor();
+    class BooleanVisitor extends CreateExprModelVisitor {
 
 
         @Override
-        public BooleanModel visitExpression(ASTExpression node, BooleanValueAnalysis data) {
-            return null;
-        }
-
-        @Override
-        public BooleanModel visit(ASTAssignmentExpression node, BooleanValueAnalysis data) {
-            return data.getBooleanModel(node.getRightOperand());
-        }
-
-        @Override
-        public BooleanModel visit(ASTConditionalExpression node, BooleanValueAnalysis data) {
-            BooleanModel condition = data.getBooleanModel(node.getCondition());
-            if (condition == TRUE) {
-                return data.getBooleanModel(node.getThenBranch());
-            } else if (condition == FALSE) {
-                return data.getBooleanModel(node.getElseBranch());
-            }
-            BooleanModel thenBool = data.getBooleanModel(node.getThenBranch());
-            BooleanModel elseBool = data.getBooleanModel(node.getElseBranch());
-            return thenBool.join(elseBool);
-        }
-
-
-        @Override
-        public BooleanModel visit(ASTInfixExpression node, BooleanValueAnalysis data) {
+        public BooleanModel visit(ASTInfixExpression node, DataflowScope scope) {
             // todo this is actually not flexible enough I think.
             //  Because conditional expressions have their own control flow,
             //  in a || b, if you're executing b then you can assume !a.
             //
+            // -> actually the solution is to say that the framework will explore
+            //  a, then b given !a, then ask the analysis for its result for the
+            // whole expression - but the analysis actually does not recurse, it
+            // just gets the values from the cache.
 
-            BooleanModel left = data.getBooleanModel(node.getLeftOperand());
-            BooleanModel right = data.getBooleanModel(node.getRightOperand());
+            ASTExpression lhs = node.getLeftOperand();
+            ASTExpression rhs = node.getRightOperand();
+            BinaryOp operator = node.getOperator();
 
-            switch (node.getOperator()) {
-            case OR:
-            case CONDITIONAL_OR:
-                if (left == TRUE || right == TRUE) {
-                    return TRUE;
-                } else if (left == FALSE && right == FALSE) {
-                    return FALSE;
-                }
-                return UNKNOWN;
-            case CONDITIONAL_AND:
-            case AND:
-                if (left == FALSE || right == FALSE) {
-                    return FALSE;
-                } else if (left == TRUE && right == TRUE) {
-                    return TRUE;
-                }
-                return UNKNOWN;
+            if (BOOLEAN_OPS.contains(operator)) {
+                // These are operations that require boolean operands,
+                // therefore we need to get models for the branches.
 
-            case XOR:
-                if (left == UNKNOWN || right == UNKNOWN
-                    || left == EMPTY || right == EMPTY) {
+                BooleanModel left = getModel(lhs, scope);
+                BooleanModel right = getModel(rhs, scope);
+                switch (operator) {
+                case OR:
+                case CONDITIONAL_OR:
+                    if (left == TRUE || right == TRUE) {
+                        return TRUE;
+                    } else if (left == FALSE && right == FALSE) {
+                        return FALSE;
+                    }
                     return UNKNOWN;
+                case CONDITIONAL_AND:
+                case AND:
+                    if (left == FALSE || right == FALSE) {
+                        return FALSE;
+                    } else if (left == TRUE && right == TRUE) {
+                        return TRUE;
+                    }
+                    return UNKNOWN;
+
+                case XOR:
+                    if (left == UNKNOWN || right == UNKNOWN
+                        || left == EMPTY || right == EMPTY) {
+                        return UNKNOWN;
+                    }
+                    return left != right ? TRUE : FALSE;
+                default:
+                    throw AssertionUtil.shouldNotReachHere("exhaustive switch");
                 }
-                return left != right ? TRUE : FALSE;
+            }
+
+            // The rest of the operators use different analyses.
+
+            switch (operator) {
             case EQ:
             case NE:
-                // todo
+                if (lhs instanceof ASTNullLiteral || rhs instanceof ASTNullLiteral) {
+                    // This is a null check. Maybe the nullability analysis
+                    // knows something about this.
+                    ASTExpression nullChecked = lhs instanceof ASTNullLiteral ? rhs : lhs;
+                    NullabilityAnalysis.Nullability nullability = getModel(nullChecked, scope, NullabilityAnalysis.class);
+                    BooleanModel result = UNKNOWN;
+                    if (nullability == NullabilityAnalysis.Nullability.NULL) {
+                        result = TRUE;
+                    } else if (nullability == NullabilityAnalysis.Nullability.NONNULL) {
+                        result = FALSE;
+                    }
+                    return operator == BinaryOp.NE ? result.negate() : result;
+                }
                 return UNKNOWN;
             }
             return UNKNOWN;
@@ -177,54 +167,25 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
 
 
         @Override
-        public BooleanModel visit(ASTUnaryExpression node, BooleanValueAnalysis data) {
-            BooleanModel operandModel = data.getBooleanModel(node.getOperand());
+        public BooleanModel visit(ASTUnaryExpression node, DataflowScope scope) {
+            BooleanModel operandModel = getModel(node.getOperand(), scope);
             if (node.getOperator() == UnaryOp.NEGATION) {
                 return operandModel.negate();
             }
-            return null;
+            return UNKNOWN;
         }
-
-        @Override
-        public BooleanModel visit(ASTCastExpression node, BooleanValueAnalysis data) {
-            return data.getBooleanModel(node.getOperand());
-        }
-
-
-        @Override
-        public BooleanModel visit(ASTSwitchExpression node, BooleanValueAnalysis data) {
-            return UNKNOWN; // TODO
-        }
-
 
     /*
         Primaries
      */
 
         @Override
-        public BooleanModel visit(ASTMethodCall node, BooleanValueAnalysis data) {
-            return visitPrimaryExpr(node, data);
+        public BooleanModel visit(ASTMethodCall node, DataflowScope scope) {
+            return unknown(); // todo
         }
 
         @Override
-        public BooleanModel visit(ASTArrayAccess node, BooleanValueAnalysis data) {
-            // todo. actually we need to be able to query another analysis from here,
-            //  to get the corresponding array model
-            return UNKNOWN;
-        }
-
-        @Override
-        public BooleanModel visit(ASTVariableAccess node, BooleanValueAnalysis data) {
-            return data.computeModelOfReachingDefinitions(node); // todo same here actually
-        }
-
-        @Override
-        public BooleanModel visit(ASTFieldAccess node, BooleanValueAnalysis data) {
-            return data.computeModelOfReachingDefinitions(node);
-        }
-
-        @Override
-        public BooleanModel visit(ASTBooleanLiteral node, BooleanValueAnalysis data) {
+        public BooleanModel visit(ASTBooleanLiteral node, DataflowScope scope) {
             return node.isTrue() ? TRUE : FALSE;
         }
     }

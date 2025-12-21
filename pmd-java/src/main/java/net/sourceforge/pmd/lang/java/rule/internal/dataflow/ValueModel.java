@@ -22,27 +22,6 @@ public interface ValueModel<T extends ValueModel<T>> {
     T join(T other);
 
     /**
-     * Model for any reference value, that just supports checking the
-     * nullability state.
-     */
-    enum Nullability implements ValueModel<Nullability> {
-        EMPTY,
-        NULL,
-        NONNULL,
-        NULLABLE,
-        UNKNOWN;
-
-        @Override
-        public Nullability join(Nullability other) {
-            if (this == NULL && other == NONNULL
-                || this == NONNULL && other == NULL) {
-                return NULLABLE;
-            }
-            return this.compareTo(other) < 0 ? other : this;
-        }
-    }
-
-    /**
      * Model for any primitive integer value (excluding boolean).
      */
     class IntegerModel implements ValueModel<IntegerModel> {
