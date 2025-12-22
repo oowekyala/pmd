@@ -66,7 +66,7 @@ public final class StablePathMatcher {
                 }
 
                 ASTMethodCall call = (ASTMethodCall) e;
-                if (!call.getMethodName().equals(name) || call.getArguments().size() != 0) {
+                if (!call.getMethodName().equals(name) || !call.getArguments().isEmpty()) {
                     return false;
                 }
                 e = call.getQualifier();
@@ -132,6 +132,20 @@ public final class StablePathMatcher {
         return new StablePathMatcher(owner, segments);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        StablePathMatcher that = (StablePathMatcher) o;
+        return Objects.equals(owner, that.owner) && Objects.equals(path, that.path);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(owner, path);
+    }
+
     public static StablePathMatcher matching(JVariableSymbol e) {
         return new StablePathMatcher(e, Collections.emptyList());
     }
@@ -150,6 +164,20 @@ public final class StablePathMatcher {
         public String toString() {
             return isField ? "." + name
                            : "." + name + "()";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Segment segment = (Segment) o;
+            return isField == segment.isField && Objects.equals(name, segment.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, isField);
         }
     }
 }

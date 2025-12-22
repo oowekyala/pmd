@@ -6,7 +6,6 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +22,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
+import net.sourceforge.pmd.lang.java.rule.internal.StablePathMatcher;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 
 /**
@@ -95,34 +95,132 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
 
 
     protected interface DataflowScope {
+
+        /**
+         * Get the model of an expression in this scope. This returns
+         * the current working model for the expression. If the expression
+         * is a reference to a stable path ({@link StablePathMatcher}), we
+         * will fetch facts about the variable. Otherwise, if it is the
+         * first time we query this model in this scope, we will create
+         * a new model with the {@linkplain #createModelForSimpleExprVisitor() visitor}.
+         *
+         * @param expr     An expression
+         * @param analysis The analysis owning the model
+         * @param <V>      Type of value model
+         */
         <V extends ValueModel<V>> V getModel(ASTExpression expr, ValueAnalysis<V> analysis);
 
-        <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, ValueAnalysis<V> analysis);
+        /**
+         * Set the model of the given expression for the rest of this scope.
+         * If the expression is a reference to a stable path ({@link StablePathMatcher}),
+         * facts about it will be accumulated and queryable in the rest of
+         * this scope.
+         *
+         * @param expr     An expression
+         * @param newModel The new model
+         * @param analysis The analysis owning the model
+         * @param <V>      Type of value model
+         */
+        <V extends ValueModel<V>> void setModel(ASTExpression expr, @NonNull V newModel, ValueAnalysis<V> analysis);
     }
 
-    private static class DataflowScopeImpl implements DataflowScope {
+    /**
+     * Base implementation class for a dataflow scope.
+     */
+    abstract static class DataflowScopeImpl implements DataflowScope {
+        static class AnalysisState<V extends ValueModel<V>> {
+            /**
+             * Map any expression to its model. This is used principally
+             * as a cache. TODO think about limiting size.
+             */
+            final Map<ASTExpression, V> exprState = new HashMap<>();
 
-        private final Map<ValueAnalysis<?>, Map<ASTExpression, Object>> cache = new HashMap<>();
+            /**
+             * Map tracked variables to their current model. This can
+             * be refined explicitly by the analysis when evaluating conditions.
+             */
+            final Map<StablePathMatcher, V> varState = new HashMap<>();
+        }
+
+        private final Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates = new HashMap<>();
+
+        protected DataflowScopeImpl() {
+        }
+
+        protected void register(ValueAnalysis<?> analysis) {
+            boolean duplicate = null != analysisStates.putIfAbsent(analysis, new AnalysisState<>());
+            if (duplicate) {
+                throw new IllegalStateException("Cannot register twice: " + analysis);
+            }
+        }
 
         @Override
         public <V extends ValueModel<V>> V getModel(ASTExpression expr, ValueAnalysis<V> analysis) {
+            AnalysisState<V> state = getAnalysisState(analysis);
+            if (expr instanceof ASTNamedReferenceExpr) {
+                StablePathMatcher matcher = StablePathMatcher.matching(expr);
+                V result;
+                if (matcher != null) {
+                    result = state.varState.get(matcher);
+                    if (result == null) {
+                        result = mergeReachingDefinitions((ASTNamedReferenceExpr) expr, analysis);
+                        state.varState.put(matcher, result);
+                    }
+                    return result;
+                }
+                // This is not an analysable expression. Maybe its model
+                // has been set by an assumption? If so we return that
+                // model, however if there is no model for the expression
+                // we don't ask the visitor, because it would just call back here.
+                return state.exprState.getOrDefault(expr, analysis.unknown());
+            }
+
+
             // cannot use computeifabsent because of ooncurrent modification
-            Map<ASTExpression, Object> exprCache = Objects.requireNonNull(cache.get(analysis), "analysis not registered");
-            @SuppressWarnings("unchecked")
-            @Nullable V model = (V) exprCache.get(expr);
+            @Nullable V model = state.exprState.get(expr);
             if (model == null) {
                 // todo check recursion
                 model = analysis.createModelForSimpleExpr(expr, this);
-                exprCache.put(expr, model);
+                state.exprState.put(expr, model);
             }
             return model;
         }
 
+        private <V extends ValueModel<V>> AnalysisState<V> getAnalysisState(ValueAnalysis<V> analysis) {
+            @SuppressWarnings("unchecked")
+            AnalysisState<V> state = (AnalysisState<V>) analysisStates.get(analysis);
+            if (state == null) {
+                throw new IllegalStateException("Analysis not registered " + analysis);
+            }
+            return state;
+        }
+
+        protected abstract DataflowPass.ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
+
+        /** Merge the models for the current reaching definitions of the variable. */
+        private <V extends ValueModel<V>> V mergeReachingDefinitions(ASTNamedReferenceExpr expr, ValueAnalysis<V> analysis) {
+            DataflowPass.ReachingDefinitionSet reaching = currentReachingDefs(expr);
+            if (reaching.isNotFullyKnown()) {
+                return analysis.unknown();
+            }
+            V result = analysis.empty();
+            for (DataflowPass.AssignmentEntry a : reaching.getReaching()) {
+                V model = analysis.createModelForAssignment(a, this);
+                result = result.join(model);
+            }
+            return result;
+        }
+
         @Override
-        @SuppressWarnings("unchecked")
-        public <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, ValueAnalysis<V> analysis) {
-            Map<ASTExpression, Object> exprCache = Objects.requireNonNull(cache.get(analysis), "analysis not registered");
-            return (V) exprCache.put(expr, newModel);
+        public <V extends ValueModel<V>> void setModel(ASTExpression expr, @NonNull V newModel, ValueAnalysis<V> analysis) {
+            AnalysisState<V> state = getAnalysisState(analysis);
+            if (expr instanceof ASTNamedReferenceExpr) {
+                StablePathMatcher matcher = StablePathMatcher.matching(expr);
+                if (matcher != null) {
+                    state.varState.put(matcher, newModel);
+                }
+            }
+            state.exprState.put(expr, newModel);
         }
     }
 
@@ -149,7 +247,8 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         @Override
         public V visitExpression(ASTExpression node, DataflowScope scope) {
             // By default, we return top, meaning this analysis doesn't
-            // understand or care about this kind of expression.
+            // understand or care about expressions for which a visit
+            // method is not explicitly overridden.
             return unknown();
         }
 
@@ -165,13 +264,16 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         }
 
         @Override
-        public V visit(ASTVariableAccess node, DataflowScope data) {
-            return computeModelOfReachingDefinitions(node);
+        public final V visit(ASTVariableAccess node, DataflowScope scope) {
+            throw new IllegalStateException("This should be somehow not ever called");
+            // return scope.getModelOfReachingDefs(node, ValueAnalysis.this);
         }
 
         @Override
-        public V visit(ASTFieldAccess node, DataflowScope data) {
-            return computeModelOfReachingDefinitions(node);
+        public final V visit(ASTFieldAccess node, DataflowScope scope) {
+            // todo maybe we will need to override this for the array length model
+            throw new IllegalStateException("This should be somehow not ever called");
+            // return scope.getModelOfReachingDefs(node, ValueAnalysis.this);
         }
 
         @Override
@@ -210,24 +312,9 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         return createModelBasedOnType(varType);
     }
 
-    protected V computeModelOfReachingDefinitions(ASTNamedReferenceExpr node, DataflowScope scope) {
-        DataflowPass.ReachingDefinitionSet reaching = getEngine().getDataflow().getReachingDefinitions(node);
-        if (reaching.isNotFullyKnown()) {
-            return unknown();
-        }
-        // todo flow sensitivity is really important if we want to
-        //  report something else than EMPTY
-        V result = empty();
-        for (DataflowPass.AssignmentEntry a : reaching.getReaching()) {
-            V model = createModelForAssignment(a, scope);
-            result = result.join(model);
-        }
-        return result;
-    }
-
     private @Nullable V createModelForAssignment(DataflowPass.AssignmentEntry value, DataflowScope scope) {
         ASTExpression rhs = value.getRhsAsExpression();
-        if (rhs != null) {
+        if (rhs != null) { // todo avoid infinite recursion
             return scope.getModel(rhs, this);
         }
         if (value.isFieldDefaultValue()) {
