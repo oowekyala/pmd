@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.DataflowScope;
 import static net.sourceforge.pmd.util.CollectionUtil.asSingle;
 
 import java.util.ArrayDeque;
@@ -40,6 +42,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTContinueStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTDoStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
+import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
@@ -297,11 +300,11 @@ public final class BaseDataflowPass {
             if (condition instanceof ASTInfixExpression) {
                 BinaryOp op = ((ASTInfixExpression) condition).getOperator();
                 if (op == BinaryOp.CONDITIONAL_OR) {
-                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, thenState, elseState);
+                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, thenState, elseState, true);
                 } else if (op == BinaryOp.CONDITIONAL_AND) {
                     // To mimic a shortcut AND expr, swap the thenState and the elseState
                     // See explanations in method
-                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, elseState, thenState);
+                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, elseState, thenState, false);
                 }
             }
 
@@ -316,7 +319,8 @@ public final class BaseDataflowPass {
         SpanInfo visitShortcutOrExpr(ASTInfixExpression orExpr,
                                      SpanInfo before,
                                      SpanInfo thenState,
-                                     SpanInfo elseState) {
+                                     SpanInfo elseState,
+                                     boolean isOrExpr) {
 
             //  if (<a> || <b> || ... || <n>) <then>
             //  else <else>
@@ -336,10 +340,22 @@ public final class BaseDataflowPass {
             SpanInfo cur = before;
             cur = linkConditional(cur, orExpr.getLeftOperand(), thenState, elseState, false);
             thenState.absorb(cur);
+            BooleanModel spec = before.global.speculateCondition(orExpr.getLeftOperand(), cur);
+            if (isOrExpr && spec == BooleanModel.TRUE || !isOrExpr && spec == BooleanModel.FALSE) {
+                // Shortcut return
+                elseState.absorb(cur);
+                before.global.setConditionSpec(orExpr, spec, cur);
+                return cur;
+            }
             cur = linkConditional(cur, orExpr.getRightOperand(), thenState, elseState, false);
             thenState.absorb(cur);
-
             elseState.absorb(cur);
+
+            // Speculate on the right part
+            spec = before.global.speculateCondition(orExpr.getRightOperand(), cur);
+            if (isOrExpr && spec == BooleanModel.TRUE || !isOrExpr && spec == BooleanModel.FALSE) {
+                before.global.setConditionSpec(orExpr, spec, cur);
+            }
 
             return cur;
         }
@@ -690,6 +706,11 @@ public final class BaseDataflowPass {
         }
 
         @Override
+        public SpanInfo visitMethodOrCtor(ASTExecutableDeclaration node, SpanInfo data) {
+            return super.visitMethodOrCtor(node, data);
+        }
+
+        @Override
         public SpanInfo visit(ASTCatchParameter node, SpanInfo data) {
             data.declareBlank(node.getVarId());
             return data;
@@ -1010,6 +1031,14 @@ public final class BaseDataflowPass {
         public void switchBranchFallsThrough(ASTSwitchBranch branch, OptionalBool isFallingThrough) {
 
         }
+
+        public BooleanModel speculateCondition(@NonNull ASTExpression expr, DataflowScope scope) {
+            return BooleanModel.UNKNOWN;
+        }
+
+        public void setConditionSpec(ASTExpression orExpr, BooleanModel spec, DataflowScope scope) {
+
+        }
     }
 
 
@@ -1235,7 +1264,7 @@ public final class BaseDataflowPass {
         // of the current context while analysing a sub-block
         // Forks must be merged later if control flow merges again, see ::absorb
 
-        // todo fork routines should also copy over the value scopes
+        // fixme fork routines should also copy over the value scopes and their registration table
         SpanInfo fork() {
             return doFork(this, copyTable());
         }

@@ -51,15 +51,15 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         this.createExprModelVisitor = createModelForSimpleExprVisitor();
     }
 
-    void setEngine(AnalysisEngine engine) {
-        this.engine = engine;
-    }
-
     private AnalysisEngine getEngine() {
         if (engine == null) {
             throw new IllegalStateException("AnalysisEngine has not been set");
         }
         return engine;
+    }
+
+    void setEngine(AnalysisEngine engine) {
+        this.engine = engine;
     }
 
     protected <A extends ValueAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
@@ -94,6 +94,38 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
 
     protected abstract CreateExprModelVisitor createModelForSimpleExprVisitor();
 
+    /**
+     * Create the model for the default value of a field. Return unknown
+     * if this analysis does not support this kind of value and should not
+     * track this field.
+     *
+     * @param varId a field ID
+     */
+    protected abstract @NonNull V createFieldDefaultModel(ASTVariableId varId);
+
+    protected V createForeachVarModel(ASTVariableId varId, JTypeMirror varType, ASTExpression iterableExpr, DataflowScope scope) {
+        return createModelBasedOnType(varType);
+    }
+
+    private @Nullable V createModelForAssignment(AssignmentEntry value, DataflowScope scope) {
+        ASTExpression rhs = value.getRhsAsExpression();
+        if (rhs != null) { // todo avoid infinite recursion
+            return scope.getModel(rhs, this);
+        }
+        if (value.isFieldDefaultValue()) {
+            return createFieldDefaultModel(value.getVarId());
+        } else if (value.isFormalParameterInitialValue()) {
+            return createModelBasedOnType(value.getDeclaredType());
+        } else if (value.isUnbound()) {
+            return unknown();
+        } else if (value.isForeachVar()) {
+            ASTExpression iterableExpr = value.getVarId().ancestors(ASTForeachStatement.class).firstOrThrow().getIterableExpr();
+            return createForeachVarModel(value.getVarId(), value.getDeclaredType(), iterableExpr, scope);
+        } else if (value.isBlankDeclaration()) {
+            return empty();
+        }
+        return unknown();
+    }
 
     protected interface DataflowScope {
 
@@ -129,36 +161,6 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
      * Base implementation class for a dataflow scope.
      */
     abstract static class DataflowScopeImpl implements DataflowScope {
-        static class AnalysisState<V extends ValueModel<V>> {
-            /**
-             * Map any expression to its model. This is used principally
-             * as a cache. TODO think about limiting size.
-             */
-            final Map<ASTExpression, V> exprState = new HashMap<>();
-
-            /**
-             * Map tracked variables to their current model. This can
-             * be refined explicitly by the analysis when evaluating conditions.
-             */
-            final Map<StablePathMatcher, V> varState = new HashMap<>();
-
-            boolean absorb(AnalysisState<V> otherState) {
-                boolean changed = joinMap(exprState, otherState.exprState);
-                changed |= joinMap(varState, otherState.varState);
-                return changed;
-            }
-
-            private static <K, V extends ValueModel<V>> boolean joinMap(Map<K, V> myMap, Map<K, V> otherMap) {
-                boolean changed = false;
-                for (Map.Entry<K, V> entry : otherMap.entrySet()) {
-                    V oldValue = myMap.get(entry.getKey());
-                    V newValue = myMap.merge(entry.getKey(), entry.getValue(), V::join);
-                    changed |= !Objects.equals(oldValue, newValue);
-                }
-                return changed;
-            }
-        }
-
         private final Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates = new HashMap<>();
 
         protected DataflowScopeImpl() {
@@ -266,6 +268,36 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
             return analysisStates
                 .values().stream().allMatch(it -> it.varState.isEmpty() && it.exprState.isEmpty());
         }
+
+        static class AnalysisState<V extends ValueModel<V>> {
+            /**
+             * Map any expression to its model. This is used principally
+             * as a cache. TODO think about limiting size.
+             */
+            final Map<ASTExpression, V> exprState = new HashMap<>();
+
+            /**
+             * Map tracked variables to their current model. This can
+             * be refined explicitly by the analysis when evaluating conditions.
+             */
+            final Map<StablePathMatcher, V> varState = new HashMap<>();
+
+            private static <K, V extends ValueModel<V>> boolean joinMap(Map<K, V> myMap, Map<K, V> otherMap) {
+                boolean changed = false;
+                for (Map.Entry<K, V> entry : otherMap.entrySet()) {
+                    V oldValue = myMap.get(entry.getKey());
+                    V newValue = myMap.merge(entry.getKey(), entry.getValue(), V::join);
+                    changed |= !Objects.equals(oldValue, newValue);
+                }
+                return changed;
+            }
+
+            boolean absorb(AnalysisState<V> otherState) {
+                boolean changed = joinMap(exprState, otherState.exprState);
+                changed |= joinMap(varState, otherState.varState);
+                return changed;
+            }
+        }
     }
 
     /**
@@ -341,39 +373,6 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         public V visit(ASTSwitchExpression node, DataflowScope scope) {
             return unknown(); // TODO
         }
-    }
-
-    /**
-     * Create the model for the default value of a field. Return unknown
-     * if this analysis does not support this kind of value and should not
-     * track this field.
-     *
-     * @param varId a field ID
-     */
-    protected abstract @NonNull V createFieldDefaultModel(ASTVariableId varId);
-
-    protected V createForeachVarModel(ASTVariableId varId, JTypeMirror varType, ASTExpression iterableExpr, DataflowScope scope) {
-        return createModelBasedOnType(varType);
-    }
-
-    private @Nullable V createModelForAssignment(AssignmentEntry value, DataflowScope scope) {
-        ASTExpression rhs = value.getRhsAsExpression();
-        if (rhs != null) { // todo avoid infinite recursion
-            return scope.getModel(rhs, this);
-        }
-        if (value.isFieldDefaultValue()) {
-            return createFieldDefaultModel(value.getVarId());
-        } else if (value.isFormalParameterInitialValue()) {
-            return createModelBasedOnType(value.getDeclaredType());
-        } else if (value.isUnbound()) {
-            return unknown();
-        } else if (value.isForeachVar()) {
-            ASTExpression iterableExpr = value.getVarId().ancestors(ASTForeachStatement.class).firstOrThrow().getIterableExpr();
-            return createForeachVarModel(value.getVarId(), value.getDeclaredType(), iterableExpr, scope);
-        } else if (value.isBlankDeclaration()) {
-            return empty();
-        }
-        return unknown();
     }
 
 }

@@ -4,7 +4,9 @@
 
 package net.sourceforge.pmd.lang.java.rule.errorprone;
 
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.NULL;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.NULLABLE;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysisFacade.ValueAnalysisResult;
 
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
@@ -16,7 +18,6 @@ import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis;
 import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysisFacade;
-import net.sourceforge.pmd.util.OptionalBool;
 
 public class NullabilityProblemRule extends AbstractJavaRule {
 
@@ -33,12 +34,17 @@ public class NullabilityProblemRule extends AbstractJavaRule {
                     && !JavaAstUtils.isVarAccessStrictlyWrite((ASTVariableAccess) it)
                     && nullability == NULL) {
                     asCtx(data).addViolationWithMessage(it, "Variable `{0}` is always null", ((ASTVariableAccess) it).getName());
-                } else if (expressionWillNpeIfNull(it) && nullability.mayBeNull() == OptionalBool.YES) {
+                } else if (expressionWillNpeIfNull(it)) {
                     if (nullability == NULL) {
                         asCtx(data).addViolationWithMessage(it, "Expression will NPE at runtime");
-                    } else {
+                    } else if (nullability == NULLABLE) {
                         asCtx(data).addViolationWithMessage(it, "Expression may NPE at runtime");
                     }
+                }
+                BooleanModel booleanModel = analysis.getBooleanModel(it);
+                if (booleanModel == BooleanModel.TRUE || booleanModel == BooleanModel.FALSE) {
+                    String boolAsString = booleanModel == BooleanModel.TRUE ? "true" : "false";
+                    asCtx(data).addViolationWithMessage(it, "Expression is always {0}", boolAsString);
                 }
             });
         return null;
