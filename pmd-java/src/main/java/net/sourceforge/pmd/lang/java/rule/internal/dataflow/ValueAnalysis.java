@@ -163,7 +163,22 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
     abstract static class DataflowScopeImpl implements DataflowScope {
         private final Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates = new HashMap<>();
 
+        protected DataflowScopeImpl(Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates) {
+            this.analysisStates.putAll(analysisStates);
+        }
         protected DataflowScopeImpl() {
+        }
+
+        protected Map<ValueAnalysis<?>, AnalysisState<?>> cloneStates(boolean preserveFacts) {
+            Map<ValueAnalysis<?>, AnalysisState<?>> states = new HashMap<>(analysisStates);
+            states.putAll(this.analysisStates);
+            if (!preserveFacts) {
+                // clear values but preserve map keys
+                states.entrySet().forEach(
+                    entry -> entry.setValue(new AnalysisState<>())
+                );
+            }
+            return states;
         }
 
         protected void register(ValueAnalysis<?> analysis) {
@@ -171,6 +186,10 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
             if (duplicate) {
                 throw new IllegalStateException("Cannot register twice: " + analysis);
             }
+        }
+
+        protected boolean shouldCacheVariable() {
+            return true;
         }
 
         @Override
@@ -183,7 +202,9 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                     result = state.varState.get(matcher);
                     if (result == null) {
                         result = mergeReachingDefinitions((ASTNamedReferenceExpr) expr, analysis);
-                        state.varState.put(matcher, result);
+                        if (shouldCacheVariable()) {
+                            state.varState.put(matcher, result);
+                        }
                     }
                     return result;
                 }
@@ -269,6 +290,17 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 .values().stream().allMatch(it -> it.varState.isEmpty() && it.exprState.isEmpty());
         }
 
+        /**
+         * Delete the facts we know about the given tracked value.
+         * Called when the value has been reassigned.
+         */
+        public void cleanVariableState(StablePathMatcher matcher) {
+            analysisStates.forEach((analysis, state) -> {
+                // todo remove all that have the matcher as a prefix
+                state.varState.remove(matcher);
+            });
+        }
+
         static class AnalysisState<V extends ValueModel<V>> {
             /**
              * Map any expression to its model. This is used principally
@@ -296,6 +328,14 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 boolean changed = joinMap(exprState, otherState.exprState);
                 changed |= joinMap(varState, otherState.varState);
                 return changed;
+            }
+
+            @Override
+            public String toString() {
+                return "AnalysisState{" +
+                       "exprState=" + exprState +
+                       ", varState=" + varState +
+                       '}';
             }
         }
     }

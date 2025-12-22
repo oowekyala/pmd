@@ -12,6 +12,7 @@ import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
@@ -41,13 +42,19 @@ public class NullabilityProblemRule extends AbstractJavaRule {
                         asCtx(data).addViolationWithMessage(it, "Expression may NPE at runtime");
                     }
                 }
-                BooleanModel booleanModel = analysis.getBooleanModel(it);
-                if (booleanModel == BooleanModel.TRUE || booleanModel == BooleanModel.FALSE) {
-                    String boolAsString = booleanModel == BooleanModel.TRUE ? "true" : "false";
-                    asCtx(data).addViolationWithMessage(it, "Expression is always {0}", boolAsString);
+                if (isStatementCondition(it)) {
+                    BooleanModel booleanModel = analysis.getBooleanModel(it);
+                    if (booleanModel == BooleanModel.TRUE || booleanModel == BooleanModel.FALSE) {
+                        String boolAsString = booleanModel == BooleanModel.TRUE ? "true" : "false";
+                        asCtx(data).addViolationWithMessage(it, "Condition is always {0}", boolAsString);
+                    }
                 }
             });
         return null;
+    }
+
+    private static boolean isStatementCondition(ASTExpression it) {
+        return it.getParent() instanceof ASTStatement;
     }
 
     boolean expressionWillNpeIfNull(ASTExpression e) {

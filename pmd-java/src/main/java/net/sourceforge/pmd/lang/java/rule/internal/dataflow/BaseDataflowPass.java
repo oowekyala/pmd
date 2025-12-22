@@ -6,10 +6,13 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.DataflowScope;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.*;
 import static net.sourceforge.pmd.util.CollectionUtil.asSingle;
+import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -93,6 +96,7 @@ import net.sourceforge.pmd.lang.java.symbols.JFormalParamSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.util.CollectionUtil;
+import net.sourceforge.pmd.util.DataMap;
 import net.sourceforge.pmd.util.OptionalBool;
 
 /**
@@ -258,9 +262,14 @@ public final class BaseDataflowPass {
             SpanInfo elseState = elseBranch != null ? before.fork() : before;
 
             linkConditional(before, condition, thenState, elseState, true);
+            BooleanModel conditionModel = before.global.speculateCondition(condition, before);
 
-            thenState = acceptOpt(thenBranch, thenState);
-            elseState = acceptOpt(elseBranch, elseState);
+            if (conditionModel != BooleanModel.FALSE) {
+                thenState = acceptOpt(thenBranch, thenState);
+            }
+            if (conditionModel != BooleanModel.TRUE) {
+                elseState = acceptOpt(elseBranch, elseState);
+            }
 
             return elseState.absorb(thenState);
         }
@@ -707,7 +716,9 @@ public final class BaseDataflowPass {
 
         @Override
         public SpanInfo visitMethodOrCtor(ASTExecutableDeclaration node, SpanInfo data) {
-            return super.visitMethodOrCtor(node, data);
+            SpanInfo endState = super.visitMethodOrCtor(node, data);
+            data.global.exitControlFlowScope(node, endState);
+            return endState;
         }
 
         @Override
@@ -1007,7 +1018,7 @@ public final class BaseDataflowPass {
      * The shared state for all {@link SpanInfo} instances in the same
      * toplevel class.
      */
-    static class GlobalAlgoState {
+    abstract static class GlobalAlgoState {
 
         final TargetStack breakTargets = new TargetStack();
         // continue jumps to the condition check, while break jumps to after the loop
@@ -1016,11 +1027,23 @@ public final class BaseDataflowPass {
         protected GlobalAlgoState() {
         }
 
-        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, VarLocalInfo info) {
+        protected abstract DataMap.SimpleDataKey<ReachingDefinitionSet> reachingDefsKey();
 
+        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, VarLocalInfo info) {
+            ReachingDefinitionSet reaching;
+            if (info == null || var.isField() && var.isFinal()) {
+                return;
+            } else {
+                reaching = new ReachingDefinitionSet(new LinkedHashSet<>(info.reachingDefs));
+            }
+            // need to merge into previous to account for cyclic control flow
+            reachingDefSink.getUserMap().merge(reachingDefsKey(), reaching, (current, newer) -> {
+                current.absorb(newer);
+                return current;
+            });
         }
 
-        protected void newAssignment(@Nullable VarLocalInfo previous, AssignmentEntry newEntry) {
+        protected void newAssignment(@Nullable VarLocalInfo previous, AssignmentEntry newEntry, DataflowScopeImpl spanInfo) {
 
         }
 
@@ -1037,6 +1060,14 @@ public final class BaseDataflowPass {
         }
 
         public void setConditionSpec(ASTExpression orExpr, BooleanModel spec, DataflowScope scope) {
+
+        }
+
+        protected Collection<? extends ValueAnalysis<?>> getAnalyses() {
+            return emptyList();
+        }
+
+        protected void exitControlFlowScope(ASTExecutableDeclaration node, DataflowScopeImpl endState) {
 
         }
     }
@@ -1073,7 +1104,7 @@ public final class BaseDataflowPass {
     /**
      * Information about a span of code.
      */
-    private static class SpanInfo extends ValueAnalysis.DataflowScopeImpl {
+    private static class SpanInfo extends DataflowScopeImpl {
 
         // spans are arranged in a tree, to look for enclosing finallies
         // when abrupt completion occurs. Blocks that have non-local
@@ -1128,12 +1159,17 @@ public final class BaseDataflowPass {
 
 
         private SpanInfo(GlobalAlgoState global) {
-            this(null, global, new LinkedHashMap<>());
+            this(null, global, new LinkedHashMap<>(), new LinkedHashMap<>());
+            for (ValueAnalysis<?> analysis : global.getAnalyses()) {
+                register(analysis);
+            }
         }
 
         private SpanInfo(@Nullable SpanInfo parent,
                          GlobalAlgoState global,
-                         Map<JVariableSymbol, VarLocalInfo> symtable) {
+                         Map<JVariableSymbol, VarLocalInfo> symtable,
+                         Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates) {
+            super(analysisStates);
             this.parent = parent;
             this.returnOrThrowTarget = parent == null ? this : parent.returnOrThrowTarget;
             this.global = global;
@@ -1181,7 +1217,7 @@ public final class BaseDataflowPass {
                 }
             }
             VarLocalInfo previous = symtable.put(var, newInfo);
-            global.newAssignment(previous, entry);
+            global.newAssignment(previous, entry, this);
             return previous;
         }
 
@@ -1228,7 +1264,7 @@ public final class BaseDataflowPass {
         }
 
         void deleteVar(JVariableSymbol var) {
-            symtable.remove(var);
+            // symtable.remove(var);
         }
 
         /**
@@ -1266,28 +1302,30 @@ public final class BaseDataflowPass {
 
         // fixme fork routines should also copy over the value scopes and their registration table
         SpanInfo fork() {
-            return doFork(this, copyTable());
+            return doFork(true, true);
         }
 
         SpanInfo forkEmpty() {
-            return doFork(this, new LinkedHashMap<>());
+            return doFork(true, false);
         }
 
 
         SpanInfo forkEmptyNonLocal() {
-            return doFork(null, new LinkedHashMap<>());
+            return doFork(false, false);
         }
 
         SpanInfo forkCapturingNonLocal() {
-            return doFork(null, copyTable());
+            return doFork(false, true);
         }
 
-        private Map<JVariableSymbol, VarLocalInfo> copyTable() {
-            return new LinkedHashMap<>(this.symtable);
-        }
+        protected SpanInfo doFork(boolean hasLocalControlFlow, boolean preserveState) {
+            SpanInfo parent = hasLocalControlFlow ? this : null;
+            Map<JVariableSymbol, VarLocalInfo> reaching = new LinkedHashMap<>();
+            if (preserveState) {
+                reaching.putAll(this.symtable);
+            }
 
-        protected SpanInfo doFork(/*nullable*/ SpanInfo parent, Map<JVariableSymbol, VarLocalInfo> reaching) {
-            return new SpanInfo(parent, this.global, reaching);
+            return new SpanInfo(parent, this.global, reaching, cloneStates(preserveState));
         }
 
         /** Abrupt completion for return, continue, break. */

@@ -4,6 +4,8 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal;
 
+import static net.sourceforge.pmd.util.CollectionUtil.listOf;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +20,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTSuperExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
+import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 
 /**
@@ -146,8 +149,12 @@ public final class StablePathMatcher {
         return Objects.hash(owner, path);
     }
 
-    public static StablePathMatcher matching(JVariableSymbol e) {
-        return new StablePathMatcher(e, Collections.emptyList());
+    public static StablePathMatcher matching(JVariableSymbol var) {
+        if (var instanceof JFieldSymbol) {
+            // interpret field symbol as a field of this instance
+            return new StablePathMatcher(null, listOf(new Segment(var.getSimpleName(), true)));
+        }
+        return new StablePathMatcher(var, Collections.emptyList());
     }
 
     private static final class Segment {

@@ -155,7 +155,7 @@ public final class ReachingDefinitionsAnalysis {
         // Fallback, to compute reaching definitions for some nodes
         // that are not tracked by the tree exploration. Final fields
         // indeed have a fully known set of reaching definitions.
-        private @NonNull ReachingDefinitionSet reachingFallback(ASTNamedReferenceExpr expr) {
+        static @NonNull ReachingDefinitionSet reachingFallback(ASTNamedReferenceExpr expr) {
             JVariableSymbol sym = expr.getReferencedSym();
             if (sym == null || sym.isField() && !sym.isFinal()) {
                 return ReachingDefinitionSet.unknown();
@@ -232,18 +232,8 @@ public final class ReachingDefinitionsAnalysis {
 
 
         @Override
-        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, BaseDataflowPass.VarLocalInfo info) {
-            ReachingDefinitionSet reaching;
-            if (info == null || var.isField() && var.isFinal()) {
-                return;
-            } else {
-                reaching = new ReachingDefinitionSet(new LinkedHashSet<>(info.reachingDefs));
-            }
-            // need to merge into previous to account for cyclic control flow
-            reachingDefSink.getUserMap().merge(REACHING_DEFS, reaching, (current, newer) -> {
-                current.absorb(newer);
-                return current;
-            });
+        protected SimpleDataKey<ReachingDefinitionSet> reachingDefsKey() {
+            return REACHING_DEFS;
         }
 
         @Override
@@ -252,7 +242,7 @@ public final class ReachingDefinitionsAnalysis {
         }
 
         @Override
-        protected void newAssignment(BaseDataflowPass.@Nullable VarLocalInfo previous, AssignmentEntry newEntry) {
+        protected void newAssignment(BaseDataflowPass.@Nullable VarLocalInfo previous, AssignmentEntry newEntry, ValueAnalysis.DataflowScopeImpl spanInfo) {
             if (previous != null) {
                 // those assignments were overwritten ("killed")
                 for (AssignmentEntry killed : previous.reachingDefs) {

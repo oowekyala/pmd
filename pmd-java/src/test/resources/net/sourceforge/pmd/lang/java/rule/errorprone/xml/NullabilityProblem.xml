@@ -53,10 +53,37 @@ public class Foo {
             public class Foo {
                 public Object foo() {
                     Object x;
-                    if (bar() || true) {
+                    if (bar()) {
                         x = null;
                     } else {
                         x = null;
+                    }
+                    System.out.println(x);
+                    return x;
+                }
+
+                private boolean bar() {
+                }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Condition is constant, and the branch taken sets null</description>
+        <expected-problems>3</expected-problems>
+        <expected-linenumbers>4,9,10</expected-linenumbers>
+        <expected-messages>
+            <message>Condition is always true</message>
+            <message>Variable `x` is always null</message>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo() {
+                    Object x;
+                    if (bar() || true) {
+                        x = null;
+                    } else {
+                        x = new Object();
                     }
                     System.out.println(x);
                     return x;

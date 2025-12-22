@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,5 +33,9 @@ public class AnalysisEngine {
             throw new IllegalArgumentException("analysis not registered: " + analysisClass.getName());
         }
         return dfAnalysis;
+    }
+
+    Collection<? extends ValueAnalysis<?>> getAllAnalyses() {
+        return allAnalyses.values();
     }
 }
