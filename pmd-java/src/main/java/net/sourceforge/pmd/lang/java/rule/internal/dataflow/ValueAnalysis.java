@@ -40,13 +40,13 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
  *
  * @param <V> Type of value model
  */
-public abstract class DfAnalysis<V extends ValueModel<V>> {
+public abstract class ValueAnalysis<V extends ValueModel<V>> {
 
     private final CreateExprModelVisitor createExprModelVisitor;
 
     private AnalysisEngine engine;
 
-    protected DfAnalysis() {
+    protected ValueAnalysis() {
         this.createExprModelVisitor = createModelForSimpleExprVisitor();
     }
 
@@ -61,7 +61,7 @@ public abstract class DfAnalysis<V extends ValueModel<V>> {
         return engine;
     }
 
-    protected <A extends DfAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
+    protected <A extends ValueAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
         return getEngine().getAnalysis(analysisClass);
     }
 
@@ -95,17 +95,17 @@ public abstract class DfAnalysis<V extends ValueModel<V>> {
 
 
     protected interface DataflowScope {
-        <V extends ValueModel<V>> V getModel(ASTExpression expr, DfAnalysis<V> analysis);
+        <V extends ValueModel<V>> V getModel(ASTExpression expr, ValueAnalysis<V> analysis);
 
-        <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, DfAnalysis<V> analysis);
+        <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, ValueAnalysis<V> analysis);
     }
 
     private static class DataflowScopeImpl implements DataflowScope {
 
-        private final Map<DfAnalysis<?>, Map<ASTExpression, Object>> cache = new HashMap<>();
+        private final Map<ValueAnalysis<?>, Map<ASTExpression, Object>> cache = new HashMap<>();
 
         @Override
-        public <V extends ValueModel<V>> V getModel(ASTExpression expr, DfAnalysis<V> analysis) {
+        public <V extends ValueModel<V>> V getModel(ASTExpression expr, ValueAnalysis<V> analysis) {
             // cannot use computeifabsent because of ooncurrent modification
             Map<ASTExpression, Object> exprCache = Objects.requireNonNull(cache.get(analysis), "analysis not registered");
             @SuppressWarnings("unchecked")
@@ -120,7 +120,7 @@ public abstract class DfAnalysis<V extends ValueModel<V>> {
 
         @Override
         @SuppressWarnings("unchecked")
-        public <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, DfAnalysis<V> analysis) {
+        public <V extends ValueModel<V>> V setModel(ASTExpression expr, V newModel, ValueAnalysis<V> analysis) {
             Map<ASTExpression, Object> exprCache = Objects.requireNonNull(cache.get(analysis), "analysis not registered");
             return (V) exprCache.put(expr, newModel);
         }
@@ -138,10 +138,10 @@ public abstract class DfAnalysis<V extends ValueModel<V>> {
     protected class CreateExprModelVisitor extends JavaVisitorBase<DataflowScope, @NonNull V> {
 
         protected final V getModel(ASTExpression e, DataflowScope scope) {
-            return scope.getModel(e, DfAnalysis.this);
+            return scope.getModel(e, ValueAnalysis.this);
         }
 
-        protected final <X extends ValueModel<X>> X getModel(ASTExpression e, DataflowScope scope, Class<? extends DfAnalysis<X>> analysis) {
+        protected final <X extends ValueModel<X>> X getModel(ASTExpression e, DataflowScope scope, Class<? extends ValueAnalysis<X>> analysis) {
             return scope.getModel(e, getAnalysis(analysis));
         }
 

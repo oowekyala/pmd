@@ -16,74 +16,37 @@ public interface ValueModel<T extends ValueModel<T>> {
 
     /**
      * Produce a model that represents the union of both sets of facts.
+     * This must behave as the join operator of a lattice, meaning it
+     * must have the following properties:
+     * <ul>
+     * <li>Commutativity: {@code A.join(B) == B.join(A)};
+     * <li>Associativity: {@code A.join(B).join(C) == A.join(B.join(C))};
+     * <li>Reflexivity: {@code A.join(A) == A}.
+     * </ul>
+     * Additionally, it must support two designated elements, {@linkplain #isTop() top}
+     * and {@linkplain #isBottom()}.
      *
      * @param other Another model
      */
     T join(T other);
 
     /**
-     * Model for any primitive integer value (excluding boolean).
+     * Return true if this is the top of the lattice. This represents
+     * a state where no specific assumptions about the value can be made,
+     * an "unknown" state. It is an absorbing element, i.e.
+     * {@code top.join(X) = top} for all {@code X}.
      */
-    class IntegerModel implements ValueModel<IntegerModel> {
-        private final long minInclusive;
-        private final long maxInclusive;
-        private final BitWidth bitwidth;
+    boolean isTop();
 
-        private IntegerModel(long minInclusive, long maxInclusive, BitWidth bitwidth) {
-            this.minInclusive = minInclusive;
-            this.maxInclusive = maxInclusive;
-            this.bitwidth = bitwidth;
-        }
+    // todo seems we could do away with the bottom value and just represent
+    //  that using absence.
 
-        @Override
-        public IntegerModel join(IntegerModel other) {
-            // todo implicit widening is not expected, there might be truncation happening
-            BitWidth widest = bitwidth.compareTo(other.bitwidth) < 0 ? other.bitwidth : bitwidth;
-            long min = Math.min(this.minInclusive, other.minInclusive);
-            long max = Math.max(this.maxInclusive, other.maxInclusive);
-            return new IntegerModel(min, max, widest);
-        }
-
-        public enum BitWidth {
-            /** byte */
-            INT8(8, Byte.MIN_VALUE, Byte.MAX_VALUE),
-            /** char and short */
-            INT16(16, Short.MIN_VALUE, Short.MAX_VALUE),
-            /** int */
-            INT32(32, Integer.MIN_VALUE, Integer.MAX_VALUE),
-            /** long */
-            INT64(64, Long.MIN_VALUE, Long.MAX_VALUE);
-
-            private final int width;
-            private final long minInclusive;
-            private final long maxInclusive;
-
-
-            BitWidth(int width, long minInclusive, long maxInclusive) {
-                this.width = width;
-                this.minInclusive = minInclusive;
-                this.maxInclusive = maxInclusive;
-            }
-
-            public boolean contains(long value) {
-                return minInclusive <= value && value <= maxInclusive;
-            }
-
-            public IntegerModel unknown() {
-                return new IntegerModel(minInclusive, maxInclusive, this);
-            }
-
-            public IntegerModel point(long value) {
-                assert contains(value);
-                return new IntegerModel(value, value, this);
-            }
-
-            public IntegerModel range(long minInclusive, long maxInclusive) {
-                assert contains(minInclusive) && contains(maxInclusive);
-                assert minInclusive <= maxInclusive;
-                return new IntegerModel(minInclusive, maxInclusive, this);
-            }
-        }
-    }
+    /**
+     * Return true if this is the bottom of the lattice. This represents
+     * the state of an empty local variable, i.e., there is no value to
+     * model. All value models must support a designated bottom element.
+     * It is a null element, i.e. {@code bottom.join(X) = X} for all {@code X}.
+     */
+    boolean isBottom();
 
 }

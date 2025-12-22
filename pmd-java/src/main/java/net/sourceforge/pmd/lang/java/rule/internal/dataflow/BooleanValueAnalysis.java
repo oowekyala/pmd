@@ -27,7 +27,7 @@ import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.util.AssertionUtil;
 
-public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
+public class BooleanValueAnalysis extends ValueAnalysis<BooleanModel> {
 
     public static final EnumSet<BinaryOp> BOOLEAN_OPS =
         EnumSet.of(BinaryOp.OR, BinaryOp.CONDITIONAL_OR, BinaryOp.AND, BinaryOp.CONDITIONAL_AND, BinaryOp.XOR);
@@ -55,7 +55,7 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
     }
 
     @Override
-    protected DfAnalysis<BooleanModel>.CreateExprModelVisitor createModelForSimpleExprVisitor() {
+    protected ValueAnalysis<BooleanModel>.CreateExprModelVisitor createModelForSimpleExprVisitor() {
         return new BooleanVisitor();
     }
 
@@ -75,6 +75,16 @@ public class BooleanValueAnalysis extends DfAnalysis<BooleanModel> {
                 return UNKNOWN;
             }
             return this.compareTo(other) < 0 ? other : this;
+        }
+
+        @Override
+        public boolean isTop() {
+            return this == UNKNOWN;
+        }
+
+        @Override
+        public boolean isBottom() {
+            return this == EMPTY;
         }
 
         public BooleanModel negate() {

@@ -8,6 +8,7 @@ import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAn
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.EMPTY;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.NONNULL;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.NULL;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.NULLABLE;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability.UNKNOWN;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -28,9 +29,15 @@ import net.sourceforge.pmd.lang.java.ast.ASTSuperExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThisExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
+import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 
-public class NullabilityAnalysis extends DfAnalysis<Nullability> {
+/**
+ * A value analysis that tracks nullability of values.
+ * This understands nullability annotations (TODO make configurable).
+ */
+public class NullabilityAnalysis extends ValueAnalysis<Nullability> {
 
     public Nullability getNullability(ASTExpression e) {
         // fixme - provide API to get result from a given expression.
@@ -59,7 +66,29 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
 
     @Override
     protected @NonNull Nullability createModelBasedOnType(JTypeMirror type) {
-        return UNKNOWN; // todo use annotations
+        if (type.isPrimitive()) {
+            return NONNULL;
+        }
+        // This is written so that
+        // No annotations -> UNKNOWN
+        // Contradictory annotations -> UNKNOWN
+        Nullability result = EMPTY;
+        for (SymbolicValue.SymAnnot annot : type.getTypeAnnotations()) {
+            if (isNullableAnnotation(annot)) {
+                result = result.join(NULLABLE);
+            } else if (isNonNullAnnotation(annot)) {
+                result = result.join(NONNULL);
+            }
+        }
+        return result == EMPTY ? UNKNOWN : result;
+    }
+
+    private static boolean isNonNullAnnotation(SymbolicValue.SymAnnot annot) {
+        return annot.getSimpleName().equals("NonNull");
+    }
+
+    private static boolean isNullableAnnotation(SymbolicValue.SymAnnot annot) {
+        return annot.getSimpleName().equals("Nullable");
     }
 
     @Override
@@ -69,7 +98,7 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
     }
 
     @Override
-    protected DfAnalysis<Nullability>.CreateExprModelVisitor createModelForSimpleExprVisitor() {
+    protected ValueAnalysis<Nullability>.CreateExprModelVisitor createModelForSimpleExprVisitor() {
         return new NullabilityVisitor();
     }
 
@@ -92,6 +121,16 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
             }
             return this.compareTo(other) < 0 ? other : this;
         }
+
+        @Override
+        public boolean isTop() {
+            return this == UNKNOWN;
+        }
+
+        @Override
+        public boolean isBottom() {
+            return this == EMPTY;
+        }
     }
 
     class NullabilityVisitor extends CreateExprModelVisitor {
@@ -113,8 +152,11 @@ public class NullabilityAnalysis extends DfAnalysis<Nullability> {
 
         @Override
         public Nullability visit(ASTMethodCall node, DataflowScope scope) {
-            // todo
-            return unknown();
+            OverloadSelectionResult info = node.getOverloadSelectionInfo();
+            if (info.isFailed()) {
+                return UNKNOWN;
+            }
+            return createModelBasedOnType(info.getMethodType().getReturnType());
         }
 
         @Override

@@ -1356,7 +1356,7 @@ public final class DataflowForwardAnalysis {
         // this is not necessarily an expression, it may be also the
         // variable declarator of a foreach loop or a variable id
         final JavaNode node;
-        final Map<DfAnalysis<?>, Object> analysisToState = new HashMap<>();
+        final Map<ValueAnalysis<?>, Object> analysisToState = new HashMap<>();
 
         ValueFacts(JVariableSymbol var, JavaNode node) {
             this.var = var;
@@ -1368,8 +1368,8 @@ public final class DataflowForwardAnalysis {
         }
 
         void absorb(ValueFacts facts) {
-            for (Map.Entry<DfAnalysis<?>, Object> entry : analysisToState.entrySet()) {
-                DfAnalysis<?> analysis = entry.getKey();
+            for (Map.Entry<ValueAnalysis<?>, Object> entry : analysisToState.entrySet()) {
+                ValueAnalysis<?> analysis = entry.getKey();
                 Object other = facts.analysisToState.get(analysis);
                 if (other == null) {
                     continue;
@@ -1379,7 +1379,7 @@ public final class DataflowForwardAnalysis {
             }
         }
 
-        private <T extends ValueModel<T>> T joinCapture(DfAnalysis<T> analysis, Object a, Object b) {
+        private <T extends ValueModel<T>> T joinCapture(ValueAnalysis<T> analysis, Object a, Object b) {
             @SuppressWarnings("unchecked")
             T aAsT = (T) a;
             @SuppressWarnings("unchecked")

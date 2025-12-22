@@ -15,18 +15,18 @@ import java.util.Map;
 public class AnalysisEngine {
 
     private final DataflowPass.DataflowResult dataflow;
-    private final Map<Class<?>, DfAnalysis<?>> allAnalyses = new HashMap<>();
+    private final Map<Class<?>, ValueAnalysis<?>> allAnalyses = new HashMap<>();
 
     AnalysisEngine(DataflowPass.DataflowResult dataflow) {
         this.dataflow = dataflow;
     }
 
-    public <A extends DfAnalysis<?>> void register(A analysis) {
+    public <A extends ValueAnalysis<?>> void register(A analysis) {
         allAnalyses.put(analysis.getClass(), analysis);
         analysis.setEngine(this);
     }
 
-    <A extends DfAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
+    <A extends ValueAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
         @SuppressWarnings("unchecked")
         A dfAnalysis = (A) allAnalyses.get(analysisClass);
         if (dfAnalysis == null) {
