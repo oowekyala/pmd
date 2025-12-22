@@ -218,7 +218,7 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
          *
          * @param ref A reference expression
          */
-        protected abstract DataflowPass.ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
+        protected abstract BaseDataflowPass.ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
 
         /** Merge the models for the current reaching definitions of the variable. */
         private <V extends ValueModel<V>> V mergeReachingDefinitions(ASTNamedReferenceExpr expr, ValueAnalysis<V> analysis) {
@@ -258,6 +258,13 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 changed |= absorbCapture(entry.getValue(), otherState);
             }
             return changed;
+        }
+
+        protected boolean hasEmptyValueAnalysisState() {
+            // todo this is never going to match because the exprState
+            //  is never cleaned up
+            return analysisStates
+                .values().stream().allMatch(it -> it.varState.isEmpty() && it.exprState.isEmpty());
         }
     }
 

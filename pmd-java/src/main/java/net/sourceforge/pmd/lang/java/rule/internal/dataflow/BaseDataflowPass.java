@@ -1239,7 +1239,52 @@ public final class BaseDataflowPass {
 
         protected GlobalAlgoState() {
         }
+
+        void newAssignment(@Nullable VarLocalInfo previous, AssignmentEntry newEntry) {
+
+        }
     }
+
+    private static class KillTrackerState extends GlobalAlgoState {
+        final Set<AssignmentEntry> allAssignments;
+        final Set<AssignmentEntry> usedAssignments;
+
+        // track which assignments kill which
+        // assignment -> killers(assignment)
+        final Map<AssignmentEntry, Set<AssignmentEntry>> killRecord;
+
+        private KillTrackerState(Set<AssignmentEntry> allAssignments,
+                                 Set<AssignmentEntry> usedAssignments,
+                                 Map<AssignmentEntry, Set<AssignmentEntry>> killRecord) {
+            this.allAssignments = allAssignments;
+            this.usedAssignments = usedAssignments;
+            this.killRecord = killRecord;
+
+        }
+
+        private KillTrackerState() {
+            this(new LinkedHashSet<>(),
+                new LinkedHashSet<>(),
+                new LinkedHashMap<>());
+        }
+
+        @Override
+        void newAssignment(@Nullable VarLocalInfo previous, AssignmentEntry newEntry) {
+            if (previous != null) {
+                // those assignments were overwritten ("killed")
+                for (AssignmentEntry killed : previous.reachingDefs) {
+                    if (killed.isBlankLocal()) {
+                        continue;
+                    }
+
+                    killRecord.computeIfAbsent(killed, k -> new LinkedHashSet<>(1))
+                              .add(newEntry);
+                }
+            }
+            allAssignments.add(newEntry);
+        }
+    }
+
 
     // Information about a variable in a code span.
     static class VarLocalInfo {
@@ -1272,7 +1317,7 @@ public final class BaseDataflowPass {
     /**
      * Information about a span of code.
      */
-    private static class SpanInfo {
+    private static class SpanInfo extends ValueAnalysis.DataflowScopeImpl {
 
         // spans are arranged in a tree, to look for enclosing finallies
         // when abrupt completion occurs. Blocks that have non-local
@@ -1340,6 +1385,15 @@ public final class BaseDataflowPass {
             this.myCatches = Collections.emptyList();
         }
 
+        @Override
+        protected ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref) {
+            VarLocalInfo info = symtable.get(ref.getReferencedSym());
+            if (info == null) {
+                return new ReachingDefinitionSet();
+            }
+            return new ReachingDefinitionSet(new LinkedHashSet<>(info.reachingDefs));
+        }
+
         boolean hasVar(ASTVariableId var) {
             return symtable.containsKey(var.getSymbol());
         }
@@ -1371,18 +1425,9 @@ public final class BaseDataflowPass {
                 }
             }
             VarLocalInfo previous = symtable.put(var, newInfo);
-            if (previous != null) {
-                // those assignments were overwritten ("killed")
-                for (AssignmentEntry killed : previous.reachingDefs) {
-                    if (killed.isBlankLocal()) {
-                        continue;
-                    }
-
-                    global.killRecord.computeIfAbsent(killed, k -> new LinkedHashSet<>(1))
-                                     .add(entry);
-                }
-            }
-            global.allAssignments.add(entry);
+            // todo this behavior should be moved to the implementation
+            //  that tracks kills
+            global.newAssignment(previous, entry);
             return previous;
         }
 
@@ -1421,7 +1466,8 @@ public final class BaseDataflowPass {
             VarLocalInfo info = symtable.get(var);
             // may be null for implicit assignments, like method parameter
             if (info != null) {
-                global.usedAssignments.addAll(info.reachingDefs);
+                // todo also move to reaching def pass
+                // global.usedAssignments.addAll(info.reachingDefs);
                 if (reachingDefSink != null) {
                     updateReachingDefs(reachingDefSink, var, info);
                 }
@@ -1479,6 +1525,7 @@ public final class BaseDataflowPass {
         // of the current context while analysing a sub-block
         // Forks must be merged later if control flow merges again, see ::absorb
 
+        // todo fork routines should also copy over the value scopes
         SpanInfo fork() {
             return doFork(this, copyTable());
         }
@@ -1587,13 +1634,18 @@ public final class BaseDataflowPass {
 
             // a spanInfo may be absorbed several times so this method should not
             // destroy the parameter
-            if (other == this || other == null || other.symtable.isEmpty()) { // NOPMD #3205
+            if (other == this
+                || other == null
+                || other.symtable.isEmpty()
+                || other.hasEmptyValueAnalysisState()) { // NOPMD #3205
                 return this;
             }
 
             CollectionUtil.mergeMaps(this.symtable, other.symtable, VarLocalInfo::merge);
             this.hasCompletedAbruptly = mergeCertitude(this.hasCompletedAbruptly, other.hasCompletedAbruptly);
             this.abruptCompletionTargets = CollectionUtil.union(this.abruptCompletionTargets, other.abruptCompletionTargets);
+            // absorb value analysis facts
+            super.absorb(other);
             return this;
         }
 
