@@ -21,10 +21,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 
@@ -122,7 +122,7 @@ public class InvalidLogMessageFormatRule extends AbstractJavaRulechainRule {
         if (node.getConstValue() instanceof String) {
             return OptionalInt.of(countPlaceHolders((String) node.getConstValue()));
         } else if (node instanceof ASTNamedReferenceExpr) {
-            DataflowResult dataflow = DataflowPass.getDataflowResult(node.getRoot());
+            DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(node.getRoot());
             ReachingDefinitionSet reaching = dataflow.getReachingDefinitions((ASTNamedReferenceExpr) node);
             if (reaching.isNotFullyKnown()) {
                 return OptionalInt.empty();

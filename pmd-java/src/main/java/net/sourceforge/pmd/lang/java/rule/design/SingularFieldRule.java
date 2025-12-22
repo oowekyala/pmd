@@ -27,9 +27,9 @@ import net.sourceforge.pmd.lang.java.ast.ModifierOwner;
 import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaPropertyUtil;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 
@@ -85,7 +85,7 @@ public class SingularFieldRule extends AbstractJavaRulechainRule {
             }
             for (ASTVariableId varId : fieldDecl.getVarIds()) {
                 if (dataflow == null) { //compute lazily
-                    dataflow = DataflowPass.getDataflowResult(node.getRoot());
+                    dataflow = ReachingDefinitionsAnalysis.getDataflowResult(node.getRoot());
                 }
                 if (isSingularField(enclosingType, varId, dataflow)) {
                     asCtx(data).addViolation(varId, varId.getName());

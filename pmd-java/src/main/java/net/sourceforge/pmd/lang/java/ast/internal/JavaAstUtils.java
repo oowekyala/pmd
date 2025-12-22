@@ -85,9 +85,9 @@ import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
 import net.sourceforge.pmd.lang.java.ast.ReturnScopeNode;
 import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleUtil;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
@@ -859,7 +859,7 @@ public final class JavaAstUtils {
     public static boolean isEffectivelyFinal(ASTVariableId var) {
         if (var.getInitializer() == null && var.isLocalVariable()) {
             // blank variables may be assigned on several paths
-            DataflowResult dataflow = DataflowPass.getDataflowResult(var.getRoot());
+            DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(var.getRoot());
             for (ASTNamedReferenceExpr usage : var.getLocalUsages()) {
                 if (usage.getAccessType() == AccessType.WRITE) {
                     ReachingDefinitionSet reaching = dataflow.getReachingDefinitions(usage);

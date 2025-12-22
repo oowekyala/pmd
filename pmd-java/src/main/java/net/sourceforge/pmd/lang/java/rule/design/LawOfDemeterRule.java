@@ -41,10 +41,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.QualifiableExpression;
 import net.sourceforge.pmd.lang.java.ast.internal.PrettyPrintingUtil;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JFieldSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
@@ -287,7 +287,7 @@ public class LawOfDemeterRule extends AbstractJavaRule {
 
 
     private int variableDegree(ASTVariableAccess expr) {
-        DataflowResult dataflow = DataflowPass.getDataflowResult(expr.getRoot());
+        DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(expr.getRoot());
         ReachingDefinitionSet reaching = dataflow.getReachingDefinitions(expr);
         if (reaching.isNotFullyKnown()) {
             // a field symbol, normally

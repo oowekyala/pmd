@@ -20,10 +20,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.UnaryOp;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleUtil;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.reporting.RuleContext;
@@ -104,7 +104,7 @@ public class UnusedAssignmentRule extends AbstractJavaRulechainRule {
 
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
-        DataflowResult result = DataflowPass.getDataflowResult(node);
+        DataflowResult result = ReachingDefinitionsAnalysis.getDataflowResult(node);
         reportFinished(result, (RuleContext) data);
         return data;
     }

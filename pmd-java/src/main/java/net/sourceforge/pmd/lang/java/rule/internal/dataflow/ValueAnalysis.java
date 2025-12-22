@@ -218,16 +218,16 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
          *
          * @param ref A reference expression
          */
-        protected abstract BaseDataflowPass.ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
+        protected abstract ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
 
         /** Merge the models for the current reaching definitions of the variable. */
         private <V extends ValueModel<V>> V mergeReachingDefinitions(ASTNamedReferenceExpr expr, ValueAnalysis<V> analysis) {
-            DataflowPass.ReachingDefinitionSet reaching = currentReachingDefs(expr);
+            ReachingDefinitionSet reaching = currentReachingDefs(expr);
             if (reaching.isNotFullyKnown()) {
                 return analysis.unknown();
             }
             V result = analysis.empty();
-            for (DataflowPass.AssignmentEntry a : reaching.getReaching()) {
+            for (AssignmentEntry a : reaching.getReaching()) {
                 V model = analysis.createModelForAssignment(a, this);
                 result = result.join(model);
             }
@@ -356,7 +356,7 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         return createModelBasedOnType(varType);
     }
 
-    private @Nullable V createModelForAssignment(DataflowPass.AssignmentEntry value, DataflowScope scope) {
+    private @Nullable V createModelForAssignment(AssignmentEntry value, DataflowScope scope) {
         ASTExpression rhs = value.getRhsAsExpression();
         if (rhs != null) { // todo avoid infinite recursion
             return scope.getModel(rhs, this);

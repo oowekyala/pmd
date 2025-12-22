@@ -16,8 +16,8 @@ import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
 import net.sourceforge.pmd.reporting.RuleContext;
 import net.sourceforge.pmd.util.OptionalBool;
 
@@ -43,7 +43,7 @@ public class ImplicitSwitchFallThroughRule extends AbstractJavaRulechainRule {
     }
 
     private void checkSwitchLike(ASTSwitchLike node, RuleContext ruleContext) {
-        DataflowResult dataflow = DataflowPass.getDataflowResult(node.getRoot());
+        DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(node.getRoot());
 
         for (ASTSwitchBranch branch : node.getBranches()) {
             if (branch instanceof ASTSwitchFallthroughBranch && branch != node.getLastChild()) {

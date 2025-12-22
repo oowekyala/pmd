@@ -22,9 +22,9 @@ import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.ModifierOwner.Visibility;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 public class ImmutableFieldRule extends AbstractJavaRulechainRule {
@@ -59,7 +59,7 @@ public class ImmutableFieldRule extends AbstractJavaRulechainRule {
             && !JavaAstUtils.hasAnyAnnotation(enclosingType, INVALIDATING_CLASS_ANNOT)
             && !JavaAstUtils.hasAnyAnnotation(field, INVALIDATING_FIELD_ANNOT)) {
 
-            DataflowResult dataflow = DataflowPass.getDataflowResult(field.getRoot());
+            DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(field.getRoot());
 
             outer:
             for (ASTVariableId varId : field.getVarIds()) {
@@ -95,7 +95,7 @@ public class ImmutableFieldRule extends AbstractJavaRulechainRule {
     }
 
     private boolean defaultValueDoesNotReachEndOfCtor(DataflowResult dataflow, ASTVariableId varId) {
-        AssignmentEntry fieldDef = DataflowPass.getFieldDefinition(varId);
+        AssignmentEntry fieldDef = ReachingDefinitionsAnalysis.getFieldDefinition(varId);
         // first assignments to the field
         Set<AssignmentEntry> killers = dataflow.getKillers(fieldDef);
         // no killer isFieldAssignmentAtEndOfCtor => the field is assigned on all code paths

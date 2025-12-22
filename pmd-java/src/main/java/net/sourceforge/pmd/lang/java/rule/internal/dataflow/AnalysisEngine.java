@@ -14,10 +14,10 @@ import java.util.Map;
  */
 public class AnalysisEngine {
 
-    private final DataflowPass.DataflowResult dataflow;
+    private final ReachingDefinitionsAnalysis.DataflowResult dataflow;
     private final Map<Class<?>, ValueAnalysis<?>> allAnalyses = new HashMap<>();
 
-    AnalysisEngine(DataflowPass.DataflowResult dataflow) {
+    AnalysisEngine(ReachingDefinitionsAnalysis.DataflowResult dataflow) {
         this.dataflow = dataflow;
     }
 
@@ -35,7 +35,7 @@ public class AnalysisEngine {
         return dfAnalysis;
     }
 
-    DataflowPass.DataflowResult getDataflow() {
+    ReachingDefinitionsAnalysis.DataflowResult getDataflow() {
         return dataflow;
     }
 }

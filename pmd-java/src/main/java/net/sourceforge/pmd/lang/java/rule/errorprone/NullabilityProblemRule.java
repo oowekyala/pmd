@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AnalysisEngine;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
 import net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis;
 
 public class NullabilityProblemRule extends AbstractJavaRule {
@@ -23,7 +23,7 @@ public class NullabilityProblemRule extends AbstractJavaRule {
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
 
-        AnalysisEngine engine = DataflowPass.newAnalysisEngine(node);
+        AnalysisEngine engine = ReachingDefinitionsAnalysis.newAnalysisEngine(node);
         NullabilityAnalysis analysis = new NullabilityAnalysis();
         engine.register(analysis);
 

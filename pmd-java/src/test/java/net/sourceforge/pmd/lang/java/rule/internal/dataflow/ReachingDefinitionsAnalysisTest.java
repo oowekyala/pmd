@@ -18,14 +18,12 @@ import net.sourceforge.pmd.lang.java.BaseParserTest;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
 
 /**
  * @author Clément Fournier
  */
-class DataflowPassTest extends BaseParserTest {
+class ReachingDefinitionsAnalysisTest extends BaseParserTest {
 
 
     @Test
@@ -36,7 +34,7 @@ class DataflowPassTest extends BaseParserTest {
             "21"
         );
 
-        DataflowResult dataflow = DataflowPass.getDataflowResult(ast);
+        DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(ast);
         assertThat(dataflow.getUnusedAssignments(), hasSize(0));
 
     }
@@ -48,7 +46,7 @@ class DataflowPassTest extends BaseParserTest {
                 + "  int a;"
                 + "  a = 0;"
                 + " } }");
-        DataflowResult df = DataflowPass.getDataflowResult(ast);
+        DataflowResult df = ReachingDefinitionsAnalysis.getDataflowResult(ast);
         List<ASTVariableId> list = ast.descendants(ASTVariableId.class).toList();
         ASTVariableId a = list.get(0);
         ReachingDefinitionSet reachingAEqZero = df.getReachingDefinitions(a.getLocalUsages().get(0));
@@ -63,7 +61,7 @@ class DataflowPassTest extends BaseParserTest {
                 + "  use(field);"
                 + "  use(nonFinal);"
                 + " } }");
-        DataflowResult df = DataflowPass.getDataflowResult(ast);
+        DataflowResult df = ReachingDefinitionsAnalysis.getDataflowResult(ast);
         List<ASTVariableId> list = ast.descendants(ASTVariableId.class).toList();
         ASTVariableId field = list.get(0);
         ReachingDefinitionSet finalUse = df.getReachingDefinitions(field.getLocalUsages().get(0));

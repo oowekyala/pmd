@@ -8,10 +8,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTThrowStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.AssignmentEntry;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.DataflowResult;
-import net.sourceforge.pmd.lang.java.rule.internal.dataflow.DataflowPass.ReachingDefinitionSet;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.AssignmentEntry;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionsAnalysis.DataflowResult;
+import net.sourceforge.pmd.lang.java.rule.internal.dataflow.ReachingDefinitionSet;
 import net.sourceforge.pmd.lang.java.symbols.JLocalVariableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
@@ -43,7 +43,7 @@ public class AvoidThrowingNullPointerExceptionRule extends AbstractJavaRulechain
     }
 
     private boolean hasNpeValue(ASTVariableAccess thrown) {
-        DataflowResult dataflow = DataflowPass.getDataflowResult(thrown.getRoot());
+        DataflowResult dataflow = ReachingDefinitionsAnalysis.getDataflowResult(thrown.getRoot());
         ReachingDefinitionSet reaching = dataflow.getReachingDefinitions(thrown);
         if (reaching.isNotFullyKnown()) {
             // we lean towards false negatives... maybe we should be able
