@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -140,6 +141,22 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
              * be refined explicitly by the analysis when evaluating conditions.
              */
             final Map<StablePathMatcher, V> varState = new HashMap<>();
+
+            boolean absorb(AnalysisState<V> otherState) {
+                boolean changed = joinMap(exprState, otherState.exprState);
+                changed |= joinMap(varState, otherState.varState);
+                return changed;
+            }
+
+            private static <K, V extends ValueModel<V>> boolean joinMap(Map<K, V> myMap, Map<K, V> otherMap) {
+                boolean changed = false;
+                for (Map.Entry<K, V> entry : otherMap.entrySet()) {
+                    V oldValue = myMap.get(entry.getKey());
+                    V newValue = myMap.merge(entry.getKey(), entry.getValue(), V::join);
+                    changed |= !Objects.equals(oldValue, newValue);
+                }
+                return changed;
+            }
         }
 
         private final Map<ValueAnalysis<?>, AnalysisState<?>> analysisStates = new HashMap<>();
@@ -195,6 +212,12 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
             return state;
         }
 
+        /**
+         * Return the current reaching definitions for a reference expr.
+         * Return an unknown set if the expr cannot be tracked.
+         *
+         * @param ref A reference expression
+         */
         protected abstract DataflowPass.ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref);
 
         /** Merge the models for the current reaching definitions of the variable. */
@@ -221,6 +244,20 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 }
             }
             state.exprState.put(expr, newModel);
+        }
+
+        @SuppressWarnings("unchecked")
+        private <V extends ValueModel<V>> boolean absorbCapture(AnalysisState<V> a, AnalysisState<?> b) {
+            return a.absorb((AnalysisState<V>) b);
+        }
+
+        protected boolean absorb(DataflowScopeImpl other) {
+            boolean changed = false;
+            for (Map.Entry<ValueAnalysis<?>, AnalysisState<?>> entry : analysisStates.entrySet()) {
+                AnalysisState<?> otherState = other.getAnalysisState(entry.getKey());
+                changed |= absorbCapture(entry.getValue(), otherState);
+            }
+            return changed;
         }
     }
 
