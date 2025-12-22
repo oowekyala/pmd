@@ -1012,31 +1012,6 @@ public final class BaseDataflowPass {
         }
     }
 
-    private static class KillTrackerState extends GlobalAlgoState {
-        final Set<AssignmentEntry> allAssignments;
-        final Set<AssignmentEntry> usedAssignments;
-
-        // track which assignments kill which
-        // assignment -> killers(assignment)
-        final Map<AssignmentEntry, Set<AssignmentEntry>> killRecord;
-
-        private KillTrackerState(Set<AssignmentEntry> allAssignments,
-                                 Set<AssignmentEntry> usedAssignments,
-                                 Map<AssignmentEntry, Set<AssignmentEntry>> killRecord) {
-            this.allAssignments = allAssignments;
-            this.usedAssignments = usedAssignments;
-            this.killRecord = killRecord;
-
-        }
-
-        private KillTrackerState() {
-            this(new LinkedHashSet<>(),
-                new LinkedHashSet<>(),
-                new LinkedHashMap<>());
-        }
-
-    }
-
 
     // Information about a variable in a code span.
     static class VarLocalInfo {
