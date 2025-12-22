@@ -14,16 +14,15 @@ import java.util.Map;
  */
 public class AnalysisEngine {
 
-    private final ReachingDefinitionsAnalysis.DataflowResult dataflow;
     private final Map<Class<?>, ValueAnalysis<?>> allAnalyses = new HashMap<>();
 
-    AnalysisEngine(ReachingDefinitionsAnalysis.DataflowResult dataflow) {
-        this.dataflow = dataflow;
+    public AnalysisEngine() {
     }
 
-    public <A extends ValueAnalysis<?>> void register(A analysis) {
+    public <A extends ValueAnalysis<?>> A register(A analysis) {
         allAnalyses.put(analysis.getClass(), analysis);
         analysis.setEngine(this);
+        return analysis;
     }
 
     <A extends ValueAnalysis<?>> A getAnalysis(Class<A> analysisClass) {
@@ -33,9 +32,5 @@ public class AnalysisEngine {
             throw new IllegalArgumentException("analysis not registered: " + analysisClass.getName());
         }
         return dfAnalysis;
-    }
-
-    ReachingDefinitionsAnalysis.DataflowResult getDataflow() {
-        return dataflow;
     }
 }

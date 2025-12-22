@@ -236,6 +236,10 @@ public final class AssertionUtil {
         return shouldNotReachHere(message, null);
     }
 
+    public static @NonNull AssertionError exhaustiveSwitch() {
+        return shouldNotReachHere("exhaustive switch");
+    }
+
     public static @NonNull AssertionError shouldNotReachHere(String message, Throwable cause) {
         String prefix = "This should be unreachable";
         message = StringUtils.isBlank(message) ? prefix

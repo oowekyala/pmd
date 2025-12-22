@@ -37,6 +37,8 @@ import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
+import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.OptionalBool;
 
 /**
  * A value analysis that tracks nullability of values.
@@ -171,6 +173,25 @@ public class NullabilityAnalysis extends ValueAnalysis<Nullability> {
                 return NULLABLE;
             }
             return this.compareTo(other) < 0 ? other : this;
+        }
+
+        /**
+         * Returns whether null is a possible value of a variable in
+         * this state.
+         */
+        public OptionalBool mayBeNull() {
+            switch (this) {
+            case EMPTY:
+            case NONNULL:
+                return OptionalBool.NO;
+            case NULL:
+            case NULLABLE:
+                return OptionalBool.YES;
+            case UNKNOWN:
+                return OptionalBool.UNKNOWN;
+            default:
+                throw AssertionUtil.exhaustiveSwitch();
+            }
         }
 
         @Override

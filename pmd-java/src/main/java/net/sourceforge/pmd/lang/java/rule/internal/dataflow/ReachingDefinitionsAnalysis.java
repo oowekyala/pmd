@@ -66,11 +66,6 @@ public final class ReachingDefinitionsAnalysis {
         return acu.getUserMap().computeIfAbsent(DATAFLOW_RESULT_K, () -> process(acu));
     }
 
-    public static AnalysisEngine newAnalysisEngine(ASTCompilationUnit acu) {
-        DataflowResult dataflow = getDataflowResult(acu);
-        return new AnalysisEngine(dataflow);
-    }
-
     /**
      * If the var id is that of a field, returns the assignment entry that
      * corresponds to its definition (either blank or its initializer). From
