@@ -26,11 +26,16 @@ import net.sourceforge.pmd.lang.java.ast.UnaryOp;
 import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.DataMap;
 
 public class BooleanValueAnalysis extends ValueAnalysis<BooleanModel> {
 
     public static final EnumSet<BinaryOp> BOOLEAN_OPS =
         EnumSet.of(BinaryOp.OR, BinaryOp.CONDITIONAL_OR, BinaryOp.AND, BinaryOp.CONDITIONAL_AND, BinaryOp.XOR);
+
+    BooleanValueAnalysis(DataMap.SimpleDataKey<BooleanModel> cacheKey) {
+        super(cacheKey);
+    }
 
     @Override
     protected @NonNull BooleanModel unknown() {

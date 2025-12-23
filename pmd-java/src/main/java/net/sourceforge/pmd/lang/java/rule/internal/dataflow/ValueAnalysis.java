@@ -25,6 +25,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
 import net.sourceforge.pmd.lang.java.rule.internal.StablePathMatcher;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.util.DataMap;
 
 /**
  * Base class for flow-sensitive value analysis. An implementation
@@ -44,10 +45,12 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 public abstract class ValueAnalysis<V extends ValueModel<V>> {
 
     private final CreateExprModelVisitor createExprModelVisitor;
+    final DataMap.SimpleDataKey<V> cacheKey;
 
     private AnalysisEngine engine;
 
-    protected ValueAnalysis() {
+    protected ValueAnalysis(DataMap.SimpleDataKey<V> cacheKey) {
+        this.cacheKey = cacheKey;
         this.createExprModelVisitor = createModelForSimpleExprVisitor();
     }
 
@@ -206,6 +209,7 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                             state.varState.put(matcher, result);
                         }
                     }
+                    setResult(expr, analysis, result);
                     return result;
                 }
                 // This is not an analysable expression. Maybe its model
@@ -224,6 +228,10 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 state.exprState.put(expr, model);
             }
             return model;
+        }
+
+        protected <V extends ValueModel<V>> void setResult(ASTExpression e, ValueAnalysis<V> analysis, V model) {
+            e.getUserMap().set(analysis.cacheKey, model);
         }
 
         private <V extends ValueModel<V>> AnalysisState<V> getAnalysisState(ValueAnalysis<V> analysis) {

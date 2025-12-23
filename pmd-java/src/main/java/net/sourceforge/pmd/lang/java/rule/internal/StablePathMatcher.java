@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -155,6 +156,12 @@ public final class StablePathMatcher {
             return new StablePathMatcher(null, listOf(new Segment(var.getSimpleName(), true)));
         }
         return new StablePathMatcher(var, Collections.emptyList());
+    }
+
+    @Override
+    public String toString() {
+        String root = owner == null ? "this" : owner.getSimpleName();
+        return root + path.stream().map(Segment::toString).collect(Collectors.joining());
     }
 
     private static final class Segment {

@@ -816,7 +816,7 @@ public final class BaseDataflowPass {
                     }
 
                     VarLocalInfo oldVar = result.assign(lhsVar, rhs);
-                    result.global.updateReachingDefs(lhs, lhsVar, oldVar);
+                    result.global.updateReachingDefs(lhs, lhsVar, oldVar, result);
                 }
             }
             return result;
@@ -1029,7 +1029,7 @@ public final class BaseDataflowPass {
 
         protected abstract DataMap.SimpleDataKey<ReachingDefinitionSet> reachingDefsKey();
 
-        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, VarLocalInfo info) {
+        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, VarLocalInfo info, DataflowScopeImpl scope) {
             ReachingDefinitionSet reaching;
             if (info == null || var.isField() && var.isFinal()) {
                 return;
@@ -1258,7 +1258,7 @@ public final class BaseDataflowPass {
             if (info != null) {
                 global.useVar(info);
                 if (reachingDefSink != null) {
-                    global.updateReachingDefs(reachingDefSink, var, info);
+                    global.updateReachingDefs(reachingDefSink, var, info, this);
                 }
             }
         }

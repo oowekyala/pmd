@@ -11,10 +11,12 @@ import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis
 
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLoopStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
-import net.sourceforge.pmd.lang.java.ast.ASTStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis;
@@ -54,7 +56,8 @@ public class NullabilityProblemRule extends AbstractJavaRule {
     }
 
     private static boolean isStatementCondition(ASTExpression it) {
-        return it.getParent() instanceof ASTStatement;
+        JavaNode parent = it.getParent();
+        return parent instanceof ASTIfStatement || parent instanceof ASTLoopStatement;
     }
 
     boolean expressionWillNpeIfNull(ASTExpression e) {

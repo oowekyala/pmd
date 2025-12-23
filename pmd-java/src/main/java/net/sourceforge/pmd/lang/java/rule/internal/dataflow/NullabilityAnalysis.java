@@ -38,6 +38,7 @@ import net.sourceforge.pmd.lang.java.symbols.SymbolicValue;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
 import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.util.AssertionUtil;
+import net.sourceforge.pmd.util.DataMap;
 import net.sourceforge.pmd.util.OptionalBool;
 
 /**
@@ -46,14 +47,8 @@ import net.sourceforge.pmd.util.OptionalBool;
  */
 public class NullabilityAnalysis extends ValueAnalysis<Nullability> {
 
-    public Nullability getNullability(ASTExpression e) {
-        // fixme - provide API to get result from a given expression.
-        //  Previously the analysis was caching results, now we have
-        //  scopes that do that. But analyses should be able to set
-        //  their result on the AST when we know the final scope, for
-        //  consumption by rules.
-        return unknown();
-        // return getModel(e);
+    NullabilityAnalysis(DataMap.SimpleDataKey<Nullability> cacheKey) {
+        super(cacheKey);
     }
 
     @Override

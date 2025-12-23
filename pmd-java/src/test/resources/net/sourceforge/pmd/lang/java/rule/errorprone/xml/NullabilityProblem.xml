@@ -92,7 +92,56 @@ public class Foo {
             }
             ]]></code>
     </test-code>
-
+    <test-code>
+        <description>Null check</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>4</expected-linenumbers>
+        <expected-messages>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(Object x) {
+                    if (x == null) {
+                        System.out.println(x); // warn
+                        x = new Object();
+                        System.out.println(x); // no warn
+                    } else {
+                        x = new Object();
+                    }
+                    System.out.println(x);
+                    return x;
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Parameter reassigned</description>
+        <expected-problems>4</expected-problems>
+        <expected-linenumbers>5,5,6,10</expected-linenumbers>
+        <expected-messages>
+            <message>Condition is always true</message>
+            <message>Variable `x` is always null</message>
+            <message>Variable `x` is always null</message>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(Object x) {
+                    System.out.println(x); // no warning
+                    x = null;
+                    if (x == null) { // condition true, x null
+                        System.out.println(x); // x null
+                    } else {
+                        x = new Object();
+                    }
+                    return x; // x null
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
 
     <test-code>
         <description>Comparison</description>

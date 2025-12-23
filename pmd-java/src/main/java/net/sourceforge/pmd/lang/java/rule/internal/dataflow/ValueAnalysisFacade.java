@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
+import static net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.DataflowScope;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability;
@@ -13,20 +14,20 @@ import java.util.Collection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTExecutableDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ReturnScopeNode;
 import net.sourceforge.pmd.lang.java.rule.internal.StablePathMatcher;
+import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.util.DataMap;
 
 public class ValueAnalysisFacade {
 
     private static final DataMap.SimpleDataKey<Nullability> NULLABILITY_RESULT
         = DataMap.simpleDataKey("pmd.dataflow.val.nullability");
-    private static final DataMap.SimpleDataKey<BooleanModel> BOOLEAN_MODEL
+    private static final DataMap.SimpleDataKey<BooleanModel> BOOLEAN_RESULT
         = DataMap.simpleDataKey("pmd.dataflow.val.boolean");
     private static final DataMap.SimpleDataKey<ReachingDefinitionSet> SPECULATIVE_REACHING_DEFS
         = DataMap.simpleDataKey("java.dataflow.reaching.speculative");
@@ -35,8 +36,8 @@ public class ValueAnalysisFacade {
 
     public static ValueAnalysisResult process(ASTCompilationUnit acu) {
         AnalysisEngine engine = new AnalysisEngine();
-        engine.register(new NullabilityAnalysis());
-        engine.register(new BooleanValueAnalysis());
+        engine.register(new NullabilityAnalysis(NULLABILITY_RESULT));
+        engine.register(new BooleanValueAnalysis(BOOLEAN_RESULT));
 
         for (ASTTypeDeclaration typeDecl : acu.getTypeDeclarations()) {
             ValueAnalysisState subResult = new ValueAnalysisState(engine);
@@ -75,7 +76,7 @@ public class ValueAnalysisFacade {
         }
 
         @Override
-        protected ReachingDefinitionSet currentReachingDefs(ASTAssignableExpr.ASTNamedReferenceExpr ref) {
+        protected ReachingDefinitionSet currentReachingDefs(ASTNamedReferenceExpr ref) {
             // todo there is a fallback for final fields
             return ref.getUserMap().computeIfAbsent(SPECULATIVE_REACHING_DEFS,
                 () -> ReachingDefinitionsAnalysis.DataflowResult.reachingFallback(ref));
@@ -100,6 +101,20 @@ public class ValueAnalysisFacade {
         @Override
         protected DataMap.SimpleDataKey<ReachingDefinitionSet> reachingDefsKey() {
             return SPECULATIVE_REACHING_DEFS;
+        }
+
+        @Override
+        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, BaseDataflowPass.VarLocalInfo info, ValueAnalysis.DataflowScopeImpl scope) {
+            super.updateReachingDefs(reachingDefSink, var, info, scope);
+            for (ValueAnalysis<?> analysis : engine.getAllAnalyses()) {
+                // Set the cached value on the reaching def sink to
+                // the currently up-to-date computed model. This sets
+                // the model on the node for later retrieval.
+
+                // todo what happens if we call this several times with
+                //  refined assumptions? seems like it won't get overwritten
+                scope.getModel(reachingDefSink, analysis);
+            }
         }
 
         @Override
@@ -131,8 +146,8 @@ public class ValueAnalysisFacade {
             this.engine = engine;
         }
 
-        private <V extends ValueModel<V>> V getModel(ASTExpression expr, DataMap.SimpleDataKey<V> cacheKey, ValueAnalysis<V> analysis) {
-            return expr.getUserMap().computeIfAbsent(cacheKey, () -> {
+        private <V extends ValueModel<V>> V getModel(ASTExpression expr, ValueAnalysis<V> analysis) {
+            return expr.getUserMap().computeIfAbsent(analysis.cacheKey, () -> {
                 ReturnScopeNode scopeBearingNode = expr.ancestors(ReturnScopeNode.class).first();
                 if (scopeBearingNode == null) {
                     return analysis.unknown();
@@ -148,11 +163,11 @@ public class ValueAnalysisFacade {
          * Return the nullability of an expression.
          */
         public Nullability getNullability(ASTExpression expr) {
-            return getModel(expr, NULLABILITY_RESULT, engine.getAnalysis(NullabilityAnalysis.class));
+            return getModel(expr, engine.getAnalysis(NullabilityAnalysis.class));
         }
 
         public BooleanModel getBooleanModel(ASTExpression expr) {
-            return getModel(expr, BOOLEAN_MODEL, engine.getAnalysis(BooleanValueAnalysis.class));
+            return getModel(expr, engine.getAnalysis(BooleanValueAnalysis.class));
         }
     }
 }
