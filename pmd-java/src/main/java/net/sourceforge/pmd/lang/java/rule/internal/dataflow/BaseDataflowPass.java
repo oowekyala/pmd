@@ -264,6 +264,7 @@ public final class BaseDataflowPass {
             linkConditional(before, condition, thenState, elseState, true);
             BooleanModel conditionModel = before.global.speculateCondition(condition, before);
 
+            // Shortcut if we can prove the condition is constant.
             if (conditionModel != BooleanModel.FALSE) {
                 thenState = acceptOpt(thenBranch, thenState);
             }
@@ -309,11 +310,11 @@ public final class BaseDataflowPass {
             if (condition instanceof ASTInfixExpression) {
                 BinaryOp op = ((ASTInfixExpression) condition).getOperator();
                 if (op == BinaryOp.CONDITIONAL_OR) {
-                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, thenState, elseState, true);
+                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, thenState, elseState, BooleanModel.TRUE);
                 } else if (op == BinaryOp.CONDITIONAL_AND) {
                     // To mimic a shortcut AND expr, swap the thenState and the elseState
                     // See explanations in method
-                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, elseState, thenState, false);
+                    return visitShortcutOrExpr((ASTInfixExpression) condition, before, elseState, thenState, BooleanModel.FALSE);
                 }
             }
 
@@ -329,7 +330,7 @@ public final class BaseDataflowPass {
                                      SpanInfo before,
                                      SpanInfo thenState,
                                      SpanInfo elseState,
-                                     boolean isOrExpr) {
+                                     BooleanModel shortcut) {
 
             //  if (<a> || <b> || ... || <n>) <then>
             //  else <else>
@@ -349,20 +350,22 @@ public final class BaseDataflowPass {
             SpanInfo cur = before;
             cur = linkConditional(cur, orExpr.getLeftOperand(), thenState, elseState, false);
             thenState.absorb(cur);
+
             BooleanModel spec = before.global.speculateCondition(orExpr.getLeftOperand(), cur);
-            if (isOrExpr && spec == BooleanModel.TRUE || !isOrExpr && spec == BooleanModel.FALSE) {
+            if (spec == shortcut) {
                 // Shortcut return
                 elseState.absorb(cur);
                 before.global.setConditionSpec(orExpr, spec, cur);
                 return cur;
             }
+
             cur = linkConditional(cur, orExpr.getRightOperand(), thenState, elseState, false);
             thenState.absorb(cur);
             elseState.absorb(cur);
 
             // Speculate on the right part
             spec = before.global.speculateCondition(orExpr.getRightOperand(), cur);
-            if (isOrExpr && spec == BooleanModel.TRUE || !isOrExpr && spec == BooleanModel.FALSE) {
+            if (spec == shortcut) {
                 before.global.setConditionSpec(orExpr, spec, cur);
             }
 
@@ -1057,6 +1060,10 @@ public final class BaseDataflowPass {
 
         public BooleanModel speculateCondition(@NonNull ASTExpression expr, DataflowScope scope) {
             return BooleanModel.UNKNOWN;
+        }
+
+        public Assumptions backwardsBoolAnalysis(ASTExpression expr, DataflowScope scope) {
+            return Assumptions.NO_ASSUMPTIONS;
         }
 
         public void setConditionSpec(ASTExpression orExpr, BooleanModel spec, DataflowScope scope) {

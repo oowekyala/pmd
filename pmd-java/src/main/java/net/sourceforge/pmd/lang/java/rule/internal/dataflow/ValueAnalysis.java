@@ -7,6 +7,7 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -128,6 +129,19 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
             return empty();
         }
         return unknown();
+    }
+
+    /**
+     * Given a boolean expression, what does its being true or
+     * false imply about the values it uses? The boolean expr
+     * will never be a ternary, an {@code AND}, {@code OR}, {@code XOR}
+     * or conditional {@code AND} or {@code OR} expression.
+     *
+     * @param boolExpr A boolean expression atom
+     * @return assumptions
+     */
+    protected Assumptions backwardsBoolAnalysis(ASTExpression boolExpr, DataflowScope baseScope) {
+        return Assumptions.NO_ASSUMPTIONS;
     }
 
     protected interface DataflowScope {
@@ -345,6 +359,41 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                        ", varState=" + varState +
                        '}';
             }
+        }
+    }
+
+    /**
+     * Represents facts that can be applied to a dataflow scope based
+     * on the boolean value of a condition.
+     */
+    protected static final class Assumptions {
+        static final Assumptions NO_ASSUMPTIONS =
+            new Assumptions(s -> {
+            }, s -> {
+            });
+
+        private final Consumer<DataflowScope> whenTrue;
+        private final Consumer<DataflowScope> whenFalse;
+
+        public Assumptions(Consumer<DataflowScope> whenTrue, Consumer<DataflowScope> whenFalse) {
+            this.whenTrue = whenTrue;
+            this.whenFalse = whenFalse;
+        }
+
+        public Assumptions merge(Assumptions other) {
+            if (this == NO_ASSUMPTIONS) {
+                return other;
+            } else if (other == NO_ASSUMPTIONS) {
+                return this;
+            }
+
+            return new Assumptions(
+                this.whenTrue.andThen(other.whenTrue),
+                this.whenFalse.andThen(other.whenFalse));
+        }
+
+        public Assumptions negate() {
+            return new Assumptions(whenFalse, whenTrue);
         }
     }
 

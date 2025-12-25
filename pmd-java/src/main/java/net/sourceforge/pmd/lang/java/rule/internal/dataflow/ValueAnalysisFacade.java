@@ -8,6 +8,8 @@ import static net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedRefere
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.DataflowScope;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.NullabilityAnalysis.Nullability;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.Assumptions;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.DataflowScopeImpl;
 
 import java.util.Collection;
 
@@ -58,9 +60,9 @@ public class ValueAnalysisFacade {
      * todo reevaluate this. If we can speculate on conditions without FPs,
      *  why wouldn't we want UnusedAssignment to skip dead code?
      */
-    private static class DetachedScope extends ValueAnalysis.DataflowScopeImpl {
+    private static class DetachedScope extends DataflowScopeImpl {
 
-        DetachedScope(ValueAnalysis.DataflowScopeImpl spanInfo) {
+        DetachedScope(DataflowScopeImpl spanInfo) {
             super(spanInfo.cloneStates(true));
         }
 
@@ -94,7 +96,7 @@ public class ValueAnalysisFacade {
         }
 
         @Override
-        protected void exitControlFlowScope(ASTExecutableDeclaration node, ValueAnalysis.DataflowScopeImpl endState) {
+        protected void exitControlFlowScope(ASTExecutableDeclaration node, DataflowScopeImpl endState) {
             node.getUserMap().set(DF_SCOPE, new DetachedScope(endState));
         }
 
@@ -104,7 +106,7 @@ public class ValueAnalysisFacade {
         }
 
         @Override
-        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, BaseDataflowPass.VarLocalInfo info, ValueAnalysis.DataflowScopeImpl scope) {
+        protected void updateReachingDefs(@NonNull ASTNamedReferenceExpr reachingDefSink, JVariableSymbol var, BaseDataflowPass.VarLocalInfo info, DataflowScopeImpl scope) {
             super.updateReachingDefs(reachingDefSink, var, info, scope);
             for (ValueAnalysis<?> analysis : engine.getAllAnalyses()) {
                 // Set the cached value on the reaching def sink to
@@ -118,7 +120,7 @@ public class ValueAnalysisFacade {
         }
 
         @Override
-        protected void newAssignment(BaseDataflowPass.@Nullable VarLocalInfo previous, AssignmentEntry newEntry, ValueAnalysis.DataflowScopeImpl scope) {
+        protected void newAssignment(BaseDataflowPass.@Nullable VarLocalInfo previous, AssignmentEntry newEntry, DataflowScopeImpl scope) {
             StablePathMatcher matcher = StablePathMatcher.matching(newEntry.var);
             scope.cleanVariableState(matcher);
         }
@@ -131,6 +133,16 @@ public class ValueAnalysisFacade {
         @Override
         public void setConditionSpec(ASTExpression expr, BooleanModel spec, DataflowScope scope) {
             scope.setModel(expr, spec, boolAnalysis);
+        }
+
+        @Override
+        public Assumptions backwardsBoolAnalysis(ASTExpression expr, DataflowScope scope) {
+            Assumptions assumptions = Assumptions.NO_ASSUMPTIONS;
+            for (ValueAnalysis<?> analysis : engine.getAllAnalyses()) {
+                Assumptions myAssumptions = analysis.backwardsBoolAnalysis(expr, scope);
+                assumptions = assumptions.merge(myAssumptions);
+            }
+            return assumptions;
         }
 
         @Override

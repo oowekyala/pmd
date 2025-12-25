@@ -109,15 +109,6 @@ public class BooleanValueAnalysis extends ValueAnalysis<BooleanModel> {
 
         @Override
         public BooleanModel visit(ASTInfixExpression node, DataflowScope scope) {
-            // todo this is actually not flexible enough I think.
-            //  Because conditional expressions have their own control flow,
-            //  in a || b, if you're executing b then you can assume !a.
-            //
-            // -> actually the solution is to say that the framework will explore
-            //  a, then b given !a, then ask the analysis for its result for the
-            // whole expression - but the analysis actually does not recurse, it
-            // just gets the values from the cache.
-
             ASTExpression lhs = node.getLeftOperand();
             ASTExpression rhs = node.getRightOperand();
             BinaryOp operator = node.getOperator();
