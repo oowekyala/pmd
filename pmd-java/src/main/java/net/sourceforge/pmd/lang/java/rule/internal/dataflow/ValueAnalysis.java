@@ -189,13 +189,10 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
 
         protected Map<ValueAnalysis<?>, AnalysisState<?>> cloneStates(boolean preserveFacts) {
             Map<ValueAnalysis<?>, AnalysisState<?>> states = new HashMap<>(analysisStates);
-            states.putAll(this.analysisStates);
-            if (!preserveFacts) {
-                // clear values but preserve map keys
-                states.entrySet().forEach(
-                    entry -> entry.setValue(new AnalysisState<>())
-                );
-            }
+            states.entrySet().forEach(
+                preserveFacts ? entry -> entry.setValue(entry.getValue().cloneState())
+                              : entry -> entry.setValue(new AnalysisState<>())
+            );
             return states;
         }
 
@@ -351,6 +348,13 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
                 boolean changed = joinMap(exprState, otherState.exprState);
                 changed |= joinMap(varState, otherState.varState);
                 return changed;
+            }
+
+            protected AnalysisState<V> cloneState() {
+                AnalysisState<V> state = new AnalysisState<>();
+                state.exprState.putAll(exprState);
+                state.varState.putAll(varState);
+                return state;
             }
 
             @Override
