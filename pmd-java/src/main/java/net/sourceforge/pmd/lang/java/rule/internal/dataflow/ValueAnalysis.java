@@ -380,6 +380,36 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
             this.whenFalse = whenFalse;
         }
 
+        public Assumptions and(Assumptions other) {
+            return whenTrue(
+                this.whenTrue.andThen(other.whenTrue)
+            );
+        }
+
+        public Assumptions or(Assumptions other) {
+            return whenFalse(
+                this.whenFalse.andThen(other.whenFalse)
+            );
+        }
+
+        public static Assumptions whenTrue(Consumer<DataflowScope> whenTrue) {
+            return new Assumptions(whenTrue, scope -> {
+            });
+        }
+
+        public static Assumptions whenFalse(Consumer<DataflowScope> whenFalso) {
+            return new Assumptions(scope -> {
+            }, whenFalso);
+        }
+
+        public void assumeFalseIn(DataflowScope scope) {
+            whenFalse.accept(scope);
+        }
+
+        public void assumeTrueIn(DataflowScope scope) {
+            whenTrue.accept(scope);
+        }
+
         public Assumptions merge(Assumptions other) {
             if (this == NO_ASSUMPTIONS) {
                 return other;

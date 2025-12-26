@@ -6,7 +6,8 @@ package net.sourceforge.pmd.lang.java.rule.internal.dataflow;
 
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.BooleanModel;
 import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.BooleanValueAnalysis.DataflowScope;
-import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.*;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.Assumptions;
+import static net.sourceforge.pmd.lang.java.rule.internal.dataflow.ValueAnalysis.DataflowScopeImpl;
 import static net.sourceforge.pmd.util.CollectionUtil.asSingle;
 import static net.sourceforge.pmd.util.CollectionUtil.emptyList;
 
@@ -261,14 +262,16 @@ public final class BaseDataflowPass {
             SpanInfo thenState = before.fork();
             SpanInfo elseState = elseBranch != null ? before.fork() : before;
 
-            linkConditional(before, condition, thenState, elseState, true);
+            Assumptions assumptions = linkConditional(before, condition, thenState, elseState, true);
             BooleanModel conditionModel = before.global.speculateCondition(condition, before);
 
             // Shortcut if we can prove the condition is constant.
             if (conditionModel != BooleanModel.FALSE) {
+                assumptions.assumeTrueIn(thenState);
                 thenState = acceptOpt(thenBranch, thenState);
             }
             if (conditionModel != BooleanModel.TRUE) {
+                assumptions.assumeFalseIn(elseState);
                 elseState = acceptOpt(elseBranch, elseState);
             }
 
@@ -302,9 +305,9 @@ public final class BaseDataflowPass {
          *      Eg for `a && b`, this is the `then` state (all evaluated to true)
          *
          */
-        private SpanInfo linkConditional(SpanInfo before, ASTExpression condition, SpanInfo thenState, SpanInfo elseState, boolean isTopLevel) {
+        private Assumptions linkConditional(SpanInfo before, ASTExpression condition, SpanInfo thenState, SpanInfo elseState, boolean isTopLevel) {
             if (condition == null) {
-                return before;
+                return Assumptions.NO_ASSUMPTIONS;
             }
 
             if (condition instanceof ASTInfixExpression) {
@@ -323,14 +326,14 @@ public final class BaseDataflowPass {
                 thenState.absorb(state);
                 elseState.absorb(state);
             }
-            return state;
+            return state.global.backwardsBoolAnalysis(condition, before);
         }
 
-        SpanInfo visitShortcutOrExpr(ASTInfixExpression orExpr,
-                                     SpanInfo before,
-                                     SpanInfo thenState,
-                                     SpanInfo elseState,
-                                     BooleanModel shortcut) {
+        Assumptions visitShortcutOrExpr(ASTInfixExpression orExpr,
+                                        SpanInfo before,
+                                        SpanInfo thenState,
+                                        SpanInfo elseState,
+                                        BooleanModel shortcut) {
 
             //  if (<a> || <b> || ... || <n>) <then>
             //  else <else>
@@ -347,19 +350,21 @@ public final class BaseDataflowPass {
             // This method side effects on thenState and elseState to
             // set the variables.
 
-            SpanInfo cur = before;
-            cur = linkConditional(cur, orExpr.getLeftOperand(), thenState, elseState, false);
-            thenState.absorb(cur);
+            final SpanInfo cur = before;
+            Assumptions branch1 = linkConditional(before, orExpr.getLeftOperand(), thenState, elseState, false);
+            thenState.absorb(before);
 
             BooleanModel spec = before.global.speculateCondition(orExpr.getLeftOperand(), cur);
             if (spec == shortcut) {
                 // Shortcut return
                 elseState.absorb(cur);
                 before.global.setConditionSpec(orExpr, spec, cur);
-                return cur;
+                return branch1;
             }
+            // todo for or, assume branch1 is false
+            // todo for and, assume branch1 is true
 
-            cur = linkConditional(cur, orExpr.getRightOperand(), thenState, elseState, false);
+            Assumptions branch2 = linkConditional(cur, orExpr.getRightOperand(), thenState, elseState, false);
             thenState.absorb(cur);
             elseState.absorb(cur);
 
@@ -369,7 +374,9 @@ public final class BaseDataflowPass {
                 before.global.setConditionSpec(orExpr, spec, cur);
             }
 
-            return cur;
+            return shortcut == BooleanModel.FALSE
+                   ? branch1.and(branch2)
+                   : branch1.or(branch2);
         }
 
         @Override
@@ -581,7 +588,7 @@ public final class BaseDataflowPass {
                 iter = acceptOpt(update, iter);
             }
 
-            linkConditional(iter, cond, iter, breakTarget, true);
+            Assumptions assumptions = linkConditional(iter, cond, iter, breakTarget, true);
             // do a second round to make sure assignments can reach themselves.
             iter = acceptOpt(body, iter);
 
@@ -1271,7 +1278,7 @@ public final class BaseDataflowPass {
         }
 
         void deleteVar(JVariableSymbol var) {
-            // symtable.remove(var);
+            symtable.remove(var);
         }
 
         /**
