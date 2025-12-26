@@ -208,6 +208,11 @@ public class JavaVisitorBase<P, R> extends AstVisitorBase<P, R> implements JavaV
         return visitPrimaryExpr(node, data);
     }
 
+    @Override
+    public R visit(ASTArrayInitializer node, P data) {
+        return visitExpression(node, data);
+    }
+
     public R visitNamedExpr(ASTNamedReferenceExpr node, P data) {
         return visitPrimaryExpr(node, data);
     }

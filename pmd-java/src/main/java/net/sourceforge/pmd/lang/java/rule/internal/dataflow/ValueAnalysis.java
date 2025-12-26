@@ -21,6 +21,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTFieldAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTForeachStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTSwitchExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableAccess;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
 import net.sourceforge.pmd.lang.java.ast.JavaVisitorBase;
@@ -489,6 +490,17 @@ public abstract class ValueAnalysis<V extends ValueModel<V>> {
         @Override
         public V visit(ASTAssignmentExpression node, DataflowScope scope) {
             return getModel(node.getRightOperand(), scope);
+        }
+
+        /**
+         * Note when overriding this: if the expression is an increment
+         * or decrement expression, you need to take care of handling
+         * the case where the operand is a variable, because it is going
+         * to run into an infinite loop.
+         */
+        @Override
+        public V visit(ASTUnaryExpression node, DataflowScope data) {
+            return super.visit(node, data);
         }
 
         @Override

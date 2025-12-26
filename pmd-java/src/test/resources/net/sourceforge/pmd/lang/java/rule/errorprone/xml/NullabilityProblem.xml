@@ -117,6 +117,81 @@ public class Foo {
             ]]></code>
     </test-code>
     <test-code>
+        <description>Null check (2)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Condition is always false</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(Object x) {
+                    if (x == null) {
+
+                    } else if (x == null) { // condition false
+                        throw fooxx();
+                    }
+                    System.out.println(x);
+                    return x;
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Null check (3)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Variable `x` is always null</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(Object x) {
+                    if (x != null) {
+                        @NonNull var x2 = x; // ok
+                    } else {
+                        @NonNull var x2 = x; // warn: x null
+                    }
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Array init exception</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>4</expected-linenumbers>
+        <expected-messages>
+            <message>Condition is always true</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(Object x) {
+                    Object[] os = { x };
+                    if (os != null) { // condition true
+                    }
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
+        <description>Increment expr</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            public class Foo {
+                public Object foo(int x) {
+                    x++;
+                    ++x;
+                    --x;
+                    x--;
+                }
+                private boolean bar() { }
+            }
+            ]]></code>
+    </test-code>
+    <test-code>
         <description>Parameter reassigned</description>
         <expected-problems>4</expected-problems>
         <expected-linenumbers>5,5,6,10</expected-linenumbers>

@@ -174,8 +174,8 @@ public class BooleanValueAnalysis extends ValueAnalysis<BooleanModel> {
 
         @Override
         public BooleanModel visit(ASTUnaryExpression node, DataflowScope scope) {
-            BooleanModel operandModel = getModel(node.getOperand(), scope);
             if (node.getOperator() == UnaryOp.NEGATION) {
+                BooleanModel operandModel = getModel(node.getOperand(), scope);
                 return operandModel.negate();
             }
             return UNKNOWN;
