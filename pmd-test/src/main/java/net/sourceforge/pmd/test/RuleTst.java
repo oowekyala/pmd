@@ -102,7 +102,6 @@ public abstract class RuleTst {
         Map<PropertyDescriptor<?>, Object> oldProperties = rule.getPropertiesByPropertyDescriptor();
         Report report = null;
         try {
-            int res;
             try {
                 // Set test specific properties onto the Rule
                 if (test.getProperties() != null) {
@@ -125,15 +124,11 @@ public abstract class RuleTst {
                 }
 
                 report = processUsingStringReader(test, rule);
-                res = report.getViolations().size();
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException('"' + test.getDescription() + "\" failed", e);
             }
-            assertEquals(test.getExpectedProblems(), res,
-                    '"' + test.getDescription() + "\" resulted in wrong number of failures,");
-            assertMessages(report, test);
-            assertLineNumbers(report, test);
+            assertProblems(report, test);
             assertSuppressions(report, test);
         } catch (AssertionError e) {
             printReport(test, report);
@@ -174,55 +169,33 @@ public abstract class RuleTst {
         }
     }
 
-    private void assertMessages(Report report, RuleTestDescriptor test) {
-        if (report == null || test.getExpectedMessages().isEmpty()) {
+    private void assertProblems(Report report, RuleTestDescriptor test) {
+        if (report == null) {
             return;
         }
+        List<RuleTestDescriptor.ExpectedProblem> expected = test.getExpectedProblemList();
+        assertEquals(expected.size(), report.getViolations().size(),
+            '"' + test.getDescription() + "\" resulted in wrong number of failures,");
 
-        List<String> expectedMessages = test.getExpectedMessages();
-        if (report.getViolations().size() != expectedMessages.size()) {
-            throw new RuntimeException("Test setup error: number of expected messages doesn't match "
-                                           + "number of violations for test case '" + test.getDescription() + "'");
-        }
-
-        int index = 0;
-        for (RuleViolation violation : report.getViolations()) {
-            String actual = violation.getDescription();
-            assertEquals(expectedMessages.get(index), actual,
-                         '"' + test.getDescription() + "\" produced wrong message on violation number " + (index + 1)
-                             + ".");
-            index++;
-        }
-    }
-
-    private void assertLineNumbers(Report report, RuleTestDescriptor test) {
-        if (report == null || test.getExpectedLineNumbers().isEmpty()) {
-            return;
-        }
-
-        List<Integer> expected = test.getExpectedLineNumbers();
-        List<Integer> expectedEndLines = test.getExpectedEndLineNumbers();
-        if (report.getViolations().size() != expected.size()) {
-            throw new RuntimeException("Test setup error: number of expected line numbers " + expected.size()
-                                           + " doesn't match number of violations " + report.getViolations().size()
-                                           + " for test case '"
-                                           + test.getDescription() + "'");
-        }
-
-        int index = 0;
-        for (RuleViolation violation : report.getViolations()) {
-            Integer actualBeginLine = violation.getBeginLine();
-            Integer actualEndLine = violation.getEndLine();
-
-            assertEquals(expected.get(index), actualBeginLine,
-                         '"' + test.getDescription() + "\" violation on wrong line number: violation number "
-                             + (index + 1) + ".");
-            if (!expectedEndLines.isEmpty()) {
-                assertEquals(expectedEndLines.get(index), actualEndLine,
-                        '"' + test.getDescription() + "\" violation on wrong end line number: violation number "
-                            + (index + 1) + ".");
+        for (int i = 0; i < report.getViolations().size(); i++) {
+            RuleViolation violation = report.getViolations().get(i);
+            RuleTestDescriptor.ExpectedProblem expectedProblem = expected.get(i);
+            if (expectedProblem.getLineNumber().isPresent()) {
+                assertEquals(expectedProblem.getLineNumber().getAsInt(), violation.getBeginLine(),
+                    '"' + test.getDescription() + "\" violation on wrong line number: violation number "
+                    + (i + 1) + ".");
             }
-            index++;
+            if (expectedProblem.getEndLineNumber().isPresent()) {
+                assertEquals(expectedProblem.getEndLineNumber().getAsInt(), violation.getEndLine(),
+                    '"' + test.getDescription() + "\" violation on wrong end line number: violation number "
+                    + (i + 1) + ".");
+            }
+            if (expectedProblem.getMessage().isPresent()) {
+                assertEquals(expectedProblem.getMessage().get(), violation.getDescription(),
+                    '"' + test.getDescription() + "\" produced wrong message on violation number " + (i + 1)
+                    + ".");
+            }
+
         }
     }
 
@@ -238,13 +211,12 @@ public abstract class RuleTst {
             return;
         }
 
+        List<RuleTestDescriptor.ExpectedProblem> expected = test.getExpectedProblemList();
         System.out.println(
-            " -> Expected " + test.getExpectedProblems() + " problem(s), " + report.getViolations().size()
-                + " problem(s) found.");
-        System.out.println(" -> Expected messages: " + test.getExpectedMessages());
-        System.out.println(" -> Expected begin line numbers: " + test.getExpectedLineNumbers());
-        if (!test.getExpectedEndLineNumbers().isEmpty()) {
-            System.out.println(" -> Expected   end line numbers: " + test.getExpectedEndLineNumbers());
+            " -> Expected " + expected.size() + " problem(s), " + report.getViolations().size()
+            + " problem(s) found.");
+        for (RuleTestDescriptor.ExpectedProblem expectedProblem : expected) {
+            System.out.println("  - " + expectedProblem);
         }
         if (test.hasExpectedSuppressions()) {
             System.out.println(" -> Expected " + test.getExpectedSuppressions().size() + " suppression(s), "

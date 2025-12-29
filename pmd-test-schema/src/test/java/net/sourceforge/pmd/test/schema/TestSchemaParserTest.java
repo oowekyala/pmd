@@ -4,18 +4,25 @@
 
 package net.sourceforge.pmd.test.schema;
 
+import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.xml.sax.InputSource;
@@ -271,6 +278,62 @@ class TestSchemaParserTest {
         });
 
         assertThat(log, containsString("cvc-complex-type.2.4.a: Invalid content was found starting with element '{\"http://pmd.sourceforge.net/rule-tests\":expected-linenumber}'"));
+    }
+
+    @Test
+    void parseAnnotatedCodeElements() throws IOException {
+        RuleTestCollection tests = parseResource("AnnotatedCodeTests.xml");
+
+        RuleTestDescriptor td = getTest(tests, "No violations");
+        assertEquals(emptyList(), td.getExpectedProblemList());
+        assertNotNull(td.getCode());
+
+        RuleTestDescriptor nst = getTest(tests, "New style test");
+        RuleTestDescriptor ost = getTest(tests, "Old style test");
+        assertEquals(ost.getExpectedProblemList(), nst.getExpectedProblemList());
+    }
+
+    @Test
+    void parseAnnotatedCodeElementsWithOffset() throws IOException {
+        RuleTestCollection tests = parseResource("AnnotatedCodeTests.xml");
+
+        RuleTestDescriptor td = getTest(tests, "Multiple violations on same line");
+        assertThat(td.getExpectedProblemList(), hasSize(3));
+
+        for (RuleTestDescriptor.ExpectedProblem prob : td.getExpectedProblemList()) {
+            assertEquals(6, prob.getLineNumber().getAsInt());
+        }
+    }
+
+    private RuleTestCollection parseResource(String resourceName) throws IOException {
+        MockRule mockRule = new MockRule();
+        mockRule.setLanguage(PlainTextLanguage.getInstance());
+
+        try (InputStream stream = getClass().getResourceAsStream(resourceName)) {
+            InputSource is = new InputSource();
+            is.setSystemId(resourceName);
+            is.setByteStream(stream);
+
+            final Locale defaultLocale = Locale.getDefault();
+            try {
+                // make sure to use English for XML validation errors, like invalid element
+                Locale.setDefault(Locale.ENGLISH);
+
+                return new TestSchemaParser().parse(mockRule, is);
+            } finally {
+                Locale.setDefault(defaultLocale);
+            }
+        }
+    }
+
+    private RuleTestDescriptor getTest(RuleTestCollection tests, String name) {
+        Optional<RuleTestDescriptor> found = tests.getTests().stream().filter(it -> it.getDescription().trim().equals(name))
+                                                  .findFirst();
+        if (!found.isPresent()) {
+            List<String> allNames = tests.getTests().stream().map(RuleTestDescriptor::getDescription).collect(Collectors.toList());
+            throw new IllegalStateException("No test found for " + name + " in " + allNames);
+        }
+        return found.get();
     }
 
     private RuleTestCollection parseFile(String file) throws IOException {

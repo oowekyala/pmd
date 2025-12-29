@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +42,8 @@ import com.github.oowekyala.ooxml.messages.XmlPositioner;
  * @author Clément Fournier
  */
 class BaseTestParserImpl {
+
+    public static final Pattern SPEC_PATTERN = Pattern.compile("(?:\\+(\\d+)\\s+)?(?:suppressed\\((.*?)\\)|warn)(?:\\(\\+(\\d+)\\))?(?::(.*))?");
 
     static class ParserV1 extends BaseTestParserImpl {
 
@@ -120,6 +124,15 @@ class BaseTestParserImpl {
         Properties properties = parseRuleProperties(testCode, descriptor.getRule(), err);
         descriptor.getProperties().putAll(properties);
 
+        XmlPosition startPosition = xmlPositioner.startPositionOf(testCode);
+        descriptor.setLineNumber(startPosition.getLine());
+
+        Node annotatedCode = getSingleChild(testCode, "annotated-code", false, err);
+        if (annotatedCode != null) {
+            parseAnnotatedCode(descriptor, err, annotatedCode);
+            return;
+        }
+
         parseExpectedProblems(testCode, descriptor, err);
         parseExpectedSuppressions(testCode, descriptor, err);
 
@@ -134,9 +147,71 @@ class BaseTestParserImpl {
         if (lversion != null) {
             descriptor.setLanguageVersion(lversion);
         }
+    }
 
-        XmlPosition startPosition = xmlPositioner.startPositionOf(testCode);
-        descriptor.setLineNumber(startPosition.getLine());
+    private void parseAnnotatedCode(RuleTestDescriptor descriptor, PmdXmlReporter err, Node annotatedCode) {
+        Attr attr = (Attr) annotatedCode.getAttributes().getNamedItem("language-version");
+        if (attr != null) {
+            LanguageVersion ver = validateLanguageVersion(err, attr.getValue(), attr);
+            if (ver == null) {
+                return;
+            }
+            descriptor.setLanguageVersion(ver);
+        }
+
+        String code = parseTextNodeNoTrim(annotatedCode);
+        code = StringUtil.trimIndent(Chars.wrap(code).trimBlankLines()).toString();
+
+        List<RuleTestDescriptor.ExpectedProblem> expectedProblems = new ArrayList<>();
+        Pattern pat = extractViolationRegex(descriptor.getRule().getLanguage());
+        int lineNo = 1;
+        for (Chars line : Chars.wrap(code).lines()) {
+            Matcher matcher = pat.matcher(line);
+            if (matcher.find()) {
+                String spec = matcher.group(1);
+                RuleTestDescriptor.ExpectedProblem problem = parseCommentForProblem(spec, lineNo);
+                if (problem != null) {
+                    expectedProblems.add(problem);
+                }
+            }
+            lineNo++;
+        }
+        descriptor.recordExpectedViolations(expectedProblems);
+        descriptor.setCode(code);
+    }
+
+    private RuleTestDescriptor.ExpectedProblem parseCommentForProblem(String spec, int line) {
+        spec = spec.trim();
+        Matcher matcher = SPEC_PATTERN.matcher(spec);
+        if (matcher.matches()) {
+            RuleTestDescriptor.ExpectedProblem expectedProblem = new RuleTestDescriptor.ExpectedProblem();
+            String offsetStr = matcher.group(1);
+            if (offsetStr != null) {
+                // add offset to line number
+                line += Integer.parseInt(offsetStr);
+            }
+            expectedProblem.suppressorId = matcher.group(2);
+            expectedProblem.lineNumber = line;
+            if (matcher.group(3) != null) {
+                // end line
+                expectedProblem.endLineNumber = line + Integer.parseInt(matcher.group(3));
+            } else {
+                // assume single line
+                expectedProblem.endLineNumber = line;
+            }
+            expectedProblem.message = StringUtils.trim(matcher.group(4));
+            return expectedProblem;
+        }
+        return null;
+    }
+
+
+    /** Return a comment matcher with one capturing group for the comment content for this language. */
+    private Pattern extractViolationRegex(Language lang) {
+        if (lang.getId().equals("html") || lang.getId().equals("xml")) {
+            return Pattern.compile("<!--(.*?)-->");
+        }
+        return Pattern.compile("//(.*)$");
     }
 
     private void parseExpectedProblems(Element testCode, RuleTestDescriptor descriptor, PmdXmlReporter err) {
@@ -255,12 +330,16 @@ class BaseTestParserImpl {
             return null;
         }
         String languageVersionString = parseTextNode(sourceTypeNode);
+        return validateLanguageVersion(err, languageVersionString, sourceTypeNode);
+    }
+
+    private static LanguageVersion validateLanguageVersion(PmdXmlReporter err, String languageVersionString, Node errNode) {
         LanguageVersion languageVersion = parseSourceType(languageVersionString);
         if (languageVersion != null) {
             return languageVersion;
         }
 
-        err.at(sourceTypeNode).error("Unknown language version ''{0}''", languageVersionString);
+        err.at(errNode).error("Unknown language version ''{0}''", languageVersionString);
         return null;
     }
 

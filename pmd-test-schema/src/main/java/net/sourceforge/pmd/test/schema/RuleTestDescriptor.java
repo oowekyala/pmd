@@ -5,8 +5,15 @@
 package net.sourceforge.pmd.test.schema;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.rule.Rule;
@@ -24,10 +31,7 @@ public class RuleTestDescriptor {
     private final int index;
     private final Rule rule;
     private String code;
-    private int expectedProblems;
-    private List<Integer> expectedLineNumbers;
-    private List<Integer> expectedEndLineNumbers;
-    private List<String> expectedMessages;
+    private List<ExpectedProblem> expectedProblems = new ArrayList<>();
     private List<SuppressionDescriptor> expectedSuppressions;
     private int lineNumber;
 
@@ -98,19 +102,38 @@ public class RuleTestDescriptor {
         this.code = code;
     }
 
+    public void recordExpectedViolations(List<ExpectedProblem> problems) {
+        this.expectedProblems = Objects.requireNonNull(problems);
+    }
+
+    @Deprecated
     public void recordExpectedViolations(int expectedProblems, List<Integer> expectedLineNumbers, List<String> expectedMessages) {
         checkListSize(expectedProblems, expectedLineNumbers);
         checkListSize(expectedProblems, expectedMessages);
+        this.expectedProblems.clear();
 
-        this.expectedProblems = expectedProblems;
-        this.expectedLineNumbers = expectedLineNumbers;
-        this.expectedMessages = expectedMessages;
+        for (int i = 0; i < expectedProblems; i++) {
+            ExpectedProblem prob = new ExpectedProblem();
+            if (i < expectedLineNumbers.size()) {
+                prob.lineNumber = expectedLineNumbers.get(i);
+            }
+            if (i < expectedMessages.size()) {
+                prob.message = expectedMessages.get(i);
+            }
+            this.expectedProblems.add(prob);
+        }
     }
 
+    @Deprecated
     public void recordExpectedViolations(int expectedProblems, List<Integer> expectedLineNumbers, List<Integer> expectedEndLineNumbers, List<String> expectedMessages) {
         checkListSize(expectedProblems, expectedEndLineNumbers);
-        this.expectedEndLineNumbers = expectedEndLineNumbers;
         recordExpectedViolations(expectedProblems, expectedLineNumbers, expectedMessages);
+        for (int i = 0; i < expectedProblems; i++) {
+            ExpectedProblem prob = this.expectedProblems.get(i);
+            if (i < expectedEndLineNumbers.size()) {
+                prob.endLineNumber = expectedEndLineNumbers.get(i);
+            }
+        }
     }
 
     private void checkListSize(int expectedProblems, List<?> expectedMessages) {
@@ -120,24 +143,107 @@ public class RuleTestDescriptor {
         }
     }
 
+    /**
+     * A problem (rule violation or suppressed violation) expected to
+     * be found when running a rule on a test code sample.
+     */
+    public static final class ExpectedProblem {
+        int lineNumber = -1;
+        int endLineNumber = -1;
+        @Nullable
+        String message = null;
+        @Nullable
+        String suppressorId = null;
+
+
+        public OptionalInt getLineNumber() {
+            return lineNumber < 1 ? OptionalInt.empty() : OptionalInt.of(lineNumber);
+        }
+
+        public OptionalInt getEndLineNumber() {
+            return endLineNumber < 1 ? OptionalInt.empty() : OptionalInt.of(endLineNumber);
+        }
+
+        public Optional<String> getMessage() {
+            return Optional.ofNullable(message);
+        }
+
+        public boolean isSuppressed() {
+            return suppressorId != null;
+        }
+
+        public Optional<String> suppressorId() {
+            return Optional.ofNullable(suppressorId);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ExpectedProblem that = (ExpectedProblem) o;
+            return lineNumber == that.lineNumber && endLineNumber == that.endLineNumber
+                   && Objects.equals(message, that.message)
+                   && Objects.equals(suppressorId, that.suppressorId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(lineNumber, endLineNumber, message, suppressorId);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            if (getLineNumber().isPresent()) {
+                sb.append("line ").append(getLineNumber().getAsInt());
+            }
+            if (getEndLineNumber().isPresent()) {
+                sb.append("-").append(getEndLineNumber().getAsInt());
+            }
+            sb.append(": ").append(getMessage().orElse("(no message)"));
+            return sb.toString();
+        }
+    }
+
+    @Deprecated
     public int getExpectedProblems() {
-        return expectedProblems;
+        return expectedProblems.size();
     }
 
     public int getIndex() {
         return index;
     }
 
+    @Deprecated
     public List<Integer> getExpectedLineNumbers() {
-        return expectedLineNumbers;
+        if (expectedProblems.stream().allMatch(it -> it.getLineNumber().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getLineNumber)
+                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
+    @Deprecated
     public List<Integer> getExpectedEndLineNumbers() {
-        return expectedEndLineNumbers;
+        if (expectedProblems.stream().allMatch(it -> it.getEndLineNumber().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getEndLineNumber)
+                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
+    @Deprecated
     public List<String> getExpectedMessages() {
-        return expectedMessages;
+        if (expectedProblems.stream().allMatch(it -> it.getMessage().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getMessage)
+                                   .map(Optional::get).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    public List<ExpectedProblem> getExpectedProblemList() {
+        return expectedProblems;
     }
 
     public boolean isFocused() {

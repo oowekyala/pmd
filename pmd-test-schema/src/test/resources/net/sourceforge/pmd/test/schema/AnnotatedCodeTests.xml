@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+  -->
+
+<test-data
+        xmlns="http://pmd.sourceforge.net/rule-tests"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.github.io/schema/rule-tests_1_2_0.xsd">
+
+    <test-code>
+        <description>No violations</description>
+        <annotated-code><![CDATA[
+            class Test {
+                public record NestedRecord(int x, int y) { }
+                // unrelated comment
+            }
+        ]]></annotated-code>
+    </test-code>
+
+
+    <!-- Old style test -->
+    <test-code>
+        <description>Old style test</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>3-3</expected-linenumbers>
+        <expected-messages>
+            <message>The initializer for variable 'i' is never used (overwritten on line 4)</message>
+        </expected-messages>
+        <code><![CDATA[
+            public class Foo {
+                void bar() {
+                    int i=0;
+                    i=1;
+                    if (i==2) {}
+                }
+            }
+            ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>New style test</description>
+        <annotated-code><![CDATA[
+            public class Foo {
+                void bar() {
+                    int i=0; // warn: The initializer for variable 'i' is never used (overwritten on line 4)
+                    i=1;
+                    if (i==2) {}
+                }
+            }
+        ]]></annotated-code>
+    </test-code>
+
+    <test-code>
+        <description>No message</description>
+        <annotated-code><![CDATA[
+            public class Foo {
+                void bar() {
+                    int i=0; // warn
+                }
+            }
+            ]]>
+        </annotated-code>
+    </test-code>
+
+    <test-code>
+        <description>Multiple violations</description>
+        <annotated-code><![CDATA[
+            public class Foo {
+                void bar(int i) {
+                    int j = 0; // warn: The initializer for variable 'j' is never used (overwritten on lines 6 and 9)
+                    int z = 0;
+                    if (i < 10) {
+                        j = i; // warn(+1): The value assigned to variable 'j' is never used
+                        throw new Exception();
+                    } else {
+                        j = z;
+                    }
+                    System.out.println(j);
+                }
+            }
+        ]]></annotated-code>
+    </test-code>
+
+    <test-code>
+        <description>Suppressed violations</description>
+        <annotated-code><![CDATA[
+            public class Foo {
+                @SuppressWarnings("PMD")
+                void bar(int i) {
+                    int j = 0; // suppressed(@SuppressWarnings)(+2): The initializer for variable 'j' is never used (overwritten on lines 6 and 9)
+                    int z = 0;
+                    if (i < 10) {
+                        j = i;
+                        throw new Exception();
+                    } else {
+                        j = z;
+                    }
+                    System.out.println(j);
+                }
+            }
+            ]]></annotated-code>
+    </test-code>
+
+    <test-code>
+        <description>Multiple violations on same line</description>
+        <annotated-code><![CDATA[
+            public class Foo {
+                @SuppressWarnings("PMD")
+                void bar(int i) {
+                    //+2 warn: something
+                    //+1 warn: something else
+                    int j = 0; // suppressed(@SuppressWarnings)(+2): a suppression
+                    int z = 0;
+                    if (i < 10) {
+                        j = i;
+                        throw new Exception();
+                    } else {
+                        j = z;
+                    }
+                    System.out.println(j);
+                }
+            }
+            ]]></annotated-code>
+    </test-code>
+
+
+
+</test-data>
