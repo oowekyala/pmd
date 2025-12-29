@@ -2,22 +2,20 @@
 <test-data
     xmlns="http://pmd.sourceforge.net/rule-tests"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.github.io/schema/rule-tests_1_1_0.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.github.io/schema/rule-tests_1_2_0.xsd">
 
     <test-code>
         <description>NPE on nested record decl #3224</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Test {
                 public record NestedRecord(int x, int y) { }
             }
-            ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>ok</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar(int b) {
         for (int i = 0; i < 10; i++) {
@@ -25,85 +23,71 @@ public class Foo {
         }
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>DD anomaly</description>
-        <expected-problems>1</expected-problems>
-        <expected-linenumbers>3</expected-linenumbers>
-        <expected-messages>
-            <message>The initializer for variable 'i' is never used (overwritten on line 4)</message>
-        </expected-messages>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar() {
-        int i=0;
+        int i=0; // warn: The initializer for variable 'i' is never used (overwritten on line 4)
         i=1;
         if (i==2) {}
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>DU anomaly</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar() {
         int i=0;
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
     <test-code>
         <description>DU anomaly (reportUnusedVariables)</description>
         <rule-property name="reportUnusedVariables">true</rule-property>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar() {
-        int i=0;
+        int i=0; // warn
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>UR anomaly</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar() {
         int i;
         if (i == 0) {}
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Conditional flow 0</description>
         <rule-property name="reportUnusedVariables">true</rule-property>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>3,4</expected-linenumbers>
-        <expected-messages>
-            <message>The initializer for variable 'j' is never used (overwritten on line 6)</message>
-            <message>The initializer for variable 'z' is never used</message>
-        </expected-messages>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 public class Foo {
     void bar(int i) {
-        int j = 0;
-        int z = 0; // unused
+        int j = 0; // warn: The initializer for variable 'j' is never used (overwritten on line 6)
+        int z = 0; // warn: The initializer for variable 'z' is never used
         if (i < 10) {
             j = i;
             print(j);
         }
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
