@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -43,7 +44,20 @@ import com.github.oowekyala.ooxml.messages.XmlPositioner;
  */
 class BaseTestParserImpl {
 
-    public static final Pattern SPEC_PATTERN = Pattern.compile("(?:\\+(\\d+)\\s+)?(?:suppressed\\((.*?)\\)|warn)(?:\\(\\+(\\d+)\\))?(?::(.*))?(?:\\s*#.*)?");
+    /**
+     * Simplified synopsis:
+     * <ul>
+     * <li>{@code (\+\d+)?}: Offset specification. The violation is found not on the line of the comment but x lines later.
+     * <li>{@code suppressed(.+)|warn}: suppression (with suppressor ID) or regular violation
+     * <li>{@code (\(\+\d+\))?}: End line specification (e.g. {@code (+2)} means the end line is start line + 2).
+     * <li>{@code (:.*)?}: Message specification following a colon
+     * <li>{@code (#.*)?}: Comment (ignored) following a hash
+     * </ul>
+     * TODO if the message spec contains a hashtag, we need a way to
+     *  escape it.
+     */
+    public static final Pattern SPEC_PATTERN =
+        Pattern.compile("(?:\\+(\\d+)\\s+)?(?:suppressed\\((.*?)\\)|warn)(?:\\(\\+(\\d+)\\))?(?::(.*))?(?:\\s*#.*)?");
 
     static class ParserV1 extends BaseTestParserImpl {
 
@@ -134,7 +148,7 @@ class BaseTestParserImpl {
         }
 
         parseExpectedProblems(testCode, descriptor, err);
-        parseExpectedSuppressions(testCode, descriptor, err);
+        parseExpectedSuppressions(testCode, err, descriptor::recordExpectedSuppression);
 
         String code = getTestCode(testCode, fragments, usedFragments, err);
         if (code == null) {
@@ -262,22 +276,39 @@ class BaseTestParserImpl {
             }
         }
 
+        List<RuleTestDescriptor.ExpectedProblem> expectedProblemList = new ArrayList<>();
+        for (int i = 0; i < expectedProblems; i++) {
+            RuleTestDescriptor.ExpectedProblem prob = new RuleTestDescriptor.ExpectedProblem();
+            if (i < expectedLineNumbers.size()) {
+                prob.lineNumber = expectedLineNumbers.get(i);
+            }
+            if (i < expectedEndLineNumbers.size()) {
+                prob.endLineNumber = expectedEndLineNumbers.get(i);
+            }
+            if (i < expectedMessages.size()) {
+                prob.message = expectedMessages.get(i);
+            }
+            expectedProblemList.add(prob);
+        }
+        parseExpectedSuppressions(testCode, err, (line, suppressor) -> {
+            RuleTestDescriptor.ExpectedProblem prob = new RuleTestDescriptor.ExpectedProblem();
+            prob.lineNumber = line;
+            prob.suppressorId = suppressor;
+            expectedProblemList.add(prob);
+        });
+
         descriptor.recordExpectedViolations(
-            expectedProblems,
-            expectedLineNumbers,
-            expectedEndLineNumbers,
-            expectedMessages
+            expectedProblemList
         );
 
     }
 
-    private void parseExpectedSuppressions(Element testCode, RuleTestDescriptor descriptor, PmdXmlReporter err) {
+    private void parseExpectedSuppressions(Element testCode, PmdXmlReporter err, BiConsumer<Integer, String> recordDescriptor) {
         Node expectedProblemsNode = getSingleChild(testCode, "expected-suppressions", false, err);
         if (expectedProblemsNode == null) {
             return;
         }
 
-        descriptor.createEmptyExpectedSuppression();
         NodeList childNodes = expectedProblemsNode.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
@@ -292,7 +323,7 @@ class BaseTestParserImpl {
             String suppressor = parseTextNode(itemEl);
 
             if (line != null) {
-                descriptor.recordExpectedSuppression(Integer.parseInt(line.getValue()), suppressor);
+                recordDescriptor.accept(Integer.parseInt(line.getValue()), suppressor);
             }
         }
     }

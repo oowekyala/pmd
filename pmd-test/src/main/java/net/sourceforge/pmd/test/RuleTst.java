@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.DynamicTest;
@@ -157,15 +158,20 @@ public abstract class RuleTst {
         if (!test.hasExpectedSuppressions()) {
             return;
         }
-        List<RuleTestDescriptor.SuppressionDescriptor> expectedSuppressions = test.getExpectedSuppressions();
+        List<RuleTestDescriptor.ExpectedProblem> expectedSuppressions =
+            test.getExpectedProblemList().stream().filter(RuleTestDescriptor.ExpectedProblem::isSuppressed).collect(Collectors.toList());
+
         assertEquals(expectedSuppressions.size(), report.getSuppressedViolations().size(), "wrong number of suppressed violations");
         for (int i = 0; i < expectedSuppressions.size(); i++) {
-            RuleTestDescriptor.SuppressionDescriptor expectedSuppression = expectedSuppressions.get(i);
+            RuleTestDescriptor.ExpectedProblem expectedSuppression = expectedSuppressions.get(i);
             Report.SuppressedViolation actualSuppression = report.getSuppressedViolations().get(i);
-            assertEquals(expectedSuppression.getLine(), actualSuppression.getRuleViolation().getBeginLine(), "wrong line for suppression");
-            if (StringUtils.isNotBlank(expectedSuppression.getSuppressorId())) {
-                assertEquals(expectedSuppression.getSuppressorId(), actualSuppression.getSuppressor().getId(), "wrong suppressor id");
-            }
+
+            assertViolationMatches(test, expectedSuppression, actualSuppression.getRuleViolation(), i + 1);
+            expectedSuppression
+                .suppressorId()
+                // for now may be empty if you use a deprecated method to record suppressions directly on the RuleTestDescriptor
+                .filter(it -> !it.isEmpty())
+                .ifPresent(id -> assertEquals(id, actualSuppression.getSuppressor().getId(), "wrong suppressor id"));
         }
     }
 
@@ -173,29 +179,31 @@ public abstract class RuleTst {
         if (report == null) {
             return;
         }
-        List<RuleTestDescriptor.ExpectedProblem> expected = test.getExpectedProblemList();
+        List<RuleTestDescriptor.ExpectedProblem> expected =
+            test.getExpectedProblemList().stream().filter(it -> !it.isSuppressed()).collect(Collectors.toList());
+
         assertEquals(expected.size(), report.getViolations().size(),
             '"' + test.getDescription() + "\" resulted in wrong number of failures,");
 
         for (int i = 0; i < report.getViolations().size(); i++) {
             RuleViolation violation = report.getViolations().get(i);
             RuleTestDescriptor.ExpectedProblem expectedProblem = expected.get(i);
-            if (expectedProblem.getLineNumber().isPresent()) {
-                assertEquals(expectedProblem.getLineNumber().getAsInt(), violation.getBeginLine(),
-                    '"' + test.getDescription() + "\" violation on wrong line number: violation number "
-                    + (i + 1) + ".");
-            }
-            if (expectedProblem.getEndLineNumber().isPresent()) {
-                assertEquals(expectedProblem.getEndLineNumber().getAsInt(), violation.getEndLine(),
-                    '"' + test.getDescription() + "\" violation on wrong end line number: violation number "
-                    + (i + 1) + ".");
-            }
-            if (expectedProblem.getMessage().isPresent()) {
-                assertEquals(expectedProblem.getMessage().get(), violation.getDescription(),
-                    '"' + test.getDescription() + "\" produced wrong message on violation number " + (i + 1)
-                    + ".");
-            }
+            assertViolationMatches(test, expectedProblem, violation, i + 1);
+        }
+    }
 
+    private static void assertViolationMatches(RuleTestDescriptor test, RuleTestDescriptor.ExpectedProblem expectedProblem, RuleViolation violation, int index) {
+        if (expectedProblem.getLineNumber().isPresent()) {
+            assertEquals(expectedProblem.getLineNumber().getAsInt(), violation.getBeginLine(),
+                '"' + test.getDescription() + "\" violation on wrong line number: violation number " + index + ".");
+        }
+        if (expectedProblem.getEndLineNumber().isPresent()) {
+            assertEquals(expectedProblem.getEndLineNumber().getAsInt(), violation.getEndLine(),
+                '"' + test.getDescription() + "\" violation on wrong end line number: violation number " + index + ".");
+        }
+        if (expectedProblem.getMessage().isPresent()) {
+            assertEquals(expectedProblem.getMessage().get(), violation.getDescription(),
+                '"' + test.getDescription() + "\" produced wrong message on violation number " + index + ".");
         }
     }
 
@@ -214,13 +222,9 @@ public abstract class RuleTst {
         List<RuleTestDescriptor.ExpectedProblem> expected = test.getExpectedProblemList();
         System.out.println(
             " -> Expected " + expected.size() + " problem(s), " + report.getViolations().size()
-            + " problem(s) found.");
+            + " problem(s) found. " + report.getSuppressedViolations().size() + " suppressed violation(s) found.");
         for (RuleTestDescriptor.ExpectedProblem expectedProblem : expected) {
             System.out.println("  - " + expectedProblem);
-        }
-        if (test.hasExpectedSuppressions()) {
-            System.out.println(" -> Expected " + test.getExpectedSuppressions().size() + " suppression(s), "
-                    + report.getSuppressedViolations().size() + " found.");
         }
         System.out.println();
         StringWriter reportOutput = new StringWriter();

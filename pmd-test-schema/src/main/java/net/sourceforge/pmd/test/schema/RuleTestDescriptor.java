@@ -6,6 +6,7 @@ package net.sourceforge.pmd.test.schema;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,9 +33,9 @@ public class RuleTestDescriptor {
     private final Rule rule;
     private String code;
     private List<ExpectedProblem> expectedProblems = new ArrayList<>();
-    private List<SuppressionDescriptor> expectedSuppressions;
     private int lineNumber;
 
+    @Deprecated
     public static final class SuppressionDescriptor {
         private final int line;
         private final String suppressorId;
@@ -143,6 +144,89 @@ public class RuleTestDescriptor {
         }
     }
 
+    @Deprecated
+    public int getExpectedProblems() {
+        return (int) expectedProblems.stream().filter(it -> !it.isSuppressed()).count();
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    @Deprecated
+    public List<Integer> getExpectedLineNumbers() {
+        if (expectedProblems.stream().allMatch(it -> it.getLineNumber().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getLineNumber)
+                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    @Deprecated
+    public List<Integer> getExpectedEndLineNumbers() {
+        if (expectedProblems.stream().allMatch(it -> it.getEndLineNumber().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getEndLineNumber)
+                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    @Deprecated
+    public List<String> getExpectedMessages() {
+        if (expectedProblems.stream().allMatch(it -> it.getMessage().isPresent())) {
+            return expectedProblems.stream().map(ExpectedProblem::getMessage)
+                                   .map(Optional::get).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    public List<ExpectedProblem> getExpectedProblemList() {
+        return expectedProblems;
+    }
+
+    public boolean isFocused() {
+        return focused;
+    }
+
+    public void setFocused(boolean focused) {
+        this.focused = focused;
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+
+    @Deprecated
+    public boolean hasExpectedSuppressions() {
+        return expectedProblems.stream().anyMatch(ExpectedProblem::isSuppressed);
+    }
+
+    @Deprecated
+    public void recordExpectedSuppression(int line) {
+        recordExpectedSuppression(line, "");
+    }
+
+    @Deprecated
+    public void recordExpectedSuppression(int line, String suppressor) {
+        ExpectedProblem problem = new ExpectedProblem();
+        problem.lineNumber = line;
+        problem.suppressorId = suppressor;
+        this.expectedProblems.add(problem);
+        this.expectedProblems.sort(Comparator.comparingInt(it -> it.lineNumber));
+    }
+
+    @Deprecated
+    public List<SuppressionDescriptor> getExpectedSuppressions() {
+        return expectedProblems.stream().filter(ExpectedProblem::isSuppressed)
+                               .map(it -> new SuppressionDescriptor(it.lineNumber, it.suppressorId))
+                               .collect(Collectors.toList());
+    }
+
+
     /**
      * A problem (rule violation or suppressed violation) expected to
      * be found when running a rule on a test code sample.
@@ -204,84 +288,5 @@ public class RuleTestDescriptor {
             sb.append(": ").append(getMessage().orElse("(no message)"));
             return sb.toString();
         }
-    }
-
-    @Deprecated
-    public int getExpectedProblems() {
-        return expectedProblems.size();
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    @Deprecated
-    public List<Integer> getExpectedLineNumbers() {
-        if (expectedProblems.stream().allMatch(it -> it.getLineNumber().isPresent())) {
-            return expectedProblems.stream().map(ExpectedProblem::getLineNumber)
-                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    @Deprecated
-    public List<Integer> getExpectedEndLineNumbers() {
-        if (expectedProblems.stream().allMatch(it -> it.getEndLineNumber().isPresent())) {
-            return expectedProblems.stream().map(ExpectedProblem::getEndLineNumber)
-                                   .map(OptionalInt::getAsInt).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    @Deprecated
-    public List<String> getExpectedMessages() {
-        if (expectedProblems.stream().allMatch(it -> it.getMessage().isPresent())) {
-            return expectedProblems.stream().map(ExpectedProblem::getMessage)
-                                   .map(Optional::get).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    public List<ExpectedProblem> getExpectedProblemList() {
-        return expectedProblems;
-    }
-
-    public boolean isFocused() {
-        return focused;
-    }
-
-    public void setFocused(boolean focused) {
-        this.focused = focused;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
-    }
-
-    public boolean hasExpectedSuppressions() {
-        return expectedSuppressions != null;
-    }
-
-    void createEmptyExpectedSuppression() {
-        expectedSuppressions = new ArrayList<>();
-    }
-
-    public void recordExpectedSuppression(int line) {
-        recordExpectedSuppression(line, null);
-    }
-
-    public void recordExpectedSuppression(int line, String suppressor) {
-        if (expectedSuppressions == null) {
-            createEmptyExpectedSuppression();
-        }
-        this.expectedSuppressions.add(new SuppressionDescriptor(line, suppressor));
-    }
-
-    public List<SuppressionDescriptor> getExpectedSuppressions() {
-        return expectedSuppressions;
     }
 }
