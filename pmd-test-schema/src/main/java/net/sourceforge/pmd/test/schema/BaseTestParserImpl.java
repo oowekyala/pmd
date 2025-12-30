@@ -43,7 +43,7 @@ import com.github.oowekyala.ooxml.messages.XmlPositioner;
  */
 class BaseTestParserImpl {
 
-    public static final Pattern SPEC_PATTERN = Pattern.compile("(?:\\+(\\d+)\\s+)?(?:suppressed\\((.*?)\\)|warn)(?:\\(\\+(\\d+)\\))?(?::(.*))?");
+    public static final Pattern SPEC_PATTERN = Pattern.compile("(?:\\+(\\d+)\\s+)?(?:suppressed\\((.*?)\\)|warn)(?:\\(\\+(\\d+)\\))?(?::(.*))?(?:\\s*#.*)?");
 
     static class ParserV1 extends BaseTestParserImpl {
 

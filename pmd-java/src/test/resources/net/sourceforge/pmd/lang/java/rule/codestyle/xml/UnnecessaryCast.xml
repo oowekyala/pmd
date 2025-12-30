@@ -2,13 +2,11 @@
 <test-data
         xmlns="http://pmd.sourceforge.net/rule-tests"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+        xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_2_0.xsd">
 
     <test-code>
         <description>Basic Violations</description>
-        <expected-problems>5</expected-problems>
-        <expected-linenumbers>12,15,18,23,28</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,32 +18,31 @@ public class UnnecessaryCastSample {
 
     public void localVars() {
         List<String> stringList = Arrays.asList("a");
-        String element = (String) stringList.get(0);
+        String element = (String) stringList.get(0); // warn
 
         List<Double> doubleList = new ArrayList<>();
-        Double number = (Double) doubleList.get(0);
+        Double number = (Double) doubleList.get(0); // warn
 
         Map<String, String> stringMap = new HashMap<>();
-        String mapData = (String) stringMap.get("a");
+        String mapData = (String) stringMap.get("a"); // warn
     }
 
     public void fields() {
         map.put(1, "test");
-        String val = (String) map.get(1);
+        String val = (String) map.get(1); // warn
     }
 
     public void fields2() {
         this.map.put(1, "test");
-        String val = (String) this.map.get(1);
+        String val = (String) this.map.get(1); // warn
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Without casts there should be no violation</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,14 +70,12 @@ public class UnnecessaryCastSample {
         String val = this.map.get(1);
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Unnecessary casts with iterator</description>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>8,15</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.*;
 
 public class UnnecessaryCastSample {
@@ -88,25 +83,24 @@ public class UnnecessaryCastSample {
         List<String> stringList = Arrays.asList("a");
         Iterator<String> stringIt = stringList.iterator();
         while (stringIt.hasNext()) {
-            String element = (String) stringIt.next();
+            String element = (String) stringIt.next(); // warn
             String element2 = stringIt.next();
         }
 
         List<Double> doubleList = new ArrayList<>();
         Iterator<Double> doubleIt = doubleList.iterator();
         while (doubleIt.hasNext()) {
-            Double number = (Double) doubleIt.next();
+            Double number = (Double) doubleIt.next(); // warn
             Double number2 = doubleIt.next();
         }
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Avoid cast false-positives</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.*;
 public class UnnecessaryCastSample {
     public void localVars() {
@@ -120,13 +114,12 @@ public class UnnecessaryCastSample {
         String dataFromMap = (String) map.get("foo");
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Avoid clone false-positive</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.*;
 public class UnnecessaryCastSample {
     public void localVars() {
@@ -134,13 +127,12 @@ public class UnnecessaryCastSample {
         List<String> copy = (List<String>) strings.clone();
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Necessary Map Cast (nested generics) false-positive</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -152,42 +144,38 @@ public class MapCasts {
         return (Map<String, T>) this.resourceCaches.computeIfAbsent(valueType, key -> new ConcurrentHashMap<>());
     }
 }
-        ]]></code>
+        ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Unnecessary (primitive -> primitive) casts</description>
-        <expected-problems>4</expected-problems>
-        <expected-linenumbers>5,6,7,8</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args) {
                     Integer integer = 2; // ok
 
-                    long a = (int) Integer.valueOf(2);  // explicit boxing where the value would be autoboxed
-                    int b = (int) 2;                    // unnecessary, it's the same type
-                    long c = (int) 4;                   // widening can be implicit
-                    double c = (int) 4;                 // widening can be implicit
+                    long a = (int) Integer.valueOf(2);  // warn # explicit boxing where the value would be autoboxed
+                    int b = (int) 2;                    // warn # unnecessary, it's the same type
+                    long c = (int) 4;                   // warn # widening can be implicit
+                    double c = (int) 4;                 // warn # widening can be implicit
                     double c = (int) 4.0;               // cast is narrowing so necessary
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Tests from the doc</description>
-        <expected-problems>2</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args) {
-                    Object context = (Comparable) "o";
-                    Integer integer = (Integer) 1;
+                    Object context = (Comparable) "o"; // warn
+                    Integer integer = (Integer) 1; // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Self cast</description>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class A {
                 private Integer x;
 
@@ -198,31 +186,28 @@ public class MapCasts {
                 public static class B extends A { }
 
                 public int compareTo(A arg) {
-                    return ((B) arg).getX().compareTo(getX());
+                    return ((B) arg).getX().compareTo(getX()); // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Context is array index</description>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>3,4</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args, Integer i, Double d) {
-                    args[(int) i] = "";   // unnecessary
-                    args[(int) '0'] = ""; // unnecessary
+                    args[(int) i] = "";   // warn
+                    args[(int) '0'] = ""; // warn
                     args[(int) 0.5] = ""; // narrowing so necessary
                     args[(int) d] = "";   // unboxing + narrowing so necessary
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Context is invocation, no overloads</description>
         <!-- TODO for now this is explicitly disabled -->
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args, Integer i, Double d) {
                     doSt((int) i); // unnecessary
@@ -230,12 +215,11 @@ public class MapCasts {
 
                 static void doSt(int i) {}
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Context is invocation, some overloads</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args, Integer i, Double d) {
                     doSt((int) i); // necessary
@@ -244,13 +228,12 @@ public class MapCasts {
                 static void doSt(int i) {}
                 static void doSt(Integer i) {}
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Unchecked cast FP</description>
         <!-- There's a corresponding type res unit test in UncheckedInference.kt -->
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             // Note: Enum is raw, not Enum<T>
             class StringToEnum<T extends Enum> implements Converter<String, T> {
 
@@ -272,13 +255,12 @@ public class MapCasts {
             interface Converter<From, To> {
                 To convert(From source);
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast as target type for method reference/lambda FP</description>
         <!-- https://github.com/spring-projects/spring-framework/blob/v5.0.6.RELEASE/spring-webmvc/src/main/java/org/springframework/web/servlet/config/annotation/InterceptorRegistry.java#L81 -->
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Comparator;
 
             class Test {
@@ -325,12 +307,11 @@ public class MapCasts {
                 int getOrder();
             }
 
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast as target type for method reference/lambda FP (2)</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Comparator;
 
             class Test {
@@ -353,25 +334,19 @@ public class MapCasts {
                 int getOrder();
             }
 
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast as target type for method reference/lambda (ok)</description>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>7,8</expected-linenumbers>
-        <expected-messages>
-            <message>Unnecessary cast (Ordered)</message>
-            <message>Unnecessary cast (Ordered)</message>
-        </expected-messages>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Comparator;
 
             class Test {
 
                 static {
                     Ordered comparator;
-                    comparator = (Ordered) Test::getAnInt;
-                    comparator = (Ordered) () -> 0;
+                    comparator = (Ordered) Test::getAnInt; // warn: Unnecessary cast (Ordered)
+                    comparator = (Ordered) () -> 0; // warn: Unnecessary cast (Ordered)
                 }
 
                 static int getAnInt() {return 0;}
@@ -386,12 +361,11 @@ public class MapCasts {
                 int getOrder();
             }
 
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast as target type for method reference/lambda, with enclosing invoc context</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.lang.reflect.Constructor;
             import java.security.AccessController;
             import java.security.PrivilegedAction;
@@ -408,13 +382,11 @@ public class MapCasts {
                     }
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast over a ternary</description>
-        <expected-problems>1</expected-problems>
-        <expected-linenumbers>14</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.lang.reflect.Constructor;
             import java.security.AccessController;
             import java.security.PrivilegedAction;
@@ -428,7 +400,7 @@ public class MapCasts {
                                                                 : another());
 
                     // only this one is unnecessary
-                    textFromMessage = (String) (messageSelector ? "methodThatReturnsObject(selectorString)"
+                    textFromMessage = (String) (messageSelector ? "methodThatReturnsObject(selectorString)" // warn
                                                                 : "string");
                 }
 
@@ -437,12 +409,11 @@ public class MapCasts {
                 Object another() {return null;}
 
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast over target-dependent ternary</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Collection;
             import java.util.List;
             import java.util.Set;
@@ -466,17 +437,15 @@ public class MapCasts {
                 <T> Set<T> emptySet() {return null;}
 
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast over ternary mixing boxing/null/primitive</description>
-        <expected-problems>1</expected-problems>
-        <expected-linenumbers>4</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
 
                 public static void main(String[] args) {
-                    double z = (Integer) // here
+                    double z = (Integer) // warn
                             ((0.2 == Math.random()) ? (Integer) null + apply(null) // this one is required so that + applies
                                                     : (0.3 == Math.random()) ? (Integer) null // this one could be removed but whatever
                                                                              : (int) Math.sin(300 * (12 + 30))); // this one is narrowing
@@ -484,29 +453,26 @@ public class MapCasts {
 
                 public static int apply(Object o) { return 0; }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Cast that determines boxing when context is Object</description>
-        <expected-problems>5</expected-problems>
-        <expected-linenumbers>7,10,12,14,16</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public Object zero() {
                     switch (this) {
                     case BOOLEAN:
                         return Boolean.FALSE;
                     case INT:
-                        return (Integer)0; // here
-                    // in the following double casts, the first one is unnecessary
+                        return (Integer)0; // warn: Unnecessary cast (Integer)
                     case BYTE:
-                        return (Byte)(byte)0;
+                        return (Byte)(byte)0; // warn: Unnecessary cast (Byte)
                     case CHAR:
-                        return (Character)(char)0;
+                        return (Character)(char)0; // warn: Unnecessary cast (Character)
                     case SHORT:
-                        return (Short)(short)0;
+                        return (Short)(short)0; // warn: Unnecessary cast (Short)
                     case LONG:
-                        return (Long)(long)0;
+                        return (Long)(long)0; // warn: Unnecessary cast (Long)
                     case FLOAT:
                         return FLOAT_ZERO;
                     case DOUBLE:
@@ -518,12 +484,11 @@ public class MapCasts {
                     }
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Byte arithmetic</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public void putTag(byte tagClass, boolean form, byte val) {
                     // result of the OR is widened to int,
@@ -535,12 +500,11 @@ public class MapCasts {
                     write(tag);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>FP, removing both casts changes program</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
 
                 public void putTag(boolean useLong, int n) {
@@ -552,27 +516,24 @@ public class MapCasts {
                                     : (Number) Integer.valueOf(n);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>TP in ternary</description>
         <!-- Note: the other is technically removable as well but that would change the type of the ternary -->
-        <expected-problems>1</expected-problems>
-        <expected-linenumbers>5</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
 
                 public void putTag(boolean useLong, int n) {
                     double result = useLong ? (double) 1
-                                            : (int) 2;   // removable, (2 : int)
+                                            : (int) 2;   // warn: Unnecessary cast (int)
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>[java] UnnecessaryCast false positive #2748 with unchecked cast</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.List;
 
             class Scratch {
@@ -582,90 +543,84 @@ public class MapCasts {
                     return result;
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Boxing cast needs to box to the same type to be unnecessary</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 class Scratch {
     static {
         Object o = (Long) 3; // compile time error (int cannot be converted to Long)
         o = (long) 3; // makes it box to Long
+        o = (long) 3L; // warn: Unnecessary cast (long)
     }
 }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Chained casts to convert int to Long</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 class Scratch {
     static m(Integer boxedInt) {
         Object o = (long)
                 (int) boxedInt; // both are necessary
     }
 }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Assignment context is more flexible than cast</description>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>3,4</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 class Scratch {
     static m(Integer boxedInt) {
-        long l = (int) boxedInt; // unnecessary
-        l = (long)               // unnecessary
+        long l = (int) boxedInt; // warn
+        l = (long)               // warn
                 (int) boxedInt;  // necessary
         Object l = (long) (int) boxedInt; // both necessary
     }
 }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Assert statements</description>
-        <expected-problems>3</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(Boolean boxedBool, boolean bool, String str) {
-                    assert (boolean) boxedBool;
-                    assert (boolean) bool;
-                    assert bool : (String) str;
+                    assert (boolean) boxedBool; // warn
+                    assert (boolean) bool;      // warn
+                    assert bool : (String) str; // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Conditionals and loop statements</description>
-        <expected-problems>5</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(Boolean boxedBool, boolean bool, String str, int[] ints) {
-                    if ((boolean) boxedBool);
-                    while ((boolean) boxedBool);
-                    for (int i = 0; (boolean) boxedBool; i++) {}
-                    do; while ((boolean) boxedBool);
-                    for (int i : (int[]) ints);
+                    if ((boolean) boxedBool);                     // warn
+                    while ((boolean) boxedBool);                  // warn
+                    for (int i = 0; (boolean) boxedBool; i++) {}  // warn
+                    do; while ((boolean) boxedBool);              // warn
+                    for (int i : (int[]) ints);                   // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Conditional expr condition</description>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(Boolean boxedBool, boolean bool, String str, int[] ints) {
-                    str = (boolean) boxedBool ? "a" : "b";
+                    str = (boolean) boxedBool // warn
+                          ? "a" : "b";
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Necessary cast for condition</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(Object obj) {
                     // both are necessary
@@ -673,20 +628,19 @@ class Scratch {
                         || (boolean) obj);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Missing context identity cast</description>
-        <expected-problems>2</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
 
                 static void m(Boolean boxedBool) {
-                    ((Boolean) boxedBool).booleanValue(); // same type
-                    ((Object) boxedBool).toString(); // supertype
+                    ((Boolean) boxedBool).booleanValue(); // warn # same type
+                    ((Object) boxedBool).toString(); // warn # supertype
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Casts in arithmetic</description>
@@ -704,61 +658,57 @@ class Scratch {
     </test-code>
     <test-code>
         <description>Casts in shift exprs</description>
-        <expected-problems>7</expected-problems>
-        <expected-linenumbers>5,8,9,10,12,13,14</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(int i, short s, long l, Integer boxedInt) {
-                    l  = (long) i << 2; // "necessary"
-                    l  = (long) i << 34; // definitely necessary
-                    l  = (long) (i << 34); // unnecessary, l5
+                    l  = (long) i << 2;     // "necessary"
+                    l  = (long) i << 34;    // definitely necessary
+                    l  = (long) (i << 34);  // warn # unnecessary, l5
 
                     i = i << (int) l;          // necessary
-                    i = i << (int) boxedInt;   // unnecessary
-                    i = (int) i << boxedInt;   // unnecessary
-                    i = (int) (i << boxedInt); // unnecessary
+                    i = i << (int) boxedInt;   // warn
+                    i = (int) i << boxedInt;   // warn
+                    i = (int) (i << boxedInt); // warn
 
-                    i = (int) s << boxedInt;   // unnecessary, widened anyway
-                    i = ((int) s) << boxedInt; // unnecessary, same expression with unnecessary parens
-                    i = (int) (s << boxedInt); // unnecessary
+                    i = (int) s << boxedInt;   // warn # widened anyway
+                    i = ((int) s) << boxedInt; // warn # same expression with unnecessary parens
+                    i = (int) (s << boxedInt); // warn
 
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Casts in arithmetic smaller than int </description>
-        <expected-problems>9</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 // they're all unnecessary
                 static void m(int i, byte b, char c, short s) {
-                    i = b * (int) b; // 4
-                    i = (int) b * b;
-                    i = b * (int) s; // 6
-                    i = b * (int) c;
-                    i = b * (short) b; // 8
-                    i = i * (short) b;
-                    i = i * (short) s; // 10
-                    i = i * (int) c;
-                    i = i * (char) c; // 11
+                    i = b * (int) b; // warn
+                    i = (int) b * b; // warn
+                    i = b * (int) s; // warn
+                    i = b * (int) c; // warn
+                    i = b * (short) b; // warn
+                    i = i * (short) b; // warn
+                    i = i * (short) s; // warn
+                    i = i * (int) c;  // warn
+                    i = i * (char) c; // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>Casts in arithmetic with unboxing + widening</description>
-        <expected-problems>4</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 static void m(Integer i, Double d, Object lhs) {
-                    lhs = (int) i * 1.0;
-                    lhs = (double) d * 1.01;
-                    lhs = 1.01 * (int) i;
-                    lhs = 1.01 * (double) d;
+                    lhs = (int) i * 1.0;     // warn
+                    lhs = (double) d * 1.01; // warn
+                    lhs = 1.01 * (int) i;    // warn
+                    lhs = 1.01 * (double) d; // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>"Narrowing" cast from char to short is necessary</description>
@@ -910,44 +860,40 @@ class MyClass {
 
     <test-code>
         <description>#4620 [java] UnnecessaryCast reports false-positive for ByteBuffer methods when targeting Java 8</description>
-        <expected-problems>2</expected-problems>
-        <expected-linenumbers>5,9</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
 import java.nio.ByteBuffer;
 class Tester {
     public byte[] getArray() {
         ByteBuffer bb = ByteBuffer.allocate(5 * 4);
-        return (byte[])bb.flip().array(); // cast is unnecessary since Java 9: ByteBuffer.flip() returns a ByteBuffer (and not a Buffer)
+        return (byte[])bb.flip().array(); // warn # cast is unnecessary since Java 9: ByteBuffer.flip() returns a ByteBuffer (and not a Buffer)
     }
     ByteBuffer nativeAddress;
     public void foo(ByteBuffer nativeAddress) {
-        this.nativeAddress = nativeAddress == null ? null : (ByteBuffer) (Object) nativeAddress // casts are unnecessary
+        this.nativeAddress = nativeAddress == null ? null : (ByteBuffer) (Object) nativeAddress // warn # casts are unnecessary
             .duplicate().rewind();
         // since Java 9: ByteBuffer.rewind() returns a ByteBuffer (and not a Buffer)
     }
 }
-]]></code>
+]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>#5523 [java] UnnecessaryCast FP with integer division</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             class Scratch {
                 public static void main(String[] args) {
                     long x = 100;
                     Integer y = 75;
-                    System.out.println(Math.ceil((double) x / y)); // <-- Unnecessary cast (double).
+                    System.out.println(Math.ceil((double) x / y)); // not unnecessary
                     System.out.println(Math.ceil(x / y));
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Cast in return position of lambda (#5073)</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.*;
             import static java.util.Comparator.nullsFirst;
 
@@ -958,14 +904,12 @@ class Tester {
                                                 .orElseGet(Collections::emptySet);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Cast in return position of lambda, true positives</description>
-        <expected-problems>3</expected-problems>
-        <expected-linenumbers>13,14,15</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.*;
 
             interface L1<X> { Object foo(X x); }
@@ -978,20 +922,19 @@ class Tester {
                 <X> void bar4(L2<X, Comparable<?>> l) {}
                 <X, Q> void bar3(L2<X, Q> l) {}
                 void foo(List<String> someList) {
-                    bar(x -> (Comparable<?>) "something"); // redundant
-                    bar2(x -> (Comparable<?>) "something"); // redundant: lambda not context dependent
-                    bar4(x -> (Comparable<?>) "something"); // redundant: lambda not context dependent
+                    bar(x -> (Comparable<?>) "something");  // warn
+                    bar2(x -> (Comparable<?>) "something"); // warn # lambda not context dependent
+                    bar4(x -> (Comparable<?>) "something"); // warn # lambda not context dependent
                     bar3(x -> (Comparable<?>) "something"); // not redundant: method uses lambda ret ty
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
 
     <test-code>
         <description>Cast in return position of lambda, types are unresolved (#5073)</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             package org.example;
 
             import io.vavr.collection.Array;
@@ -1011,13 +954,12 @@ class Tester {
                 }
 
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Cast in return position of lambda, declare types here (#5073)</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             interface Function<P,R> { R apply(P p); }
             interface Seq<T> {}
             interface Array<T> extends Seq<T> {
@@ -1041,14 +983,13 @@ class Tester {
                 }
 
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
 
     <test-code>
         <description>Other example of cast in lambda return (#5440)</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Optional;
             class Scratch {
                 public static void main(String[] args) {
@@ -1059,32 +1000,30 @@ class Tester {
                             .orElse(Boolean.FALSE);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
 
     <test-code>
         <description>Other example of cast in lambda return (#5440) - has explicit type args</description>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Optional;
             class Scratch {
                 public static void main(String[] args) {
                     Object object = Optional
                             .of(new Object())
                             // with explicit targs it is unnecessary
-                            .<Object>map(o -> (Object) o.toString())
+                            .<Object>map(o -> (Object) o.toString()) // warn
                             .orElse(Boolean.FALSE);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
 
     <test-code>
         <description>Other example of cast in lambda return (#5440) - has cast context</description>
-        <expected-problems>1</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Optional;
             import java.util.function.UnaryOperator;
 
@@ -1093,18 +1032,17 @@ class Tester {
                     Object object = Optional
                             .of(new Object())
                             // the outer cast determines the type of the lambda, not the inner cast
-                            .map((UnaryOperator<Object>) o -> (Object) o.toString())
+                            .map((UnaryOperator<Object>) o -> (Object) o.toString()) // warn: Unnecessary cast (Object)
                             .orElse(Boolean.FALSE);
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
 
     <test-code>
         <description>[java] UnnecessaryCast false-positive for raw types #4822</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.Objects;
             import java.util.Comparator;
             import static java.util.Comparator.nullsFirst;
@@ -1124,35 +1062,32 @@ class Tester {
                     return ((Comparable) o1).compareTo(o2); // <--- Unnecessary cast (Comparable)
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Cast in method call unnecessary</description>
-        <expected-problems>3</expected-problems>
-        <expected-linenumbers>7,8,12</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.List;
 
             public interface StringList extends List<String> { }
 
             public class Foo {
                 public int parameterized(List<?> o1) {
-                    Object t = ((List) o1).get(0);
-                    return ((List) o1).size();
+                    Object t = ((List) o1).get(0); // warn
+                    return ((List) o1).size(); // warn
                 }
 
                 public int generic(List o1) {
-                    return ((List<?>) o1).size();
+                    return ((List<?>) o1).size(); // warn
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 
     <test-code>
         <description>Cast in method call needed</description>
-        <expected-problems>0</expected-problems>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             import java.util.List;
 
             public interface StringList extends List<String> { }
@@ -1173,19 +1108,17 @@ class Tester {
                     ((List<String>) o1).add("x");
                 }
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
     <test-code>
         <description>#6237 Error with lambdas in switch expr</description>
-        <expected-problems>1</expected-problems>
-        <expected-linenumbers>6</expected-linenumbers>
-        <code><![CDATA[
+        <annotated-code><![CDATA[
             public class Foo {
                 void bar(int x) {
                     foo(
                             switch(x) {
-                                case 0 -> () -> (long) 1;  // this is necessary   int  -> long -> Long
-                                case 1 -> () -> (long) 2L; // this is unnecessary long -> long -> Long
+                                case 0 -> () -> (long) 1;  //        this is necessary   int  -> long -> Long
+                                case 1 -> () -> (long) 2L; // warn # this is unnecessary long -> long -> Long
                                 default -> throw new Error();
                             }
                     );
@@ -1198,6 +1131,6 @@ class Tester {
             interface Supplier<T> {
                 T get();
             }
-            ]]></code>
+            ]]></annotated-code>
     </test-code>
 </test-data>
