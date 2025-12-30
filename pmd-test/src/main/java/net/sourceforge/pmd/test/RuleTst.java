@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.DynamicTest;
@@ -158,8 +157,7 @@ public abstract class RuleTst {
         if (!test.hasExpectedSuppressions()) {
             return;
         }
-        List<RuleTestDescriptor.ExpectedProblem> expectedSuppressions =
-            test.getExpectedProblemList().stream().filter(RuleTestDescriptor.ExpectedProblem::isSuppressed).collect(Collectors.toList());
+        List<RuleTestDescriptor.ExpectedProblem> expectedSuppressions = test.getExpectedSuppressedViolations();
 
         assertEquals(expectedSuppressions.size(), report.getSuppressedViolations().size(), "wrong number of suppressed violations");
         for (int i = 0; i < expectedSuppressions.size(); i++) {
@@ -179,8 +177,7 @@ public abstract class RuleTst {
         if (report == null) {
             return;
         }
-        List<RuleTestDescriptor.ExpectedProblem> expected =
-            test.getExpectedProblemList().stream().filter(it -> !it.isSuppressed()).collect(Collectors.toList());
+        List<RuleTestDescriptor.ExpectedProblem> expected = test.getExpectedViolations();
 
         assertEquals(expected.size(), report.getViolations().size(),
             '"' + test.getDescription() + "\" resulted in wrong number of failures,");

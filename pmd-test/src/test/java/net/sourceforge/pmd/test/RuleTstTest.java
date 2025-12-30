@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.test;
 
+import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,9 +12,6 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -30,6 +28,7 @@ import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.lang.rule.RuleTargetSelector;
 import net.sourceforge.pmd.reporting.RuleContext;
 import net.sourceforge.pmd.test.schema.RuleTestDescriptor;
+import net.sourceforge.pmd.test.schema.RuleTestDescriptor.ExpectedProblem;
 
 class RuleTstTest {
     private final LanguageVersion dummyLanguage = DummyLanguageModule.getInstance().getDefaultVersion();
@@ -79,7 +78,7 @@ class RuleTstTest {
         testDescriptor.setLanguageVersion(dummyLanguage);
         testDescriptor.setCode(code);
         testDescriptor.setDescription("sample test");
-        testDescriptor.recordExpectedViolations(2, Arrays.asList(1, 2), Arrays.asList(1, 2), Collections.emptyList());
+        testDescriptor.setExpectedProblems(listOf(ExpectedProblem.startingAtLine(1), ExpectedProblem.startingAtLine(2)));
 
         ruleTester.runTest(testDescriptor);
     }
@@ -110,8 +109,7 @@ class RuleTstTest {
         testDescriptor.setLanguageVersion(dummyLanguage);
         testDescriptor.setCode("(a)(b)\n(c)");
         testDescriptor.setDescription("sample test");
-        testDescriptor.recordExpectedViolations(0, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        testDescriptor.recordExpectedSuppression(1);
+        testDescriptor.setExpectedProblems(listOf(ExpectedProblem.suppressed(1, null)));
 
         ruleTester.runTest(testDescriptor);
     }
@@ -124,8 +122,7 @@ class RuleTstTest {
         testDescriptor.setLanguageVersion(dummyLanguage);
         testDescriptor.setCode("(a)(b)\n(c)");
         testDescriptor.setDescription("sample test");
-        testDescriptor.recordExpectedViolations(0, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        testDescriptor.recordExpectedSuppression(1, "//NOPMD");
+        testDescriptor.setExpectedProblems(listOf(ExpectedProblem.suppressed(1, "//NOPMD")));
 
         ruleTester.runTest(testDescriptor);
     }
@@ -138,8 +135,7 @@ class RuleTstTest {
         testDescriptor.setLanguageVersion(dummyLanguage);
         testDescriptor.setCode("(a)(b)\n(c)");
         testDescriptor.setDescription("sample test");
-        testDescriptor.recordExpectedViolations(0, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        testDescriptor.recordExpectedSuppression(1, "wrong id");
+        testDescriptor.setExpectedProblems(listOf(ExpectedProblem.suppressed(1, "wrong id")));
 
         AssertionFailedError assertionFailedError = assertThrows(AssertionFailedError.class, () -> ruleTester.runTest(testDescriptor));
         assertEquals("wrong suppressor id ==> expected: <wrong id> but was: <//NOPMD>", assertionFailedError.getMessage());

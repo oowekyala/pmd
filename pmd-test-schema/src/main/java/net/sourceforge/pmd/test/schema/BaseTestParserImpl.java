@@ -190,7 +190,7 @@ class BaseTestParserImpl {
             }
             lineNo++;
         }
-        descriptor.recordExpectedViolations(expectedProblems);
+        descriptor.setExpectedProblems(expectedProblems);
         descriptor.setCode(code);
     }
 
@@ -297,7 +297,7 @@ class BaseTestParserImpl {
             expectedProblemList.add(prob);
         });
 
-        descriptor.recordExpectedViolations(
+        descriptor.setExpectedProblems(
             expectedProblemList
         );
 

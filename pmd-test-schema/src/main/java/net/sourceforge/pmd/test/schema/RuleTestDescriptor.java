@@ -14,6 +14,7 @@ import java.util.OptionalInt;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.LanguageVersion;
@@ -100,13 +101,23 @@ public class RuleTestDescriptor {
     }
 
     public void setCode(String code) {
-        this.code = code;
+        this.code = Objects.requireNonNull(code);
     }
 
-    public void recordExpectedViolations(List<ExpectedProblem> problems) {
-        this.expectedProblems = Objects.requireNonNull(problems);
+    /**
+     * Set the expected violations for this test, overwriting the previous value.
+     * This list can contain also expected suppressions.
+     *
+     * @param problems list of problems
+     */
+    public void setExpectedProblems(@NonNull List<ExpectedProblem> problems) {
+        this.expectedProblems = new ArrayList<>(problems);
+        this.expectedProblems.sort(ExpectedProblem.COMPARATOR);
     }
 
+    /**
+     * @deprecated Use {@link #setExpectedProblems(List)}
+     */
     @Deprecated
     public void recordExpectedViolations(int expectedProblems, List<Integer> expectedLineNumbers, List<String> expectedMessages) {
         checkListSize(expectedProblems, expectedLineNumbers);
@@ -125,6 +136,9 @@ public class RuleTestDescriptor {
         }
     }
 
+    /**
+     * @deprecated Use {@link #setExpectedProblems(List)}
+     */
     @Deprecated
     public void recordExpectedViolations(int expectedProblems, List<Integer> expectedLineNumbers, List<Integer> expectedEndLineNumbers, List<String> expectedMessages) {
         checkListSize(expectedProblems, expectedEndLineNumbers);
@@ -180,8 +194,20 @@ public class RuleTestDescriptor {
         return Collections.emptyList();
     }
 
+    /**
+     * Return a sorted list of expected problems. This may contain also
+     * expected suppressions.
+     */
     public List<ExpectedProblem> getExpectedProblemList() {
         return expectedProblems;
+    }
+
+    public List<ExpectedProblem> getExpectedViolations() {
+        return expectedProblems.stream().filter(it -> !it.isSuppressed()).collect(Collectors.toList());
+    }
+
+    public List<ExpectedProblem> getExpectedSuppressedViolations() {
+        return expectedProblems.stream().filter(ExpectedProblem::isSuppressed).collect(Collectors.toList());
     }
 
     public boolean isFocused() {
@@ -192,10 +218,16 @@ public class RuleTestDescriptor {
         this.focused = focused;
     }
 
+    /**
+     * The line number of the test in the test file.
+     */
     public int getLineNumber() {
         return lineNumber;
     }
 
+    /**
+     * Set the line number of the test in the test file.
+     */
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
@@ -210,13 +242,16 @@ public class RuleTestDescriptor {
         recordExpectedSuppression(line, "");
     }
 
+    /**
+     * @deprecated Use {@link #setExpectedProblems(List)}
+     */
     @Deprecated
     public void recordExpectedSuppression(int line, String suppressor) {
         ExpectedProblem problem = new ExpectedProblem();
         problem.lineNumber = line;
         problem.suppressorId = suppressor;
         this.expectedProblems.add(problem);
-        this.expectedProblems.sort(Comparator.comparingInt(it -> it.lineNumber));
+        this.expectedProblems.sort(ExpectedProblem.COMPARATOR);
     }
 
     @Deprecated
@@ -232,13 +267,32 @@ public class RuleTestDescriptor {
      * be found when running a rule on a test code sample.
      */
     public static final class ExpectedProblem {
+
+        private static final Comparator<ExpectedProblem> COMPARATOR =
+            Comparator.<ExpectedProblem>comparingInt(it -> it.lineNumber)
+                      .thenComparingInt(it -> it.endLineNumber);
+
+        /** Start line. */
         int lineNumber = -1;
+        /** End line. */
         int endLineNumber = -1;
         @Nullable
         String message = null;
         @Nullable
         String suppressorId = null;
 
+        public static ExpectedProblem startingAtLine(int lineNumber) {
+            assert lineNumber >= 1;
+            ExpectedProblem result = new ExpectedProblem();
+            result.lineNumber = lineNumber;
+            return result;
+        }
+
+        public static ExpectedProblem suppressed(int lineNumber, @Nullable String suppressorId) {
+            ExpectedProblem result = startingAtLine(lineNumber);
+            result.suppressorId = suppressorId == null ? "" : suppressorId;
+            return result;
+        }
 
         public OptionalInt getLineNumber() {
             return lineNumber < 1 ? OptionalInt.empty() : OptionalInt.of(lineNumber);
@@ -284,6 +338,9 @@ public class RuleTestDescriptor {
             }
             if (getEndLineNumber().isPresent()) {
                 sb.append("-").append(getEndLineNumber().getAsInt());
+            }
+            if (isSuppressed()) {
+                sb.append(" (suppressed)");
             }
             sb.append(": ").append(getMessage().orElse("(no message)"));
             return sb.toString();
