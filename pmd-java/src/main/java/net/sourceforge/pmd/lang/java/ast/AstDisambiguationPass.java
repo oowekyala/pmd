@@ -226,7 +226,7 @@ final class AstDisambiguationPass {
             // revisit children, which may have changed
             for (int i = 0; i < type.getNumChildren(); i++) {
                 JavaNode child = type.getChild(i);
-                if (child != typeArgs) { // NOPMD CompareObjectsWithEquals
+                if (child != typeArgs) {
                     child.acceptVisitor(this, ctx);
                 }
             }
